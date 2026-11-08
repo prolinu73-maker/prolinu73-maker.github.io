@@ -10,6 +10,7 @@
             --primary-bg: #f3f4f6; 
             --text-main: #1f2937; 
             --text-muted: #6b7280;
+            --primary-color: #4f46e5;
             --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --gradient-btn: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
         }
@@ -18,7 +19,11 @@
         
         header { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-bottom: 2px solid #e5e7eb; padding: 0 40px; display: flex; justify-content: space-between; align-items: center; height: 70px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .logo { font-size: 24px; font-weight: 900; background: linear-gradient(to right, #f12711, #f5af19); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
+        
+        .header-right { display: flex; align-items: center; gap: 15px; }
         #liveClock { font-weight: 700; color: #4f46e5; background: #e0e7ff; padding: 8px 15px; border-radius: 20px; font-size: 14px; }
+        .auth-btn { background: #1e293b; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: 'Pretendard', sans-serif; }
+        .auth-btn:hover { background: #0f172a; }
 
         .hero { background: var(--gradient-hero); background-size: 200% 200%; animation: gradientMove 5s ease infinite; padding: 80px 20px; text-align: center; color: white; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
         @keyframes gradientMove { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
@@ -41,25 +46,12 @@
         .card { position: relative; background: #ffffff; border-radius: 15px; padding: 25px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; text-decoration: none; color: inherit; border-top: 5px solid transparent; cursor: pointer; }
         .card:hover { transform: translateY(-10px) scale(1.02); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15); }
         
-        /* 추가된 카테고리 테마 색상 설정 */
-        .card.bg-blue { border-top-color: #3b82f6; }
-        .card.bg-green { border-top-color: #10b981; }
-        .card.bg-pink { border-top-color: #ec4899; }
-        .card.bg-purple { border-top-color: #8b5cf6; } /* 예산 테마 추가 */
-        .card.bg-orange { border-top-color: #f97316; } /* 계약 테마 추가 */
-        .card.bg-gray { border-top-color: #64748b; }   /* 기타 테마 추가 */
-        
+        .card.bg-blue { border-top-color: #3b82f6; } .card.bg-green { border-top-color: #10b981; } .card.bg-pink { border-top-color: #ec4899; } .card.bg-purple { border-top-color: #8b5cf6; } .card.bg-orange { border-top-color: #f97316; } .card.bg-gray { border-top-color: #64748b; }
         .badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; color: white; margin-bottom: 15px; width: max-content; }
-        .badge.blue { background: #3b82f6; }
-        .badge.green { background: #10b981; }
-        .badge.pink { background: #ec4899; }
-        .badge.purple { background: #8b5cf6; } /* 예산 배지 추가 */
-        .badge.orange { background: #f97316; } /* 계약 배지 추가 */
-        .badge.gray { background: #64748b; }   /* 기타 배지 추가 */
+        .badge.blue { background: #3b82f6; } .badge.green { background: #10b981; } .badge.pink { background: #ec4899; } .badge.purple { background: #8b5cf6; } .badge.orange { background: #f97316; } .badge.gray { background: #64748b; }
 
         .card-title { font-size: 20px; font-weight: 800; margin: 0 0 12px 0; }
         .card-desc { font-size: 15px; color: var(--text-muted); margin: 0 0 20px 0; flex-grow: 1; }
-        
         .card-delete { position: absolute; top: 15px; right: 15px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; display: none; transition: 0.2s; }
         .card:hover .card-delete { display: block; }
         .card-delete:hover { background: #ef4444; color: white; }
@@ -74,7 +66,7 @@
         .board-form input { padding: 12px 20px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Pretendard', sans-serif; font-size: 15px; }
         .board-form input.title-input { flex-grow: 1; }
         
-        .btn-submit { background: var(--gradient-btn); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: 800; font-size: 15px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(255, 8, 68, 0.4); }
+        .btn-submit { background: var(--gradient-btn); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: 800; font-size: 15px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(255, 8, 68, 0.4); font-family: 'Pretendard', sans-serif; }
         .btn-submit:hover { transform: scale(1.05); }
 
         .board-table { width: 100%; border-collapse: collapse; }
@@ -84,13 +76,28 @@
         
         .btn-like { background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; }
         .btn-delete { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; margin-left: 5px; }
+
+        /* 회원가입/로그인 모달창 디자인 */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 320px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .modal-content h3 { margin: 0 0 20px 0; font-size: 22px; color: #1e293b; text-align: center; }
+        .modal-content input { width: 100%; padding: 12px; margin-bottom: 12px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
+        .modal-content input:focus { border-color: var(--primary-color); outline: none; }
+        .auth-toggle { text-align: center; font-size: 13px; margin-top: 15px; }
+        .auth-toggle a { color: var(--primary-color); text-decoration: none; font-weight: 700; cursor: pointer; }
+        .auth-toggle a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
     <header>
         <a href="#" class="logo">🚀 조효식 허브 PRO</a>
-        <div id="liveClock">시간 로딩중...</div>
+        <div class="header-right">
+            <div id="liveClock">시간 로딩중...</div>
+            <div id="userInfoArea">
+                <button class="auth-btn" onclick="openModal('login')">로그인</button>
+            </div>
+        </div>
     </header>
 
     <div class="hero">
@@ -105,7 +112,6 @@
         </div>
 
         <div class="tool-form">
-            <!-- 콤보상자에 새로운 분류 항목 3개 추가 -->
             <select id="toolCategory">
                 <option value="blue">인사 · 복무 (파랑)</option>
                 <option value="purple">예산 · 기획 (보라)</option>
@@ -137,9 +143,11 @@
                     <option value="free">자유게시판</option>
                     <option value="qa">묻고 답하기</option>
                 </select>
-                <input type="text" id="postTitle" class="title-input" placeholder="내용을 입력해주세요!">
-                <input type="text" id="postAuthor" value="조효식" style="width: 100px; text-align: center;">
-                <button class="btn-submit" onclick="addPost()">✨ 등록하기</button>
+                <!-- 제한 해제: 누구나 글을 쓸 수 있도록 활성화 -->
+                <input type="text" id="postTitle" class="title-input" placeholder="새로운 업무 노하우나 질문을 작성해주세요!">
+                <!-- 작성자도 게스트가 마음대로 바꿀 수 있도록 readonly 해제 -->
+                <input type="text" id="postAuthor" value="게스트" style="width: 100px; text-align: center;">
+                <button class="btn-submit" id="postSubmitBtn" onclick="addPost()">✨ 등록하기</button>
             </div>
             <table class="board-table">
                 <thead>
@@ -156,6 +164,28 @@
         </div>
     </div>
 
+    <!-- 로그인/회원가입/비번찾기 통합 모달창 (선택 사항) -->
+    <div id="authModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modalTitle">로그인</h3>
+            
+            <input type="text" id="authPhone" placeholder="휴대폰 번호 (예: 010-1234-5678)">
+            <input type="password" id="authPw" placeholder="비밀번호를 입력하세요">
+            <input type="text" id="authName" placeholder="사용하실 닉네임 (이름)" style="display:none;">
+            
+            <button class="btn-submit" id="authActionBtn" style="width: 100%;" onclick="executeAuth()">로그인</button>
+            
+            <div class="auth-toggle">
+                <span id="authToggleMsg">계정이 없으신가요?</span> 
+                <a onclick="changeAuthMode('signup')" id="authToggleBtn">회원가입</a>
+            </div>
+            <div class="auth-toggle" id="findPwWrap" style="margin-top: 5px;">
+                <a onclick="changeAuthMode('findpw')" style="color: #64748b; font-weight: normal;">비밀번호를 잊으셨나요?</a>
+            </div>
+            <button onclick="closeModal()" style="width: 100%; padding: 10px; margin-top: 15px; background: #e2e8f0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">닫기</button>
+        </div>
+    </div>
+
     <script>
         function updateClock() {
             const now = new Date();
@@ -167,26 +197,153 @@
 
         function filterCards() {
             const query = document.getElementById("searchInput").value.toLowerCase();
-            const cards = document.querySelectorAll(".card");
-            cards.forEach(card => {
+            document.querySelectorAll(".card").forEach(card => {
                 const title = card.querySelector(".card-title").innerText.toLowerCase();
                 const desc = card.querySelector(".card-desc").innerText.toLowerCase();
                 card.style.display = (title.includes(query) || desc.includes(query)) ? "flex" : "none";
             });
         }
 
+        // ==========================================
+        // 회원가입, 로그인, 비밀번호 찾기 기능 로직
+        // ==========================================
+        let authMode = 'login'; 
+        let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
         document.addEventListener("DOMContentLoaded", () => {
+            updateLoginUI();
             initTools();
             loadPosts(); 
         });
 
+        function openModal(mode) {
+            document.getElementById('authModal').style.display = 'flex';
+            changeAuthMode(mode);
+        }
+
+        function closeModal() {
+            document.getElementById('authModal').style.display = 'none';
+            document.getElementById('authPhone').value = '';
+            document.getElementById('authPw').value = '';
+            document.getElementById('authName').value = '';
+            changeAuthMode('login'); 
+        }
+
+        function changeAuthMode(mode) {
+            authMode = mode;
+            const title = document.getElementById('modalTitle');
+            const nameInput = document.getElementById('authName');
+            const pwInput = document.getElementById('authPw');
+            const actionBtn = document.getElementById('authActionBtn');
+            const toggleMsg = document.getElementById('authToggleMsg');
+            const toggleBtn = document.getElementById('authToggleBtn');
+            const findPwWrap = document.getElementById('findPwWrap');
+
+            if (authMode === 'login') {
+                title.innerText = '로그인';
+                nameInput.style.display = 'none';
+                pwInput.style.display = 'block';
+                actionBtn.innerText = '로그인';
+                toggleMsg.innerText = '계정이 없으신가요?';
+                toggleBtn.innerText = '회원가입';
+                toggleBtn.onclick = () => changeAuthMode('signup');
+                findPwWrap.style.display = 'block';
+            } else if (authMode === 'signup') {
+                title.innerText = '회원가입';
+                nameInput.style.display = 'block';
+                nameInput.placeholder = '사용하실 닉네임 (이름)';
+                pwInput.style.display = 'block';
+                actionBtn.innerText = '가입하기';
+                toggleMsg.innerText = '이미 계정이 있으신가요?';
+                toggleBtn.innerText = '로그인';
+                toggleBtn.onclick = () => changeAuthMode('login');
+                findPwWrap.style.display = 'none';
+            } else if (authMode === 'findpw') {
+                title.innerText = '비밀번호 찾기';
+                nameInput.style.display = 'block';
+                nameInput.placeholder = '가입 시 등록한 이름';
+                pwInput.style.display = 'none';
+                actionBtn.innerText = '비밀번호 확인';
+                toggleMsg.innerText = '비밀번호가 기억나셨나요?';
+                toggleBtn.innerText = '로그인';
+                toggleBtn.onclick = () => changeAuthMode('login');
+                findPwWrap.style.display = 'none';
+            }
+        }
+
+        function executeAuth() {
+            const phone = document.getElementById('authPhone').value.trim();
+            const pw = document.getElementById('authPw').value.trim();
+            const name = document.getElementById('authName').value.trim();
+            
+            if (!phone) return alert("휴대폰 번호를 입력해주세요.");
+            
+            let users = JSON.parse(localStorage.getItem("mockUsers")) || [];
+
+            if (authMode === 'login') {
+                if (!pw) return alert("비밀번호를 입력해주세요.");
+                const user = users.find(u => u.phone === phone && u.pw === pw);
+                if (user) {
+                    localStorage.setItem("currentUser", JSON.stringify({ phone: user.phone, name: user.name }));
+                    currentUser = { phone: user.phone, name: user.name };
+                    alert(`환영합니다, ${user.name}님!`);
+                    closeModal();
+                    updateLoginUI();
+                } else {
+                    alert("휴대폰 번호 또는 비밀번호가 일치하지 않습니다.");
+                }
+            } else if (authMode === 'signup') {
+                if (!pw) return alert("비밀번호를 입력해주세요.");
+                if (!name) return alert("사용하실 닉네임(이름)을 입력해주세요.");
+                if (users.find(u => u.phone === phone)) return alert("이미 가입된 휴대폰 번호입니다.");
+                
+                users.push({ phone, pw, name });
+                localStorage.setItem("mockUsers", JSON.stringify(users));
+                alert("회원가입이 완료되었습니다. 로그인해주세요.");
+                changeAuthMode('login');
+            } else if (authMode === 'findpw') {
+                if (!name) return alert("이름을 입력해주세요.");
+                const user = users.find(u => u.phone === phone && u.name === name);
+                if (user) {
+                    alert(`회원님의 비밀번호는 [ ${user.pw} ] 입니다.\n보안을 위해 확인 후 바로 로그인해주세요.`);
+                    changeAuthMode('login');
+                } else {
+                    alert("입력하신 정보와 일치하는 계정을 찾을 수 없습니다.");
+                }
+            }
+        }
+
+        function logout() {
+            if (confirm("로그아웃 하시겠습니까?")) {
+                localStorage.removeItem("currentUser");
+                currentUser = null;
+                updateLoginUI();
+            }
+        }
+
+        function updateLoginUI() {
+            const uiArea = document.getElementById('userInfoArea');
+            const postAuthor = document.getElementById('postAuthor');
+
+            if (currentUser) {
+                uiArea.innerHTML = `<span style="font-weight:700; color:#1e293b;">😊 ${currentUser.name}님</span> 
+                                    <button class="auth-btn" style="background:#ef4444; margin-left:10px;" onclick="logout()">로그아웃</button>`;
+                postAuthor.value = currentUser.name; // 로그인 시 닉네임 자동 입력
+            } else {
+                uiArea.innerHTML = `<button class="auth-btn" onclick="openModal('login')">로그인</button>`;
+                postAuthor.value = "게스트"; // 로그아웃 시 '게스트'로 변경
+            }
+        }
+
+        // ==========================================
+        // 기타 도구 및 게시판 로직 (누구나 이용 가능)
+        // ==========================================
         function initTools() {
             let tools = JSON.parse(localStorage.getItem("smartTools"));
             if (!tools) {
                 tools = [
-                    { id: 1, category: 'blue', title: '교육공무직 인사관리 시스템', desc: '연차 조정, 퇴직금 계산, 인사 기록을 한 번에 통합 관리하는 실무용 Access VBA 시스템입니다.', link: '교육공무직인사관리_v2.accdb', badgeText: '인사 · 복무' },
-                    { id: 2, category: 'green', title: '온비드 공용차량 매각 서식', desc: '내용연수를 초과한 차량의 14일 관리전환 소요조회 및 온비드 공매 처분 표준 기안문', link: '#', badgeText: '재산 · 회계' },
-                    { id: 3, category: 'pink', title: '여백 없는 민방위 교육 HWP', desc: '프린터 여백 없이 꽉 찬 고품질 책자 표지를 출력하기 위한 아래한글(HWPX) 바탕쪽 템플릿', link: '#', badgeText: '문서 · 디자인' }
+                    { id: 1, category: 'blue', title: '교육공무직 인사관리 시스템', desc: '연차 조정, 퇴직금 계산, 인사 기록을 한 번에 통합 관리', link: '교육공무직인사관리_v2.accdb', badgeText: '인사 · 복무' },
+                    { id: 2, category: 'green', title: '온비드 공용차량 매각 서식', desc: '내용연수를 초과한 차량 관리전환 및 공매 처분', link: '#', badgeText: '재산 · 회계' }
                 ];
                 localStorage.setItem("smartTools", JSON.stringify(tools));
             }
@@ -197,52 +354,37 @@
             const grid = document.getElementById("cardGrid");
             grid.innerHTML = "";
             let tools = JSON.parse(localStorage.getItem("smartTools")) || [];
-
             tools.forEach(tool => {
                 const card = document.createElement("a");
                 card.href = tool.link;
                 card.className = `card bg-${tool.category}`;
-                
                 card.innerHTML = `
-                    <button class="card-delete" onclick="deleteTool(event, ${tool.id})" title="도구 삭제">✖</button>
+                    <button class="card-delete" onclick="deleteTool(event, ${tool.id})">✖</button>
                     <div class="badge ${tool.category}">${tool.badgeText}</div>
                     <h4 class="card-title">${tool.title}</h4>
-                    <p class="card-desc">${tool.desc}</p>
-                `;
+                    <p class="card-desc">${tool.desc}</p>`;
                 grid.appendChild(card);
             });
         }
 
         function addTool() {
+            // 로그인 체크 삭제 (누구나 등록 가능)
             const categorySelect = document.getElementById("toolCategory");
             const titleInput = document.getElementById("toolTitle");
             const linkInput = document.getElementById("toolLink");
             const descInput = document.getElementById("toolDesc");
 
-            if (!titleInput.value.trim() || !linkInput.value.trim()) {
-                return alert("도구 이름과 링크(파일명)를 모두 입력해주세요!");
-            }
+            if (!titleInput.value.trim() || !linkInput.value.trim()) return alert("도구 이름과 링크를 모두 입력해주세요!");
 
-            // 추가된 분류 항목에 맞게 배지 텍스트 지정 로직 업데이트
             let badgeText = "기타 · 공통";
             if(categorySelect.value === "blue") badgeText = "인사 · 복무";
             if(categorySelect.value === "purple") badgeText = "예산 · 기획";
             if(categorySelect.value === "orange") badgeText = "계약 · 지출";
             if(categorySelect.value === "green") badgeText = "재산 · 회계";
             if(categorySelect.value === "pink") badgeText = "문서 · 디자인";
-            if(categorySelect.value === "gray") badgeText = "기타 · 공통";
-
-            const newTool = {
-                id: Date.now(),
-                category: categorySelect.value,
-                title: titleInput.value,
-                link: linkInput.value,
-                desc: descInput.value || "설명이 없습니다.",
-                badgeText: badgeText
-            };
 
             let tools = JSON.parse(localStorage.getItem("smartTools")) || [];
-            tools.push(newTool);
+            tools.push({ id: Date.now(), category: categorySelect.value, title: titleInput.value, link: linkInput.value, desc: descInput.value, badgeText: badgeText });
             localStorage.setItem("smartTools", JSON.stringify(tools));
 
             titleInput.value = ""; linkInput.value = ""; descInput.value = "";
@@ -251,8 +393,8 @@
 
         function deleteTool(event, id) {
             event.preventDefault(); 
-            
-            if (confirm("이 업무 도구를 목록에서 삭제하시겠습니까? (실제 파일이 지워지지는 않습니다)")) {
+            // 로그인 체크 삭제 (누구나 삭제 가능)
+            if (confirm("이 업무 도구를 목록에서 삭제하시겠습니까?")) {
                 let tools = JSON.parse(localStorage.getItem("smartTools")) || [];
                 tools = tools.filter(tool => tool.id !== id);
                 localStorage.setItem("smartTools", JSON.stringify(tools));
@@ -273,15 +415,19 @@
         function getStorageKey() { return currentTab === 'free' ? 'freeBoardData' : 'qaBoardData'; }
 
         function addPost() {
+            // 로그인 체크 삭제 (누구나 작성 가능)
             const titleInput = document.getElementById("postTitle");
             const authorInput = document.getElementById("postAuthor");
             const selectedBoard = document.getElementById("boardSelect").value;
             
             if (!titleInput.value.trim()) return alert("제목을 입력해주세요!");
+            
+            // 사용자가 입력한 작성자 이름 가져오기 (비어있으면 익명 처리)
+            const authorName = authorInput.value.trim() || "익명";
 
             const today = new Date();
             const dateStr = `${today.getMonth() + 1}.${today.getDate()}`;
-            const newPost = { id: Date.now(), title: titleInput.value, author: authorInput.value, date: dateStr, likes: 0 };
+            const newPost = { id: Date.now(), title: titleInput.value, author: authorName, date: dateStr, likes: 0 };
 
             const storageKey = selectedBoard === 'free' ? 'freeBoardData' : 'qaBoardData';
             let posts = JSON.parse(localStorage.getItem(storageKey)) || [];
@@ -304,6 +450,7 @@
         }
 
         function deletePost(id) {
+            // 로그인 체크 삭제 (누구나 삭제 가능)
             if (confirm("이 게시글을 삭제하시겠습니까?")) {
                 const storageKey = getStorageKey();
                 let posts = JSON.parse(localStorage.getItem(storageKey)) || [];
@@ -316,17 +463,14 @@
         function loadPosts() {
             const boardBody = document.getElementById("boardBody");
             boardBody.innerHTML = ""; 
-            const storageKey = getStorageKey();
-            let posts = JSON.parse(localStorage.getItem(storageKey)) || [];
+            let posts = JSON.parse(localStorage.getItem(getStorageKey())) || [];
 
             if (posts.length === 0) {
-                const boardName = currentTab === 'free' ? '자유게시판' : '묻고 답하기';
-                boardBody.innerHTML = `<tr><td colspan="5" class="center" style="padding:40px; color:#94a3b8;">${boardName}에 등록된 글이 없습니다.</td></tr>`;
+                boardBody.innerHTML = `<tr><td colspan="5" class="center" style="padding:40px; color:#94a3b8;">등록된 글이 없습니다.</td></tr>`;
                 return;
             }
 
             posts.forEach((post, index) => {
-                const likes = post.likes || 0;
                 const titlePrefix = currentTab === 'qa' ? '<span style="color:#ec4899; font-weight:900; margin-right:5px;">Q.</span>' : '';
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
@@ -335,7 +479,7 @@
                     <td style="font-weight: 600;">${post.author}</td>
                     <td class="center">${post.date}</td>
                     <td class="center">
-                        <button class="btn-like" onclick="likePost(${post.id})">👍 ${likes}</button>
+                        <button class="btn-like" onclick="likePost(${post.id})">👍 ${post.likes || 0}</button>
                         <button class="btn-delete" onclick="deletePost(${post.id})">삭제</button>
                     </td>
                 `;
