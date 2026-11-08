@@ -1,0 +1,415 @@
+
+            const timeString = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateString = now.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+            document.getElementById('liveClock').innerText = `${dateString} ${timeString}`;
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        function filterCards() {
+            const query = document.getElementById("searchInput").value.toLowerCase();
+            document.querySelectorAll(".card").forEach(card => {
+                const title = card.querySelector(".card-title").innerText.toLowerCase();
+                const desc = card.querySelector(".card-desc").innerText.toLowerCase();
+                card.style.display = (title.includes(query) || desc.includes(query)) ? "flex" : "none";
+            });
+        }
+
+        // 2. 인증(로그인) 시스템
+        let authMode = 'login'; 
+        let currentUser = JSON.parse(localStorage.getItem("currentUser")); 
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateLoginUI();
+            loadTools();
+            loadPosts(); 
+        });
+
+        function openModal(mode) { document.getElementById('authModal').style.display = 'flex'; changeAuthMode(mode); }
+        function closeModal() { 
+            document.getElementById('authModal').style.display = 'none'; 
+            document.getElementById('authPhone').value = ''; 
+            document.getElementById('authPw').value = ''; 
+            document.getElementById('authPwConfirm').value = ''; 
+            document.getElementById('authName').value = ''; 
+            changeAuthMode('login'); 
+        }
+
+        function changeAuthMode(mode) {
+            authMode = mode;
+            const title = document.getElementById('modalTitle');
+            const nameInput = document.getElementById('authName');
+            const pwInput = document.getElementById('authPw');
+            const pwConfirmInput = document.getElementById('authPwConfirm'); 
+            const actionBtn = document.getElementById('authActionBtn');
+            const toggleMsg = document.getElementById('authToggleMsg');
+            const toggleBtn = document.getElementById('authToggleBtn');
+            const findPwWrap = document.getElementById('findPwWrap');
+
+            if (authMode === 'login') {
+                title.innerText = '로그인'; 
+                nameInput.style.display = 'none'; 
+                pwInput.style.display = 'block'; 
+                pwConfirmInput.style.display = 'none'; 
+                actionBtn.innerText = '로그인'; 
+                toggleMsg.innerText = '계정이 없으신가요?'; 
+                toggleBtn.innerText = '회원가입'; 
+                toggleBtn.onclick = () => changeAuthMode('signup'); 
+                findPwWrap.style.display = 'block';
+            } else if (authMode === 'signup') {
+                title.innerText = '회원가입'; 
+                nameInput.style.display = 'block'; 
+                nameInput.placeholder = '사용하실 닉네임 (이름)'; 
+                pwInput.style.display = 'block'; 
+                pwConfirmInput.style.display = 'block'; 
+                actionBtn.innerText = '가입하기'; 
+                toggleMsg.innerText = '이미 계정이 있으신가요?'; 
+                toggleBtn.innerText = '로그인'; 
+                toggleBtn.onclick = () => changeAuthMode('login'); 
+                findPwWrap.style.display = 'none';
+            } else if (authMode === 'findpw') {
+                title.innerText = '비밀번호 찾기'; 
+                nameInput.style.display = 'block'; 
+                nameInput.placeholder = '가입 시 등록한 이름'; 
+                pwInput.style.display = 'none'; 
+                pwConfirmInput.style.display = 'none'; 
+                actionBtn.innerText = '비밀번호 확인'; 
+                toggleMsg.innerText = '비밀번호가 기억나셨나요?'; 
+                toggleBtn.innerText = '로그인'; 
+                toggleBtn.onclick = () => changeAuthMode('login'); 
+                findPwWrap.style.display = 'none';
+            }
+        }
+
+        async function executeAuth() {
+            const phone = document.getElementById('authPhone').value.trim();
+            const pw = document.getElementById('authPw').value.trim();
+            const pwConfirm = document.getElementById('authPwConfirm').value.trim(); 
+            const name = document.getElementById('authName').value.trim();
+            
+            if (!phone) return alert("휴대폰 번호를 입력해주세요.");
+            
+            try {
+                if (authMode === 'login') {
+                    if (!pw) return alert("비밀번호를 입력해주세요.");
+                    const snapshot = await db.collection("users").where("phone", "==", phone).where("pw", "==", pw).get();
+                    if (!snapshot.empty) {
+                        const user = snapshot.docs[0].data();
+                        localStorage.setItem("currentUser", JSON.stringify({ phone: user.phone, name: user.name }));
+                        currentUser = { phone: user.phone, name: user.name };
+                        alert(`환영합니다, ${user.name}님!`);
+                        closeModal();
+                        updateLoginUI();
+                        loadTools(); loadPosts();
+                    } else {
+                        alert("휴대폰 번호 또는 비밀번호가 일치하지 않습니다.");
+                    }
+                } else if (authMode === 'signup') {
+                    if (!pw || !pwConfirm || !name) return alert("비밀번호와 닉네임을 모두 입력해주세요.");
+                    if (pw !== pwConfirm) return alert("비밀번호가 서로 일치하지 않습니다. 다시 한 번 확인해주세요."); 
+                    
+                    const snapshot = await db.collection("users").where("phone", "==", phone).get();
+                    if (!snapshot.empty) return alert("이미 가입된 휴대폰 번호입니다.");
+                    
+                    await db.collection("users").add({ phone: phone, pw: pw, name: name });
+                    alert("회원가입이 완료되었습니다. 로그인해주세요.");
+                    changeAuthMode('login');
+                } else if (authMode === 'findpw') {
+                    if (!name) return alert("이름을 입력해주세요.");
+                    const snapshot = await db.collection("users").where("phone", "==", phone).where("name", "==", name).get();
+                    if (!snapshot.empty) {
+                        alert(`회원님의 비밀번호는 [ ${snapshot.docs[0].data().pw} ] 입니다.`);
+                        changeAuthMode('login');
+                    } else {
+                        alert("입력하신 정보와 일치하는 계정을 찾을 수 없습니다.");
+                    }
+                }
+            } catch (error) {
+                console.error("에러 발생:", error);
+                alert("서버 통신 중 오류가 발생했습니다.");
+            }
+        }
+
+        function logout() {
+            if (confirm("로그아웃 하시겠습니까?")) {
+                localStorage.removeItem("currentUser");
+                currentUser = null;
+                updateLoginUI();
+                loadTools(); loadPosts();
+            }
+        }
+
+        function updateLoginUI() {
+            const uiArea = document.getElementById('userInfoArea');
+            const postAuthor = document.getElementById('postAuthor');
+            const toolGuestPw = document.getElementById('toolGuestPw');
+            const postGuestPw = document.getElementById('postGuestPw');
+            
+            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+
+            if (currentUser) {
+                const badge = isAdmin ? `<span class="admin-badge">ADMIN</span>` : "";
+                uiArea.innerHTML = `<span style="font-weight:700; color:#1e293b;">😊 ${currentUser.name}님 ${badge}</span> 
+                                    <button class="auth-btn" style="background:#ef4444; margin-left:10px;" onclick="logout()">로그아웃</button>`;
+                postAuthor.value = currentUser.name;
+                postAuthor.readOnly = true;
+                postAuthor.style.background = "#f1f5f9";
+                
+                toolGuestPw.style.display = 'none';
+                postGuestPw.style.display = 'none';
+            } else {
+                uiArea.innerHTML = `<button class="auth-btn" onclick="openModal('login')">로그인</button>`;
+                postAuthor.value = "게스트";
+                postAuthor.readOnly = false;
+                postAuthor.style.background = "white";
+                
+                toolGuestPw.style.display = 'inline-block';
+                postGuestPw.style.display = 'inline-block';
+                toolGuestPw.value = ""; postGuestPw.value = "";
+            }
+        }
+
+        // 3. 스마트 업무 도구 관리 (소유권 및 관리자 기능 적용)
+        async function loadTools() {
+            const grid = document.getElementById("cardGrid");
+            grid.innerHTML = "로딩 중...";
+            const snapshot = await db.collection("smartTools").orderBy("createdAt", "desc").get();
+            grid.innerHTML = "";
+            
+            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+
+            snapshot.forEach(doc => {
+                const tool = doc.data();
+                const isOwner = currentUser && currentUser.phone === tool.authorPhone;
+                const isGuestPost = tool.authorPhone === "guest";
+
+                let controlBtns = `<div class="card-controls">`;
+                
+                // 관리자용 수정 버튼
+                if (isAdmin) {
+                    controlBtns += `<button class="control-btn btn-edit" onclick="editTool(event, '${doc.id}', '${tool.title.replace(/'/g, "\\'")}', '${tool.link.replace(/'/g, "\\'")}', '${tool.desc.replace(/'/g, "\\'")}')" title="도구 수정">✏️</button>`;
+                }
+                // 본인 등록, 관리자, 또는 게스트 자료일 경우 삭제 버튼 표시
+                if (isAdmin || isOwner || isGuestPost) {
+                    controlBtns += `<button class="control-btn btn-del" onclick="deleteTool(event, '${doc.id}', '${tool.authorPhone}', '${tool.guestPw}')" title="도구 삭제">✖</button>`;
+                }
+                controlBtns += `</div>`;
+
+                const card = document.createElement("a");
+                card.href = tool.link;
+                card.className = `card bg-${tool.category}`;
+                card.innerHTML = `
+                    ${controlBtns}
+                    <div class="badge ${tool.category}">${tool.badgeText}</div>
+                    <h4 class="card-title">${tool.title}</h4>
+                    <p class="card-desc">${tool.desc}</p>`;
+                grid.appendChild(card);
+            });
+        }
+
+        async function addTool() {
+            const categorySelect = document.getElementById("toolCategory");
+            const titleInput = document.getElementById("toolTitle");
+            const linkInput = document.getElementById("toolLink");
+            const descInput = document.getElementById("toolDesc");
+            const guestPwInput = document.getElementById("toolGuestPw");
+
+            if (!titleInput.value.trim() || !linkInput.value.trim()) return alert("도구 이름과 링크를 모두 입력해주세요!");
+            if (!currentUser && !guestPwInput.value.trim()) return alert("게스트 등록 시 삭제용 비밀번호를 입력해주세요.");
+
+            let badgeText = "기타 · 공통";
+            if(categorySelect.value === "blue") badgeText = "인사 · 복무";
+            if(categorySelect.value === "purple") badgeText = "예산 · 기획";
+            if(categorySelect.value === "orange") badgeText = "계약 · 지출";
+            if(categorySelect.value === "green") badgeText = "재산 · 회계";
+            if(categorySelect.value === "pink") badgeText = "문서 · 디자인";
+
+            await db.collection("smartTools").add({
+                category: categorySelect.value,
+                title: titleInput.value,
+                link: linkInput.value,
+                desc: descInput.value || "설명이 없습니다.",
+                badgeText: badgeText,
+                authorPhone: currentUser ? currentUser.phone : "guest",
+                guestPw: currentUser ? null : guestPwInput.value.trim(),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            titleInput.value = ""; linkInput.value = ""; descInput.value = ""; guestPwInput.value = "";
+            loadTools(); 
+        }
+
+        async function editTool(event, docId, currentTitle, currentLink, currentDesc) {
+            event.preventDefault(); // 카드 링크 클릭 방지
+            const newTitle = prompt("수정할 도구 이름을 입력하세요:", currentTitle);
+            if (newTitle === null) return;
+            const newLink = prompt("수정할 파일명 또는 링크를 입력하세요:", currentLink);
+            if (newLink === null) return;
+            const newDesc = prompt("수정할 상세 설명을 입력하세요:", currentDesc);
+            if (newDesc === null) return;
+            
+            await db.collection("smartTools").doc(docId).update({ title: newTitle, link: newLink, desc: newDesc });
+            loadTools();
+        }
+
+        async function deleteTool(event, docId, authorPhone, guestPwStr) {
+            event.preventDefault(); 
+            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            const isOwner = currentUser && currentUser.phone === authorPhone;
+
+            if (isAdmin || isOwner) {
+                if (confirm("이 업무 도구를 삭제하시겠습니까?")) {
+                    await db.collection("smartTools").doc(docId).delete();
+                    loadTools();
+                }
+            } else if (authorPhone === "guest") {
+                const inputPw = prompt("게스트 등록 자료입니다. 삭제용 비밀번호를 입력하세요.");
+                if (inputPw === guestPwStr) {
+                    await db.collection("smartTools").doc(docId).delete();
+                    loadTools();
+                } else if (inputPw !== null) {
+                    alert("비밀번호가 일치하지 않습니다.");
+                }
+            } else {
+                alert("삭제 권한이 없습니다. (본인이 등록한 자료만 삭제 가능)");
+            }
+        }
+
+        // 4. 커뮤니티 및 자료실 로직 (소유권 및 관리자 기능 적용)
+        let currentTab = 'freeBoard';
+
+        function switchTab(tabName) {
+            currentTab = tabName + 'Board'; 
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            document.getElementById('boardSelect').value = tabName;
+            
+            const fileLinkInput = document.getElementById('postFileLink');
+            const titleInput = document.getElementById('postTitle');
+            if(tabName === 'data') {
+                fileLinkInput.style.display = 'block';
+                titleInput.placeholder = "자료의 이름과 설명, 사용 노하우 등을 작성해주세요.";
+            } else {
+                fileLinkInput.style.display = 'none';
+                fileLinkInput.value = '';
+                titleInput.placeholder = "새로운 업무 노하우나 질문을 자유롭게 작성해주세요!";
+            }
+            loadPosts();
+        }
+
+        async function addPost() {
+            const titleInput = document.getElementById("postTitle");
+            const fileLinkInput = document.getElementById("postFileLink");
+            const authorInput = document.getElementById("postAuthor");
+            const guestPwInput = document.getElementById("postGuestPw");
+            
+            if (!titleInput.value.trim()) return alert("내용을 입력해주세요!");
+            if (!currentUser && !guestPwInput.value.trim()) return alert("게스트 작성 시 삭제용 비밀번호를 입력해주세요.");
+            
+            const authorName = authorInput.value.trim() || "익명";
+            const today = new Date();
+            const dateStr = `${today.getMonth() + 1}.${today.getDate()}`;
+
+            const postData = {
+                title: titleInput.value,
+                author: authorName,
+                authorPhone: currentUser ? currentUser.phone : "guest",
+                guestPw: currentUser ? null : guestPwInput.value.trim(),
+                date: dateStr,
+                likes: 0,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            if (currentTab === 'dataBoard' && fileLinkInput.value.trim()) {
+                postData.fileLink = fileLinkInput.value.trim();
+            }
+
+            await db.collection(currentTab).add(postData);
+            titleInput.value = ""; fileLinkInput.value = ""; guestPwInput.value = "";
+            loadPosts();
+        }
+
+        async function likePost(docId) {
+            await db.collection(currentTab).doc(docId).update({ likes: firebase.firestore.FieldValue.increment(1) });
+            loadPosts();
+        }
+
+        async function editPost(docId, currentTitle, currentFileLink) {
+            const newTitle = prompt("수정할 내용(제목)을 입력하세요:", currentTitle);
+            if (newTitle === null) return;
+            const updateData = { title: newTitle };
+            
+            if (currentTab === 'dataBoard') {
+                const newLink = prompt("수정할 파일 링크를 입력하세요:", currentFileLink || "");
+                if (newLink !== null) updateData.fileLink = newLink;
+            }
+            await db.collection(currentTab).doc(docId).update(updateData);
+            loadPosts();
+        }
+
+        async function deletePost(docId, authorPhone, guestPwStr) {
+            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            const isOwner = currentUser && currentUser.phone === authorPhone;
+
+            if (isAdmin || isOwner) {
+                if (confirm("이 게시글을 삭제하시겠습니까?")) {
+                    await db.collection(currentTab).doc(docId).delete();
+                    loadPosts();
+                }
+            } else if (authorPhone === "guest") {
+                const inputPw = prompt("게스트 작성 글입니다. 삭제용 비밀번호를 입력하세요.");
+                if (inputPw === guestPwStr) {
+                    await db.collection(currentTab).doc(docId).delete();
+                    loadPosts();
+                } else if (inputPw !== null) {
+                    alert("비밀번호가 일치하지 않습니다.");
+                }
+            } else {
+                alert("본인이 작성한 글만 삭제할 수 있습니다.");
+            }
+        }
+
+        async function loadPosts() {
+            const boardBody = document.getElementById("boardBody");
+            boardBody.innerHTML = `<tr><td colspan="5" class="center">데이터를 불러오는 중입니다...</td></tr>`; 
+            const snapshot = await db.collection(currentTab).orderBy("createdAt", "desc").get();
+            boardBody.innerHTML = ""; 
+
+            if (snapshot.empty) {
+                boardBody.innerHTML = `<tr><td colspan="5" class="center" style="padding:40px; color:#94a3b8;">등록된 데이터가 없습니다.</td></tr>`;
+                return;
+            }
+
+            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            let index = snapshot.size;
+
+            snapshot.forEach(doc => {
+                const post = doc.data();
+                const titlePrefix = currentTab === 'qaBoard' ? '<span style="color:#ec4899; font-weight:900; margin-right:5px;">Q.</span>' : '';
+                const fileBadgeHTML = post.fileLink ? `<br><a href="${post.fileLink}" target="_blank" class="file-badge">💾 첨부파일 열기</a>` : '';
+                
+                const isOwner = currentUser && currentUser.phone === post.authorPhone;
+                const isGuestPost = post.authorPhone === "guest";
+                
+                let adminBtns = '';
+                if (isAdmin) adminBtns += `<button class="btn-edit" onclick="editPost('${doc.id}', '${post.title.replace(/'/g, "\\'")}', '${(post.fileLink || '').replace(/'/g, "\\'")}')">수정</button>`;
+                if (isAdmin || isOwner || isGuestPost) adminBtns += `<button class="btn-delete" onclick="deletePost('${doc.id}', '${post.authorPhone}', '${post.guestPw}')">삭제</button>`;
+
+                const badge = (isAdmin && post.authorPhone === ADMIN_PHONE) ? `<span class="admin-badge">A</span>` : '';
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${index--}</td>
+                    <td style="font-weight: 700; color: #1e293b; white-space: pre-wrap; line-height: 1.6;">${titlePrefix}${post.title} ${fileBadgeHTML}</td>
+                    <td style="font-weight: 600;">${post.author} ${badge}</td>
+                    <td class="center">${post.date}</td>
+                    <td class="center">
+                        <button class="btn-like" onclick="likePost('${doc.id}')">👍 ${post.likes || 0}</button>
+                        ${adminBtns}
+                    </td>
+                `;
+                boardBody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
