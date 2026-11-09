@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>조효식 허브 - 스마트 업무 플랫폼</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <style>
+        :root { 
+            --primary-bg: #f3f4f6; --text-main: #1f2937; --text-muted: #6b7280; --primary-color: #4f46e5;
+            --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-btn: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
+        }
+        body { margin: 0; font-family: 'Pretendard', sans-serif; background-color: var(--primary-bg); color: var(--text-main); line-height: 1.6; }
+        header { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-bottom: 2px solid #e5e7eb; padding: 0 40px; display: flex; justify-content: space-between; align-items: center; height: 70px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .logo { font-size: 24px; font-weight: 900; background: linear-gradient(to right, #f12711, #f5af19); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        #liveClock { font-weight: 700; color: #4f46e5; background: #e0e7ff; padding: 8px 15px; border-radius: 20px; font-size: 14px; }
+        .auth-btn { background: #1e293b; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: 'Pretendard', sans-serif; }
+        .auth-btn:hover { background: #0f172a; }
+        .hero { background: var(--gradient-hero); background-size: 200% 200%; animation: gradientMove 5s ease infinite; padding: 80px 20px; text-align: center; color: white; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        @keyframes gradientMove { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
+        .hero h2 { margin: 0 0 15px 0; font-size: 40px; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .hero p { margin: 0; font-size: 20px; opacity: 0.9; }
+        
+        /* 다시 상하 배치(초기 레이아웃)로 복구하며 적절한 너비 제한 */
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 3px solid #cbd5e1; padding-bottom: 10px; }
+        .section-header h3 { margin: 0; font-size: 26px; font-weight: 800; color: #1e293b; }
+        .search-box { padding: 10px 20px; width: 300px; border: 2px solid #a855f7; border-radius: 25px; font-size: 15px; outline: none; transition: 0.3s; }
+        .search-box:focus { box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
+        
+        .tool-form { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 40px; }
+        .tool-form-row { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; align-items: center; }
+        .tool-form input, .tool-form select { padding: 14px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Pretendard', sans-serif; font-size: 15px; box-sizing: border-box; transition: 0.2s; }
+        .tool-form input:focus, .tool-form select:focus { border-color: #a855f7; outline: none; }
+        
+        .link-input-group { flex: 1 1 300px; position: relative; display: flex; align-items: center; }
+        .link-input-label { position: absolute; left: 15px; top: -10px; background: white; padding: 0 5px; font-size: 12px; font-weight: 800; color: #10b981; }
+        #toolLink { width: 100%; padding-left: 40px; border-color: #10b981; background-color: #f0fdf4; font-weight: 700; color: #065f46; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        #toolLink::placeholder { color: #10b981; opacity: 0.7; font-weight: 500; }
+        #toolLink:focus { border-color: #059669; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2); }
+        .link-icon { position: absolute; left: 15px; font-size: 18px; pointer-events: none; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; margin-bottom: 60px; }
+        .card { position: relative; background: #ffffff; border-radius: 15px; padding: 25px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; text-decoration: none; color: inherit; border-top: 5px solid transparent; cursor: pointer; }
+        .card:hover { transform: translateY(-10px) scale(1.02); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15); }
+        .card.bg-blue { border-top-color: #3b82f6; } .card.bg-green { border-top-color: #10b981; } .card.bg-pink { border-top-color: #ec4899; } .card.bg-purple { border-top-color: #8b5cf6; } .card.bg-orange { border-top-color: #f97316; } .card.bg-gray { border-top-color: #64748b; }
+        .badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; color: white; margin-bottom: 15px; width: max-content; }
+        .badge.blue { background: #3b82f6; } .badge.green { background: #10b981; } .badge.pink { background: #ec4899; } .badge.purple { background: #8b5cf6; } .badge.orange { background: #f97316; } .badge.gray { background: #64748b; }
+        .card-title { font-size: 20px; font-weight: 800; margin: 0 0 12px 0; }
+        .card-desc { font-size: 15px; color: var(--text-muted); margin: 0 0 20px 0; flex-grow: 1; }
+        
+        .card-controls { position: absolute; top: 15px; right: 15px; display: flex; gap: 5px; display: none; }
+        .card:hover .card-controls { display: flex; }
+        .control-btn { background: rgba(0,0,0,0.05); color: #64748b; border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; }
+        .control-btn:hover { transform: scale(1.1); }
+        .btn-del:hover { background: #ef4444; color: white; }
+        .btn-edit:hover { background: #3b82f6; color: white; }
+        
+        /* 수직 탭 메뉴 스타일 유지 */
+        .board-section-wrapper { display: flex; gap: 20px; align-items: flex-start; }
+        .vertical-tabs { display: flex; flex-direction: column; gap: 10px; flex: 0 0 150px; }
+        .v-tab-btn { padding: 16px 15px; font-size: 15px; font-weight: 800; border: 2px solid transparent; background: #f8fafc; color: #64748b; border-radius: 12px; cursor: pointer; transition: 0.2s; text-align: left; position: relative; }
+        .v-tab-btn:hover { background: #e2e8f0; color: #334155; }
+        .v-tab-btn.active { background: #ffffff; color: #4f46e5; border-color: #4f46e5; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.15); }
+        /* 탭에 펜 아이콘 (작성기능 암시) 추가 */
+        .v-tab-btn::after { content: '✎'; position: absolute; right: 15px; opacity: 0.5; }
+        .v-tab-btn.active::after { opacity: 1; color: #4f46e5; }
+        
+        .board-container { background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); flex: 1; min-width: 0; border: 1px solid #e5e7eb; }
+        
+        /* 폼 초기화 시 애니메이션으로 부드럽게 나타나도록 변경 */
+        .board-form { display: none; flex-direction: column; align-items: stretch; margin-bottom: 25px; padding-bottom: 25px; border-bottom: 2px dashed #e2e8f0; animation: fadeInDown 0.3s ease; }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .board-form input, .board-form textarea { padding: 12px 15px; border: 2px solid #e5e7eb; border-radius: 8px; font-family: 'Pretendard', sans-serif; font-size: 15px; box-sizing: border-box; width: 100%; }
+        .board-form textarea.title-input { height: 90px; resize: vertical; line-height: 1.5; outline: none; transition: 0.2s; }
+        .board-form textarea.title-input:focus { border-color: #f43f5e; }
+        
+        #postFileLink { border-color: #4f46e5; background-color: #f8fafc; font-weight: 600; display: none; }
+
+        .btn-submit { background: var(--gradient-btn); color: white; border: none; padding: 14px 30px; border-radius: 8px; font-weight: 800; font-size: 16px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(255, 8, 68, 0.4); font-family: 'Pretendard', sans-serif; white-space: nowrap; }
+        .btn-submit:hover { transform: scale(1.05); }
+        
+        .board-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .board-table th, .board-table td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #f3f4f6; font-size: 14px; word-break: break-word; overflow-wrap: break-word; }
+        .board-table th { background: #f8fafc; font-weight: 800; color: #475569; border-radius: 8px; }
+        .board-table td.center, .board-table th.center { text-align: center; }
+        
+        .btn-like { background: #10b981; color: white; border: none; padding: 4px 0; width: 100%; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: block; }
+        .btn-edit, .btn-delete { padding: 4px 0; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; flex: 1; text-align: center; margin: 0; }
+        .btn-edit { background: #3b82f6; color: white; border: none; }
+        .btn-delete { background: #ef4444; color: white; border: none; }
+
+        .file-badge { display: inline-block; margin-top: 10px; padding: 5px 12px; background: #e0e7ff; color: #4f46e5; font-size: 12px; border-radius: 6px; text-decoration: none; font-weight: 800; border: 1px solid #c7d2fe; transition: 0.2s; }
+        .file-badge:hover { background: #4f46e5; color: white; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2); }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 320px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .modal-content h3 { margin: 0 0 20px 0; font-size: 22px; color: #1e293b; text-align: center; }
+        .modal-content input { width: 100%; padding: 12px; margin-bottom: 12px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
+        .modal-content input:focus { border-color: var(--primary-color); outline: none; }
+        .auth-toggle { text-align: center; font-size: 13px; margin-top: 15px; }
+        .auth-toggle a { color: var(--primary-color); text-decoration: none; font-weight: 700; cursor: pointer; }
+        .auth-toggle a:hover { text-decoration: underline; }
+        .admin-badge { background: #fef08a; color: #854d0e; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 900; margin-left: 5px; vertical-align: middle; display: inline-block; }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <header>
+        <a href="#" class="logo">🚀 조효식 허브 PRO</a>
+        <div class="header-right">
+            <div id="liveClock">시간 로딩중...</div>
+            <div id="userInfoArea">
+                <button class="auth-btn" onclick="openModal('login')">로그인</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="hero">
+        <h2>현장을 가장 잘 아는 사람이, 현장을 바꿉니다</h2>
+        <p>실무에 최적화된 차세대 업무 자동화 플랫폼 (클라우드 DB 연동)</p>
+    </div>
+
+    <!-- 1단 (상하) 레이아웃 복원 -->
+    <div class="container">
+        
+        <!-- 위쪽 영역: 스마트 업무 도구 -->
+        <div class="section-header">
+            <h3>💡 스마트 업무 도구</h3>
+            <input type="text" id="searchInput" class="search-box" placeholder="실행할 도구 이름을 검색하세요..." onkeyup="filterCards()" autocomplete="off">
+        </div>
+        
+        <div class="tool-form">
+            <div class="tool-form-row">
+                <select id="toolCategory" style="flex: 0 0 140px;">
+                    <option value="blue">인사 · 복무 (파랑)</option>
+                    <option value="purple">예산 · 기획 (보라)</option>
+                    <option value="orange">계약 · 지출 (주황)</option>
+                    <option value="green">재산 · 회계 (초록)</option>
+                    <option value="pink">문서 · 디자인 (핑크)</option>
+                    <option value="gray">기타 · 공통 (회색)</option>
+                </select>
+                <input type="text" id="toolTitle" style="flex: 1 1 180px;" placeholder="도구 이름 (예: 인사관리 시스템)" autocomplete="off">
+                
+                <div class="link-input-group">
+                    <span class="link-input-label">클라우드 파일 공유 링크</span>
+                    <span class="link-icon">🔗</span>
+                    <input type="text" id="toolLink" placeholder="다운로드 주소 (구글드라이브 등) 붙여넣기" autocomplete="off">
+                </div>
+            </div>
+            
+            <div class="tool-form-row" style="margin-bottom: 0;">
+                <input type="text" id="toolDesc" style="flex: 1 1 100%;" placeholder="도구에 대한 상세 설명을 입력하세요" autocomplete="off">
+                <input type="password" id="toolGuestPw" style="flex: 0 0 160px;" placeholder="🔒 비번(삭제 시 필요)" autocomplete="new-password">
+                <button class="btn-submit" onclick="addTool()" style="flex: 0 0 130px;">✨ 등록하기</button>
+            </div>
+        </div>
+        
+        <!-- 도구 카드 그리드 -->
+        <div class="grid" id="cardGrid"></div>
+
+        <!-- 아래쪽 영역: 커뮤니티 라운지 및 자료실 (수직 탭 유지) -->
+        <div class="section-header" style="margin-top: 20px; margin-bottom: 15px;">
+            <h3>💬 커뮤니티 라운지 및 자료실</h3>
+        </div>
+        
+        <div class="board-section-wrapper">
+            <!-- 수직 탭 메뉴 -->
+            <div class="vertical-tabs">
+                <button class="v-tab-btn active" id="tab-free" onclick="switchTab('free')">🎈 자유게시판</button>
+                <button class="v-tab-btn" id="tab-qa" onclick="switchTab('qa')">❓ 묻고 답하기</button>
+                <button class="v-tab-btn" id="tab-data" onclick="switchTab('data')">💾 자료 공유방</button>
+            </div>
+            
+            <!-- 게시판 컨텐츠 영역 -->
+            <div class="board-container">
+                
+                <!-- 게시판 탭 클릭 시에만 노출되는 동적 입력폼 (기본 숨김 유지) -->
+                <div class="board-form" id="postFormWrapper">
+                    <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                        <textarea id="postTitle" class="title-input" placeholder="새로운 업무 노하우나 질문을 자유롭게 작성해주세요!" autocomplete="off"></textarea>
+                        <input type="text" id="postFileLink" placeholder="🔗 공유 파일 주소 (구글드라이브 등 링크 붙여넣기)" autocomplete="off">
+                    </div>
+                    
+                    <div style="display: flex; gap: 8px; margin-top: 12px; width: 100%;">
+                        <input type="text" id="postAuthor" value="게스트" style="text-align: center; flex: 1; min-width: 0;" placeholder="이름" autocomplete="off">
+                        <input type="password" id="postGuestPw" style="text-align: center; flex: 1.2; min-width: 0;" placeholder="🔒 게스트 비번" autocomplete="new-password">
+                        <!-- 버튼 폭과 레이아웃 고려 -->
+                        <button class="btn-submit" id="postSubmitBtn" onclick="addPost()" style="flex: 1.5; padding: 14px 0; max-width: 250px;">✨ 등록하기</button>
+                    </div>
+                </div>
+                
+                <table class="board-table">
+                    <thead>
+                        <tr>
+                            <th width="50" class="center">번호</th>
+                            <th>제목 및 내용</th>
+                            <th width="80" class="center">작성자</th>
+                            <th width="80" class="center">날짜</th>
+                            <th width="80" class="center">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="boardBody"></tbody>
+                </table>
+            </div>
+        </div>
+        
+    </div> <!-- container 끝 -->
+
+    <!-- 모달창 -->
+    <div id="authModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modalTitle">로그인</h3>
+            <input type="text" id="authPhone" placeholder="휴대폰 번호 (예: 010-1234-5678)" autocomplete="off">
+            <input type="password" id="authPw" placeholder="비밀번호를 입력하세요" autocomplete="new-password">
+            <input type="password" id="authPwConfirm" placeholder="비밀번호 확인 (한 번 더 입력)" style="display:none;" autocomplete="new-password">
+            <input type="text" id="authName" placeholder="사용하실 닉네임 (이름)" style="display:none;" autocomplete="off">
+            
+            <button class="btn-submit" id="authActionBtn" style="width: 100%;" onclick="executeAuth()">로그인</button>
+            <div class="auth-toggle">
+                <span id="authToggleMsg">계정이 없으신가요?</span> <a onclick="changeAuthMode('signup')" id="authToggleBtn">회원가입</a>
+            </div>
+            <div class="auth-toggle" id="findPwWrap" style="margin-top: 5px;">
+                <a onclick="changeAuthMode('findpw')" style="color: #64748b; font-weight: normal;">비밀번호를 잊으셨나요?</a>
+            </div>
+            <button onclick="closeModal()" style="width: 100%; padding: 10px; margin-top: 15px; background: #e2e8f0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">닫기</button>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_PHONE = "010-9848-0309"; 
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw",
+            authDomain: "prolinu73-6c409.firebaseapp.com",
+            projectId: "prolinu73-6c409",
+            storageBucket: "prolinu73-6c409.firebasestorage.app",
+            messagingSenderId: "399358344473",
+            appId: "1:399358344473:web:491d5e74448b4f0f029988",
+            measurementId: "G-083RQKR8SQ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateString = now.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+            document.getElementById('liveClock').innerText = `${dateString} ${timeString}`;
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        function filterCards() {
+            const query = document.getElementById("searchInput").value.toLowerCase();
+            document.querySelectorAll(".card").forEach(card => {
+                const title = card.querySelector(".card-title").innerText.toLowerCase();
+                const desc = card.querySelector(".card-desc").innerText.toLowerCase();
+                card.style.display = (title.includes(query) || desc.includes(query)) ? "flex" : "none";
+            });
+        }
+
+        let authMode = 'login'; 
+        let currentUser = JSON.parse(localStorage.getItem("currentUser")); 
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateLoginUI();
+            loadTools();
+            loadPosts(); 
+        });
+
+        function openModal(mode) { document.getElementById('authModal').style.display = 'flex'; changeAuthMode(mode); }
+        function closeModal() { 
+            document.getElementById('authModal').style.display = 'none'; 
+            document.getElementById('authPhone').value = ''; 
+            document.getElementById('authPw').value = ''; 
+            document.getElementById('authPwConfirm').value = ''; 
+            document.getElementById('authName').value = ''; 
+            changeAuthMode('login'); 
+        }
+
+        function changeAuthMode(mode) {
+            authMode = mode;
+            const title = document.getElementById('modalTitle');
+            const nameInput = document.getElementById('authName');
+            const pwInput = document.getElementById('authPw');
+            const pwConfirmInput = document.getElementById('authPwConfirm'); 
+            const actionBtn = document.getElementById('authActionBtn');
+            const toggleMsg = document.getElementById('authToggleMsg');
+            const toggleBtn = document.getElementById('authToggleBtn');
+            const findPwWrap = document.getElementById('findPwWrap');
+
+            if (authMode === 'login') {
+                title.innerText = '로그인'; 
+                nameInput.style.display = 'none'; 
+                pwInput.style.display = 'block'; 
+                pwConfirmInput.style.display = 'none'; 
+                actionBtn.innerText = '로그인'; 
+                toggleMsg.innerText = '계정이 없으신가요?'; 
+                toggleBtn.innerText = '회원가입'; 
+                toggleBtn.onclick = () => changeAuthMode('signup'); 
+                findPwWrap.style.display = 'block';
+            } else if (authMode === 'signup') {
+                title.innerText = '회원가입'; 
+                nameInput.style.display = 'block'; 
+                nameInput.placeholder = '사용하실 닉네임 (이름)'; 
+                pwInput.style.display = 'block'; 
+                pwConfirmInput.style.display = 'block'; 
+                actionBtn.innerText = '가입하기'; 
+                toggleMsg.innerText = '이미 계정이 있으신가요?'; 
+                toggleBtn.innerText = '로그인'; 
+                toggleBtn.onclick = () => changeAuthMode('login'); 
+                findPwWrap.style.display = 'none';
+            } else if (authMode === 'findpw') {
+                title.innerText = '비밀번호 찾기'; 
+                nameInput.style.display = 'block'; 
+                nameInput.placeholder = '가입 시 등록한 이름'; 
+                pwInput.style.display = 'none'; 
+                pwConfirmInput.style.display = 'none'; 
+                actionBtn.innerText = '비밀번호 확인'; 
+                toggleMsg.innerText = '비밀번호가 기억나셨나요?'; 
+                toggleBtn.innerText = '로그인'; 
+                toggleBtn.onclick = () => changeAuthMode('login'); 
+                findPwWrap.style.display = 'none';
+            }
+        }
+
+        async function executeAuth() {
+            const phone = document.getElementById('authPhone').value.trim();
+            const pw = document.getElementById('authPw').value.trim();
+            const pwConfirm = document.getElementById('authPwConfirm').value.trim(); 
+            const name = document.getElementById('authName').value.trim();
+            
+            if (!phone) return alert("휴대폰 번호를 입력해주세요.");
+            
+            try {
+                if (authMode === 'login') {
+                    if (!pw) return alert("비밀번호를 입력해주세요.");
+                    const snapshot = await db.collection("users").where("phone", "==", phone).where("pw", "==", pw).get();
+                    if (!snapshot.empty) {
+                        const user = snapshot.docs[0].data();
+                        localStorage.setItem("currentUser", JSON.stringify({ phone: user.phone, name: user.name }));
+                        currentUser = { phone: user.phone, name: user.name };
+                        alert(`환영합니다, ${user.name}님!`);
+                        closeModal();
+                        updateLoginUI();
+                        loadTools(); loadPosts();
+                    } else {
+                        alert("휴대폰 번호 또는 비밀번호가 일치하지 않습니다.");
+                    }
+                } else if (authMode === 'signup') {
+                    if (!pw || !pwConfirm || !name) return alert("비밀번호와 닉네임을 모두 입력해주세요.");
+                    if (pw !== pwConfirm) return alert("비밀번호가 서로 일치하지 않습니다. 다시 한 번 확인해주세요."); 
+                    
+                    const snapshot = await db.collection("users").where("phone", "==", phone).get();
+                    if (!snapshot.empty) return alert("이미 가입된 휴대폰 번호입니다.");
+                    
+                    await db.collection("users").add({ phone: phone, pw: pw, name: name });
+                    alert("회원가입이 완료되었습니다. 로그인해주세요.");
+                    changeAuthMode('login');
+                } else if (authMode === 'findpw') {
+                    if (!name) return alert("이름을 입력해주세요.");
+                    const snapshot = await db.collection("users").where("phone", "==", phone).where("name", "==", name).get();
+                    if (!snapshot.empty) {
+                        alert(`회원님의 비밀번호는 [ ${snapshot.docs[0].data().pw} ] 입니다.`);
+                        changeAuthMode('login');
+                    } else {
+                        alert("입력하신 정보와 일치하는 계정을 찾을 수 없습니다.");
+                    }
+                }
+            } catch (error) {
+                console.error("에러 발생:", error);
+                alert("서버 통신 중 오류가 발생했습니다.");
+            }
+        }
+
+        function logout() {
+            if (confirm("로그아웃 하시겠습니까?")) {
+                localStorage.removeItem("currentUser");
+                currentUser = null;
+                updateLoginUI();
+                loadTools(); loadPosts();
+            }
+        }
+
+        function updateLoginUI() {
+            const uiArea = document.getElementById('userInfoArea');
+            const postAuthor = document.getElementById('postAuthor');
+            const toolGuestPw = document.getElementById('toolGuestPw');
+            const postGuestPw = document.getElementById('postGuestPw');
+            
+            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+
+            if (currentUser) {
+                const badge = isAdmin ? `<span class="admin-badge">ADMIN</span>` : "";
+                uiArea.innerHTML = `<span style="font-weight:700; color:#1e293b;">😊 ${currentUser.name}님 ${badge}</span> 
+                                    <button class="auth-btn" style="background:#ef4444; margin-left:10px;" onclick="logout()">로그아웃</button>`;
+                postAuthor.value = currentUser.name;
+                postAuthor.readOnly = true;
+                postAuthor.style.background = "#f1f5f9";
+                
+                toolGuestPw.style.display = 'none';
+                postGuestPw.style.display = 'none';
+            } else {
+                uiArea.innerHTML = `<button class="auth-btn" onclick="openModal('login')">로그인</button>`;
+                postAuthor.value = "게스트";
+                postAuthor.readOnly = false;
+                postAuthor.style.background = "white";
+                
+                toolGuestPw.style.display = 'inline-block';
+                postGuestPw.style.display = 'inline-block';
+                toolGuestPw.value = ""; postGuestPw.value = "";
+            }
+        }
+
+        async function loadTools() {
+            const grid = document.getElementById("cardGrid");
+            grid.innerHTML = "로딩 중...";
+            const snapshot = await db.collection("smartTools").orderBy("createdAt", "desc").get();
+            grid.innerHTML = "";
+            
+            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+
+            snapshot.forEach(doc => {
+                const tool = doc.data();
+                const isOwner = currentUser && currentUser.phone === tool.authorPhone;
+                const isGuestPost = tool.authorPhone === "guest";
+
+                let controlBtns = `<div class="card-controls">`;
+                
+                if (isAdmin) {
+                    controlBtns += `<button class="control-btn btn-edit" onclick="editTool(event, '${doc.id}', '${(tool.title || '').replace(/'/g, "\\'")}', '${(tool.link || '').replace(/'/g, "\\'")}', '${(tool.desc || '').replace(/'/g, "\\'")}')" title="도구 수정">✏️</button>`;
+                }
+                if (isAdmin || isOwner || isGuestPost) {
+                    controlBtns += `<button class="control-btn btn-del" onclick="deleteTool(event, '${doc.id}', '${tool.authorPhone}', '${tool.guestPw}')" title="도구 삭제">✖</button>`;
+                }
+                controlBtns += `</div>`;
+
+                const card = document.createElement("a");
+                if (tool.link && tool.link.startsWith('http')) {
+                    card.target = "_blank";
+                }
+                card.href = tool.link;
+                card.className = `card bg-${tool.category}`;
+                card.innerHTML = `
+                    ${controlBtns}
+                    <div class="badge ${tool.category}">${tool.badgeText}</div>
+                    <h4 class="card-title">${tool.title}</h4>
+                    <p class="card-desc">${tool.desc}</p>`;
+                grid.appendChild(card);
+            });
+        }
+
+        async function addTool() {
+            const categorySelect = document.getElementById("toolCategory");
+            const titleInput = document.getElementById("toolTitle");
+            const linkInput = document.getElementById("toolLink");
+            const descInput = document.getElementById("toolDesc");
+            const guestPwInput = document.getElementById("toolGuestPw");
+
+            if (!titleInput.value.trim() || !linkInput.value.trim()) return alert("도구 이름과 링크 주소를 모두 입력해주세요!");
+            if (!currentUser && !guestPwInput.value.trim()) return alert("게스트 등록 시 삭제용 비밀번호를 입력해주세요.");
+
+            let badgeText = "기타 · 공통";
+            if(categorySelect.value === "blue") badgeText = "인사 · 복무";
+            if(categorySelect.value === "purple") badgeText = "예산 · 기획";
+            if(categorySelect.value === "orange") badgeText = "계약 · 지출";
+            if(categorySelect.value === "green") badgeText = "재산 · 회계";
+            if(categorySelect.value === "pink") badgeText = "문서 · 디자인";
+
+            let finalLink = linkInput.value.trim();
+            if (finalLink && !finalLink.startsWith('http')) {
+                finalLink = 'http://' + finalLink;
+            }
+
+            await db.collection("smartTools").add({
+                category: categorySelect.value,
+                title: titleInput.value,
+                link: finalLink,
+                desc: descInput.value || "설명이 없습니다.",
+                badgeText: badgeText,
+                authorPhone: currentUser ? currentUser.phone : "guest",
+                guestPw: currentUser ? null : guestPwInput.value.trim(),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            titleInput.value = ""; linkInput.value = ""; descInput.value = ""; guestPwInput.value = "";
+            loadTools(); 
+        }
+
+        async function editTool(event, docId, currentTitle, currentLink, currentDesc) {
+            event.preventDefault(); 
+            const newTitle = prompt("수정할 도구 이름을 입력하세요:", currentTitle);
+            if (newTitle === null) return;
+            const newLink = prompt("수정할 공유 링크 주소를 입력하세요:", currentLink);
+            if (newLink === null) return;
+            const newDesc = prompt("수정할 상세 설명을 입력하세요:", currentDesc);
+            if (newDesc === null) return;
+            
+            await db.collection("smartTools").doc(docId).update({ title: newTitle, link: newLink, desc: newDesc });
+            loadTools();
+        }
+
+        async function deleteTool(event, docId, authorPhone, guestPwStr) {
+            event.preventDefault(); 
+            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            const isOwner = currentUser && currentUser.phone === authorPhone;
+
+            if (isAdmin || isOwner) {
+                if (confirm("이 업무 도구를 삭제하시겠습니까?")) {
+                    await db.collection("smartTools").doc(docId).delete();
+                    loadTools();
+                }
+            } else if (authorPhone === "guest") {
+                const inputPw = prompt("게스트 등록 자료입니다. 삭제용 비밀번호를 입력하세요.");
+                if (inputPw === guestPwStr) {
+                    await db.collection("smartTools").doc(docId).delete();
+                    loadTools();
+                } else if (inputPw !== null) {
+                    alert("비밀번호가 일치하지 않습니다.");
+                }
+            } else {
+                alert("삭제 권한이 없습니다. (본인이 등록한 자료만 삭제 가능)");
+            }
+        }
+
+        let currentTab = 'freeBoard';
+
+        function switchTab(tabName) {
+            const formWrapper = document.getElementById('postFormWrapper');
+            const targetTab = tabName + 'Board'; 
+            
+            // 같은 탭을 한번 더 클릭하면 입력 폼 숨기기 / 보이기 토글
+            if (currentTab === targetTab) {
+                formWrapper.style.display = formWrapper.style.display === 'none' ? 'flex' : 'none';
+                return;
+            } else {
+                formWrapper.style.display = 'flex';
+            }
+            
+            currentTab = targetTab;
+            
+            document.querySelectorAll('.v-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            
+            const fileLinkInput = document.getElementById('postFileLink');
+            const titleInput = document.getElementById('postTitle');
+            if(tabName === 'data') {
+                fileLinkInput.style.display = 'block';
+                titleInput.placeholder = "자료의 이름과 설명, 사용 노하우 등을 작성해주세요.";
+            } else {
+                fileLinkInput.style.display = 'none';
+                fileLinkInput.value = '';
+                titleInput.placeholder = "새로운 업무 노하우나 질문을 자유롭게 작성해주세요!";
+            }
+            loadPosts();
+        }
+
+        async function addPost() {
+            const titleInput = document.getElementById("postTitle");
+            const fileLinkInput = document.getElementById("postFileLink");
+            const authorInput = document.getElementById("postAuthor");
+            const guestPwInput = document.getElementById("postGuestPw");
+            
+            if (!titleInput.value.trim()) return alert("내용을 입력해주세요!");
+            if (!currentUser && !guestPwInput.value.trim()) return alert("게스트 작성 시 삭제용 비밀번호를 입력해주세요.");
+            
+            const authorName = authorInput.value.trim() || "익명";
+            const today = new Date();
+            const dateStr = `${today.getMonth() + 1}.${today.getDate()}`;
+
+            const postData = {
+                title: titleInput.value,
+                author: authorName,
+                authorPhone: currentUser ? currentUser.phone : "guest",
+                guestPw: currentUser ? null : guestPwInput.value.trim(),
+                date: dateStr,
+                likes: 0,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            if (currentTab === 'dataBoard' && fileLinkInput.value.trim()) {
+                let finalLink = fileLinkInput.value.trim();
+                if (!finalLink.startsWith('http')) finalLink = 'http://' + finalLink;
+                postData.fileLink = finalLink;
+            }
+
+            await db.collection(currentTab).add(postData);
+            titleInput.value = ""; fileLinkInput.value = ""; guestPwInput.value = "";
+            loadPosts();
+        }
+
+        async function likePost(docId) {
+            await db.collection(currentTab).doc(docId).update({ likes: firebase.firestore.FieldValue.increment(1) });
+            loadPosts();
+        }
+
+        async function editPost(docId, currentTitle, currentFileLink) {
+            const newTitle = prompt("수정할 내용(제목)을 입력하세요:", currentTitle);
+            if (newTitle === null) return;
+            const updateData = { title: newTitle };
+            
+            if (currentTab === 'dataBoard') {
+                const newLink = prompt("수정할 파일 링크를 입력하세요:", currentFileLink || "");
+                if (newLink !== null) updateData.fileLink = newLink;
+            }
+            await db.collection(currentTab).doc(docId).update(updateData);
+            loadPosts();
+        }
+
+        async function deletePost(docId, authorPhone, guestPwStr) {
+            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            const isOwner = currentUser && currentUser.phone === authorPhone;
+
+            if (isAdmin || isOwner) {
+                if (confirm("이 게시글을 삭제하시겠습니까?")) {
+                    await db.collection(currentTab).doc(docId).delete();
+                    loadPosts();
+                }
+            } else if (authorPhone === "guest") {
+                const inputPw = prompt("게스트 작성 글입니다. 삭제용 비밀번호를 입력하세요.");
+                if (inputPw === guestPwStr) {
+                    await db.collection(currentTab).doc(docId).delete();
+                    loadPosts();
+                } else if (inputPw !== null) {
+                    alert("비밀번호가 일치하지 않습니다.");
+                }
+            } else {
+                alert("본인이 작성한 글만 삭제할 수 있습니다.");
+            }
+        }
+
+        async function loadPosts() {
+            const boardBody = document.getElementById("boardBody");
+            boardBody.innerHTML = `<tr><td colspan="5" class="center">데이터를 불러오는 중입니다...</td></tr>`; 
+            const snapshot = await db.collection(currentTab).orderBy("createdAt", "desc").get();
+            boardBody.innerHTML = ""; 
+
+            if (snapshot.empty) {
+                boardBody.innerHTML = `<tr><td colspan="5" class="center" style="padding:40px; color:#94a3b8;">등록된 데이터가 없습니다.</td></tr>`;
+                return;
+            }
+
+            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            let index = snapshot.size;
+
+            snapshot.forEach(doc => {
+                const post = doc.data();
+                const titlePrefix = currentTab === 'qaBoard' ? '<span style="color:#ec4899; font-weight:900; margin-right:5px;">Q.</span>' : '';
+                const fileBadgeHTML = post.fileLink ? `<br><a href="${post.fileLink}" target="_blank" class="file-badge">💾 첨부파일 열기</a>` : '';
+                
+                const isOwner = currentUser && currentUser.phone === post.authorPhone;
+                const isGuestPost = post.authorPhone === "guest";
+                
+                let adminBtns = '';
+                if (isAdmin) adminBtns += `<button class="btn-edit" onclick="editPost('${doc.id}', '${(post.title || '').replace(/'/g, "\\'")}', '${(post.fileLink || '').replace(/'/g, "\\'")}')">수정</button>`;
+                if (isAdmin || isOwner || isGuestPost) adminBtns += `<button class="btn-delete" onclick="deletePost('${doc.id}', '${post.authorPhone}', '${post.guestPw}')">삭제</button>`;
+
+                const badge = (isAdmin && post.authorPhone === ADMIN_PHONE) ? `<span class="admin-badge">A</span>` : '';
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td class="center">${index--}</td>
+                    <td style="font-weight: 700; color: #1e293b; line-height: 1.5; font-size: 13px;">${titlePrefix}${post.title} ${fileBadgeHTML}</td>
+                    <td class="center" style="font-weight: 600; font-size: 12px;">${post.author} ${badge}</td>
+                    <td class="center" style="font-size: 11px; color: #64748b;">${post.date}</td>
+                    <td class="center">
+                        <button class="btn-like" onclick="likePost('${doc.id}')">👍 ${post.likes || 0}</button>
+                        <div style="display:flex; gap:4px; margin-top:4px; justify-content:center;">${adminBtns}</div>
+                    </td>
+                `;
+                boardBody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
