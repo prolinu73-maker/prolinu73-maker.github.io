@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예산집행현황 다차원 통계/관리 시스템</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --surface: #ffffff;
+            --background: #f8fafc;
+            --border: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --purple: #8b5cf6;
+            --teal: #14b8a6;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; }
+        body { background-color: var(--background); color: var(--text-main); padding: 20px; font-size: 13px; }
+        .container { max-width: 100%; margin: 0 auto; padding: 0 10px; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
+        h1 { font-size: 1.5rem; color: var(--primary); display: flex; align-items: center; gap: 8px;}
+        
+        button { padding: 8px 14px; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
+        button:hover { opacity: 0.9; transform: translateY(-1px);}
+        .btn-import { background-color: var(--success); }
+        .btn-export { background-color: var(--accent); }
+        .btn-toggle { background-color: var(--warning); color: #fff;}
+        .btn-pivot { background-color: var(--purple); color: #fff; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3);}
+        .btn-init { background-color: var(--text-muted); }
+        .btn-clear { background-color: var(--text-muted); }
+        .btn-home { background-color: var(--primary); }
+        .btn-submit { width: 100%; background-color: var(--primary); margin-top: 10px; padding: 12px; font-size: 1rem;}
+        .btn-cancel { width: 100%; background-color: var(--text-muted); margin-top: 10px; padding: 12px; display: none; }
+        .btn-icon { padding: 4px 8px; font-size: 0.75rem; border-radius: 4px; margin-left: 2px;}
+        .btn-edit { background-color: var(--warning); color: #fff; }
+        .btn-delete { background-color: var(--danger); color: #fff; }
+
+        input, select { font-size: 0.85rem; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; outline: none; }
+        input:focus, select:focus { border-color: var(--accent); }
+        
+        /* 통합 툴바 (원장 상세 데이터 라인) */
+        .toolbar {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+        .toolbar h2 { margin: 0; padding-right: 5px; font-size: 1.1rem; white-space: nowrap;}
+        .toolbar-divider { width: 1px; height: 20px; background-color: #cbd5e1; margin: 0 4px; }
+        .btn-toolbar { padding: 6px 10px; font-size: 0.8rem; white-space: nowrap; }
+        .search-box { min-width: 180px; padding: 6px 10px; font-size: 0.8rem; }
+        .year-select { padding: 5px 8px; font-size: 0.8rem; height: 28px; }
+
+        /* 안내 박스 */
+        .info-box { background-color: #e0f2fe; color: #0369a1; padding: 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.95rem; border: 2px dashed #7dd3fc; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s ease; }
+        .info-box:hover { background-color: #bae6fd; }
+        .info-box.drag-over { background-color: #bae6fd; border-color: var(--accent); transform: scale(1.005); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+        /* 요약 카드 */
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .card { background: var(--surface); padding: 16px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-top: 4px solid var(--primary); }
+        .card:nth-child(2) { border-top-color: var(--teal); }
+        .card:nth-child(3) { border-top-color: var(--warning); }
+        .card:nth-child(4) { border-top-color: var(--accent); }
+        .card:nth-child(5) { border-top-color: var(--danger); }
+        .card:nth-child(6) { border-top-color: var(--success); }
+        .card h3 { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; letter-spacing: -0.5px;}
+        .card p { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px; }
+        
+        /* 메인 레이아웃 */
+        .content-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
+        .panel { background: var(--surface); padding: 20px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid var(--border); }
+        .panel h2.form-title { font-size: 1.05rem; margin-bottom: 15px; border-bottom: 2px solid var(--border); padding-bottom: 10px;}
+        
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.8rem; margin-bottom: 4px; font-weight: bold; }
+        
+        /* 피벗(통계) 컨트롤 */
+        .pivot-controls { display: flex; gap: 15px; align-items: center; background: #f8fafc; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border); flex-wrap: wrap;}
+        .pivot-controls label { font-weight: bold; color: var(--purple); display: flex; align-items: center; gap: 5px; }
+
+        /* 테이블 공통 */
+        .table-responsive { overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 280px); width: 100%; border: 1px solid var(--border); border-radius: 6px;}
+        table { width: max-content; min-width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem; }
+        th, td { padding: 8px 12px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); white-space: nowrap; vertical-align: middle; }
+        th { background-color: #f1f5f9; font-weight: 700; color: var(--text-main); position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 0 var(--border); }
+        tr:hover td { background-color: #f8fafc; }
+        td.number { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+        
+        /* 컬럼 필터 텍스트박스 */
+        .col-filter { width: 100%; padding: 4px 6px; font-size: 0.75rem; font-weight: normal; margin-top: 5px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box;}
+        
+        /* 고정 열 설정 (상세 뷰에서 첫 1개 열 고정) */
+        #dataTable th:nth-child(1), #dataTable td:nth-child(1) { position: sticky; left: 0; background: #fff; z-index: 5; box-shadow: 1px 0 0 var(--border); text-align: center; }
+        #dataTable th:nth-child(1) { background-color: #e2e8f0; z-index: 11; }
+        
+        .progress-bg { background-color: #e2e8f0; border-radius: 4px; height: 6px; width: 100%; margin-top: 4px; }
+        .progress-bar { height: 100%; border-radius: 4px; }
+        
+        #errorBanner { display: none; background-color: #fef2f2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #f87171; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📋 세출예산 집행 현황</h1>
+        <!-- 우측 상단에 인덱스 페이지로 돌아가는 버튼 추가 -->
+        <div class="controls">
+            <button id="btnHome" class="btn-home" onclick="location.href='index.html'">🏠 메인 허브로 돌아가기</button>
+        </div>
+    </header>
+
+    <div id="errorBanner">⚠️ 보안망 차단 알림: 외부 엑셀 모듈 로드에 실패했습니다. 기능이 제한될 수 있습니다.</div>
+
+    <!-- 에듀파인 다운로드 경로 안내 메시지 및 드래그 앤 드롭 영역 -->
+    <div id="dropZone" class="info-box" onclick="document.getElementById('fileUpload').click();">
+        <span>💡 <b>엑셀 파일 업로드 안내:</b> 에듀파인-재무회계-재정분석-집행실적-집행실적저장(직속기관/교육지원청)-'102-B' 선택-파일 다운로드 후 해당 파일을 <b>이곳에 드래그 앤 드롭</b>하거나 클릭하여 불러와주세요.</span>
+    </div>
+
+    <!-- 1. 요약 패널 -->
+    <div class="summary-grid">
+        <div class="card">
+            <h3>💰 총 예산액 (AR열)</h3>
+            <p id="sumBudget">0</p>
+        </div>
+        <div class="card">
+            <h3>💎 총 예산현액 (BH열)</h3>
+            <p id="sumCurrentBudget" style="color: var(--teal);">0</p>
+        </div>
+        <div class="card">
+            <h3>📝 총 원인행위액 (BI열)</h3>
+            <p id="sumCause" style="color: var(--warning);">0</p>
+        </div>
+        <div class="card">
+            <h3>💸 총 지출액 (BK열)</h3>
+            <p id="sumExpenditure" style="color: var(--accent);">0</p>
+        </div>
+        <div class="card">
+            <h3>📉 예산 잔액 (현액 - 원인행위)</h3>
+            <p id="sumBalance" style="color: var(--danger);">0</p>
+        </div>
+        <div class="card">
+            <h3>📊 집행률 (원인행위 / 현액)</h3>
+            <p id="avgRate" style="color: var(--success);">0.00%</p>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <!-- 2. 수동 데이터 입력 패널 -->
+        <div class="panel">
+            <h2 id="formTitle" class="form-title">신규 사업 등록</h2>
+            <form id="budgetForm">
+                <input type="hidden" id="f_id">
+                <div class="form-group"><label>회계연도</label><input type="number" id="f_year" required></div>
+                <div class="form-group"><label>정책사업명</label><input type="text" id="f_policy" required></div>
+                <div class="form-group"><label>세부사업명</label><input type="text" id="f_detail" required></div>
+                <div class="form-group"><label>원가통계비목</label><input type="text" id="f_item" required></div>
+                <div class="form-group"><label>예산액 (원)</label><input type="number" id="f_budget" value="0" required></div>
+                <div class="form-group"><label>원인행위액 (원)</label><input type="number" id="f_cause" value="0" required></div>
+                <div class="form-group"><label>지출액 (원)</label><input type="number" id="f_expenditure" value="0" required></div>
+                <button type="submit" id="btnSubmit" class="btn-submit">데이터 저장</button>
+                <button type="button" id="btnCancelEdit" class="btn-cancel" onclick="resetForm()">수정 취소</button>
+            </form>
+        </div>
+
+        <!-- 3. 데이터 테이블 (상세 & 피벗 통합 패널) -->
+        <div class="panel">
+            
+            <!-- 통합 툴바 -->
+            <div class="toolbar">
+                <h2 id="tableTitle">원장 상세 데이터</h2>
+                
+                <!-- 상세 화면용 검색 버튼 라인 -->
+                <input type="text" id="searchInput" class="search-box" placeholder="🔍 데이터 전체 텍스트 검색...">
+                <button type="button" id="btnClearSearch" class="btn-clear btn-toolbar" onclick="clearSearch()">✖ 지우기</button>
+                <button id="btnSimpleView" class="btn-toggle btn-toolbar" onclick="toggleSimpleView()">👀 간편보기</button>
+                
+                <div id="toolbarDivider" class="toolbar-divider"></div>
+                
+                <!-- 기능 버튼 라인 -->
+                <input type="file" id="fileUpload" accept=".xlsx, .xls, .csv" style="display: none;">
+                <button class="btn-import btn-toolbar" onclick="document.getElementById('fileUpload').click();">📥 불러오기</button>
+                <button id="btnExport" class="btn-export btn-toolbar" onclick="handleExcelExport()">📤 다운로드</button>
+                <button id="btnPivotToggle" class="btn-pivot btn-toolbar" onclick="togglePivotView()">📊 분석기 켜기</button>
+                <select id="yearFilter" class="year-select"><option value="all">전체 연도</option></select>
+                <button id="btnInit" class="btn-init btn-toolbar" onclick="clearData()">전체 초기화</button>
+            </div>
+
+            <!-- 피벗(통계) 컨트롤 -->
+            <div id="pivotOptions" class="pivot-controls" style="display: none;">
+                <label>▶ 행(Row) 분류 :</label>
+                <select id="p_row1" onchange="renderPivot()">
+                    <option value="none">- 1차 기준 -</option>
+                    <option value="17" selected>정책사업</option>
+                    <option value="19">단위사업</option>
+                    <option value="21">세부사업</option>
+                    <option value="3">예산소관부서명</option>
+                    <option value="36">원가통계비목</option>
+                </select>
+                <select id="p_row2" onchange="renderPivot()">
+                    <option value="none">- 2차 기준 -</option>
+                    <option value="17">정책사업</option>
+                    <option value="19">단위사업</option>
+                    <option value="21" selected>세부사업</option>
+                    <option value="36">원가통계비목</option>
+                </select>
+                <select id="p_row3" onchange="renderPivot()">
+                    <option value="none">- 3차 기준 -</option>
+                    <option value="21">세부사업</option>
+                    <option value="36">원가통계비목</option>
+                </select>
+                <span style="color:var(--border);">|</span>
+                <label>▶ 열(Column) 분할 :</label>
+                <select id="p_col" onchange="renderPivot()">
+                    <option value="none">선택 안 함 (단일 표)</option>
+                    <option value="0">회계연도별</option>
+                    <option value="3">부서별</option>
+                </select>
+            </div>
+            
+            <!-- 상세 데이터 테이블 컨테이너 -->
+            <div id="detailTableContainer" class="table-responsive">
+                <table id="dataTable">
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- 피벗 데이터 테이블 컨테이너 -->
+            <div id="pivotTableContainer" class="table-responsive" style="display: none;">
+                <table id="pivotTable">
+                    <thead id="pivotHead"></thead>
+                    <tbody id="pivotBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // HTML 파싱 지연 없는 동적 엑셀 라이브러리 스크립트 로드
+    window.addEventListener('DOMContentLoaded', () => {
+        const script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+        script.onload = () => console.log("Excel module loaded.");
+        script.onerror = () => document.getElementById('errorBanner').style.display = 'block';
+        document.body.appendChild(script);
+        initApp();
+        setupDragAndDrop();
+    });
+
+    const DEFAULT_HEADERS = [
+        '회계연도', '건제코드', '예산소관부서코드', '예산소관부서명', '집행예산구분코드', '집행예산구분', '단위업무관리번호', '단위업무', '단위업무기관코드', '단위업무기관', 
+        '단위업무부서코드', '단위업무부서', '분야코드', '분야', '부문코드', '부문', '정책사업코드', '정책사업', '단위사업코드', '단위사업', 
+        '세부사업코드', '세부사업', '사업항목1레벨코드', '사업항목명1', '사업항목명2', '사업항목명3', '사업항목명4', '사업항목명5', '사업항목명6', '목그룹코드', 
+        '목그룹', '세출목코드', '세출목', '세출세목코드', '세출세목', '원가통계비목코드', '원가통계비목', '본예산액', '추경예산액', '1차추경예산액', 
+        '2차추경예산액', '그외추경예산액', '성립전예산액', '예산액', '전년도명시이월액', '전년도사고이월액', '전년도계속비이월액', '예비비증가금액', '예비비감소금액', '전용증가금액', 
+        '전용감소금액', '이용증가금액', '이용감소금액', '이체증가금액', '이체감소금액', '예산변경사용증가금액', '예산변경사용감소금액', '준재배정액', '받은재배정액', '예산현액', 
+        '원인행위금액', '재배정원인행위이월감조정금액', '지출금액', '다음연도명시이월액', '다음연도사고이월액', '다음연도계속비이월액', '불용액', '일상경비배부액', '일상경비교부액', '일상경비지급원인행위액', '일상경비지급액', '일상경비교부잔액'
+    ];
+
+    const STORAGE_KEY = 'edu_budget_full_v10';
+    let budgetData = [];
+    let savedHeaders = []; 
+    
+    let colFilters = {};
+    let currentHeaderState = ""; 
+    let isSimpleView = false; 
+    let isPivotMode = false; 
+
+    function initApp() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            const savedH = localStorage.getItem(STORAGE_KEY + '_hd');
+            if (saved) budgetData = JSON.parse(saved);
+            if (savedH) savedHeaders = JSON.parse(savedH);
+            else savedHeaders = DEFAULT_HEADERS;
+        } catch (e) {
+            savedHeaders = DEFAULT_HEADERS;
+        }
+        
+        document.getElementById('yearFilter').addEventListener('change', () => { renderApp(); renderPivot(); });
+        
+        // 검색 텍스트박스 한글 씹힘을 방지하기 위한 디바운싱
+        let renderTimer;
+        document.getElementById('searchInput').addEventListener('input', () => {
+            clearTimeout(renderTimer);
+            renderTimer = setTimeout(renderApp, 200);
+        });
+        
+        document.getElementById('fileUpload').addEventListener('change', (e) => {
+            if(e.target.files[0]) processExcelFile(e.target.files[0]);
+            e.target.value = '';
+        });
+        
+        renderApp();
+    }
+
+    // 드래그 앤 드롭 
+    function setupDragAndDrop() {
+        const dropZone = document.getElementById('dropZone');
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if(e.dataTransfer.files.length > 0) processExcelFile(e.dataTransfer.files[0]);
+        });
+    }
+
+    const fmt = (num) => parseInt(num || 0).toLocaleString('ko-KR');
+    const getRateColor = (rate) => {
+        if (rate < 50) return 'var(--danger)';
+        if (rate < 70) return 'var(--warning)';
+        return 'var(--success)';
+    };
+
+    // 지우기 버튼 액션
+    window.clearSearch = function() {
+        document.getElementById('searchInput').value = '';
+        colFilters = {};
+        document.querySelectorAll('.col-filter').forEach(input => input.value = '');
+        renderApp();
+    }
+
+    // 컬럼별 헤더 필터 인풋 핸들러
+    let colTimer;
+    window.handleColFilter = function(e) {
+        const col = e.target.getAttribute('data-col');
+        const val = e.target.value.trim().toLowerCase();
+        
+        if(val) colFilters[col] = val;
+        else delete colFilters[col];
+        
+        // 입력 도중 DOM이 새로고침되어 포커스가 뺏기지 않도록, 
+        // renderApp()에서 헤더는 그대로 두고 tbody만 업데이트 되게 설계됨.
+        clearTimeout(colTimer);
+        colTimer = setTimeout(renderApp, 200);
+    }
+
+    // 뷰 전환
+    window.togglePivotView = function() {
+        isPivotMode = !isPivotMode;
+        
+        const btnPivot = document.getElementById('btnPivotToggle');
+        const tableTitle = document.getElementById('tableTitle');
+        const searchInput = document.getElementById('searchInput');
+        const btnClearSearch = document.getElementById('btnClearSearch');
+        const btnSimpleView = document.getElementById('btnSimpleView');
+        const toolbarDivider = document.getElementById('toolbarDivider');
+        const detailTableContainer = document.getElementById('detailTableContainer');
+        const pivotOptions = document.getElementById('pivotOptions');
+        const pivotTableContainer = document.getElementById('pivotTableContainer');
+
+        if(isPivotMode) {
+            btnPivot.innerHTML = '📋 상세 원장 복귀';
+            btnPivot.style.backgroundColor = 'var(--text-main)';
+            tableTitle.innerText = "통계(피벗) 데이터";
+            
+            searchInput.style.display = 'none';
+            btnClearSearch.style.display = 'none';
+            btnSimpleView.style.display = 'none';
+            toolbarDivider.style.display = 'none';
+            
+            detailTableContainer.style.display = 'none';
+            pivotOptions.style.display = 'flex';
+            pivotTableContainer.style.display = 'block';
+            
+            renderPivot();
+        } else {
+            btnPivot.innerHTML = '📊 피벗 분석기 켜기';
+            btnPivot.style.backgroundColor = 'var(--purple)';
+            tableTitle.innerText = "원장 상세 데이터";
+            
+            searchInput.style.display = 'inline-block';
+            btnClearSearch.style.display = 'inline-flex';
+            btnSimpleView.style.display = 'inline-flex';
+            toolbarDivider.style.display = 'block';
+            
+            detailTableContainer.style.display = 'block';
+            pivotOptions.style.display = 'none';
+            pivotTableContainer.style.display = 'none';
+            
+            renderApp();
+        }
+    }
+
+    window.toggleSimpleView = function() {
+        isSimpleView = !isSimpleView;
+        const btn = document.getElementById('btnSimpleView');
+        if(isSimpleView) {
+            btn.innerHTML = '👀 72열 보기 (해제)';
+            btn.style.backgroundColor = 'var(--text-muted)';
+        } else {
+            btn.innerHTML = '👀 간편보기 (0값 숨김)';
+            btn.style.backgroundColor = 'var(--warning)';
+        }
+        renderApp();
+    }
+
+    // --- 1. 상세 원장 데이터 렌더링 ---
+    function renderApp() {
+        if(isPivotMode) return; 
+
+        const filterYear = document.getElementById('yearFilter');
+        const uniqueYears = [...new Set(budgetData.map(item => item[savedHeaders[0]]))].filter(Boolean).sort((a, b) => b - a);
+        
+        if(filterYear.options.length <= 1 && uniqueYears.length > 0) {
+            const currentVal = filterYear.value;
+            filterYear.innerHTML = '<option value="all">전체 연도</option>';
+            uniqueYears.forEach(y => filterYear.innerHTML += `<option value="${y}">${y}년도</option>`);
+            if (uniqueYears.includes(parseInt(currentVal))) filterYear.value = currentVal;
+        }
+
+        const selYear = document.getElementById('yearFilter').value;
+        const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
+        
+        let filtered = budgetData.filter(item => {
+            const matchYear = (selYear === 'all') || (item[savedHeaders[0]] == selYear);
+            const matchSearch = Object.values(item).some(val => String(val).toLowerCase().includes(searchKeyword));
+            
+            let matchCols = true;
+            for (let key in colFilters) {
+                if (colFilters[key]) {
+                    const cellVal = String(item[key] || '').toLowerCase();
+                    if (!cellVal.includes(colFilters[key])) {
+                        matchCols = false;
+                        break;
+                    }
+                }
+            }
+            return matchYear && matchSearch && matchCols;
+        });
+
+        const headerStateKey = `${isSimpleView}_${selYear}_${budgetData.length}`;
+        let visibleHeaders = [];
+        
+        // [한글 입력 끊김 방지 핵심 로직] 
+        // 간편보기 토글, 연도 변경, 전체 데이터수 변경시에만 테이블 헤더(thead)를 재생성합니다.
+        // 일반적인 검색어나 필터 타이핑 시에는 thead를 건드리지 않으므로 input 포커스가 풀리지 않습니다.
+        if (currentHeaderState !== headerStateKey) {
+            const zeroCheckStartIndex = 37; 
+            let yearFilteredData = (selYear === 'all') ? budgetData : budgetData.filter(item => item[savedHeaders[0]] == selYear);
+
+            savedHeaders.forEach((h, index) => {
+                if (isSimpleView) {
+                    if (index >= 0 && index <= 20) return; 
+                    if (index >= zeroCheckStartIndex) {
+                        const isAllZero = yearFilteredData.every(row => {
+                            const val = row[h];
+                            if (val === undefined || val === null || val === '') return true;
+                            const num = parseFloat(String(val).replace(/,/g, ''));
+                            return isNaN(num) || num === 0;
+                        });
+                        if (isAllZero) return; 
+                    }
+                }
+                visibleHeaders.push(h); 
+            });
+
+            let theadHTML = `<tr>
+                <th style="min-width: 60px; vertical-align: top;">관리</th>
+                <th style="min-width:120px; vertical-align: top;">[계산] 집행률</th>
+                <th class="number text-danger" style="vertical-align: top;">[계산] 예산잔액</th>`;
+                
+            visibleHeaders.forEach(h => {
+                const filterVal = colFilters[h] || '';
+                theadHTML += `<th style="vertical-align: top;">
+                    <div style="margin-bottom: 5px;">${h}</div>
+                    <input type="text" class="col-filter" data-col="${h}" placeholder="필터..." oninput="handleColFilter(event)" value="${filterVal}">
+                </th>`;
+            });
+            theadHTML += '</tr>';
+            
+            document.getElementById('tableHead').innerHTML = theadHTML;
+            currentHeaderState = headerStateKey;
+            
+        } else {
+            // 헤더를 그리지 않더라도 바디를 위해 visibleHeaders는 다시 산출해야 함.
+            const zeroCheckStartIndex = 37;
+            let yearFilteredData = (selYear === 'all') ? budgetData : budgetData.filter(item => item[savedHeaders[0]] == selYear);
+            savedHeaders.forEach((h, index) => {
+                if (isSimpleView) {
+                    if (index >= 0 && index <= 20) return; 
+                    if (index >= zeroCheckStartIndex) {
+                        const isAllZero = yearFilteredData.every(row => {
+                            const val = row[h];
+                            if (val === undefined || val === null || val === '') return true;
+                            const num = parseFloat(String(val).replace(/,/g, ''));
+                            return isNaN(num) || num === 0;
+                        });
+                        if (isAllZero) return; 
+                    }
+                }
+                visibleHeaders.push(h); 
+            });
+        }
+
+        let tBudget = 0, tCurrent = 0, tCause = 0, tExp = 0;
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        filtered.forEach(row => {
+            const b = parseInt(row['예산액_calc']) || 0; 
+            const cb = parseInt(row['예산현액_calc']) || 0; 
+            const c = parseInt(row['원인행위액_calc']) || 0;
+            const e = parseInt(row['지출액_calc']) || 0;
+            
+            const bal = cb - c; 
+            const rate = cb === 0 ? 0 : (c / cb) * 100;
+
+            tBudget += b;
+            tCurrent += cb;
+            tCause += c;
+            tExp += e;
+
+            let trHTML = `<tr>`;
+            const rateColor = getRateColor(rate);
+            
+            trHTML += `
+                <td style="text-align: center;">
+                    <button class="btn-icon btn-delete" onclick="deleteRecord('${row._id}')">삭제</button>
+                </td>
+                <td class="number">
+                    ${rate.toFixed(2)}%
+                    <div class="progress-bg"><div class="progress-bar" style="width: ${Math.min(rate, 100)}%; background-color: ${rateColor};"></div></div>
+                </td>
+                <td class="number" style="color: var(--danger); font-weight:bold; border-right: 2px solid var(--border);">${fmt(bal)}</td>
+            `;
+            
+            visibleHeaders.forEach(h => {
+                let val = row[h] !== undefined ? row[h] : '';
+                if (h.includes('코드') || h.includes('번호') || h.includes('연도') || h.includes('구분')) {
+                    trHTML += `<td style="text-align: center;">${val}</td>`;
+                } 
+                else if (!isNaN(parseFloat(String(val).replace(/,/g, ''))) && val !== '' && String(val).trim() !== '') {
+                    trHTML += `<td class="number">${fmt(String(val).replace(/,/g, ''))}</td>`;
+                } else {
+                    trHTML += `<td>${val}</td>`;
+                }
+            });
+            trHTML += `</tr>`;
+            tbody.insertAdjacentHTML('beforeend', trHTML);
+        });
+
+        document.getElementById('sumBudget').innerText = fmt(tBudget);
+        document.getElementById('sumCurrentBudget').innerText = fmt(tCurrent);
+        document.getElementById('sumCause').innerText = fmt(tCause);
+        document.getElementById('sumExpenditure').innerText = fmt(tExp);
+        document.getElementById('sumBalance').innerText = fmt(tCurrent - tCause);
+        document.getElementById('avgRate').innerText = (tCurrent === 0 ? 0 : (tCause / tCurrent) * 100).toFixed(2) + '%'; 
+        
+        try { 
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(budgetData)); 
+            localStorage.setItem(STORAGE_KEY + '_hd', JSON.stringify(savedHeaders)); 
+        } catch(e) {}
+    }
+
+    // --- 2. 엑셀 불러오기 및 매핑 엔진 ---
+    function processExcelFile(file) {
+        if (typeof XLSX === 'undefined') return alert("엑셀 모듈이 없습니다. 인터넷 연결 및 보안망을 확인해주세요.");
+        
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            try {
+                const workbook = XLSX.read(new Uint8Array(evt.target.result), { type: 'array' });
+                const ws = workbook.Sheets[workbook.SheetNames[0]];
+                
+                const rawJson = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+                if (rawJson.length < 2) return alert("데이터가 존재하지 않습니다.");
+                
+                let headerIdx = -1;
+                for (let i = 0; i < Math.min(rawJson.length, 20); i++) {
+                    const rowStr = rawJson[i].join("").replace(/\s/g, "");
+                    if (rowStr.includes("회계연도") || rowStr.includes("예산소관부서")) {
+                        headerIdx = i; break;
+                    }
+                }
+                
+                if (headerIdx === -1) return alert("에듀파인 표준 양식을 찾을 수 없습니다.");
+
+                const excelHeaders = rawJson[headerIdx];
+                let extractedHeaders = [];
+                for (let j = 0; j <= 71; j++) {
+                    extractedHeaders.push(excelHeaders[j] ? excelHeaders[j].toString().trim() : XLSX.utils.encode_col(j));
+                }
+                savedHeaders = extractedHeaders; 
+
+                let newRecords = [];
+
+                for (let i = headerIdx + 1; i < rawJson.length; i++) {
+                    let rowData = rawJson[i];
+                    if (!rowData || rowData.length === 0 || rowData.join("").trim() === "") continue;
+
+                    let mappedRow = { _id: Date.now().toString() + "_" + i };
+                    for (let j = 0; j <= 71; j++) {
+                        let hName = savedHeaders[j];
+                        mappedRow[hName] = rowData[j] === undefined ? "" : rowData[j];
+                    }
+
+                    let costCode = mappedRow[savedHeaders[35]] || mappedRow[savedHeaders[36]];
+                    if (!costCode || String(costCode).trim() === "") continue;
+
+                    mappedRow['예산액_calc'] = parseInt(String(rowData[43] || "0").replace(/,/g, '')) || 0; 
+                    mappedRow['예산현액_calc'] = parseInt(String(rowData[59] || "0").replace(/,/g, '')) || 0; 
+                    mappedRow['원인행위액_calc'] = parseInt(String(rowData[60] || "0").replace(/,/g, '')) || 0;
+                    mappedRow['지출액_calc'] = parseInt(String(rowData[62] || "0").replace(/,/g, '')) || 0;
+
+                    newRecords.push(mappedRow);
+                }
+
+                if (newRecords.length > 0) {
+                    budgetData = newRecords; 
+                    document.getElementById('yearFilter').value = 'all'; 
+                    clearSearch(); // 업로드 시 필터 전체 초기화 및 렌더링
+                    alert(`${newRecords.length}건 데이터 로드 완료\n(원가통계비목 빈 행 100% 삭제 완료)`);
+                } else {
+                    alert('조건을 만족하는 데이터(최하위 비목)가 없습니다.');
+                }
+            } catch (error) {
+                alert('엑셀 변환 오류: ' + error.message);
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    // --- 3. 피벗 통계 분석기 ---
+    window.renderPivot = function() {
+        if(!isPivotMode) return;
+
+        const getHeaderByIndex = (idxStr) => {
+            if (idxStr === 'none') return 'none';
+            return savedHeaders[parseInt(idxStr)] || '미분류';
+        };
+
+        const rowFields = [
+            getHeaderByIndex(document.getElementById('p_row1').value),
+            getHeaderByIndex(document.getElementById('p_row2').value),
+            getHeaderByIndex(document.getElementById('p_row3').value)
+        ].filter(v => v !== 'none');
+
+        const colField = getHeaderByIndex(document.getElementById('p_col').value);
+        
+        const tbody = document.getElementById('pivotBody');
+        const thead = document.getElementById('pivotHead');
+
+        if (rowFields.length === 0) {
+            thead.innerHTML = '';
+            tbody.innerHTML = '<tr><td style="text-align:center; padding: 20px;">행(Row) 분류 기준을 1개 이상 선택해 주세요.</td></tr>';
+            return;
+        }
+
+        const filterYear = document.getElementById('yearFilter').value;
+        let filtered = (filterYear === 'all') ? budgetData : budgetData.filter(item => item[savedHeaders[0]] == filterYear);
+
+        let colValues = ['Total']; 
+        if (colField !== 'none') {
+            const uniqueCols = [...new Set(filtered.map(r => r[colField] || '미분류'))].sort();
+            colValues = [...uniqueCols, 'Total'];
+        }
+
+        let pivotMap = {};
+        filtered.forEach(row => {
+            const rKey = JSON.stringify(rowFields.map(f => row[f] || '미분류'));
+            const cKey = colField !== 'none' ? (row[colField] || '미분류') : 'Total';
+
+            if (!pivotMap[rKey]) {
+                pivotMap[rKey] = {};
+                colValues.forEach(c => pivotMap[rKey][c] = { b:0, cb:0, c:0, e:0 });
+            }
+
+            const b = parseInt(row['예산액_calc']) || 0;
+            const cb = parseInt(row['예산현액_calc']) || 0;
+            const c = parseInt(row['원인행위액_calc']) || 0;
+            const e = parseInt(row['지출액_calc']) || 0;
+
+            pivotMap[rKey][cKey].b += b;
+            pivotMap[rKey][cKey].cb += cb;
+            pivotMap[rKey][cKey].c += c;
+            pivotMap[rKey][cKey].e += e;
+
+            if (colField !== 'none') {
+                pivotMap[rKey]['Total'].b += b;
+                pivotMap[rKey]['Total'].cb += cb;
+                pivotMap[rKey]['Total'].c += c;
+                pivotMap[rKey]['Total'].e += e;
+            }
+        });
+
+        let pivotArr = Object.keys(pivotMap).map(k => ({ rowVals: JSON.parse(k), data: pivotMap[k] }));
+        pivotArr.sort((a, b) => {
+            for(let i=0; i<rowFields.length; i++) {
+                if (a.rowVals[i] < b.rowVals[i]) return -1;
+                if (a.rowVals[i] > b.rowVals[i]) return 1;
+            }
+            return 0;
+        });
+
+        let trTop = '<tr>', trBottom = '<tr>';
+        rowFields.forEach(f => {
+            trTop += `<th rowspan="2" style="background-color: var(--primary); color: white;">${f}</th>`;
+        });
+
+        colValues.forEach(cVal => {
+            let title = cVal === 'Total' ? '총합계' : cVal;
+            let bg = cVal === 'Total' ? 'var(--purple)' : 'var(--text-muted)';
+            trTop += `<th colspan="5" style="text-align: center; background-color: ${bg}; color: white; border-bottom: 1px solid rgba(255,255,255,0.2);">${title}</th>`;
+            
+            trBottom += `
+                <th class="number" style="background: #f1f5f9;">예산액</th>
+                <th class="number" style="background: #f1f5f9;">예산현액</th>
+                <th class="number" style="background: #f1f5f9;">원인행위액</th>
+                <th class="number" style="background: #f1f5f9;">지출액</th>
+                <th class="number" style="background: #f1f5f9;">예산잔액</th>`;
+        });
+        
+        trTop += '</tr>'; trBottom += '</tr>';
+        thead.innerHTML = trTop + trBottom;
+
+        tbody.innerHTML = '';
+        let lastRowVals = Array(rowFields.length).fill(null); 
+        let grandTotal = {};
+        colValues.forEach(c => grandTotal[c] = { b:0, cb:0, c:0, e:0 });
+
+        pivotArr.forEach(row => {
+            let trHTML = '<tr>';
+            rowFields.forEach((f, idx) => {
+                let cellVal = row.rowVals[idx];
+                let isSameAsAbove = true;
+                for(let k=0; k<=idx; k++) { if(row.rowVals[k] !== lastRowVals[k]) isSameAsAbove = false; }
+                
+                if (isSameAsAbove) trHTML += `<td style="border-top: none; color: transparent;">-</td>`;
+                else trHTML += `<td style="font-weight: bold; border-top: 1px solid var(--border);">${cellVal}</td>`;
+            });
+            lastRowVals = [...row.rowVals];
+
+            colValues.forEach(cVal => {
+                let vals = row.data[cVal];
+                let bal = vals.cb - vals.c; 
+                let rate = vals.cb === 0 ? 0 : (vals.c / vals.cb) * 100;
+                let isZero = vals.b === 0 && vals.cb === 0 && vals.c === 0 && vals.e === 0;
+                let cStyle = isZero ? "color: #cbd5e1;" : "";
+
+                grandTotal[cVal].b += vals.b;
+                grandTotal[cVal].cb += vals.cb;
+                grandTotal[cVal].c += vals.c;
+                grandTotal[cVal].e += vals.e;
+
+                trHTML += `
+                    <td class="number" style="${cStyle}">${fmt(vals.b)}</td>
+                    <td class="number" style="${cStyle}">${fmt(vals.cb)}</td>
+                    <td class="number" style="${cStyle}">${fmt(vals.c)}</td>
+                    <td class="number" style="${cStyle}">${fmt(vals.e)}</td>
+                    <td class="number" style="font-weight:bold; color: var(--danger);"><div style="display:flex; justify-content:space-between;"><span>${rate.toFixed(2)}%</span><span>${fmt(bal)}</span></div></td>
+                `;
+            });
+            trHTML += '</tr>';
+            tbody.insertAdjacentHTML('beforeend', trHTML);
+        });
+
+        let trTotal = `<tr style="background-color: #fffbeb;">`;
+        trTotal += `<td colspan="${rowFields.length}" style="text-align: center; font-weight: 800; color: var(--warning);">전체 총합계</td>`;
+        
+        colValues.forEach(cVal => {
+            let t = grandTotal[cVal];
+            let tRate = t.cb === 0 ? 0 : (t.c / t.cb) * 100;
+            trTotal += `
+                <td class="number" style="font-weight: 900;">${fmt(t.b)}</td>
+                <td class="number" style="font-weight: 900;">${fmt(t.cb)}</td>
+                <td class="number" style="font-weight: 900;">${fmt(t.c)}</td>
+                <td class="number" style="font-weight: 900;">${fmt(t.e)}</td>
+                <td class="number" style="font-weight: 900; color: var(--danger);"><div style="display:flex; justify-content:space-between;"><span>${tRate.toFixed(2)}%</span><span>${fmt(t.cb - t.c)}</span></div></td>
+            `;
+        });
+        trTotal += '</tr>';
+        tbody.insertAdjacentHTML('beforeend', trTotal);
+    }
+
+    // --- 엑셀 내보내기 ---
+    window.handleExcelExport = function() {
+        if (typeof XLSX === 'undefined') return alert("엑셀 다운로드 모듈을 사용할 수 없습니다.");
+        
+        const wb = XLSX.utils.book_new();
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+
+        if (isPivotMode) {
+            const tableEle = document.getElementById('pivotTable');
+            const ws = XLSX.utils.table_to_sheet(tableEle);
+            XLSX.utils.book_append_sheet(wb, ws, "피벗통계분석");
+            XLSX.writeFile(wb, `피벗예산분석_${dateStr}.xlsx`);
+        } else {
+            if (budgetData.length === 0) return alert('다운로드할 데이터가 없습니다.');
+            const filterYear = document.getElementById('yearFilter').value;
+            const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
+            
+            const exportData = budgetData.filter(item => {
+                const matchYear = (filterYear === 'all') || (item[savedHeaders[0]] == filterYear);
+                const matchSearch = Object.values(item).some(val => String(val).toLowerCase().includes(searchKeyword));
+                let matchCols = true;
+                for (let key in colFilters) {
+                    if (colFilters[key] && !String(item[key] || '').toLowerCase().includes(colFilters[key])) {
+                        matchCols = false;
+                        break;
+                    }
+                }
+                return matchYear && matchSearch && matchCols;
+            });
+
+            const excelRows = exportData.map(row => {
+                let baseRow = {};
+                savedHeaders.forEach(h => baseRow[h] = row[h]);
+                
+                const b = parseInt(row['예산액_calc']) || 0;
+                const cb = parseInt(row['예산현액_calc']) || 0;
+                const c = parseInt(row['원인행위액_calc']) || 0;
+                
+                baseRow['[산출] 예산잔액(현액-원인행위)'] = cb - c;
+                baseRow['[산출] 종합집행률(%)'] = cb === 0 ? 0 : parseFloat(((c / cb) * 100).toFixed(2));
+                return baseRow;
+            });
+
+            const ws = XLSX.utils.json_to_sheet(excelRows);
+            XLSX.utils.book_append_sheet(wb, ws, "집행원장_전체열");
+            XLSX.writeFile(wb, `통합예산집행원장_${dateStr}.xlsx`);
+        }
+    }
+
+    // --- 수기 데이터 처리 ---
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        const idInput = document.getElementById('f_id').value;
+        let targetRow = idInput ? budgetData.find(d => d._id === idInput) : { _id: Date.now().toString() };
+        
+        savedHeaders.forEach(h => { if(targetRow[h] === undefined) targetRow[h] = ""; });
+
+        const year = document.getElementById('f_year').value;
+        targetRow[savedHeaders[0]] = year;
+        
+        // 폼 입력값을 주요 필드에 매핑
+        const policyIdx = savedHeaders[17] ? 17 : -1;
+        if(policyIdx !== -1) targetRow[savedHeaders[policyIdx]] = document.getElementById('f_policy').value;
+        
+        const detailIdx = savedHeaders[21] ? 21 : -1;
+        if(detailIdx !== -1) targetRow[savedHeaders[detailIdx]] = document.getElementById('f_detail').value;
+        
+        const itemIdx = savedHeaders[36] ? 36 : -1;
+        if(itemIdx !== -1) targetRow[savedHeaders[itemIdx]] = document.getElementById('f_item').value;
+        
+        targetRow['예산액_calc'] = parseInt(document.getElementById('f_budget').value) || 0;
+        targetRow['예산현액_calc'] = parseInt(document.getElementById('f_budget').value) || 0; 
+        targetRow['원인행위액_calc'] = parseInt(document.getElementById('f_cause').value) || 0;
+        targetRow['지출액_calc'] = parseInt(document.getElementById('f_expenditure').value) || 0;
+
+        if (!idInput) budgetData.push(targetRow);
+        
+        resetForm();
+        renderApp();
+    }
+
+    window.deleteRecord = function(id) {
+        if(confirm("해당 데이터를 삭제하시겠습니까?")) {
+            budgetData = budgetData.filter(item => item._id !== id);
+            renderApp();
+        }
+    };
+
+    window.resetForm = function() {
+        document.getElementById('budgetForm').reset();
+        document.getElementById('f_id').value = "";
+        document.getElementById('formTitle').innerText = "신규 사업 등록";
+        document.getElementById('btnSubmit').innerText = "데이터 저장";
+        document.getElementById('btnSubmit').style.backgroundColor = "var(--primary)";
+        document.getElementById('btnCancelEdit').style.display = "none";
+    };
+
+    window.clearData = function() {
+        if(confirm('데이터를 완전히 삭제하시겠습니까?')) {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(STORAGE_KEY + '_hd');
+            budgetData = [];
+            savedHeaders = DEFAULT_HEADERS;
+            document.getElementById('yearFilter').innerHTML = '<option value="all">전체 연도</option>';
+            clearSearch();
+        }
+    }
+</script>
+</body>
+</html>
