@@ -546,7 +546,10 @@
     async function recordVisit() {
         try {
             await ensureFirebase();
-            const app = window.firebase.apps.find(a => a.name === APP_NAME)
+            // 페이지가 이미 같은 Firebase를 쓰고 있으면 그것을 그대로 사용 (페이지 초기화를 방해하지 않음)
+            const apps = window.firebase.apps || [];
+            const app = apps.find(a => a.name === "[DEFAULT]" && a.options && a.options.projectId === FIREBASE_CONFIG.projectId)
+                     || apps.find(a => a.name === APP_NAME)
                      || window.firebase.initializeApp(FIREBASE_CONFIG, APP_NAME);
             const region = await getRegion();
             const now = new Date();
@@ -566,10 +569,12 @@
         }
     }
 
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", recordVisit);
+    // 페이지가 완전히 뜨고 자체 준비를 마친 뒤(1.5초 후)에 기록
+    function startLater() { setTimeout(recordVisit, 1500); }
+    if (document.readyState === "complete") {
+        startLater();
     } else {
-        recordVisit();
+        window.addEventListener("load", startLater);
     }
 })();
     </script>
@@ -579,6 +584,10 @@
 
         // 스크립트 지연 로딩 대응: DOM과 Firebase가 모두 로드된 후 실행
         document.addEventListener("DOMContentLoaded", () => {
+            // 시계는 Firebase 로딩과 상관없이 바로 시작
+            updateClock();
+            setInterval(updateClock, 1000);
+
             // Firebase가 로드될 때까지 약간의 지연 처리 (defer 특성상 DOMContentLoaded 직전에 로드완료됨)
             const checkFirebase = setInterval(() => {
                 if (typeof firebase !== 'undefined') {
@@ -605,14 +614,13 @@
                 appId: "1:399358344473:web:491d5e74448b4f0f029988",
                 measurementId: "G-083RQKR8SQ"
             };
-            if (!firebase.apps.length) {
+            // 기본(DEFAULT) 앱이 없을 때만 초기화 (다른 이름의 앱이 있어도 정상 작동)
+            if (!firebase.apps.some(app => app.name === "[DEFAULT]")) {
                 firebase.initializeApp(firebaseConfig);
             }
             db = firebase.firestore();
             storage = firebase.storage();
 
-            setInterval(updateClock, 1000); 
-            updateClock();
             updateVisitorCount();
             updateLoginUI();
             
