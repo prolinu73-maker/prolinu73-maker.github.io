@@ -439,6 +439,7 @@
           data.total = (data.total || 0) + 1;
           data.todayCount = (data.todayCount || 0) + 1;
           ref.set(data, { merge: true }).catch(console.log);
+          try { sessionStorage.setItem("countedVisitDate", todayFmt); } catch (e) {}   // 나중에 관리자로 로그인하면 되돌리기 위해 기억
         }
         $('todayCount').textContent = (data.todayCount || 0).toLocaleString('ko-KR');
         $('totalCount').textContent = (data.total || 0).toLocaleString('ko-KR');
@@ -495,7 +496,8 @@
     <!-- 방문 기록 모달 (관리자 전용) -->
     <div id="visitModal" class="modal-overlay">
         <div class="modal-content" style="width: 900px; max-width: 94%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;">
-            <h3 style="margin-bottom: 15px;">📈 방문 기록 (관리자 전용)</h3>
+            <h3 style="margin-bottom: 6px;">📈 방문 기록 (관리자 전용)</h3>
+            <p id="visitDeviceNote" style="text-align:center; font-size:13px; font-weight:700; color:#1A9C7B; margin:0 0 14px;"></p>
             <div class="visit-toolbar">
                 <button class="visit-range-btn" data-days="1" onclick="loadVisitLogs(1)">오늘</button>
                 <button class="visit-range-btn active" data-days="7" onclick="loadVisitLogs(7)">최근 7일</button>
@@ -619,6 +621,7 @@
                         alert(`환영합니다, ${user.name}님!`);
                         closeModal();
                         updateLoginUI();
+                        purgeMyVisits();   // 관리자면 로그인 전에 남은 이 브라우저의 방문 기록을 정리
                     } else {
                         alert("휴대폰 번호 또는 비밀번호가 일치하지 않습니다.");
                     }
@@ -654,6 +657,37 @@
                 currentUser = null;
                 updateLoginUI();
             }
+        }
+
+        /* 관리자로 로그인하기 전에 이 브라우저가 남긴 방문 기록과 방문자 수를 되돌림
+           (새 PC·새 브라우저에서 로그인 전에 들어온 1회까지 빼기 위함) */
+        async function purgeMyVisits() {
+            if (!(currentUser && currentUser.phone === ADMIN_PHONE)) return;
+            const d = hubDb(); if (!d) return;
+            try { localStorage.setItem("hubAdminDevice", "1"); } catch (e) {}
+            let ids = [];
+            try { ids = JSON.parse(localStorage.getItem("myVisitIds") || "[]"); } catch (e) {}
+            for (const id of ids) {
+                try { await d.collection("stats").doc(id).delete(); } catch (e) { console.log("방문기록 정리 실패", e); }
+            }
+            try { localStorage.removeItem("myVisitIds"); } catch (e) {}
+            try {
+                const counted = sessionStorage.getItem("countedVisitDate");
+                if (counted) {
+                    sessionStorage.removeItem("countedVisitDate");
+                    const ref = d.collection("stats").doc("visitors");
+                    const snap = await ref.get();
+                    if (snap.exists) {
+                        const v = snap.data();
+                        const upd = { total: Math.max(0, (v.total || 0) - 1) };
+                        if (v.todayDate === counted) upd.todayCount = Math.max(0, (v.todayCount || 0) - 1);
+                        await ref.set(upd, { merge: true });
+                        const tEl = document.getElementById('todayCount'), aEl = document.getElementById('totalCount');
+                        if (tEl && upd.todayCount !== undefined) tEl.textContent = upd.todayCount.toLocaleString('ko-KR');
+                        if (aEl) aEl.textContent = upd.total.toLocaleString('ko-KR');
+                    }
+                }
+            } catch (e) { console.log("방문자 수 되돌리기 실패", e); }
         }
 
         // 상단 오른쪽: 로그인 상태와 관리자 버튼
@@ -737,8 +771,12 @@
         function openVisitModal() {
             if (!needDb()) return;
             if (!(currentUser && currentUser.phone === ADMIN_PHONE)) return alert("관리자만 볼 수 있습니다.");
+            try { localStorage.setItem("hubAdminDevice", "1"); } catch (e) {}
+            const note = document.getElementById('visitDeviceNote');
+            if (note) note.textContent = "✅ 이 브라우저의 접속은 모든 페이지에서 방문기록·방문자 수에 포함되지 않습니다.";
             document.getElementById('visitModal').style.display = 'flex';
-            loadVisitLogs(7);
+            document.getElementById('visitContent').innerHTML = '<div style="padding:30px; color:#64748b;">불러오는 중...</div>';
+            purgeMyVisits().then(() => loadVisitLogs(7));   // 이 브라우저가 전에 남긴 기록을 먼저 정리한 뒤 보여 줌
         }
         function closeVisitModal() {
             document.getElementById('visitModal').style.display = 'none';
@@ -795,7 +833,7 @@
             return entries.map(([key, cnt]) => `
                 <div class="visit-bar-row">
                     <span class="name" title="${escHtml(labelFn(key))}">${escHtml(labelFn(key))}</span>
-                    <div class="visit-bar-track"><div class="visit-bar-fill" style="width:${Math.max(4, cnt / max * 100)}%"></div></div>
+                    <div class="visit-bar-track"><div class="visit-bar-fill" style="width:${cnt ? Math.max(4, cnt / max * 100) : 0}%"></div></div>
                     <span class="cnt">${cnt}</span>
                 </div>`).join("");
         }
@@ -828,6 +866,7 @@
                 const t = new Date();
                 const todayKey = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
                 const pageCount = {}, regionCount = {}, dayCount = {};
+                Object.keys(PAGE_LABELS).forEach(k => { pageCount[k] = 0; });   // 방문이 없는 페이지도 0으로 모두 표시
                 let todayTotal = 0;
                 logs.forEach(l => {
                     pageCount[l.page] = (pageCount[l.page] || 0) + 1;
@@ -850,7 +889,7 @@
                     <div class="visit-summary">
                         <div class="visit-stat"><div class="num">${logs.length}</div><div class="label">기간 내 방문</div></div>
                         <div class="visit-stat"><div class="num">${todayTotal}</div><div class="label">오늘 방문</div></div>
-                        <div class="visit-stat"><div class="num">${Object.keys(pageCount).length}</div><div class="label">방문된 페이지 수</div></div>
+                        <div class="visit-stat"><div class="num">${Object.values(pageCount).filter(n => n > 0).length}</div><div class="label">방문된 페이지 수</div></div>
                         <div class="visit-stat"><div class="num">${Object.keys(regionCount).length}</div><div class="label">접속 지역 수</div></div>
                     </div>
                     <div class="visit-two-col" style="text-align:left;">
@@ -890,6 +929,9 @@
             updateLoginUI();
             // 다른 페이지의 '로그인' 버튼으로 들어오면 로그인 창을 바로 열어 줌
             if (location.hash === '#login' && !currentUser) openModal('login');
+            // 관리자로 로그인된 상태면, 이 브라우저가 전에 남긴 방문 기록을 정리
+            const waitDb = setInterval(() => { if (hubDb()) { clearInterval(waitDb); purgeMyVisits(); } }, 300);
+            setTimeout(() => clearInterval(waitDb), 15000);
         });
 </script>
 <!-- 방문 기록 수집 (관리자 방문기록용) -->
@@ -981,14 +1023,24 @@
         return id;
     }
 
+    function isAdminDevice() {
+        try {
+            var u = JSON.parse(localStorage.getItem("currentUser") || "null");
+            if (u && u.phone === ADMIN_PHONE) localStorage.setItem("hubAdminDevice", "1");
+            return localStorage.getItem("hubAdminDevice") === "1";
+        } catch (e) { return false; }
+    }
+
     function recordVisit() {
+        if (isAdminDevice()) return;   // 기다리는 사이 관리자로 로그인했어도 기록하지 않음
+        var docId = newId();
         getRegion().then(function (region) {
             var now = new Date();
             var dateKey = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
             var body = {
                 writes: [{
                     update: {
-                        name: DOC_BASE + "/stats/" + newId(),
+                        name: DOC_BASE + "/stats/" + docId,
                         fields: {
                             kind: { stringValue: "visit" },
                             page: { stringValue: getPageName() },
@@ -1007,6 +1059,13 @@
                 body: JSON.stringify(body)
             }).then(function (res) {
                 if (!res.ok) return res.text().then(function (t) { throw new Error(res.status + " " + t); });
+                // 이 브라우저가 남긴 기록 번호를 기억 → 나중에 관리자로 로그인하면 홈에서 자동 삭제
+                try {
+                    var ids = JSON.parse(localStorage.getItem("myVisitIds") || "[]");
+                    ids.push(docId);
+                    if (ids.length > 300) ids = ids.slice(-300);
+                    localStorage.setItem("myVisitIds", JSON.stringify(ids));
+                } catch (e) {}
             });
         }).catch(function (err) {
             try { console.log("방문 기록 저장 실패:", err); } catch (e) {}
