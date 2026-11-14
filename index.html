@@ -1099,7 +1099,7 @@
                 snap.forEach(d => {
                     const v = d.data();
                     if (v.kind !== "visit" || !v.visitedAt) return;
-                    logs.push({ time: v.visitedAt.toDate(), page: v.page, region: v.region || "알 수 없음", dateKey: v.dateKey });
+                    logs.push({ time: v.visitedAt.toDate(), page: HUB.normalizePage(v.page), region: v.region || "알 수 없음", dateKey: v.dateKey });
                 });
 
                 if (logs.length === 0) {

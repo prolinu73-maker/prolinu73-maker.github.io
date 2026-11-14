@@ -81,12 +81,19 @@
     HUB.esc = function (s) {
         return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     };
-    HUB.currentPage = function () {
-        let p = location.pathname.split("/").pop();
-        if (!p) p = "index.html";
+    // 파일 이름 바로잡기: 'mulpum_sys (1).html', 'mulpum_sys(2).html', 'apps - 복사본.html' → 원래 이름
+    //  (내려받을 때 같은 이름이 있으면 컴퓨터가 붙이는 번호·'복사본'을 떼어 냄)
+    HUB.normalizePage = function (p) {
+        p = String(p || "");
         try { p = decodeURIComponent(p); } catch (e) {}
+        p = p.split(/[?#]/)[0].split("/").pop();
+        if (!p) return "index.html";
+        p = p.replace(/\s*\(\d+\)(?=\.html?$)/i, "")          // ' (1)'
+             .replace(/\s*-\s*복사본(\s*\(\d+\))?(?=\.html?$)/i, "")   // ' - 복사본'
+             .replace(/\s*-\s*Copy(\s*\(\d+\))?(?=\.html?$)/i, "");   // ' - Copy'
         return p;
     };
+    HUB.currentPage = function () { return HUB.normalizePage(location.pathname); };
     HUB.loadScript = function (src) {
         return new Promise((resolve, reject) => {
             const s = d.createElement("script");
