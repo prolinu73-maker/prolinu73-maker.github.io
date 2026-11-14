@@ -305,7 +305,7 @@ footer{color:var(--muted);font-size:13.5px}
     <div class="bform">
       <label class="f">내용 <textarea id="bText" maxlength="2000" placeholder="예: 여수→세종 출장 때 KTX 오송역 환승 요금은 어떻게 넣나요?"></textarea></label>
       <div class="row2">
-        <label class="f">이름 <input id="bName" type="text" maxlength="20" placeholder="게스트"></label>
+        <label class="f">이름 <input id="bName" type="text" maxlength="20" placeholder="게스트" autocomplete="off"></label>
         <label class="f" id="bPwWrap">삭제용 비밀번호 <input id="bPw" type="password" maxlength="20" autocomplete="new-password" placeholder="글을 지울 때 필요"></label>
         <button class="btn" id="bSubmit" type="button">등록하기</button>
       </div>
@@ -762,8 +762,23 @@ footer{color:var(--muted);font-size:13.5px}
   function boardAdmin(){var u=hubUser();return !!(u&&u.phone===ADMIN_PHONE)}
   function setupForm(){
     var u=hubUser();
-    if(u){$('bName').value=u.name;$('bName').readOnly=true;$('bPwWrap').hidden=true}
-    else{$('bName').readOnly=false;$('bPwWrap').hidden=false}
+    // 이름 칸은 비워 둠(미리 채우지 않음). 로그인 상태면 비워 둔 채 등록할 때 로그인 이름을 씀
+    $('bName').readOnly=false;
+    $('bName').placeholder=u?(u.name+' (비워 두면 이 이름으로 등록)'):'게스트';
+    $('bPwWrap').hidden=!!u;
+  }
+  // Firebase 오류를 쉬운 말로 바꿈
+  function why(err){
+    var c=String((err&&err.code)||''),m=String((err&&err.message)||err||'');
+    if(c.indexOf('permission-denied')>=0||/permission/i.test(m))
+      return '원인: Firebase 보안 규칙이 이 게시판(perdiemBoard)을 막고 있습니다. 관리자가 Firestore 규칙에 perdiemBoard를 허용해야 합니다.';
+    if(c.indexOf('unavailable')>=0||/offline|network/i.test(m))
+      return '원인: 인터넷 또는 Firebase 서버에 연결되지 않았습니다. 잠시 후 다시 시도하세요.';
+    if(c.indexOf('failed-precondition')>=0)
+      return '원인: Firestore 색인(index)이 필요합니다. 관리자에게 문의하세요.';
+    if(!c&&(err&&err.type==='error'||/script/i.test(m)))
+      return '원인: Firebase 프로그램을 불러오지 못했습니다. 미리보기 화면이 아닌 실제 사이트 주소에서 열어 주세요.';
+    return '원인: '+(c||'알 수 없음')+(m?' — '+m.slice(0,120):'');
   }
   function bMsg(t,bad){$('bMsg').textContent=t;$('bMsg').style.color=bad?'var(--warn)':''}
   function loadPosts(){
@@ -801,18 +816,19 @@ footer{color:var(--muted);font-size:13.5px}
       });
     }).catch(function(err){
       try{console.log('게시판 불러오기 실패',err)}catch(e){}
-      $('bList').innerHTML='<p class="empty">게시판을 불러오지 못했습니다. 인터넷 연결을 확인하거나 잠시 후 "새로 고침"을 눌러 주세요.</p>';
+      var box=$('bList');box.innerHTML='<p class="empty"></p>';
+      box.firstChild.textContent='게시판을 불러오지 못했습니다. '+why(err);
     });
   }
   function removePost(id,pw,btn){
     btn.disabled=true;btn.textContent='지우는 중…';
     getDb().then(function(db){return db.collection(BOARD).doc(id).delete()})
       .then(loadPosts)
-      .catch(function(){btn.disabled=false;btn.textContent='삭제 실패'});
+      .catch(function(err){btn.disabled=false;btn.textContent='삭제 실패';bMsg('삭제하지 못했습니다. '+why(err),true)});
   }
   $('bSubmit').addEventListener('click',function(){
     var text=$('bText').value.trim(),u=hubUser();
-    var name=u?u.name:($('bName').value.trim()||'게스트'),pw=$('bPw').value.trim();
+    var name=$('bName').value.trim()||(u&&u.name)||'게스트',pw=$('bPw').value.trim();
     if(!text){bMsg('내용을 입력해 주세요.',true);$('bText').focus();return}
     if(!u&&!pw){bMsg('게스트로 쓸 때는 삭제용 비밀번호를 넣어 주세요.',true);$('bPw').focus();return}
     var d=new Date();
@@ -827,7 +843,7 @@ footer{color:var(--muted);font-size:13.5px}
       $('bText').value='';$('bPw').value='';bMsg('등록했습니다.');loadPosts();
     }).catch(function(err){
       try{console.log('게시글 등록 실패',err)}catch(e){}
-      bMsg('등록하지 못했습니다. 인터넷 연결을 확인하거나 관리자에게 문의하세요.',true);
+      bMsg('등록하지 못했습니다. '+why(err),true);
     }).then(function(){$('bSubmit').disabled=false});
   });
   $('bReload').addEventListener('click',loadPosts);
