@@ -171,7 +171,7 @@
         .btn-micro { padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: 700; cursor: pointer; border: none; white-space: nowrap; font-family: 'Pretendard', sans-serif; color: #fff; transition: filter .15s; }
         .btn-micro:hover { filter: brightness(.9); }
         .btn-like-sm { background: #1A9C7B; }
-        .btn-like-sm.liked { background: #9ca3af; cursor: not-allowed; }
+        .btn-like-sm.liked { background: #0F6E52; box-shadow: inset 0 0 0 2px #F4C430; }
         .btn-comment-sm { background: #64748b; }
         .btn-edit-sm { background: #2F6FDE; }
         .btn-delete-sm { background: #ef4444; }
@@ -207,7 +207,22 @@
         .fav-card:hover, .fav-sm:hover { background: #FEF3C7 !important; }
         .like-card { border: 1px solid #BFE3D6; background: #fff; color: #1A7A5E; border-radius: 999px; height: 30px; padding: 0 10px; font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit; }
         .like-card:hover { background: #E7F6F0; }
-        .like-card.on { background: #E7F6F0; border-color: #1A9C7B; cursor: default; }
+        .like-card.on { background: #1A9C7B; border-color: #1A9C7B; color: #fff; }
+        /* 수정 창 */
+        .edit-modal { width: 520px !important; max-width: 94vw; max-height: 92vh; overflow-y: auto; }
+        .e-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+        .e-field label, .e-label { font-size: 13px; font-weight: 800; color: #3E4C45; }
+        .e-field input, .e-field select, .e-field textarea { width: 100%; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 8px; font-family: inherit; font-size: 15px; box-sizing: border-box; margin: 0; }
+        .e-field textarea { resize: vertical; }
+        .e-field input:focus, .e-field select:focus, .e-field textarea:focus { border-color: var(--board-light); outline: none; }
+        .e-files { display: flex; flex-direction: column; gap: 6px; }
+        .e-file { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; background: var(--paper); border-radius: 8px; font-size: 13.5px; }
+        .e-file a { color: var(--board-light); font-weight: 700; word-break: break-all; }
+        .e-file.gone { opacity: .5; text-decoration: line-through; }
+        .e-file.new { background: #EEF3FD; }
+        .e-file button { flex-shrink: 0; border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 4px 10px; font-family: inherit; font-weight: 700; cursor: pointer; }
+        .e-hint { font-size: 12px; color: var(--muted); }
+        .e-msg { min-height: 1.2em; font-size: 13px; font-weight: 700; color: #dc2626; margin: 4px 0 10px; }
         .me-link { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink); font-weight: 800; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px 14px 4px 4px; }
         .me-link:hover { border-color: var(--board-light); }
         .av { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; color: #fff; font-size: 16px; font-weight: 800; flex-shrink: 0; line-height: 1; background: var(--board-light); }
@@ -386,6 +401,42 @@
                 </table>
             </div>
             
+        </div>
+    </div>
+
+    <!-- 수정 창: 업무도구·게시글의 모든 항목을 한 화면에서 고침 -->
+    <div id="editModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="editHeading">
+        <div class="modal-content edit-modal">
+            <h3 id="editHeading">수정</h3>
+            <div id="eToolBox">
+                <div class="e-field"><label for="eCat">분류</label>
+                    <select id="eCat">
+                        <option value="blue">인사 · 복무 (파랑)</option>
+                        <option value="purple">예산 · 기획 (보라)</option>
+                        <option value="orange">계약 · 지출 (주황)</option>
+                        <option value="green">재산 · 회계 (초록)</option>
+                        <option value="pink">문서 · 디자인 (핑크)</option>
+                        <option value="gray">기타 · 공통 (회색)</option>
+                    </select></div>
+                <div class="e-field"><label for="eToolTitle">도구 이름</label><input id="eToolTitle" maxlength="60"></div>
+                <div class="e-field"><label for="eToolLink">파일 공유 링크 (구글드라이브 등)</label><input id="eToolLink" placeholder="https://..."></div>
+                <div class="e-field"><label for="eToolDesc">상세 설명</label><textarea id="eToolDesc" rows="4"></textarea></div>
+            </div>
+            <div id="ePostBox">
+                <div class="e-field"><label for="ePostText">내용</label><textarea id="ePostText" rows="5"></textarea></div>
+                <div class="e-field" id="ePostLinkWrap"><label for="ePostLink">외부 공유 링크 (구글드라이브 등, 없으면 비워 두세요)</label><input id="ePostLink" placeholder="https://..."></div>
+                <div class="e-field"><span class="e-label">첨부파일</span>
+                    <div id="eFileList" class="e-files"></div>
+                    <label class="custom-file-btn" for="eFileIn" style="margin-top:6px; width:max-content;">📁 파일 추가</label>
+                    <input type="file" id="eFileIn" multiple hidden onchange="pickEditFiles(event)">
+                    <small class="e-hint">파일 하나에 10MB까지 · '빼기'를 누른 파일은 저장할 때 지워져요</small>
+                </div>
+            </div>
+            <p id="eMsg" class="e-msg" role="alert"></p>
+            <div style="display:flex; gap:8px;">
+                <button class="btn-submit" id="eSave" style="flex:1;" onclick="saveEdit()">수정 저장</button>
+                <button onclick="closeEdit()" style="flex:0 0 90px; border:none; border-radius:8px; background:#e2e8f0; font-weight:800; cursor:pointer; font-family:inherit;">취소</button>
+            </div>
         </div>
     </div>
 
@@ -883,7 +934,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
                         <span style="font-size: 12px; color: #64748b; font-weight: 700;">다운로드 <span class="dl-count" style="font-size: 13px; font-weight: 800; color: #1B5442;">${downloads}회</span></span>
                         <span style="display:flex; gap:6px; align-items:center;">
-                            <button class="like-card ${likedPosts['tool:' + doc.id] ? 'on' : ''}" data-like-tool="${doc.id}" title="좋아요" onclick="event.preventDefault(); event.stopPropagation(); likeTool('${doc.id}')">👍 <span>${tool.likes || 0}</span></button>
+                            <button class="like-card ${likedPosts['tool:' + doc.id] ? 'on' : ''}" data-like-tool="${doc.id}" title="${likedPosts['tool:' + doc.id] ? '다시 누르면 좋아요 취소' : '좋아요'}" onclick="event.preventDefault(); event.stopPropagation(); likeTool('${doc.id}')">👍 <span>${Math.max(0, tool.likes || 0)}</span></button>
                             ${favButton('smartTools', doc.id, tool.title, tool.link, 'fav-card')}
                         </span>
                     </div>`;
@@ -944,20 +995,6 @@
             loadTools(); 
         }
 
-        async function editTool(event, docId, currentTitle, currentLink, currentDesc, authorPhone, guestPwStr) {
-            event.preventDefault(); 
-            event.stopPropagation();
-            if (!checkEditRight(authorPhone, guestPwStr, "업무 도구")) return;
-            const newTitle = prompt("수정할 도구 이름을 입력하세요:", currentTitle);
-            if (newTitle === null) return;
-            const newLink = prompt("수정할 파일명 또는 링크를 입력하세요:", currentLink);
-            if (newLink === null) return;
-            const newDesc = prompt("수정할 상세 설명을 입력하세요:", currentDesc);
-            if (newDesc === null) return;
-            
-            await db.collection("smartTools").doc(docId).update({ title: newTitle, link: newLink, desc: newDesc });
-            loadTools();
-        }
 
         async function deleteTool(event, docId, authorPhone, guestPwStr) {
             event.preventDefault(); 
@@ -1278,13 +1315,14 @@
         // 업무도구 좋아요 (한 브라우저에서 도구 하나에 한 번)
         async function likeTool(toolId) {
             const likedPosts = JSON.parse(localStorage.getItem("likedPosts")) || {};
-            if (likedPosts['tool:' + toolId]) return alert("이미 좋아요를 누른 업무도구입니다.");
+            const had = !!likedPosts['tool:' + toolId];   // 이미 눌렀으면 다시 누를 때 취소
             try {
-                await db.collection("smartTools").doc(toolId).update({ likes: firebase.firestore.FieldValue.increment(1) });
-                likedPosts['tool:' + toolId] = true;
+                await db.collection("smartTools").doc(toolId).update({ likes: firebase.firestore.FieldValue.increment(had ? -1 : 1) });
+                if (had) delete likedPosts['tool:' + toolId]; else likedPosts['tool:' + toolId] = true;
                 localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
                 document.querySelectorAll(`[data-like-tool="${toolId}"]`).forEach(b => {
-                    const n = b.querySelector('span'); n.textContent = Number(n.textContent || 0) + 1; b.classList.add('on');
+                    const n = b.querySelector('span'); n.textContent = Math.max(0, Number(n.textContent || 0) + (had ? -1 : 1));
+                    b.classList.toggle('on', !had); b.title = had ? '좋아요' : '다시 누르면 좋아요 취소';
                 });
             } catch (error) {
                 console.error("좋아요 처리 중 오류 발생:", error);
@@ -1294,18 +1332,14 @@
 
         async function likePost(docId) {
             let likedPosts = JSON.parse(localStorage.getItem("likedPosts")) || {};
-            
-            if (likedPosts[docId]) {
-                alert("이미 좋아요를 누른 게시물입니다.");
-                return;
-            }
+            const had = !!likedPosts[docId];   // 이미 눌렀으면 다시 누를 때 취소
 
             try {
                 await db.collection(currentTab).doc(docId).update({ 
-                    likes: firebase.firestore.FieldValue.increment(1) 
+                    likes: firebase.firestore.FieldValue.increment(had ? -1 : 1) 
                 });
                 
-                likedPosts[docId] = true;
+                if (had) delete likedPosts[docId]; else likedPosts[docId] = true;
                 localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
                 
                 loadPosts();
@@ -1331,19 +1365,108 @@
             return false;
         }
 
-        async function editPost(docId, currentTitle, currentFileLink, authorPhone, guestPwStr) {
+        /* ===== 수정 창: 업무도구·게시글의 모든 항목을 한 화면에서 고침 ===== */
+        const TOOL_BADGES = { blue: "인사 · 복무", purple: "예산 · 기획", orange: "계약 · 지출", green: "재산 · 회계", pink: "문서 · 디자인", gray: "기타 · 공통" };
+        const BOARD_NAMES = { freeBoard: "자유게시판", qaBoard: "묻고 답하기", dataBoard: "자료 공유방" };
+        let editing = null;   // { type, col, id, data, removed:Set, newFiles:[] }
+
+        async function editPost(docId, _title, _link, authorPhone, guestPwStr) {
             if (!checkEditRight(authorPhone, guestPwStr, "글")) return;
-            const newTitle = prompt("수정할 내용(제목)을 입력하세요:", currentTitle);
-            if (newTitle === null) return;
-            const updateData = { title: newTitle };
-            
-            if (currentTab === 'dataBoard') {
-                const newLink = prompt("수정할 파일 링크를 입력하세요:", currentFileLink || "");
-                if (newLink !== null) updateData.fileLink = newLink;
-            }
-            await db.collection(currentTab).doc(docId).update(updateData);
-            loadPosts();
+            const snap = await db.collection(currentTab).doc(docId).get();
+            if (!snap.exists) return alert("글을 찾을 수 없습니다. 이미 지워졌을 수 있어요.");
+            openEditModal({ type: 'post', col: currentTab, id: docId, data: snap.data() });
         }
+        async function editTool(event, docId, _title, _link, _desc, authorPhone, guestPwStr) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!checkEditRight(authorPhone, guestPwStr, "업무 도구")) return;
+            const snap = await db.collection("smartTools").doc(docId).get();
+            if (!snap.exists) return alert("업무 도구를 찾을 수 없습니다. 이미 지워졌을 수 있어요.");
+            openEditModal({ type: 'tool', col: 'smartTools', id: docId, data: snap.data() });
+        }
+        function openEditModal(e) {
+            editing = Object.assign(e, { removed: new Set(), newFiles: [] });
+            const $ = id => document.getElementById(id), d = e.data;
+            $('editHeading').textContent = e.type === 'tool' ? '업무 도구 수정' : `${BOARD_NAMES[e.col] || ''} 글 수정`;
+            $('eToolBox').hidden = e.type !== 'tool';
+            $('ePostBox').hidden = e.type !== 'post';
+            if (e.type === 'tool') {
+                $('eCat').value = TOOL_BADGES[d.category] ? d.category : 'gray';
+                $('eToolTitle').value = d.title || ''; $('eToolLink').value = d.link || ''; $('eToolDesc').value = d.desc || '';
+            } else {
+                $('ePostText').value = d.title || '';
+                $('ePostLink').value = d.fileLink || '';
+                $('ePostLinkWrap').hidden = !(e.col === 'dataBoard' || d.fileLink);
+                $('eFileIn').value = '';
+                renderEditFiles();
+            }
+            $('eMsg').textContent = '';
+            $('editModal').style.display = 'flex';
+            setTimeout(() => (e.type === 'tool' ? $('eToolTitle') : $('ePostText')).focus(), 50);
+        }
+        function closeEdit() { document.getElementById('editModal').style.display = 'none'; editing = null; }
+        function renderEditFiles() {
+            const e = editing, box = document.getElementById('eFileList');
+            const old = (e.data.attachments || []).map((a, i) => {
+                const gone = e.removed.has(i);
+                return `<div class="e-file ${gone ? 'gone' : ''}"><span>${a.type === 'image' ? '🖼️' : '📎'} <a href="${escText(a.url)}" target="_blank" rel="noopener">${escText(a.name || '파일')}</a>${gone ? ' (지워질 예정)' : ''}</span>
+                        <button type="button" onclick="toggleEditFile(${i})">${gone ? '되살리기' : '빼기'}</button></div>`;
+            });
+            const add = e.newFiles.map((f, i) => `<div class="e-file new"><span>🆕 ${escText(f.name)} (${Math.ceil(f.size / 1024)}KB)</span><button type="button" onclick="dropNewFile(${i})">빼기</button></div>`);
+            box.innerHTML = old.concat(add).join('') || '<div class="e-hint">첨부한 파일이 없어요.</div>';
+        }
+        function toggleEditFile(i) { editing.removed.has(i) ? editing.removed.delete(i) : editing.removed.add(i); renderEditFiles(); }
+        function dropNewFile(i) { editing.newFiles.splice(i, 1); renderEditFiles(); }
+        function pickEditFiles(ev) {
+            for (const f of ev.target.files) {
+                if (f.size > 10 * 1024 * 1024) { alert(`${f.name}의 용량이 10MB를 넘습니다.`); continue; }
+                editing.newFiles.push(f);
+            }
+            ev.target.value = '';
+            renderEditFiles();
+        }
+        function fixLink(v) { v = v.trim(); return v && !/^https?:\/\//.test(v) ? 'http://' + v : v; }
+
+        async function saveEdit() {
+            const e = editing; if (!e) return;
+            const $ = id => document.getElementById(id), msg = t => { $('eMsg').textContent = t; };
+            const btn = $('eSave');
+            try {
+                if (e.type === 'tool') {
+                    const title = $('eToolTitle').value.trim(), link = fixLink($('eToolLink').value);
+                    if (!title || !link) return msg('도구 이름과 링크 주소를 모두 입력해 주세요.');
+                    btn.disabled = true; msg('저장하는 중입니다...');
+                    const cat = $('eCat').value;
+                    await db.collection("smartTools").doc(e.id).update({ category: cat, badgeText: TOOL_BADGES[cat], title, link, desc: $('eToolDesc').value.trim() || "설명이 없습니다." });
+                    closeEdit(); loadTools();
+                } else {
+                    const text = $('ePostText').value.trim();
+                    if (!text) return msg('내용을 입력해 주세요.');
+                    btn.disabled = true; msg('저장하는 중입니다...');
+                    const upd = { title: text };
+                    if (!$('ePostLinkWrap').hidden) upd.fileLink = fixLink($('ePostLink').value);
+                    const old = e.data.attachments || [];
+                    const kept = old.filter((a, i) => !e.removed.has(i));
+                    const added = [];
+                    for (const f of e.newFiles) {   // 새 파일 올리기
+                        msg(`파일을 올리는 중입니다... (${added.length + 1}/${e.newFiles.length})`);
+                        const ref = storage.ref().child(`uploads/${e.col}/${Date.now()}_${encodeURIComponent(f.name)}`);
+                        const task = await ref.put(f);
+                        added.push({ url: await task.ref.getDownloadURL(), name: f.name, type: f.type.startsWith('image/') ? 'image' : 'file' });
+                    }
+                    upd.attachments = kept.concat(added);
+                    await db.collection(e.col).doc(e.id).update(upd);
+                    for (const i of e.removed) {   // 뺀 파일은 저장소에서도 지움 (실패해도 괜찮음)
+                        try { await storage.refFromURL(old[i].url).delete(); } catch (err) { console.log("파일 삭제 건너뜀", err); }
+                    }
+                    closeEdit(); loadPosts();
+                }
+            } catch (err) {
+                console.error("수정 저장 실패:", err);
+                msg('저장하지 못했습니다. (' + (err.code || err.message) + ')');
+            } finally { btn.disabled = false; }
+        }
+
 
         async function deletePost(docId, authorPhone, guestPwStr, attachments = []) {
             const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
@@ -1435,7 +1558,7 @@
                 const badge = (isAdmin && post.authorPhone === ADMIN_PHONE) ? `<span class="admin-badge">A</span>` : '';
                 
                 const likeBtnClass = likedPosts[doc.id] ? 'btn-micro btn-like-sm liked' : 'btn-micro btn-like-sm';
-                const likeBtnText = likedPosts[doc.id] ? `👍 ${post.likes || 0}` : `👍 ${post.likes || 0}`;
+                const likeBtnText = `👍 ${Math.max(0, post.likes || 0)}`;
                 const commentBtn = `<button id="btn-comment-${doc.id}" class="btn-micro btn-comment-sm" onclick="toggleComments('${doc.id}')">💬 0</button>`;
 
                 const tr = document.createElement("tr");
@@ -1447,7 +1570,7 @@
                     <td class="center">
                         <div class="btn-micro-group">
                             ${favButton(currentTab, doc.id, post.title, '', 'btn-micro fav-sm')}
-                            <button class="${likeBtnClass}" onclick="likePost('${doc.id}')">${likeBtnText}</button>
+                            <button class="${likeBtnClass}" title="${likedPosts[doc.id] ? '다시 누르면 좋아요 취소' : '좋아요'}" aria-pressed="${!!likedPosts[doc.id]}" onclick="likePost('${doc.id}')">${likeBtnText}</button>
                             ${commentBtn}
                             ${adminBtns}
                         </div>

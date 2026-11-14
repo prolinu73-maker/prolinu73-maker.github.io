@@ -157,7 +157,7 @@ footer{color:var(--muted);font-size:13.5px}
 #hubHomeBtn:hover{background:#123D30 !important}
 #hubHomeBtn:focus-visible{outline:3px solid #F4C430;outline-offset:2px}
 .hub-home-wrap{display:flex;align-items:center;gap:16px;min-width:0}
-.post .del .like.on{background:#E7F6F0;border-color:#1A9C7B;color:#1A7A5E}
+.post .del .like.on{background:#1A9C7B;border-color:#1A9C7B;color:#fff}
 </style>
 </head>
 <body>
@@ -813,14 +813,14 @@ footer{color:var(--muted);font-size:13.5px}
         (function(){
           var liked={};try{liked=JSON.parse(localStorage.getItem('perdiem_liked')||'{}')}catch(e){}
           var lb=document.createElement('button');lb.type='button';lb.className='btn small ghost like'+(liked[doc.id]?' on':'');
-          lb.setAttribute('aria-pressed',liked[doc.id]?'true':'false');lb.title='좋아요';
-          var n=Number(p.likes||0);lb.textContent='👍 '+n;
+          lb.setAttribute('aria-pressed',liked[doc.id]?'true':'false');lb.title=liked[doc.id]?'다시 누르면 좋아요 취소':'좋아요';
+          var n=Math.max(0,Number(p.likes||0));lb.textContent='👍 '+n;
           lb.addEventListener('click',function(){
             var L={};try{L=JSON.parse(localStorage.getItem('perdiem_liked')||'{}')}catch(e){}
-            if(L[doc.id]){bMsg('이미 좋아요를 눌렀어요.');return}
+            var had=!!L[doc.id],step=had?-1:1;   // 이미 눌렀으면 다시 누를 때 취소
             lb.disabled=true;
-            getDb().then(function(db){return db.collection(BOARD).doc(doc.id).update({likes:firebase.firestore.FieldValue.increment(1)})})
-              .then(function(){L[doc.id]=true;localStorage.setItem('perdiem_liked',JSON.stringify(L));n++;lb.textContent='👍 '+n;lb.classList.add('on');lb.setAttribute('aria-pressed','true')})
+            getDb().then(function(db){return db.collection(BOARD).doc(doc.id).update({likes:firebase.firestore.FieldValue.increment(step)})})
+              .then(function(){if(had)delete L[doc.id];else L[doc.id]=true;localStorage.setItem('perdiem_liked',JSON.stringify(L));n=Math.max(0,n+step);lb.textContent='👍 '+n;lb.classList.toggle('on',!had);lb.setAttribute('aria-pressed',String(!had));lb.title=had?'좋아요':'다시 누르면 좋아요 취소'})
               .catch(function(err){bMsg('좋아요를 저장하지 못했습니다. '+why(err),true)})
               .then(function(){lb.disabled=false});
           });

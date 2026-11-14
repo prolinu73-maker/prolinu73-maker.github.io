@@ -716,21 +716,23 @@ const LIKED_KEY = 'labor_liked';
 function likedSet() { try { return new Set(JSON.parse(localStorage.getItem(LIKED_KEY) || '[]')); } catch (e) { return new Set(); } }
 function likeButton(kind, item) {
   const on = likedSet().has(kind + '/' + item.id);
-  return `<button id="likeBtn" onclick="likeItem('${kind}','${item.id}')" aria-pressed="${on}" class="text-sm px-4 py-2 rounded-lg border ${on ? 'bg-emerald-50 border-emerald-400 text-emerald-700' : 'border-slate-300 hover:bg-slate-50'}">👍 좋아요 <b>${item.likes || 0}</b></button>`;
+  return `<button id="likeBtn" onclick="likeItem('${kind}','${item.id}')" aria-pressed="${on}" title="${on ? '다시 누르면 좋아요 취소' : '좋아요'}" class="${likeCls(on)}">👍 좋아요 <b>${Math.max(0, item.likes || 0)}</b></button>`;
 }
+function likeCls(on) { return 'text-sm px-4 py-2 rounded-lg border ' + (on ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 hover:bg-slate-50'); }
 async function likeItem(kind, id) {
   const liked = likedSet(), key = kind + '/' + id;
-  if (liked.has(key)) return toast('이미 좋아요를 눌렀어요');
+  const had = liked.has(key);   // 이미 눌렀으면 다시 누를 때 취소
   const item = (kind === 'qna' ? qnaData : boardData).find(x => x.id === id); if (!item) return;
+  const step = had ? -1 : 1;
   try {
-    const inc = DB.mode === 'firebase' ? firebase.firestore.FieldValue.increment(1) : (item.likes || 0) + 1;
+    const inc = DB.mode === 'firebase' ? firebase.firestore.FieldValue.increment(step) : Math.max(0, (item.likes || 0) + step);
     await DB.update(COL[kind], id, { likes: inc });
-    item.likes = (item.likes || 0) + 1;
-    liked.add(key); localStorage.setItem(LIKED_KEY, JSON.stringify([...liked]));
+    item.likes = Math.max(0, (item.likes || 0) + step);
+    had ? liked.delete(key) : liked.add(key); localStorage.setItem(LIKED_KEY, JSON.stringify([...liked]));
     const btn = $('likeBtn');
-    if (btn) { btn.querySelector('b').textContent = item.likes; btn.className = 'text-sm px-4 py-2 rounded-lg border bg-emerald-50 border-emerald-400 text-emerald-700'; btn.setAttribute('aria-pressed', 'true'); }
+    if (btn) { btn.querySelector('b').textContent = item.likes; btn.className = likeCls(!had); btn.setAttribute('aria-pressed', String(!had)); btn.title = had ? '좋아요' : '다시 누르면 좋아요 취소'; }
     kind === 'qna' ? renderQna() : renderBoard();
-    toast('좋아요를 눌렀어요');
+    toast(had ? '좋아요를 취소했어요' : '좋아요를 눌렀어요');
   } catch (e) { console.error(e); toast('좋아요를 저장하지 못했습니다'); }
 }
 function openBoard(id) {
