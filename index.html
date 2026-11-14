@@ -489,6 +489,11 @@
                 <input type="text" id="authId" placeholder="아이디" autocomplete="username" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')executeAuth()">
                 <small id="authIdHint" class="auth-hint" hidden>영문 소문자·숫자·밑줄(_) 4~20자</small>
             </div>
+            <div id="emailWrap" class="auth-field" hidden>
+                <label for="authEmail" id="authEmailLabel">이메일</label>
+                <input type="email" id="authEmail" placeholder="example@email.com" autocomplete="email" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')executeAuth()">
+                <small id="authEmailHint" class="auth-hint">비밀번호를 잊었을 때 재설정 메일을 받는 주소예요. 다른 사람에게는 보이지 않아요.</small>
+            </div>
             <div id="pwWrap" class="auth-field">
                 <label for="authPw" id="authPwLabel">비밀번호</label>
                 <input type="password" id="authPw" placeholder="비밀번호" autocomplete="current-password" onkeydown="if(event.key==='Enter')executeAuth()">
@@ -516,18 +521,19 @@
         </div>
     </div>
 
-    <!-- 내 정보 (닉네임·비밀번호 바꾸기) -->
+    <!-- 내 정보 (닉네임·이메일·비밀번호 바꾸기) -->
     <div id="myInfoModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="myInfoTitle">
         <div class="modal-content">
             <h3 id="myInfoTitle">내 정보</h3>
-            <p class="auth-guide">아이디 <b id="myLoginId"></b></p>
+            <p class="auth-guide">아이디 <b id="myLoginId"></b><br>이메일 <b id="myEmail"></b></p>
             <div class="auth-field"><label for="myNick">닉네임</label><input type="text" id="myNick" maxlength="12" autocomplete="nickname"></div>
-            <p class="auth-hint" style="margin:4px 0 10px;">비밀번호를 바꿀 때만 아래 칸을 채우세요.</p>
+            <div class="auth-field"><label for="myNewEmail">이메일 바꾸기·등록 (바꿀 때만)</label><input type="email" id="myNewEmail" autocomplete="email" placeholder="새 이메일 주소"><small class="auth-hint">새 주소로 확인 메일이 가요. 메일의 링크를 눌러야 바뀝니다.</small></div>
+            <p class="auth-hint" style="margin:4px 0 10px;">이메일이나 비밀번호를 바꿀 때는 지금 비밀번호가 필요해요.</p>
             <div class="auth-field"><label for="myCurPw">지금 비밀번호</label><input type="password" id="myCurPw" autocomplete="current-password"></div>
-            <div class="auth-field"><label for="myNewPw">새 비밀번호 (6자 이상)</label><input type="password" id="myNewPw" autocomplete="new-password"></div>
+            <div class="auth-field"><label for="myNewPw">새 비밀번호 (바꿀 때만, 6자 이상)</label><input type="password" id="myNewPw" autocomplete="new-password"></div>
             <div class="auth-field"><label for="myNewPw2">새 비밀번호 확인</label><input type="password" id="myNewPw2" autocomplete="new-password"></div>
             <p id="myMsg" class="auth-msg" role="alert"></p>
-            <button class="btn-submit" style="width:100%;" onclick="saveMyInfo()">저장하기</button>
+            <button class="btn-submit" id="mySave" style="width:100%;" onclick="saveMyInfo()">저장하기</button>
             <button onclick="closeMyInfo()" class="auth-close">닫기</button>
         </div>
     </div>
@@ -607,35 +613,73 @@
 
         /* =====================================================================
            회원가입 · 로그인 (Firebase Authentication 사용)
-           - 가입 정보: 아이디, 비밀번호, 닉네임 (개인정보 없음)
-           - 비밀번호는 구글(Firebase)이 암호화해서 보관 → 이 사이트 저장소에는 남지 않음
-           - 회원 정보는 기존 'users' 저장 공간에 {아이디, 닉네임}만 저장
+           - 가입 정보: 아이디, 이메일, 비밀번호, 닉네임
+           - 비밀번호와 이메일은 구글(Firebase) 로그인 기능 안에 보관
+           - 아이디로 로그인할 수 있도록, 이메일은 '그 사람의 비밀번호로 잠근(암호화한) 상태'로만
+             사이트 저장 공간에 둠 → 다른 사람은 이메일 주소를 알 수 없음
+           - 비밀번호를 잊으면 이메일로 재설정 메일을 받음
            - 예전 회원(휴대폰 번호로 가입)은 처음 로그인할 때 새 방식으로 옮김
            ===================================================================== */
-        const ID_DOMAIN = "@prolinu73-6c409.firebaseapp.com";   // 아이디를 Firebase 로그인 형식으로 바꿀 때 붙이는 꼬리 (실제 메일 아님)
+        const ID_DOMAIN = "@prolinu73-6c409.firebaseapp.com";   // 이메일을 아직 등록하지 않은 계정의 임시 로그인 주소 꼬리
         const ID_RULE = /^[a-z0-9_]{4,20}$/;
         const NICK_RULE = /^[가-힣ㄱ-ㅎa-zA-Z0-9_\- ]{2,12}$/;
+        const EMAIL_RULE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
         let legacyMember = null;   // 옮기는 중인 예전 회원 정보
 
         function hubAuth() {
             if (typeof firebase === 'undefined' || !firebase.auth) return null;
             hubDb();
-            return firebase.auth();
+            const a = firebase.auth();
+            a.languageCode = 'ko';   // 재설정·확인 메일을 한국어로
+            return a;
         }
         function idToEmail(id) { return id + ID_DOMAIN; }
+        function isTempEmail(e) { return String(e || '').endsWith(ID_DOMAIN); }
         function authMsg(text, ok) {
             const el = document.getElementById('authMsg');
             el.textContent = text || '';
             el.classList.toggle('ok', !!ok);
         }
+
+        /* ── 이메일 잠금(암호화): 비밀번호로만 풀리게 저장 ── */
+        const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+        const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+        async function pwKey(pw, salt) {
+            const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+            return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+        }
+        async function lockEmail(email, pw) {
+            const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+            const c = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await pwKey(pw, salt), new TextEncoder().encode(email));
+            return { v: 1, s: b64(salt), i: b64(iv), c: b64(c) };
+        }
+        async function unlockEmail(lock, pw) {
+            if (!lock || !lock.c) return null;
+            try {
+                const p = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(lock.i) }, await pwKey(pw, unb64(lock.s)), unb64(lock.c));
+                return new TextDecoder().decode(p);
+            } catch (e) { return null; }   // 비밀번호가 다르면 풀리지 않음
+        }
+        // 로그인에 성공하면, 잠가 둔 이메일을 지금 이메일·비밀번호에 맞게 새로 잠금 (재설정·이메일 변경 뒤에도 아이디 로그인이 되도록)
+        async function syncMailLock(uid, prof, user, pw) {
+            if (!user || isTempEmail(user.email) || !user.email) return;
+            const now = await unlockEmail(prof.mailLock, pw);
+            if (now === user.email && !prof.mailLockOld) return;
+            try {
+                await db.collection("users").doc(uid).update({ mailLock: await lockEmail(user.email, pw), mailLockOld: firebase.firestore.FieldValue.delete() });
+            } catch (e) { console.log("이메일 잠금 갱신 실패", e); }
+        }
+
         // Firebase 오류를 쉬운 말로
         function authErrorText(err) {
             const c = String((err && err.code) || '');
             if (c.includes('invalid-credential') || c.includes('wrong-password') || c.includes('user-not-found') || c.includes('invalid-login-credentials'))
-                return '아이디 또는 비밀번호가 맞지 않습니다.';
-            if (c.includes('email-already-in-use')) return '이미 사용 중인 아이디입니다. 다른 아이디를 정해 주세요.';
+                return '아이디(또는 이메일)나 비밀번호가 맞지 않습니다.';
+            if (c.includes('email-already-in-use')) return '이미 가입된 이메일입니다.';
+            if (c.includes('invalid-email')) return '이메일 주소 형식이 맞지 않습니다.';
             if (c.includes('weak-password')) return '비밀번호는 6자 이상으로 정해 주세요.';
-            if (c.includes('too-many-requests')) return '로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.';
+            if (c.includes('too-many-requests')) return '시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.';
+            if (c.includes('requires-recent-login')) return '보안을 위해 로그아웃 후 다시 로그인한 뒤 시도해 주세요.';
             if (c.includes('network-request-failed')) return '인터넷 연결을 확인한 뒤 다시 시도해 주세요.';
             if (c.includes('operation-not-allowed') || c.includes('configuration-not-found'))
                 return 'Firebase에서 "이메일/비밀번호" 로그인이 아직 켜져 있지 않습니다. 관리자가 Firebase 설정을 마쳐야 가입·로그인할 수 있어요.';
@@ -646,11 +690,11 @@
         function openModal(mode) {
             document.getElementById('authModal').style.display = 'flex';
             changeAuthMode(mode);
-            setTimeout(() => document.getElementById('authId').focus(), 50);
+            setTimeout(() => document.getElementById(mode === 'findpw' ? 'authEmail' : 'authId').focus(), 50);
         }
         function closeModal() {
             document.getElementById('authModal').style.display = 'none';
-            ['authId', 'authPw', 'authPwConfirm', 'authName'].forEach(id => { document.getElementById(id).value = ''; });
+            ['authId', 'authEmail', 'authPw', 'authPwConfirm', 'authName'].forEach(id => { document.getElementById(id).value = ''; });
             legacyMember = null;
             changeAuthMode('login');
         }
@@ -668,11 +712,12 @@
                 $id('authGuide').hidden = !guide;
             };
             // 기본: 로그인 화면
-            show('idWrap', true); show('pwWrap', true); show('pwConfirmWrap', false); show('nickWrap', false);
-            show('authIdHint', false); show('authPwHint', false); show('toggleWrap', true); show('findPwWrap', true);
-            $id('authIdLabel').textContent = '아이디';
+            show('idWrap', true); show('emailWrap', false); show('pwWrap', true); show('pwConfirmWrap', false); show('nickWrap', false);
+            show('authIdHint', false); show('authPwHint', false); show('authEmailHint', true); show('toggleWrap', true); show('findPwWrap', true);
+            $id('authIdLabel').textContent = '아이디 또는 이메일';
             $id('authPwLabel').textContent = '비밀번호';
-            $id('authId').placeholder = '아이디 (예전 회원은 휴대폰 번호)';
+            $id('authEmailLabel').textContent = '이메일';
+            $id('authId').placeholder = '아이디 또는 이메일 (예전 회원은 휴대폰 번호)';
             $id('authPw').setAttribute('autocomplete', 'current-password');
 
             if (mode === 'login') {
@@ -681,8 +726,9 @@
                 $id('authToggleBtn').textContent = '회원가입';
                 $id('authToggleBtn').onclick = () => changeAuthMode('signup');
             } else if (mode === 'signup') {
-                set('회원가입', '가입하기', '아이디·비밀번호·닉네임만 받습니다. 게시판에 글이나 파일을 올리면 닉네임으로 표시돼요.');
-                show('pwConfirmWrap', true); show('nickWrap', true); show('authIdHint', true); show('authPwHint', true); show('findPwWrap', false);
+                set('회원가입', '가입하기', '아이디·이메일·비밀번호·닉네임을 받습니다. 게시판에 글이나 파일을 올리면 닉네임으로 표시되고, 이메일은 다른 사람에게 보이지 않아요.');
+                show('emailWrap', true); show('pwConfirmWrap', true); show('nickWrap', true); show('authIdHint', true); show('authPwHint', true); show('findPwWrap', false);
+                $id('authIdLabel').textContent = '아이디';
                 $id('authId').placeholder = '사용할 아이디';
                 $id('authPw').setAttribute('autocomplete', 'new-password');
                 $id('authToggleMsg').textContent = '이미 계정이 있으신가요?';
@@ -690,8 +736,8 @@
                 $id('authToggleBtn').onclick = () => changeAuthMode('login');
             } else if (mode === 'migrate') {
                 set('새 로그인 방식으로 옮기기', '옮기고 로그인하기',
-                    '예전에 휴대폰 번호로 가입한 회원입니다. 앞으로 쓸 아이디와 비밀번호를 정하면 새 방식으로 옮겨 드려요. 그동안 쓴 글은 그대로 내 글로 남고, 휴대폰 번호는 지워집니다.');
-                show('pwConfirmWrap', true); show('nickWrap', true); show('authIdHint', true); show('authPwHint', true); show('findPwWrap', false);
+                    '예전에 휴대폰 번호로 가입한 회원입니다. 앞으로 쓸 아이디·이메일·비밀번호를 정하면 새 방식으로 옮겨 드려요. 그동안 쓴 글은 그대로 내 글로 남고, 휴대폰 번호는 지워집니다.');
+                show('emailWrap', true); show('pwConfirmWrap', true); show('nickWrap', true); show('authIdHint', true); show('authPwHint', true); show('findPwWrap', false);
                 $id('authIdLabel').textContent = '새 아이디';
                 $id('authPwLabel').textContent = '새 비밀번호 (지금 비밀번호를 그대로 써도 됩니다)';
                 $id('authId').placeholder = '앞으로 쓸 아이디';
@@ -700,9 +746,10 @@
                 $id('authToggleBtn').textContent = '처음으로';
                 $id('authToggleBtn').onclick = () => { legacyMember = null; changeAuthMode('login'); };
             } else if (mode === 'findpw') {
-                set('비밀번호를 잊으셨나요?', '',
-                    '아이디로 가입하는 방식이라 비밀번호를 찾아 드릴 수 없어요. 관리자에게 연락하면 예전 계정을 지운 뒤 같은 닉네임으로 다시 가입할 수 있습니다. 로그인한 상태에서는 비밀번호를 바꿀 수 있어요.');
-                show('idWrap', false); show('pwWrap', false); show('findPwWrap', false);
+                set('비밀번호 찾기', '재설정 메일 보내기',
+                    '가입할 때 넣은 이메일 주소를 적어 주세요. 비밀번호를 새로 정하는 메일을 보내 드려요. 새 비밀번호를 정한 뒤 처음 한 번은 아이디 대신 이메일 주소로 로그인해 주세요.');
+                show('idWrap', false); show('pwWrap', false); show('emailWrap', true); show('authEmailHint', false); show('findPwWrap', false);
+                $id('authEmailLabel').textContent = '가입한 이메일';
                 $id('authToggleMsg').textContent = '비밀번호가 기억나셨나요?';
                 $id('authToggleBtn').textContent = '로그인';
                 $id('authToggleBtn').onclick = () => changeAuthMode('login');
@@ -726,7 +773,9 @@
             updateLoginUI();
             if (!quiet) {
                 closeModal();
-                alert(`환영합니다, ${prof.name}님!`);
+                const auth = hubAuth();
+                const noMail = auth && auth.currentUser && isTempEmail(auth.currentUser.email);
+                alert(`환영합니다, ${prof.name}님!` + (noMail ? `\n\n비밀번호 찾기에 쓸 이메일이 아직 등록되지 않았어요.\n오른쪽 위 내 이름 → '이메일·비밀번호 변경'에서 등록해 주세요.` : ''));
                 purgeMyVisits();
             }
         }
@@ -736,6 +785,7 @@
             const auth = hubAuth();
             if (!auth) return authMsg('로그인 기능을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
             const raw = document.getElementById('authId').value.trim();
+            const email = document.getElementById('authEmail').value.trim().toLowerCase();
             const pw = document.getElementById('authPw').value;
             const pw2 = document.getElementById('authPwConfirm').value;
             const nick = document.getElementById('authName').value.trim().replace(/\s+/g, ' ');
@@ -743,8 +793,16 @@
             const busy = on => { btn.disabled = on; btn.style.opacity = on ? .6 : 1; };
 
             try {
+                if (authMode === 'findpw') {
+                    if (!EMAIL_RULE.test(email)) return authMsg('가입할 때 넣은 이메일 주소를 정확히 적어 주세요.');
+                    busy(true);
+                    await auth.sendPasswordResetEmail(email);
+                    authMsg('재설정 메일을 보냈어요. (가입한 주소가 맞을 때만 도착해요) 메일이 안 보이면 스팸함도 확인해 주세요. 새 비밀번호를 정한 뒤 처음 한 번은 이메일 주소로 로그인해 주세요.', true);
+                    return;
+                }
+
                 if (authMode === 'login') {
-                    if (!raw || !pw) return authMsg('아이디와 비밀번호를 입력해 주세요.');
+                    if (!raw || !pw) return authMsg('아이디(또는 이메일)와 비밀번호를 입력해 주세요.');
                     busy(true);
                     // ① 예전 회원: 휴대폰 번호로 로그인 → 확인되면 '옮기기' 화면으로
                     if (/^[0-9\-\s]+$/.test(raw)) {
@@ -757,22 +815,42 @@
                         document.getElementById('authId').value = '';
                         document.getElementById('authPw').value = '';
                         document.getElementById('authName').value = legacyMember.name;
-                        authMsg('본인 확인이 끝났습니다. 새 아이디와 비밀번호를 정해 주세요.', true);
+                        authMsg('본인 확인이 끝났습니다. 새 아이디·이메일·비밀번호를 정해 주세요.', true);
                         return;
                     }
-                    // ② 새 방식 회원: 아이디로 로그인
-                    const id = raw.toLowerCase();
-                    const cred = await auth.signInWithEmailAndPassword(idToEmail(id), pw);
-                    const prof = await db.collection("users").doc(cred.user.uid).get();
-                    if (!prof.exists) {
+                    let cred = null, prof = null, hint = '';
+                    if (raw.includes('@')) {
+                        // ② 이메일로 로그인
+                        cred = await auth.signInWithEmailAndPassword(raw.toLowerCase(), pw);
+                    } else {
+                        // ③ 아이디로 로그인: 잠가 둔 이메일을 비밀번호로 풀어서 로그인
+                        const id = raw.toLowerCase();
+                        const snap = await db.collection("users").where("loginId", "==", id).get();
+                        if (snap.empty) return authMsg('아이디(또는 이메일)나 비밀번호가 맞지 않습니다.');
+                        const p = snap.docs[0].data();
+                        const tries = [];
+                        for (const lock of [p.mailLock, p.mailLockOld]) { const e = await unlockEmail(lock, pw); if (e && !tries.includes(e)) tries.push(e); }
+                        tries.push(idToEmail(id));   // 이메일 등록 전 계정
+                        if (p.mailLock && tries.length === 1) hint = ' 비밀번호를 재설정했다면 아이디 대신 이메일 주소로 로그인해 주세요.';
+                        for (const e of tries) {
+                            try { cred = await auth.signInWithEmailAndPassword(e, pw); break; }
+                            catch (err) { if (!/credential|wrong-password|user-not-found|invalid-login/.test(String(err.code))) throw err; }
+                        }
+                        if (!cred) return authMsg('아이디(또는 이메일)나 비밀번호가 맞지 않습니다.' + hint);
+                    }
+                    const ps = await db.collection("users").doc(cred.user.uid).get();
+                    if (!ps.exists) {
                         await auth.signOut();
                         return authMsg('탈퇴 처리된 계정입니다. 다시 가입해 주세요.');
                     }
-                    setSession(cred.user.uid, prof.data());
+                    prof = ps.data();
+                    await syncMailLock(cred.user.uid, prof, cred.user, pw);
+                    setSession(cred.user.uid, prof);
 
                 } else if (authMode === 'signup' || authMode === 'migrate') {
                     const id = raw.toLowerCase();
                     if (!ID_RULE.test(id)) return authMsg('아이디는 영문 소문자·숫자·밑줄(_)로 4~20자로 정해 주세요.');
+                    if (!EMAIL_RULE.test(email)) return authMsg('이메일 주소를 정확히 적어 주세요. (비밀번호를 잊었을 때 필요해요)');
                     if (pw.length < 6) return authMsg('비밀번호는 6자 이상으로 정해 주세요.');
                     if (pw !== pw2) return authMsg('비밀번호가 서로 다릅니다. 다시 확인해 주세요.');
                     if (!NICK_RULE.test(nick)) return authMsg('닉네임은 한글·영문·숫자로 2~12자로 정해 주세요.');
@@ -782,19 +860,31 @@
                     if (!idSnap.empty) return authMsg('이미 사용 중인 아이디입니다. 다른 아이디를 정해 주세요.');
                     if (await nicknameTaken(nick, legacyMember && legacyMember.docId)) return authMsg('이미 사용 중인 닉네임입니다. 다른 닉네임을 정해 주세요.');
 
-                    const cred = await auth.createUserWithEmailAndPassword(idToEmail(id), pw);
+                    let cred, created = true;
+                    try {
+                        cred = await auth.createUserWithEmailAndPassword(email, pw);
+                    } catch (e) {
+                        if (!String(e.code).includes('email-already-in-use')) throw e;
+                        // 탈퇴 처리됐던 사람이 같은 이메일·비밀번호로 다시 가입하는 경우
+                        try { cred = await auth.signInWithEmailAndPassword(email, pw); created = false; }
+                        catch (e2) { return authMsg("이미 가입된 이메일입니다. 로그인하거나, 비밀번호를 잊었다면 '비밀번호를 잊으셨나요?'를 눌러 주세요."); }
+                        const exist = await db.collection("users").doc(cred.user.uid).get();
+                        if (exist.exists) { await auth.signOut(); return authMsg('이미 가입된 이메일입니다. 로그인해 주세요.'); }
+                    }
                     const uid = cred.user.uid;
                     const prof = {
                         loginId: id,
                         name: nick,
                         ownerKey: authMode === 'migrate' ? legacyMember.phone : ('uid:' + uid),
+                        mailLock: await lockEmail(email, pw),
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
                     if (authMode === 'migrate') prof.migratedFrom = legacyMember.docId;
                     try {
                         await db.collection("users").doc(uid).set(prof);
                     } catch (e) {
-                        try { await cred.user.delete(); } catch (e2) {}   // 회원 정보 저장에 실패하면 만든 계정을 지워 다시 시도할 수 있게
+                        if (created) { try { await cred.user.delete(); } catch (e2) {} }   // 회원 정보 저장에 실패하면 만든 계정을 지워 다시 시도할 수 있게
+                        else { try { await auth.signOut(); } catch (e2) {} }
                         throw e;
                     }
                     if (authMode === 'migrate') {
@@ -837,24 +927,32 @@
             updateLoginUI();
         }
 
-        // 내 정보: 닉네임·비밀번호 바꾸기
+        // 내 정보: 닉네임·이메일·비밀번호 바꾸기
         function openMyInfo() {
             const auth = hubAuth();
             if (!currentUser || !auth || !auth.currentUser) return alert("로그인 정보를 확인하는 중입니다. 잠시 후 다시 눌러 주세요.");
+            const mail = auth.currentUser.email;
             document.getElementById('myLoginId').textContent = currentUser.loginId || '';
+            document.getElementById('myEmail').textContent = isTempEmail(mail) || !mail ? '아직 등록 안 됨 — 아래에 적어 주세요' : mail;
             document.getElementById('myNick').value = currentUser.name || '';
-            ['myCurPw', 'myNewPw', 'myNewPw2'].forEach(id => { document.getElementById(id).value = ''; });
+            ['myNewEmail', 'myCurPw', 'myNewPw', 'myNewPw2'].forEach(id => { document.getElementById(id).value = ''; });
             document.getElementById('myMsg').textContent = '';
+            document.getElementById('myMsg').classList.remove('ok');
             document.getElementById('myInfoModal').style.display = 'flex';
         }
         function closeMyInfo() { document.getElementById('myInfoModal').style.display = 'none'; }
         async function saveMyInfo() {
             const auth = hubAuth(); const user = auth && auth.currentUser;
-            const msg = t => { document.getElementById('myMsg').textContent = t; };
+            const msgEl = document.getElementById('myMsg');
+            const msg = (t, ok) => { msgEl.textContent = t; msgEl.classList.toggle('ok', !!ok); };
             if (!user) return msg('로그인 정보가 없습니다. 다시 로그인해 주세요.');
             const nick = document.getElementById('myNick').value.trim().replace(/\s+/g, ' ');
+            const newMail = document.getElementById('myNewEmail').value.trim().toLowerCase();
             const cur = document.getElementById('myCurPw').value, np = document.getElementById('myNewPw').value, np2 = document.getElementById('myNewPw2').value;
+            const btn = document.getElementById('mySave');
+            const notes = [];
             try {
+                btn.disabled = true;
                 if (nick !== currentUser.name) {
                     if (!NICK_RULE.test(nick)) return msg('닉네임은 한글·영문·숫자로 2~12자로 정해 주세요.');
                     if (await nicknameTaken(nick, user.uid)) return msg('이미 사용 중인 닉네임입니다.');
@@ -862,21 +960,36 @@
                     currentUser.name = nick;
                     localStorage.setItem("currentUser", JSON.stringify(currentUser));
                     updateLoginUI();
+                    notes.push('닉네임을 바꿨어요.');
                 }
-                if (np || np2) {
-                    if (!cur) return msg('비밀번호를 바꾸려면 지금 비밀번호를 입력해 주세요.');
-                    if (np.length < 6) return msg('새 비밀번호는 6자 이상으로 정해 주세요.');
+                const wantMail = newMail && newMail !== user.email;
+                if (wantMail || np || np2) {
+                    if (wantMail && !EMAIL_RULE.test(newMail)) return msg('새 이메일 주소를 정확히 적어 주세요.');
+                    if (!cur) return msg('이메일이나 비밀번호를 바꾸려면 지금 비밀번호를 입력해 주세요.');
+                    if ((np || np2) && np.length < 6) return msg('새 비밀번호는 6자 이상으로 정해 주세요.');
                     if (np !== np2) return msg('새 비밀번호가 서로 다릅니다.');
-                    const credential = firebase.auth.EmailAuthProvider.credential(user.email, cur);
-                    await user.reauthenticateWithCredential(credential);
-                    await user.updatePassword(np);
+                    await user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(user.email, cur));
+                    const pwNow = np || cur;
+                    const upd = {};
+                    if (np) { await user.updatePassword(np); notes.push('비밀번호를 바꿨어요.'); }
+                    if (wantMail) {
+                        await user.verifyBeforeUpdateEmail(newMail);
+                        upd.mailLock = await lockEmail(newMail, pwNow);
+                        if (!isTempEmail(user.email)) upd.mailLockOld = await lockEmail(user.email, pwNow);   // 확인 전까지는 예전 주소로도 로그인
+                        notes.push(`${newMail} 로 확인 메일을 보냈어요. 메일의 링크를 눌러야 이메일이 바뀌어요.`);
+                    } else if (np && !isTempEmail(user.email)) {
+                        upd.mailLock = await lockEmail(user.email, np);   // 새 비밀번호로 다시 잠금
+                    }
+                    if (Object.keys(upd).length) await db.collection("users").doc(user.uid).update(upd);
                 }
-                closeMyInfo();
-                alert('내 정보를 저장했습니다.');
+                if (!notes.length) return msg('바뀐 내용이 없어요.');
+                msg(notes.join(' '), true);
+                ['myNewEmail', 'myCurPw', 'myNewPw', 'myNewPw2'].forEach(id => { document.getElementById(id).value = ''; });
             } catch (e) {
                 console.error(e);
-                msg(String(e.code || '').includes('credential') || String(e.code || '').includes('wrong-password') ? '지금 비밀번호가 맞지 않습니다.' : authErrorText(e));
-            }
+                const c = String(e.code || '');
+                msg(c.includes('credential') || c.includes('wrong-password') ? '지금 비밀번호가 맞지 않습니다.' : authErrorText(e));
+            } finally { btn.disabled = false; }
         }
 
         // 페이지를 열 때: Firebase 로그인 상태와 이 브라우저의 로그인 정보를 맞춤
@@ -966,7 +1079,7 @@
                     <div class="um-menu" id="umMenu" role="menu" hidden>
                       <a href="mypage.html" role="menuitem">🏠 내 페이지</a>
                       <a href="mypage.html#edit" role="menuitem">⚙️ 프로필 편집</a>
-                      <button role="menuitem" onclick="closeUserMenu(); openMyInfo()">🔑 비밀번호 변경</button>
+                      <button role="menuitem" onclick="closeUserMenu(); openMyInfo()">🔑 이메일·비밀번호 변경</button>
                       <a href="mypage.html#fav" role="menuitem">⭐ 즐겨찾기</a>
                       ${isAdmin ? `<div class="um-sec">관리자</div>
                       <button role="menuitem" onclick="closeUserMenu(); openAdminModal()">👥 회원관리</button>
