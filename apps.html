@@ -200,6 +200,15 @@
             .board-table th, .board-table td { padding: 12px 10px; }
             .section-header h3 { font-size: 22px; }
         }
+        /* 즐겨찾기 별표 · 내 페이지 링크 */
+        .fav-sm { background: #fff !important; color: #9A6B00 !important; border: 1px solid #F2D27A !important; font-size: 12px !important; }
+        .fav-sm.on, .fav-card.on { background: #FEF3C7 !important; color: #92400E !important; }
+        .fav-card { border: 1px solid #F2D27A; background: #fff; color: #9A6B00; border-radius: 999px; width: 30px; height: 30px; font-size: 15px; cursor: pointer; line-height: 1; padding: 0; }
+        .fav-card:hover, .fav-sm:hover { background: #FEF3C7 !important; }
+        .me-link { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink); font-weight: 800; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px 14px 4px 4px; }
+        .me-link:hover { border-color: var(--board-light); }
+        .av { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; color: #fff; font-size: 16px; font-weight: 800; flex-shrink: 0; line-height: 1; background: var(--board-light); }
+        .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
         @media (prefers-reduced-motion: reduce) {
             .card, .site-chip, .nav-item, .tab-btn { transition: none; }
             .card:hover { transform: none; }
@@ -571,8 +580,7 @@
             
             // 데이터 병렬 로딩 (성능 향상)
             loadSites();
-            loadTools();
-            loadPosts(); 
+            loadFavs().finally(() => { loadTools(); loadPosts(); openTabFromHash(); });
         }
 
         function updateClock() {
@@ -631,6 +639,65 @@
             }
         }
 
+        /* ===== 즐겨찾기 (로그인한 회원만) — 내 페이지에 모여 보임 ===== */
+        const FAV_WHERE = { smartTools: "업무도구", freeBoard: "자유게시판", qaBoard: "묻고 답하기", dataBoard: "자료 공유방" };
+        const FAV_LINK = { freeBoard: "apps.html#free", qaBoard: "apps.html#qa", dataBoard: "apps.html#data" };
+        let myFavs = [];
+        async function loadFavs() {
+            myFavs = [];
+            if (!currentUser || !currentUser.uid) return;
+            try {
+                const snap = await db.collection("users").doc(currentUser.uid).get();
+                if (snap.exists) myFavs = snap.data().favorites || [];
+            } catch (e) { console.log("즐겨찾기 불러오기 실패", e); }
+        }
+        function favButton(col, id, title, link, cls) {
+            if (!currentUser || !currentUser.uid) return '';
+            const on = myFavs.some(f => f.key === col + '/' + id);
+            const t = encodeURIComponent(String(title || '').slice(0, 80)).replace(/'/g, '%27');
+            const l = encodeURIComponent(link || FAV_LINK[col] || 'apps.html').replace(/'/g, '%27');
+            return `<button class="${cls} ${on ? 'on' : ''}" data-fav="${col}/${id}" title="${on ? '즐겨찾기에서 빼기' : '즐겨찾기에 담기 (내 페이지에서 모아 봄)'}" aria-pressed="${on}"
+                     onclick="event.preventDefault(); event.stopPropagation(); toggleFav('${col}', '${id}', '${t}', '${l}')">${on ? '★' : '☆'}</button>`;
+        }
+        async function toggleFav(col, id, encTitle, encLink) {
+            if (!currentUser || !currentUser.uid) return alert("즐겨찾기는 로그인한 회원만 쓸 수 있어요.");
+            const key = col + '/' + id;
+            const ref = db.collection("users").doc(currentUser.uid);
+            try {
+                const snap = await ref.get();
+                let favs = (snap.exists && snap.data().favorites) || [];
+                const had = favs.some(f => f.key === key);
+                favs = had ? favs.filter(f => f.key !== key)
+                           : favs.concat([{ key, col, id, title: decodeURIComponent(encTitle), link: decodeURIComponent(encLink), where: FAV_WHERE[col] || '', at: Date.now() }]);
+                await ref.update({ favorites: favs });
+                myFavs = favs;
+                document.querySelectorAll(`[data-fav="${key}"]`).forEach(b => {
+                    b.classList.toggle('on', !had); b.textContent = had ? '☆' : '★'; b.setAttribute('aria-pressed', String(!had));
+                    b.title = had ? '즐겨찾기에 담기 (내 페이지에서 모아 봄)' : '즐겨찾기에서 빼기';
+                });
+            } catch (e) { console.error(e); alert("즐겨찾기를 저장하지 못했습니다."); }
+        }
+        // 주소 끝이 #qa #data 이면 그 게시판을 바로 보여 줌 (내 페이지에서 넘어올 때)
+        function openTabFromHash() {
+            const h = location.hash.replace('#', '');
+            if (h === 'qa' || h === 'data') {
+                switchTab(h);
+                document.getElementById('postFormWrapper').style.display = 'none';
+            }
+            if (['free', 'qa', 'data'].includes(h)) document.querySelector('.tabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        // 프로필 그림 (내 페이지에서 정한 이모지·색 또는 사진)
+        const AV_EMOJIS = ["🧑‍💼", "👩‍💼", "👨‍🏫", "👩‍🏫", "🧑‍💻", "👷", "🦉", "🐻", "🐯", "🐰", "🦊", "🐼", "🌱", "🌻", "📚", "⚖️"];
+        const AV_COLORS = ["#1B5442", "#2F6FDE", "#7C5CD6", "#E0598B", "#E07A2F", "#1A9C7B", "#9A6B00", "#475569"];
+        function escText(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+        function avatarHTML(u) {
+            const a = (u && u.avatar) || {};
+            if (a.type === "photo" && /^https:\/\//.test(a.url || "")) return `<span class="av"><img src="${escText(a.url)}" alt="" onerror="this.remove()"></span>`;
+            const color = AV_COLORS.includes(a.color) ? a.color : "#1B5442";
+            const face = AV_EMOJIS.includes(a.emoji) ? a.emoji : escText(String((u && u.name) || "?").slice(0, 1));
+            return `<span class="av" style="background:${color}" aria-hidden="true">${face}</span>`;
+        }
+
         function filterCards() {
             const query = document.getElementById("searchInput").value.toLowerCase();
             document.querySelectorAll(".card").forEach(card => {
@@ -652,7 +719,9 @@
             if (currentUser) {
                 const badge = isAdmin ? `<span class="admin-badge">ADMIN</span>` : "";
                 // 로그인·로그아웃·회원관리·방문기록은 홈(index.html)에서 함. 여기서는 이름만 표시
-                uiArea.innerHTML = `<span style="font-weight:700; color:#1e293b;">😊 ${currentUser.name}님 ${badge}</span>`;
+                uiArea.innerHTML = currentUser.uid
+                    ? `<a class="me-link" href="mypage.html" title="내 페이지로 이동">${avatarHTML(currentUser)}<span>${escText(currentUser.name)}</span> ${badge}</a>`
+                    : `<span style="font-weight:700; color:#1e293b;">😊 ${escText(currentUser.name)}님 ${badge}</span>`;
                 
                 postAuthor.value = currentUser.name;
                 postAuthor.readOnly = true;
@@ -808,8 +877,8 @@
                     <h4 class="card-title">${tool.title}</h4>
                     <p class="card-desc">${tool.desc}</p>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
-                        <span style="font-size: 12px; color: #64748b; font-weight: 700;">다운로드</span>
-                        <span class="dl-count" style="font-size: 13px; font-weight: 800; color: #1B5442;">${downloads}회</span>
+                        <span style="font-size: 12px; color: #64748b; font-weight: 700;">다운로드 <span class="dl-count" style="font-size: 13px; font-weight: 800; color: #1B5442;">${downloads}회</span></span>
+                        ${favButton('smartTools', doc.id, tool.title, tool.link, 'fav-card')}
                     </div>`;
                     
                 card.onclick = (e) => {
@@ -1353,6 +1422,7 @@
                     <td class="center" style="font-size: 11px; color: #64748b;">${post.date}</td>
                     <td class="center">
                         <div class="btn-micro-group">
+                            ${favButton(currentTab, doc.id, post.title, '', 'btn-micro fav-sm')}
                             <button class="${likeBtnClass}" onclick="likePost('${doc.id}')">${likeBtnText}</button>
                             ${commentBtn}
                             ${adminBtns}

@@ -193,6 +193,20 @@
   .auth-close { width: 100%; padding: 10px; margin-top: 12px; background: #e2e8f0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: inherit; }
   .hdr-btn.signup { background: #fff; color: var(--board-light); border: 1.5px solid var(--board-light); }
   .hdr-btn.mine { background: #64748b; }
+  /* 프로필 그림 · 닉네임 펼침 메뉴 */
+  .av { display: inline-grid; place-items: center; border-radius: 50%; overflow: hidden; color: #fff; font-weight: 800; flex-shrink: 0; background: var(--board-light); line-height: 1; }
+  .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .av.sm { width: 30px; height: 30px; font-size: 16px; }
+  .um-wrap { position: relative; }
+  .um-btn { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px 14px 4px 4px; font-family: inherit; font-size: 14px; font-weight: 800; color: var(--ink); cursor: pointer; }
+  .um-btn:hover { border-color: var(--board-light); }
+  .um-btn .caret { font-size: 11px; color: #5B6B63; }
+  .um-menu { position: absolute; right: 0; top: calc(100% + 8px); min-width: 210px; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 36px rgba(0,0,0,.14); padding: 6px; z-index: 300; }
+  .um-menu[hidden] { display: none; }
+  .um-menu a, .um-menu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: none; background: none; border-radius: 8px; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none; cursor: pointer; text-align: left; }
+  .um-menu a:hover, .um-menu button:hover { background: var(--paper); }
+  .um-sec { font-size: 11.5px; font-weight: 800; color: #5B6B63; padding: 8px 12px 4px; border-top: 1px solid var(--line); margin-top: 4px; }
+  .um-menu .logout { border-top: 1px solid var(--line); border-radius: 0 0 8px 8px; margin-top: 4px; color: #64748b; }
   .board-table { width: 100%; border-collapse: collapse; }
   .board-table th, .board-table td { padding: 12px; border-bottom: 1px solid #EDF2EF; font-size: 14px; }
   .board-table th { background: var(--paper); font-weight: 800; color: #5B6B63; }
@@ -706,7 +720,7 @@
         // 로그인 성공 → 이 브라우저에 로그인 정보 저장 (다른 페이지들도 이 정보를 읽음)
         //   phone 칸에는 '글 주인 표시값'을 넣음: 예전 회원은 예전 휴대폰 번호(→ 예전 글도 계속 내 글), 새 회원은 'uid:고유번호'
         function setSession(uid, prof, quiet) {
-            currentUser = { phone: prof.ownerKey || ('uid:' + uid), name: prof.name, uid: uid, loginId: prof.loginId };
+            currentUser = { phone: prof.ownerKey || ('uid:' + uid), name: prof.name, uid: uid, loginId: prof.loginId, avatar: prof.avatar || null };
             localStorage.setItem("currentUser", JSON.stringify(currentUser));
             if (currentUser.phone === ADMIN_PHONE) localStorage.setItem("hubAdminDevice", "1");   // 관리자 브라우저는 방문기록에서 제외
             updateLoginUI();
@@ -798,8 +812,24 @@
             }
         }
 
-        function logout() {
-            if (!confirm("로그아웃 하시겠습니까?")) return;
+        // 다른 페이지(내 페이지 등)의 메뉴에서 넘어온 요청 처리: #mypw #members #visits #logout
+        let hashHandled = false;
+        function handleHashAction() {
+            if (hashHandled) return;
+            const h = location.hash;
+            if (!['#mypw', '#members', '#visits', '#logout'].includes(h)) return;
+            hashHandled = true;
+            history.replaceState(null, '', 'index.html');
+            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            if (h === '#logout') return logout(true);
+            if (!currentUser) return openModal('login');
+            if (h === '#mypw') openMyInfo();
+            else if (h === '#members' && isAdmin) openAdminModal();
+            else if (h === '#visits' && isAdmin) openVisitModal();
+        }
+
+        function logout(skipConfirm) {
+            if (skipConfirm !== true && !confirm("로그아웃 하시겠습니까?")) return;
             const auth = hubAuth();
             if (auth) auth.signOut().catch(() => {});
             localStorage.removeItem("currentUser");
@@ -862,12 +892,14 @@
                             return;
                         }
                         const p = prof.data();
-                        if (!currentUser || currentUser.uid !== user.uid || currentUser.name !== p.name) setSession(user.uid, p, true);
+                        if (!currentUser || currentUser.uid !== user.uid || currentUser.name !== p.name
+                            || JSON.stringify(currentUser.avatar || null) !== JSON.stringify(p.avatar || null)) setSession(user.uid, p, true);
                     } catch (e) { console.log("회원 정보 확인 실패", e); }
                 } else if (currentUser) {
                     // 예전 방식 로그인 정보이거나 로그인이 끝난 경우 → 다시 로그인하게 함
                     localStorage.removeItem("currentUser"); currentUser = null; updateLoginUI();
                 }
+                handleHashAction();
             });
             return true;
         }
@@ -903,18 +935,45 @@
             } catch (e) { console.log("방문자 수 되돌리기 실패", e); }
         }
 
+        /* 프로필 그림 (내 페이지에서 정한 이모지·색 또는 사진) */
+        const AV_EMOJIS = ["🧑‍💼", "👩‍💼", "👨‍🏫", "👩‍🏫", "🧑‍💻", "👷", "🦉", "🐻", "🐯", "🐰", "🦊", "🐼", "🌱", "🌻", "📚", "⚖️"];
+        const AV_COLORS = ["#1B5442", "#2F6FDE", "#7C5CD6", "#E0598B", "#E07A2F", "#1A9C7B", "#9A6B00", "#475569"];
+        function avatarHTML(u, size) {
+            const a = (u && u.avatar) || {};
+            if (a.type === "photo" && /^https:\/\//.test(a.url || "")) return `<span class="av ${size}"><img src="${escHtml(a.url)}" alt="" onerror="this.remove()"></span>`;
+            const color = AV_COLORS.includes(a.color) ? a.color : "#1B5442";
+            const face = AV_EMOJIS.includes(a.emoji) ? a.emoji : escHtml(String((u && u.name) || "?").slice(0, 1));
+            return `<span class="av ${size}" style="background:${color}" aria-hidden="true">${face}</span>`;
+        }
+        function toggleUserMenu(e) {
+            e.stopPropagation();
+            const m = document.getElementById('umMenu'), b = document.getElementById('umBtn'); const open = m.hidden;
+            m.hidden = !open; b.setAttribute('aria-expanded', String(open));
+        }
+        function closeUserMenu() { const m = document.getElementById('umMenu'); if (m) { m.hidden = true; document.getElementById('umBtn').setAttribute('aria-expanded', 'false'); } }
+        document.addEventListener('click', e => { if (!e.target.closest('.um-wrap')) closeUserMenu(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeUserMenu(); });
+
         // 상단 오른쪽: 로그인 상태와 관리자 버튼
         function updateLoginUI() {
             const ui = document.getElementById('userArea');
             const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
             if (currentUser) {
-                const tag = isAdmin ? ' <span class="admin-tag">ADMIN</span>' : '';
-                const adminBtns = isAdmin
-                    ? `<button class="hdr-btn" onclick="openAdminModal()">회원관리</button>
-                       <button class="hdr-btn visit" onclick="openVisitModal()">방문기록</button>` : '';
-                ui.innerHTML = `<span>😊 ${escHtml(currentUser.name)}님${tag}</span>${adminBtns}
-                                <button class="hdr-btn mine" onclick="openMyInfo()">내 정보</button>
-                                <button class="hdr-btn logout" onclick="logout()">로그아웃</button>`;
+                // 프로필 그림 + 닉네임 버튼 → 누르면 메뉴가 펼쳐짐
+                ui.innerHTML = `
+                  <div class="um-wrap">
+                    <button class="um-btn" id="umBtn" aria-haspopup="true" aria-expanded="false" onclick="toggleUserMenu(event)">${avatarHTML(currentUser, 'sm')}<span>${escHtml(currentUser.name)}</span>${isAdmin ? '<span class="admin-tag">ADMIN</span>' : ''}<span class="caret">▼</span></button>
+                    <div class="um-menu" id="umMenu" role="menu" hidden>
+                      <a href="mypage.html" role="menuitem">🏠 내 페이지</a>
+                      <a href="mypage.html#edit" role="menuitem">⚙️ 프로필 편집</a>
+                      <button role="menuitem" onclick="closeUserMenu(); openMyInfo()">🔑 비밀번호 변경</button>
+                      <a href="mypage.html#fav" role="menuitem">⭐ 즐겨찾기</a>
+                      ${isAdmin ? `<div class="um-sec">관리자</div>
+                      <button role="menuitem" onclick="closeUserMenu(); openAdminModal()">👥 회원관리</button>
+                      <button role="menuitem" onclick="closeUserMenu(); openVisitModal()">📈 방문기록</button>` : ''}
+                      <button role="menuitem" class="logout" onclick="closeUserMenu(); logout()">로그아웃</button>
+                    </div>
+                  </div>`;
             } else {
                 ui.innerHTML = `<button class="hdr-btn signup" onclick="openModal('signup')">회원가입</button>
                                 <button class="login-link" onclick="openModal('login')">로그인</button>`;
@@ -973,6 +1032,7 @@
         /* ================= 방문 기록 (관리자 전용) ================= */
         const PAGE_LABELS = {
             "index.html": "포털 홈",
+            "mypage.html": "내 페이지",
             "apps.html": "스마트 업무도구",
             "labor.html": "노무관리",
             "budget.html": "예산관리",

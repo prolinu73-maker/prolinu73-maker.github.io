@@ -543,6 +543,7 @@ async function saveQna(editId) {
   $('qSave').disabled = true;
   try {
     d.pwHash = await hashPw(pw); d.createdAt = Date.now(); d.views = 0; d.answer = null;
+    const hu = hubLogin(); if (hu && hu.phone) d.authorKey = hu.phone;   // 로그인한 회원이면 내 페이지에 모이도록 표시
     await DB.add(COL.qna, d); closeModal(); toast('질문이 등록되었습니다'); await refresh();
   } catch (e) { console.error(e); toast('저장에 실패했습니다'); $('qSave').disabled = false; }
 }
@@ -688,6 +689,7 @@ async function saveBoard(id) {
   if (!id) {
     d.author = ($('bAuthor')?.value || '').trim();
     if (!d.author) return toast('작성자를 입력하세요');
+    const hu = hubLogin(); if (hu && hu.phone) d.authorKey = hu.phone;   // 로그인한 회원이면 내 페이지에 모이도록 표시
     if (!isAdmin) {
       const pw = $('bPw').value; if (pw.length < 4) return toast('비밀번호를 4자리 이상 입력하세요');
       pwHash = await hashPw(pw);
