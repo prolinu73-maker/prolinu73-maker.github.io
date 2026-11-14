@@ -39,7 +39,7 @@
   .login-link { background: #1e293b; color: #fff; text-decoration: none; padding: 8px 16px; border-radius: 8px; }
   .login-link:hover { background: #0f172a; }
   .admin-tag { background: #fef08a; color: #854d0e; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 900; }
-  @media (max-width: 1500px) {
+  @media (max-width: 1140px) {
     header.top { flex-wrap: wrap; }
     .nav-wrap { order: 3; flex-basis: 100%; }
     .user-area { margin-left: auto; }
@@ -94,7 +94,7 @@
   .btn-ghost:hover { border-color: var(--chalk); }
 
   /* 칠판 오른쪽 위 '날짜 · 주번' 칸 */
-  .board-corner { align-self: start; border-left: 2px dashed rgba(234,241,236,.25); padding-left: 28px; font-family: var(--chalk-font); }
+  .board-corner { align-self: center; border-left: 2px dashed rgba(234,241,236,.25); padding-left: 28px; font-family: var(--chalk-font); }
   .corner-row { display: flex; align-items: baseline; gap: 10px; font-size: 30px; line-height: 1.25; }
   .corner-row .k { font-size: 22px; color: var(--chalk-dim); min-width: 3.2em; }
   .corner-date { font-size: 46px; line-height: 1.1; margin-bottom: 4px; }
@@ -181,7 +181,6 @@
 <body>
 
 <header class="top">
-  <a href="index.html" class="logo">🚀 조효식 허브 PRO</a>
   <nav class="nav-wrap" aria-label="업무 페이지">
     <div class="nav-pill">
       <a href="labor.html" class="nav-item"><svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/></svg>노무관리</a>
@@ -214,10 +213,6 @@
     </div>
 
     <aside class="board-corner" aria-label="오늘">
-      <div class="corner-date" id="cDate">-월 -일</div>
-      <div class="corner-row"><span id="cDay">-</span></div>
-      <div class="corner-time" id="cTime">--:--:--</div>
-
       <div class="corner-block">
         <div class="corner-label"><span>이번 달 남은 근무일</span><b id="cWork">-일</b></div>
         <div class="corner-note">오늘 포함, 주말 제외 (공휴일은 반영 안 됨)</div>
@@ -347,16 +342,7 @@
     }, 3200);
   }
 
-  /* ── 칠판 오른쪽 위: 날짜 · 시계 · 근무일 · 진행률 ── */
-  const DAYS = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
-  function tick() {
-    const n = new Date();
-    $('cDate').textContent = `${n.getMonth() + 1}월 ${n.getDate()}일`;
-    $('cDay').textContent = DAYS[n.getDay()];
-    $('cTime').textContent = n.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  }
-  tick(); setInterval(tick, 1000);
-
+  /* ── 칠판 오른쪽: 근무일 · 진행률 ── */
   const now = new Date();
   // 이번 달 남은 근무일 (오늘 포함, 토·일 제외)
   let work = 0;
