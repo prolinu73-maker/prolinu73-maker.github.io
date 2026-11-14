@@ -487,8 +487,9 @@
       <select id="setFont"><option>맑은 고딕</option><option>함초롬바탕</option><option>함초롬돋움</option><option>휴먼명조</option><option>바탕</option></select>
       <div class="help">한글 파일(.hwpx)로 저장할 때 쓰는 글꼴입니다. 컴퓨터에 없는 글꼴이면 한글이 비슷한 글꼴로 바꿔 보여 줍니다.</div>
     </div>
-    <div class="f" style="margin-top:10px"><label>Firebase 연동키 (설정 시 어디서든 접근 가능)</label>
-      <textarea id="setFb" style="min-height:80px;font-family:monospace;font-size:12px" placeholder='const firebaseConfig = { ... };'></textarea>
+    <div class="f" style="margin-top:10px"><label>Firebase 연동키 (비워 두면 허브와 같은 Firebase에 자동 연결)</label>
+      <textarea id="setFb" style="min-height:80px;font-family:monospace;font-size:12px" placeholder='비워 두면 파일에 들어 있는 허브(index.html)와 같은 연결값을 사용합니다'></textarea>
+      <div class="help">다른 Firebase 프로젝트를 쓰려는 경우에만 const firebaseConfig = { ... }; 를 붙여 넣으세요.</div>
     </div>
     <div class="row-actions">
       <button onclick="backupJSON()">💾 전체 문서 백업받기</button>
@@ -946,20 +947,39 @@ function refreshTags(){
    3. 데이터베이스 및 스토리지 연결
    ========================================================= */
 const LS_DATA = "facility_projects_v2", LS_SET = "facility_settings_v2";
+/* 허브(index.html)와 같은 Firebase 연결값 — 누가 어느 컴퓨터에서 열어도 자동으로 연결됩니다.
+   (⚙️ 설정·백업의 'Firebase 연동키' 칸에 다른 값을 넣으면 그 값이 우선합니다) */
+const BUILTIN_FB_CONFIG = {
+  apiKey: "AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw",
+  authDomain: "prolinu73-6c409.firebaseapp.com",
+  projectId: "prolinu73-6c409",
+  storageBucket: "prolinu73-6c409.firebasestorage.app",
+  messagingSenderId: "399358344473",
+  appId: "1:399358344473:web:491d5e74448b4f0f029988",
+  measurementId: "G-083RQKR8SQ"
+};
 let settings = Object.assign({ org:"", head:"", dept:"", tel:"", fb:"" }, JSON.parse(localStorage.getItem(LS_SET) || "{}"));
 let projects = {}; let db = null; let curId = null;
 
 function parseFbConfig(text){ const cfg = {}; const re = /(\w+)\s*:\s*["'`]([^"'`]+)["'`]/g; let m; while((m = re.exec(text||""))) cfg[m[1]] = m[2]; return cfg.apiKey && cfg.projectId ? cfg : null; }
 async function initStore(){
   projects = JSON.parse(localStorage.getItem(LS_DATA) || "{}");
-  const cfg = parseFbConfig(settings.fb);
+  const cfg = parseFbConfig(settings.fb) || BUILTIN_FB_CONFIG;
   if (cfg && window.firebase) {
     try {
       const app = firebase.apps.find(a=>a.name==="facility") || firebase.initializeApp(cfg, "facility");
       db = app.firestore();
       $("saveState").textContent = "☁️ Firebase 연동 완료";
+      const MIGRATED = "facility_migrated_v1";
+      let firstSnap = true;
       db.collection("facility_notices").onSnapshot(snap => {
         const fresh = {}; snap.forEach(d => fresh[d.id] = d.data());
+        // 처음 연결될 때 한 번만: 이 컴퓨터에만 저장돼 있던 공고를 Firebase로 올려 사라지지 않게 함
+        if (firstSnap && !localStorage.getItem(MIGRATED)) {
+          Object.values(projects).forEach(p => { if (p && p.id && !fresh[p.id]) { fresh[p.id] = p; db.collection("facility_notices").doc(p.id).set(JSON.parse(JSON.stringify(p))).catch(()=>{}); } });
+          localStorage.setItem(MIGRATED, "1");
+        }
+        firstSnap = false;
         if (curId && projects[curId]) fresh[curId] = projects[curId];
         projects = fresh; localStorage.setItem(LS_DATA, JSON.stringify(projects));
         if (!curId) renderList();
@@ -983,24 +1003,32 @@ function showVisits(today, total, local){
   $("visitBox").classList.toggle("local", !!local);
 }
 async function initVisitCounter(){
-  const day = todayKey(); let v = {}; try { v = JSON.parse(localStorage.getItem(LS_VISIT) || "{}"); } catch(e){}
-  const first = v.lastDay !== day;   // 오늘 처음 들어온 브라우저인가
-  if (db) {
-    try {
-      const col = db.collection("facility_stats"), inc = firebase.firestore.FieldValue.increment(1);
-      if (first) { const b = db.batch();
-        b.set(col.doc("total"), { count: inc }, { merge: true });
-        b.set(col.doc("day_" + day), { count: inc, date: day }, { merge: true });
-        await b.commit(); }
-      let t = 0, d = 0;
-      col.doc("total").onSnapshot(x => { t = x.data()?.count || 0; showVisits(d, t); });
-      col.doc("day_" + day).onSnapshot(x => { d = x.data()?.count || 0; showVisits(d, t); });
-      if (first) { v.lastDay = day; localStorage.setItem(LS_VISIT, JSON.stringify(v)); }
-      return;
-    } catch(e) { /* 권한 오류 등 → 이 컴퓨터 기준으로 표시 */ }
-  }
-  if (first) { v.total = (v.total || 0) + 1; v.days = v.days || {}; v.days[day] = (v.days[day] || 0) + 1; v.lastDay = day; localStorage.setItem(LS_VISIT, JSON.stringify(v)); }
-  showVisits(v.days?.[day] || 0, v.total || 0, true);
+  const day = todayKey();
+  // ① 이 PC 기준 숫자를 먼저 바로 표시 (빈칸 '-'이 남지 않도록)
+  let v = {}; try { v = JSON.parse(localStorage.getItem(LS_VISIT) || "{}"); } catch(e){}
+  if (v.lastDay !== day) { v.total = (v.total || 0) + 1; v.days = v.days || {}; v.days[day] = (v.days[day] || 0) + 1; v.lastDay = day; try { localStorage.setItem(LS_VISIT, JSON.stringify(v)); } catch(e){} }
+  const RULE_MSG = "모든 사용자 접속자 수를 불러오지 못해 이 PC 기준으로 표시합니다. Firebase 규칙에 facility_stats 줄이 있는지 확인하세요.";
+  const showLocal = (why) => { showVisits(v.days?.[day] || 0, v.total || 0, true); if (why) $("visitBox").title = why; };
+  showLocal();
+  if (!db) return;
+  // ② Firebase(모든 사용자) 숫자로 바꿔 표시
+  const FB_KEY = "facility_visit_fb_v1";   // Firebase에 오늘 이미 셌는지 (이 PC 기록과 따로 관리)
+  try {
+    const col = db.collection("facility_stats"), inc = firebase.firestore.FieldValue.increment(1);
+    const totalSnap = await col.doc("total").get();
+    if (localStorage.getItem(FB_KEY) !== day || !totalSnap.exists) {
+      const b = db.batch();
+      b.set(col.doc("total"), { count: inc }, { merge: true });
+      b.set(col.doc("day_" + day), { count: inc, date: day }, { merge: true });
+      await b.commit();
+      localStorage.setItem(FB_KEY, day);
+    }
+    let t = null, d = null;
+    const paint = () => { if (t !== null && d !== null) showVisits(d, t, false); };
+    const fail = (e) => { console.warn("접속자 수 불러오기 실패(facility_stats)", e); showLocal(RULE_MSG); };
+    col.doc("total").onSnapshot(x => { t = x.data()?.count || 0; paint(); }, fail);
+    col.doc("day_" + day).onSnapshot(x => { d = x.data()?.count || 0; paint(); }, fail);
+  } catch(e) { console.warn("접속자 수: Firebase 권한 확인 필요(facility_stats)", e); showLocal(RULE_MSG); }
 }
 async function persist(p){
   p.updatedAt = new Date().toISOString(); projects[p.id] = p; localStorage.setItem(LS_DATA, JSON.stringify(projects));
