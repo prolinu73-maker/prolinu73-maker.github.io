@@ -157,6 +157,7 @@ footer{color:var(--muted);font-size:13.5px}
 #hubHomeBtn:hover{background:#123D30 !important}
 #hubHomeBtn:focus-visible{outline:3px solid #F4C430;outline-offset:2px}
 .hub-home-wrap{display:flex;align-items:center;gap:16px;min-width:0}
+.post .del .like.on{background:#E7F6F0;border-color:#1A9C7B;color:#1A7A5E}
 </style>
 </head>
 <body>
@@ -808,6 +809,23 @@ footer{color:var(--muted);font-size:13.5px}
         art.querySelector('.meta span').textContent=p.date||'';
         art.querySelector('.body').textContent=p.text||'';   // 글 내용은 글자로만 보여 줌(코드 실행 방지)
         var del=art.querySelector('.del');
+        // 좋아요 (한 브라우저에서 글 하나에 한 번)
+        (function(){
+          var liked={};try{liked=JSON.parse(localStorage.getItem('perdiem_liked')||'{}')}catch(e){}
+          var lb=document.createElement('button');lb.type='button';lb.className='btn small ghost like'+(liked[doc.id]?' on':'');
+          lb.setAttribute('aria-pressed',liked[doc.id]?'true':'false');lb.title='좋아요';
+          var n=Number(p.likes||0);lb.textContent='👍 '+n;
+          lb.addEventListener('click',function(){
+            var L={};try{L=JSON.parse(localStorage.getItem('perdiem_liked')||'{}')}catch(e){}
+            if(L[doc.id]){bMsg('이미 좋아요를 눌렀어요.');return}
+            lb.disabled=true;
+            getDb().then(function(db){return db.collection(BOARD).doc(doc.id).update({likes:firebase.firestore.FieldValue.increment(1)})})
+              .then(function(){L[doc.id]=true;localStorage.setItem('perdiem_liked',JSON.stringify(L));n++;lb.textContent='👍 '+n;lb.classList.add('on');lb.setAttribute('aria-pressed','true')})
+              .catch(function(err){bMsg('좋아요를 저장하지 못했습니다. '+why(err),true)})
+              .then(function(){lb.disabled=false});
+          });
+          del.appendChild(lb);
+        })();
         var mine=u&&p.authorPhone===u.phone;
         function mkBtn(label,fn){var x=document.createElement('button');x.type='button';x.className='btn small ghost';x.textContent=label;x.addEventListener('click',fn);return x}
         // 권한: 관리자 → 모든 글 / 회원 → 자기 글 / 게스트 글 → 작성할 때 넣은 비밀번호

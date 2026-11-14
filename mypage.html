@@ -293,7 +293,7 @@
   /* ───── 내 활동: 게시판별 내가 쓴 글 ───── */
   const SOURCES = [
     { key: "tools", label: "업무도구", col: "smartTools", field: "authorPhone", color: "#2F6FDE",
-      title: d => d.title, link: d => d.link, ext: true, meta: d => [`다운로드 ${d.downloads || 0}회`] },
+      title: d => d.title, link: d => d.link, ext: true, meta: d => [`다운로드 ${d.downloads || 0}회`, `좋아요 ${d.likes || 0}`] },
     { key: "free", label: "자유게시판", col: "freeBoard", field: "authorPhone", color: "#1B5442",
       title: d => d.title, link: () => "apps.html#free", meta: d => [`좋아요 ${d.likes || 0}`] },
     { key: "qa", label: "묻고 답하기", col: "qaBoard", field: "authorPhone", color: "#E0598B",
@@ -303,11 +303,11 @@
     { key: "sites", label: "유용한 사이트", col: "usefulSites", field: "authorPhone", color: "#9A6B00",
       title: d => d.title, link: d => d.url, ext: true, meta: d => [String(d.url || "").replace(/^https?:\/\//, "").slice(0, 30)] },
     { key: "perdiem", label: "여비 게시판", col: "perdiemBoard", field: "authorPhone", color: "#E07A2F",
-      title: d => d.text, link: () => "Per_diem.html", meta: () => [] },
+      title: d => d.text, link: () => "Per_diem.html", meta: d => [`좋아요 ${d.likes || 0}`] },
     { key: "lqna", label: "노무 질문", col: "labor_qna", field: "authorKey", color: "#1A9C7B",
-      title: d => d.title, link: () => "labor.html#qna", meta: d => [d.answer ? "답변완료" : "답변대기"] },
+      title: d => d.title, link: () => "labor.html#qna", meta: d => [d.answer ? "답변완료" : "답변대기", `좋아요 ${d.likes || 0}`] },
     { key: "lboard", label: "노무 자료실", col: "labor_board", field: "authorKey", color: "#475569",
-      title: d => d.title, link: () => "labor.html#board", meta: d => [`조회 ${d.views || 0}`] },
+      title: d => d.title, link: () => "labor.html#board", meta: d => [`조회 ${d.views || 0}`, `좋아요 ${d.likes || 0}`] },
   ];
   const results = {};   // key → [{...}]
   let activeTab = "tools";

@@ -475,7 +475,7 @@ function renderQna() {
       <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${q.answer ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${q.answer ? '답변완료' : '답변대기'}</span>
       <div class="flex-1 min-w-0">
         <p class="font-medium truncate">${q.secret ? '🔒 ' : ''}${esc(q.title)} ${isNew(q.createdAt) ? '<span class="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded ml-1 align-middle">N</span>' : ''}</p>
-        <p class="text-xs text-slate-400 mt-1">${esc(q.category)} · ${esc(q.author)} · ${fmtDate(q.createdAt)} · 조회 ${q.views || 0}</p>
+        <p class="text-xs text-slate-400 mt-1">${esc(q.category)} · ${esc(q.author)} · ${fmtDate(q.createdAt)} · 조회 ${q.views || 0} · 👍 ${q.likes || 0}</p>
       </div>
     </button>`).join('') : `<p class="text-center text-slate-400 py-12">등록된 질문이 없습니다.<br><button onclick="openQnaWrite()" class="mt-3 text-blue-600 underline">첫 질문을 남겨 보세요</button></p>`;
   pager('qnaPager', list.length, qnaPage, 'qnaGo');
@@ -587,7 +587,7 @@ async function openQna(id) {
           <button onclick="saveAnswer('${id}')" class="text-sm px-4 py-2 rounded-lg bg-blue-600 text-white">답변 저장</button>
         </div>
       </div>` : ''}
-      <div class="flex justify-end gap-4 mt-5"><button onclick="editQna('${id}')" class="text-sm text-blue-600 hover:underline">질문 수정</button><button onclick="deleteQna('${id}')" class="text-sm text-rose-600 hover:underline">질문 삭제</button></div>
+      <div class="flex justify-end items-center gap-4 mt-5">${likeButton('qna', q)}<span class="flex-1"></span><button onclick="editQna('${id}')" class="text-sm text-blue-600 hover:underline">질문 수정</button><button onclick="deleteQna('${id}')" class="text-sm text-rose-600 hover:underline">질문 삭제</button></div>
     </div>`);
 }
 async function unlockQna(id) {
@@ -632,7 +632,7 @@ function boardRow(b) {
     <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${CAT_COLOR[b.category] || CAT_COLOR['기타']}">${esc(b.category)}</span>
     <div class="flex-1 min-w-0">
       <p class="font-medium truncate">${b.pinned ? '📌 ' : ''}${esc(b.title)} ${b.fileName ? '📎' : ''}${b.link ? '🔗' : ''} ${isNew(b.createdAt) ? '<span class="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded ml-1 align-middle">N</span>' : ''}</p>
-      <p class="text-xs text-slate-400 mt-1">${esc(b.author || '관리자')} · ${fmtDate(b.createdAt)} · 조회 ${b.views || 0}</p>
+      <p class="text-xs text-slate-400 mt-1">${esc(b.author || '관리자')} · ${fmtDate(b.createdAt)} · 조회 ${b.views || 0} · 👍 ${b.likes || 0}</p>
     </div></button>`;
 }
 function renderBoard() {
@@ -711,6 +711,28 @@ async function saveBoard(id) {
     closeModal(); toast('저장되었습니다'); await refresh();
   } catch (e) { console.error(e); toast(e.name === 'QuotaExceededError' ? '브라우저 저장 공간이 부족합니다' : '저장에 실패했습니다'); $('bSave').disabled = false; }
 }
+/* 좋아요: 한 브라우저에서 글 하나에 한 번 */
+const LIKED_KEY = 'labor_liked';
+function likedSet() { try { return new Set(JSON.parse(localStorage.getItem(LIKED_KEY) || '[]')); } catch (e) { return new Set(); } }
+function likeButton(kind, item) {
+  const on = likedSet().has(kind + '/' + item.id);
+  return `<button id="likeBtn" onclick="likeItem('${kind}','${item.id}')" aria-pressed="${on}" class="text-sm px-4 py-2 rounded-lg border ${on ? 'bg-emerald-50 border-emerald-400 text-emerald-700' : 'border-slate-300 hover:bg-slate-50'}">👍 좋아요 <b>${item.likes || 0}</b></button>`;
+}
+async function likeItem(kind, id) {
+  const liked = likedSet(), key = kind + '/' + id;
+  if (liked.has(key)) return toast('이미 좋아요를 눌렀어요');
+  const item = (kind === 'qna' ? qnaData : boardData).find(x => x.id === id); if (!item) return;
+  try {
+    const inc = DB.mode === 'firebase' ? firebase.firestore.FieldValue.increment(1) : (item.likes || 0) + 1;
+    await DB.update(COL[kind], id, { likes: inc });
+    item.likes = (item.likes || 0) + 1;
+    liked.add(key); localStorage.setItem(LIKED_KEY, JSON.stringify([...liked]));
+    const btn = $('likeBtn');
+    if (btn) { btn.querySelector('b').textContent = item.likes; btn.className = 'text-sm px-4 py-2 rounded-lg border bg-emerald-50 border-emerald-400 text-emerald-700'; btn.setAttribute('aria-pressed', 'true'); }
+    kind === 'qna' ? renderQna() : renderBoard();
+    toast('좋아요를 눌렀어요');
+  } catch (e) { console.error(e); toast('좋아요를 저장하지 못했습니다'); }
+}
 function openBoard(id) {
   const b = boardData.find(x => x.id === id); if (!b) return;
   b.views = (b.views || 0) + 1; DB.update(COL.board, id, { views: b.views }).catch(() => {});
@@ -726,6 +748,7 @@ function openBoard(id) {
       </div>
       <div class="mt-4 text-sm leading-relaxed min-h-[80px]">${linkify(nl2br(b.content)) || '<span class="text-slate-400">내용 없음</span>'}</div>
       <div class="mt-5 flex flex-wrap gap-2">
+        ${likeButton('board', b)}
         ${b.link ? `<a href="${esc(b.link)}" target="_blank" class="text-sm px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200">🔗 관련 링크 열기</a>` : ''}
         ${b.fileId ? `<button onclick="downloadFile('${b.fileId}')" class="text-sm px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">📎 ${esc(b.fileName)} <span class="opacity-75">(${Math.ceil((b.fileSize || 0) / 1024)}KB)</span></button>` : ''}
       </div>
