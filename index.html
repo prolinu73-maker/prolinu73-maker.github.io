@@ -451,6 +451,16 @@
     if (window.__visitTrackerLoaded) return;
     window.__visitTrackerLoaded = true;
 
+    /* 관리자 접속은 기록하지 않음
+       - 메인 허브에서 관리자로 로그인되어 있거나
+       - 이 브라우저에서 한 번이라도 관리자로 로그인한 적이 있으면 (로그아웃해도 계속 제외) */
+    var ADMIN_PHONE = "010-9848-0309";
+    try {
+        var hubUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+        if (hubUser && hubUser.phone === ADMIN_PHONE) localStorage.setItem("hubAdminDevice", "1");
+        if (localStorage.getItem("hubAdminDevice") === "1") return;
+    } catch (e) {}
+
     var PROJECT_ID = "prolinu73-6c409";
     var API_KEY = "AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw";
     var DOC_BASE = "projects/" + PROJECT_ID + "/databases/(default)/documents";
@@ -733,6 +743,7 @@
                     if (!snapshot.empty) {
                         const user = snapshot.docs[0].data();
                         localStorage.setItem("currentUser", JSON.stringify({ phone: user.phone, name: user.name }));
+                        if (user.phone === ADMIN_PHONE) localStorage.setItem("hubAdminDevice", "1");   // 이 브라우저는 방문기록에서 제외
                         currentUser = { phone: user.phone, name: user.name };
                         alert(`환영합니다, ${user.name}님!`);
                         closeModal();
