@@ -771,8 +771,9 @@ footer{color:var(--muted);font-size:13.5px}
   function boardAdmin(){var u=hubUser();return !!(u&&u.phone===ADMIN_PHONE)}
   function setupForm(){
     var u=hubUser();
-    // 이름 칸은 비워 둠(미리 채우지 않음). 로그인 상태면 비워 둔 채 등록할 때 로그인 이름을 씀
-    $('bName').readOnly=false;
+    // 홈에서 로그인했으면 이름 칸에 닉네임을 넣고 고정, 아니면 직접 입력
+    if(u&&u.name){$('bName').value=u.name;$('bName').readOnly=true;$('bName').title='로그인한 닉네임으로 올라갑니다'}
+    else{if($('bName').readOnly)$('bName').value='';$('bName').readOnly=false;$('bName').title=''}
     $('bName').placeholder='이름을 입력하세요';
     $('bPwWrap').hidden=!!u;
   }
@@ -859,7 +860,7 @@ footer{color:var(--muted);font-size:13.5px}
   }
   $('bSubmit').addEventListener('click',function(){
     var text=$('bText').value.trim(),u=hubUser();
-    var name=$('bName').value.trim(),pw=$('bPw').value.trim();
+    var name=(u&&u.name)?u.name:$('bName').value.trim(),pw=$('bPw').value.trim();
     if(!text){bMsg('내용을 입력해 주세요.',true);$('bText').focus();return}
     if(!name){bMsg('이름을 입력해 주세요.',true);$('bName').focus();return}
     if(!u&&!pw){bMsg('게스트로 쓸 때는 삭제용 비밀번호를 넣어 주세요.',true);$('bPw').focus();return}

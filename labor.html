@@ -508,7 +508,17 @@ function openQnaWrite(editId) {
     $('qAuthor').defaultValue = $('qAuthor').value = old.author || '';
     $('qTitle').defaultValue = $('qTitle').value = old.title || '';
     $('qContent').value = old.content || ''; $('qSecret').checked = !!old.secret;
+  } else {
+    applyNick('qAuthor');
   }
+}
+// 홈(index.html)에서 로그인했으면 작성자 칸에 닉네임을 넣고 고정
+function hubLogin() { try { return JSON.parse(localStorage.getItem('currentUser') || 'null'); } catch (e) { return null; } }
+function applyNick(inputId) {
+  const u = hubLogin(); const el = $(inputId);
+  if (!u || !u.name || !el) return;
+  el.defaultValue = el.value = u.name;   // 자동 채우기 방지 기능이 지우지 않도록 '원래 값'으로 넣음
+  el.readOnly = true; el.classList.add('bg-slate-100'); el.title = '로그인한 닉네임으로 올라갑니다';
 }
 // 질문 수정: 관리자이거나, 작성할 때 넣은 비밀번호가 맞아야 함
 async function editQna(id) {
@@ -667,6 +677,7 @@ function openBoardWrite(id) {
       </div>
       <div class="flex justify-end gap-2 mt-5"><button onclick="closeModal()" class="px-4 py-2 rounded-lg border">취소</button><button id="bSave" onclick="saveBoard(${id ? `'${id}'` : ''})" class="px-4 py-2 rounded-lg bg-blue-600 text-white">${id ? '저장' : '올리기'}</button></div>
     </div>`);
+  if (isNewPost && !isAdmin) applyNick('bAuthor');
 }
 function readFileB64(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); }); }
 async function saveBoard(id) {
