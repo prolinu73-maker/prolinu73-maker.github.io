@@ -1066,6 +1066,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   }
   var isNew=false;
   try{if(!sessionStorage.getItem('visited_geunmu')){sessionStorage.setItem('visited_geunmu','true');isNew=true}}catch(e){isNew=true}
+  // 관리자(또는 이 브라우저에서 관리자로 로그인한 적이 있으면)는 접속자 수를 세지 않음
+  if((function(){try{var u=JSON.parse(localStorage.getItem('currentUser')||'null');if(u&&u.phone==='010-9848-0309')localStorage.setItem('hubAdminDevice','1');return localStorage.getItem('hubAdminDevice')==='1';}catch(e){return false;}})())isNew=false;
   var p=(window.firebase&&firebase.firestore)?Promise.resolve()
     :addScript(SDK+'firebase-app-compat.js').then(function(){return addScript(SDK+'firebase-firestore-compat.js')});
   p.then(function(){

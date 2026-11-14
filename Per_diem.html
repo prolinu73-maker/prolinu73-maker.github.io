@@ -740,6 +740,8 @@ footer{color:var(--muted);font-size:13.5px}
       var d=new Date(),todayFmt=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
       var isNew=false;
       try{if(!sessionStorage.getItem('visited_perdiem')){sessionStorage.setItem('visited_perdiem','true');isNew=true}}catch(e){isNew=true}
+      // 관리자(또는 이 브라우저에서 관리자로 로그인한 적이 있으면)는 접속자 수를 세지 않음
+      if((function(){try{var u=JSON.parse(localStorage.getItem('currentUser')||'null');if(u&&u.phone==='010-9848-0309')localStorage.setItem('hubAdminDevice','1');return localStorage.getItem('hubAdminDevice')==='1';}catch(e){return false;}})())isNew=false;
       // 여러 사람이 동시에 들어와도 숫자가 꼬이지 않게 트랜잭션으로 처리
       return db.runTransaction(function(tx){
         return tx.get(ref).then(function(snap){

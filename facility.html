@@ -1004,9 +1004,11 @@ function showVisits(today, total, local){
 }
 async function initVisitCounter(){
   const day = todayKey();
+  // 관리자(또는 이 브라우저에서 관리자로 로그인한 적이 있으면)는 접속자 수를 세지 않음
+  const hubAdminSkip = (function(){try{var u=JSON.parse(localStorage.getItem('currentUser')||'null');if(u&&u.phone==='010-9848-0309')localStorage.setItem('hubAdminDevice','1');return localStorage.getItem('hubAdminDevice')==='1';}catch(e){return false;}})();
   // ① 이 PC 기준 숫자를 먼저 바로 표시 (빈칸 '-'이 남지 않도록)
   let v = {}; try { v = JSON.parse(localStorage.getItem(LS_VISIT) || "{}"); } catch(e){}
-  if (v.lastDay !== day) { v.total = (v.total || 0) + 1; v.days = v.days || {}; v.days[day] = (v.days[day] || 0) + 1; v.lastDay = day; try { localStorage.setItem(LS_VISIT, JSON.stringify(v)); } catch(e){} }
+  if (!hubAdminSkip && v.lastDay !== day) { v.total = (v.total || 0) + 1; v.days = v.days || {}; v.days[day] = (v.days[day] || 0) + 1; v.lastDay = day; try { localStorage.setItem(LS_VISIT, JSON.stringify(v)); } catch(e){} }
   const RULE_MSG = "모든 사용자 접속자 수를 불러오지 못해 이 PC 기준으로 표시합니다. Firebase 규칙에 facility_stats 줄이 있는지 확인하세요.";
   const showLocal = (why) => { showVisits(v.days?.[day] || 0, v.total || 0, true); if (why) $("visitBox").title = why; };
   showLocal();
@@ -1016,7 +1018,7 @@ async function initVisitCounter(){
   try {
     const col = db.collection("facility_stats"), inc = firebase.firestore.FieldValue.increment(1);
     const totalSnap = await col.doc("total").get();
-    if (localStorage.getItem(FB_KEY) !== day || !totalSnap.exists) {
+    if (!hubAdminSkip && (localStorage.getItem(FB_KEY) !== day || !totalSnap.exists)) {
       const b = db.batch();
       b.set(col.doc("total"), { count: inc }, { merge: true });
       b.set(col.doc("day_" + day), { count: inc, date: day }, { merge: true });

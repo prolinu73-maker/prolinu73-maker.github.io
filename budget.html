@@ -295,7 +295,9 @@
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
         const todayFmt = `${yyyy}-${mm}-${dd}`;
-        const isNewVisit = !sessionStorage.getItem(visitKey);
+        // 관리자(또는 이 브라우저에서 관리자로 로그인한 적이 있으면)는 접속자 수를 세지 않음
+        const hubAdminSkip = (function(){try{var u=JSON.parse(localStorage.getItem('currentUser')||'null');if(u&&u.phone==='010-9848-0309')localStorage.setItem('hubAdminDevice','1');return localStorage.getItem('hubAdminDevice')==='1';}catch(e){return false;}})();
+        const isNewVisit = !sessionStorage.getItem(visitKey) && !hubAdminSkip;
 
         try {
             const data = await db.runTransaction(async (tx) => {

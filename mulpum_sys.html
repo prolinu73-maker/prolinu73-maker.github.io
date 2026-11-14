@@ -1055,7 +1055,9 @@ async function counterCall(action, key){
 async function updateVisitors(){
   const day = ymd(TODAY).replace(/-/g,'');
   const dayKey = 'day-'+day;
-  const firstToday = lsGet('mulpum_visited')!==day;      // 이 브라우저에서 오늘 처음 접속?
+  // 관리자(또는 이 브라우저에서 관리자로 로그인한 적이 있으면)는 접속자 수를 세지 않음
+  const hubAdminSkip = (function(){try{var u=JSON.parse(localStorage.getItem('currentUser')||'null');if(u&&u.phone==='010-9848-0309')localStorage.setItem('hubAdminDevice','1');return localStorage.getItem('hubAdminDevice')==='1';}catch(e){return false;}})();
+  const firstToday = lsGet('mulpum_visited')!==day && !hubAdminSkip;      // 이 브라우저에서 오늘 처음 접속?
   try{
     const act = firstToday ? 'hit' : 'get';
     const [today, total] = await Promise.all([counterCall(act, dayKey), counterCall(act, 'total')]);
@@ -1067,7 +1069,7 @@ async function updateVisitors(){
   }catch(err){
     // 인터넷 연결이 안 될 때: 이 PC 기준으로 셈
     let t = +(lsGet('mulpum_local_total')||0), d = lsGet('mulpum_local_day')===day ? +(lsGet('mulpum_local_today')||0) : 0;
-    if (lsGet('mulpum_local_visited')!==day){ t++; d++; lsSet('mulpum_local_visited',day); }
+    if (!hubAdminSkip && lsGet('mulpum_local_visited')!==day){ t++; d++; lsSet('mulpum_local_visited',day); }
     lsSet('mulpum_local_total',t); lsSet('mulpum_local_day',day); lsSet('mulpum_local_today',d);
     $('vToday').textContent = d.toLocaleString();
     $('vTotal').textContent = t.toLocaleString();
