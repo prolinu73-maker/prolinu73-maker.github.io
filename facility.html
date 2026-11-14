@@ -167,16 +167,24 @@
     body{background:#fff}
   }
 </style>
+<style>
+/* ===== 홈으로 버튼 (apps.html과 같은 디자인) ===== */
+#hubHomeBtn{display:inline-flex !important;align-items:center;gap:7px;padding:9px 16px;border-radius:999px;background:#1B5442 !important;color:#fff !important;font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;font-weight:800;font-size:14px;line-height:1.2;text-decoration:none !important;white-space:nowrap;border:1.5px solid rgba(255,255,255,.25);flex-shrink:0;transition:background .2s;cursor:pointer}
+#hubHomeBtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+#hubHomeBtn:hover{background:#123D30 !important}
+#hubHomeBtn:focus-visible{outline:3px solid #F4C430;outline-offset:2px}
+.hub-home-wrap{display:flex;align-items:center;gap:16px;min-width:0}
+</style>
 </head>
 <body>
 
 <header>
+  <a id="hubHomeBtn" href="index.html" title="홈(index.html)으로 이동합니다. 작성 중인 공고는 먼저 저장합니다." onclick="goHub(); return false;"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>홈으로</a>
   <h1>📝 시설공사 공고문 작성 프로그램</h1>
   <span class="save-state" id="saveState">저장 위치 확인 중…</span>
   <span class="visit-box" id="visitBox" title="접속자 수: 같은 브라우저는 하루 1번만 셉니다">👥 오늘 <b id="visitToday">-</b> · 누적 <b id="visitTotal">-</b></span>
   <button onclick="openGlossary()">📖 용어 사전</button>
   <button onclick="openSettings()">⚙️ 설정·백업</button>
-  <button class="hub-btn" onclick="goHub()" title="조효식 허브 PRO(index.html)로 이동합니다. 작성 중인 공고는 먼저 저장합니다.">🏠 메인 허브로 돌아가기</button>
 </header>
 
 <main>
