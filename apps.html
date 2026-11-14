@@ -6,12 +6,12 @@
     <title>스마트 업무도구 - 조효식 허브</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="common.css?v=1">
+    <script src="common.js?v=1"></script>
     <style>
         /* ===== 조효식 허브 PRO · 칠판 테마 (index.html과 같은 색) ===== */
         :root {
-            --board: #123D30; --board-light: #1B5442; --chalk: #EAF1EC; --chalk-dim: #A9C2B6;
-            --marker: #F4C430; --ink: #17231D; --paper: #F2F5F3; --line: #D5DFD9; --muted: #5B6B63;
-            --wood: #8A5A36; --chalk-font: 'Nanum Pen Script', 'Pretendard', cursive;
+            /* 칠판 테마 색은 common.css에 있음. 이 페이지에서만 쓰는 색 */
             --primary-color: #1B5442;
             --gradient-btn: #F4C430;   /* 등록하기 버튼 색 (자바스크립트에서도 사용) */
         }
@@ -20,33 +20,16 @@
         :focus-visible { outline: 3px solid var(--marker); outline-offset: 2px; }
 
         /* ───── 상단바 ───── */
-        header.top { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 20px; padding: 10px 40px; min-height: 66px; }
         .logo { font-size: 22px; font-weight: 900; text-decoration: none; background: linear-gradient(to right, #f12711, #f5af19); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; }
-        .nav-wrap { flex: 1; display: flex; justify-content: center; min-width: 0; }
-        .nav-pill { display: flex; align-items: center; gap: 4px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 999px; padding: 5px; }
-        .nav-item { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid transparent; color: #475569; font-size: 14px; font-weight: 500; text-decoration: none; white-space: nowrap; transition: background .2s, color .2s; }
-        .nav-item svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
-        .nav-item:hover { background: #fff; color: #1e293b; }
-        .nav-item.active { background: #fff; color: var(--board-light); font-weight: 700; border-color: #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
         .header-right { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
         #visitorStats { font-size: 12px; font-weight: 700; color: #475569; background: #fff; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); display: flex; gap: 8px; align-items: center; }
         .stat-today, .stat-total { color: var(--board-light); font-weight: 900; font-variant-numeric: tabular-nums; }
         .stat-divider { color: #cbd5e1; }
         #liveClock { font-weight: 700; color: var(--board-light); background: #E3EEE8; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-variant-numeric: tabular-nums; }
-        .home-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 999px; background: var(--board-light); color: #fff; font-weight: 800; font-size: 14px; text-decoration: none; white-space: nowrap; transition: background .2s; }
-        .home-btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-        .home-btn:hover { background: var(--board); }
         .auth-btn { background: #1e293b; color: #fff; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: 'Pretendard', sans-serif; transition: filter .15s; }
         .auth-btn:hover { filter: brightness(.9); }
         #userInfoArea { display: flex; align-items: center; }
-        @media (max-width: 1500px) {
-            header.top { flex-wrap: wrap; }
-            .nav-wrap { order: 3; flex-basis: 100%; }
-            .header-right { margin-left: auto; }
-        }
         @media (max-width: 860px) {
-            header.top { padding: 10px 16px; }
-            .nav-pill { flex-wrap: wrap; justify-content: center; border-radius: 18px; }
             .header-right { flex-wrap: wrap; justify-content: flex-end; }
         }
 
@@ -181,14 +164,6 @@
         .attached-img { max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--line); display: block; }
 
         /* ───── 창(모달) ───── */
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(14,50,39,.55); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-        .modal-content { background: #fff; padding: 28px; border-radius: 14px; width: 340px; box-shadow: 0 24px 48px rgba(0,0,0,.25); border-top: 6px solid var(--board-light); }
-        .modal-content h3 { margin: 0 0 18px; font-size: 21px; color: var(--ink); text-align: center; }
-        .modal-content input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1.5px solid var(--line); border-radius: 8px; font-family: 'Pretendard', sans-serif; }
-        .modal-content input:focus { border-color: var(--board-light); outline: none; }
-        .auth-toggle { text-align: center; font-size: 13px; margin-top: 14px; }
-        .auth-toggle a { color: var(--board-light); text-decoration: none; font-weight: 700; cursor: pointer; }
-        .auth-toggle a:hover { text-decoration: underline; }
 
         /* 휴대폰: 표는 옆으로 밀어서 보기, 탭은 한 줄 유지 */
         .tab-btn { white-space: nowrap; }
@@ -225,8 +200,8 @@
         .e-msg { min-height: 1.2em; font-size: 13px; font-weight: 700; color: #dc2626; margin: 4px 0 10px; }
         .me-link { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink); font-weight: 800; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px 14px 4px 4px; }
         .me-link:hover { border-color: var(--board-light); }
+        /* 프로필 그림: 이 페이지는 항상 30px (기본 모양은 common.css) */
         .av { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; color: #fff; font-size: 16px; font-weight: 800; flex-shrink: 0; line-height: 1; background: var(--board-light); }
-        .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
         @media (prefers-reduced-motion: reduce) {
             .card, .site-chip, .nav-item, .tab-btn { transition: none; }
             .card:hover { transform: none; }
@@ -261,25 +236,11 @@
 </head>
 <body>
 
-    <header class="top">
-        <a href="index.html" class="home-btn" title="포털 첫 화면(index.html)으로 이동합니다"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>홈으로</a>
-        <nav class="nav-wrap" aria-label="업무 페이지">
-            <div class="nav-pill">
-                <a href="labor.html" class="nav-item"><svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/></svg>노무관리</a>
-                <a href="budget.html" class="nav-item"><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13" rx="2"/><path d="M2.5 10h19"/><path d="M16 15h2"/></svg>예산관리</a>
-                <a href="Per_diem.html" class="nav-item"><svg viewBox="0 0 24 24"><path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v2H3z"/><circle cx="7.5" cy="13" r="0.8"/><circle cx="16.5" cy="13" r="0.8"/><path d="M5 11h14"/></svg>여비관리</a>
-                <a href="mulpum_sys.html" class="nav-item"><svg viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>물품관리</a>
-                <a href="geunmu_search.html" class="nav-item"><svg viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>복무 통계 작성</a>
-                <a href="facility.html" class="nav-item"><svg viewBox="0 0 24 24"><path d="M2 20h20"/><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M8 10h8"/></svg>시설공사 공고문 작성</a>
-                <a href="apps.html" class="nav-item active" aria-current="page"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>스마트 업무도구</a>
-            </div>
-        </nav>
-        <div class="header-right">
-            <div id="userInfoArea">
-                <a class="auth-btn" href="index.html#login" style="text-decoration:none;" title="로그인은 홈 화면에서 합니다">로그인</a>
-            </div>
-        </div>
-    </header>
+    <header id="hubHeader"></header>
+    <script>
+        HUB.renderHeader({ active: 'apps.html', home: true, wrapAt: 1500, rightClass: 'header-right',
+            right: `<div id="userInfoArea"><a class="auth-btn" href="index.html#login" style="text-decoration:none;" title="로그인은 홈 화면에서 합니다">로그인</a></div>` });
+    </script>
 
     <!-- 칠판 머리말 -->
     <section class="board-wrap" aria-label="페이지 소개">
@@ -444,151 +405,9 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    <!-- 방문 기록 수집 (관리자 방문기록용) -->
-<script>
-/* ===== 방문 기록 수집 (방문 일시 · 페이지 · 시도 단위 지역) =====
-   - IP는 지역 확인에만 잠깐 쓰이고 저장하지 않음
-   - 페이지 자체의 Firebase와 완전히 분리 (웹 주소로 직접 저장) */
-(function () {
-    if (window.__visitTrackerLoaded) return;
-    window.__visitTrackerLoaded = true;
-
-    /* 관리자 접속은 기록하지 않음
-       - 메인 허브에서 관리자로 로그인되어 있거나
-       - 이 브라우저에서 한 번이라도 관리자로 로그인한 적이 있으면 (로그아웃해도 계속 제외) */
-    var ADMIN_PHONE = "010-9848-0309";
-    try {
-        var hubUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-        if (hubUser && hubUser.phone === ADMIN_PHONE) localStorage.setItem("hubAdminDevice", "1");
-        if (localStorage.getItem("hubAdminDevice") === "1") return;
-    } catch (e) {}
-
-    var PROJECT_ID = "prolinu73-6c409";
-    var API_KEY = "AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw";
-    var DOC_BASE = "projects/" + PROJECT_ID + "/databases/(default)/documents";
-    var COMMIT_URL = "https://firestore.googleapis.com/v1/" + DOC_BASE + ":commit?key=" + API_KEY;
-
-    var REGION_MAP = [
-        ["seoul", "서울특별시"], ["busan", "부산광역시"], ["daegu", "대구광역시"],
-        ["incheon", "인천광역시"], ["gwangju", "광주광역시"], ["daejeon", "대전광역시"],
-        ["ulsan", "울산광역시"], ["sejong", "세종특별자치시"], ["gyeonggi", "경기도"],
-        ["gangwon", "강원특별자치도"],
-        ["chungcheongbuk", "충청북도"], ["northchungcheong", "충청북도"], ["chungbuk", "충청북도"],
-        ["chungcheongnam", "충청남도"], ["southchungcheong", "충청남도"], ["chungnam", "충청남도"],
-        ["jeollabuk", "전북특별자치도"], ["northjeolla", "전북특별자치도"], ["jeonbuk", "전북특별자치도"],
-        ["jeollanam", "전라남도"], ["southjeolla", "전라남도"], ["jeonnam", "전라남도"],
-        ["gyeongsangbuk", "경상북도"], ["northgyeongsang", "경상북도"], ["gyeongbuk", "경상북도"],
-        ["gyeongsangnam", "경상남도"], ["southgyeongsang", "경상남도"], ["gyeongnam", "경상남도"],
-        ["jeju", "제주특별자치도"]
-    ];
-
-    function getPageName() {
-        var p = location.pathname.split("/").pop();
-        if (!p) p = "index.html";
-        try { p = decodeURIComponent(p); } catch (e) {}
-        return p;
-    }
-
-    function toKoreanRegion(region, countryCode, countryName) {
-        if (countryCode && countryCode !== "KR") return "해외(" + (countryName || countryCode) + ")";
-        var key = (region || "").toLowerCase().replace(/[^a-z]/g, "");
-        for (var i = 0; i < REGION_MAP.length; i++) {
-            if (key.indexOf(REGION_MAP[i][0]) !== -1) return REGION_MAP[i][1];
-        }
-        return region ? region : "알 수 없음";
-    }
-
-    function fetchJson(url) {
-        var ctrl = new AbortController();
-        var timer = setTimeout(function () { ctrl.abort(); }, 4000);
-        return fetch(url, { signal: ctrl.signal })
-            .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
-            .finally(function () { clearTimeout(timer); });
-    }
-
-    function getRegion() {
-        try {
-            var cached = sessionStorage.getItem("visitRegion");
-            if (cached) return Promise.resolve(cached);
-        } catch (e) {}
-        return fetchJson("https://ipapi.co/json/")
-            .then(function (d) {
-                if (!d || d.error) throw new Error("ipapi 실패");
-                return toKoreanRegion(d.region, d.country_code, d.country_name);
-            })
-            .catch(function () {
-                return fetchJson("https://ipwho.is/?fields=success,country,country_code,region")
-                    .then(function (d) { return (d && d.success !== false) ? toKoreanRegion(d.region, d.country_code, d.country) : "알 수 없음"; })
-                    .catch(function () { return "알 수 없음"; });
-            })
-            .then(function (region) {
-                try { sessionStorage.setItem("visitRegion", region); } catch (e) {}
-                return region;
-            });
-    }
-
-    function newId() {
-        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", id = "";
-        for (var i = 0; i < 20; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
-        return id;
-    }
-
-    function isAdminDevice() {
-        try {
-            var u = JSON.parse(localStorage.getItem("currentUser") || "null");
-            if (u && u.phone === ADMIN_PHONE) localStorage.setItem("hubAdminDevice", "1");
-            return localStorage.getItem("hubAdminDevice") === "1";
-        } catch (e) { return false; }
-    }
-
-    function recordVisit() {
-        if (isAdminDevice()) return;   // 기다리는 사이 관리자로 로그인했어도 기록하지 않음
-        var docId = newId();
-        getRegion().then(function (region) {
-            var now = new Date();
-            var dateKey = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
-            var body = {
-                writes: [{
-                    update: {
-                        name: DOC_BASE + "/stats/" + docId,
-                        fields: {
-                            kind: { stringValue: "visit" },
-                            page: { stringValue: getPageName() },
-                            title: { stringValue: document.title || "" },
-                            region: { stringValue: region },
-                            dateKey: { stringValue: dateKey }
-                        }
-                    },
-                    updateTransforms: [{ fieldPath: "visitedAt", setToServerValue: "REQUEST_TIME" }],
-                    currentDocument: { exists: false }
-                }]
-            };
-            return fetch(COMMIT_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            }).then(function (res) {
-                if (!res.ok) return res.text().then(function (t) { throw new Error(res.status + " " + t); });
-                // 이 브라우저가 남긴 기록 번호를 기억 → 나중에 관리자로 로그인하면 홈에서 자동 삭제
-                try {
-                    var ids = JSON.parse(localStorage.getItem("myVisitIds") || "[]");
-                    ids.push(docId);
-                    if (ids.length > 300) ids = ids.slice(-300);
-                    localStorage.setItem("myVisitIds", JSON.stringify(ids));
-                } catch (e) {}
-            });
-        }).catch(function (err) {
-            try { console.log("방문 기록 저장 실패:", err); } catch (e) {}
-        });
-    }
-
-    function startLater() { setTimeout(recordVisit, 1500); }
-    if (document.readyState === "complete") startLater();
-    else window.addEventListener("load", startLater);
-})();
-</script>
+    <!-- 방문 기록은 common.js가 자동으로 남깁니다 -->
     <script>
-        const ADMIN_PHONE = "010-9848-0309"; 
+        const ADMIN_PHONE = HUB.ADMIN_PHONE;   // 관리자 확인은 HUB.isAdmin()
 
         // 스크립트 지연 로딩 대응: DOM과 Firebase가 모두 로드된 후 실행
         document.addEventListener("DOMContentLoaded", () => {
@@ -608,26 +427,18 @@
         let db;
         let storage;
         let authMode = 'login'; 
-        let currentUser = JSON.parse(localStorage.getItem("currentUser")); 
+        let currentUser = HUB.getUser();
+        // Firebase 로그인 확인 결과 등으로 로그인 상태가 바뀌면 화면과 목록을 다시 그림
+        HUB.onUserChange(u => {
+            currentUser = u; updateLoginUI();
+            if (db) { loadTools(); loadPosts(); }
+        });
         let currentTab = 'freeBoard';
         let pendingUploadFiles = []; 
 
         function initApp() {
-            const firebaseConfig = {
-                apiKey: "AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw",
-                authDomain: "prolinu73-6c409.firebaseapp.com",
-                projectId: "prolinu73-6c409",
-                storageBucket: "prolinu73-6c409.firebasestorage.app",
-                messagingSenderId: "399358344473",
-                appId: "1:399358344473:web:491d5e74448b4f0f029988",
-                measurementId: "G-083RQKR8SQ"
-            };
-            // 기본(DEFAULT) 앱이 없을 때만 초기화 (다른 이름의 앱이 있어도 정상 작동)
-            if (!firebase.apps.some(app => app.name === "[DEFAULT]")) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            db = firebase.firestore();
-            storage = firebase.storage();
+            db = HUB.db();            // Firebase 연결 (설정은 common.js 한곳에)
+            storage = HUB.storage();
 
             updateVisitorCount();
             updateLoginUI();
@@ -665,12 +476,7 @@
                 }
 
                 // 관리자(또는 이 브라우저에서 관리자로 로그인한 적이 있으면)는 세지 않고 숫자만 보여 줌
-                let isAdminDevice = false;
-                try {
-                    if (currentUser && currentUser.phone === ADMIN_PHONE) localStorage.setItem("hubAdminDevice", "1");
-                    isAdminDevice = localStorage.getItem("hubAdminDevice") === "1";
-                } catch (e) {}
-                if (isAdminDevice) isNewVisit = false;
+                if (HUB.isAdminDevice()) isNewVisit = false;
 
                 if (data.todayDate !== todayFmt) {
                     data.todayDate = todayFmt;
@@ -741,16 +547,8 @@
             if (['free', 'qa', 'data'].includes(h)) document.querySelector('.tabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         // 프로필 그림 (내 페이지에서 정한 이모지·색 또는 사진)
-        const AV_EMOJIS = ["🧑‍💼", "👩‍💼", "👨‍🏫", "👩‍🏫", "🧑‍💻", "👷", "🦉", "🐻", "🐯", "🐰", "🦊", "🐼", "🌱", "🌻", "📚", "⚖️"];
-        const AV_COLORS = ["#1B5442", "#2F6FDE", "#7C5CD6", "#E0598B", "#E07A2F", "#1A9C7B", "#9A6B00", "#475569"];
-        function escText(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
-        function avatarHTML(u) {
-            const a = (u && u.avatar) || {};
-            if (a.type === "photo" && /^https:\/\//.test(a.url || "")) return `<span class="av"><img src="${escText(a.url)}" alt="" onerror="this.remove()"></span>`;
-            const color = AV_COLORS.includes(a.color) ? a.color : "#1B5442";
-            const face = AV_EMOJIS.includes(a.emoji) ? a.emoji : escText(String((u && u.name) || "?").slice(0, 1));
-            return `<span class="av" style="background:${color}" aria-hidden="true">${face}</span>`;
-        }
+        const escText = HUB.esc;
+        const avatarHTML = u => HUB.avatarHTML(u);   // (common.js)
 
         function filterCards() {
             const query = document.getElementById("searchInput").value.toLowerCase();
@@ -768,7 +566,7 @@
             const postGuestPw = document.getElementById('postGuestPw');
             const siteGuestPw = document.getElementById('siteGuestPw');
             
-            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            const isAdmin = HUB.isAdmin(currentUser);
 
             if (currentUser) {
                 const badge = isAdmin ? `<span class="admin-badge">ADMIN</span>` : "";
@@ -810,7 +608,7 @@
                 return;
             }
 
-            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            const isAdmin = HUB.isAdmin(currentUser);
             
             // 최적화: DocumentFragment를 사용하여 화면 그리기 연산(Reflow) 1회로 압축
             const fragment = document.createDocumentFragment();
@@ -870,7 +668,7 @@
             event.preventDefault(); 
             event.stopPropagation();
             
-            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            const isAdmin = HUB.isAdmin(currentUser);
             const isOwner = currentUser && currentUser.phone === authorPhone;
 
             if (isAdmin || isOwner) {
@@ -899,7 +697,7 @@
             const snapshot = await db.collection("smartTools").orderBy("createdAt", "desc").limit(30).get();
             grid.innerHTML = "";
             
-            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            const isAdmin = HUB.isAdmin(currentUser);
             
             // 최적화: Fragment 사용 
             const fragment = document.createDocumentFragment();
@@ -999,7 +797,7 @@
         async function deleteTool(event, docId, authorPhone, guestPwStr) {
             event.preventDefault(); 
             event.stopPropagation();
-            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            const isAdmin = HUB.isAdmin(currentUser);
             const isOwner = currentUser && currentUser.phone === authorPhone;
 
             if (isAdmin || isOwner) {
@@ -1209,7 +1007,7 @@
                 listDiv.innerHTML = '<div style="padding: 10px; color: #94a3b8; font-size: 13px;">아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!</div>';
             }
             
-            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            const isAdmin = HUB.isAdmin(currentUser);
             
             // 최적화: Fragment 처리
             const fragment = document.createDocumentFragment();
@@ -1291,7 +1089,7 @@
         }
 
         async function deleteComment(postDocId, commentDocId, authorPhone, guestPwStr) {
-            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            const isAdmin = HUB.isAdmin(currentUser);
             const isOwner = currentUser && currentUser.phone === authorPhone;
             
             if (isAdmin || isOwner) {
@@ -1351,7 +1149,7 @@
 
         /* 수정 권한 확인: 관리자 → 모든 글 / 회원 → 자기 글 / 게스트 글 → 작성할 때 넣은 비밀번호 */
         function checkEditRight(authorPhone, guestPwStr, what) {
-            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            const isAdmin = HUB.isAdmin(currentUser);
             if (isAdmin) return true;
             if (currentUser && currentUser.phone === authorPhone) return true;
             if (authorPhone === "guest") {
@@ -1469,7 +1267,7 @@
 
 
         async function deletePost(docId, authorPhone, guestPwStr, attachments = []) {
-            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            const isAdmin = HUB.isAdmin(currentUser);
             const isOwner = currentUser && currentUser.phone === authorPhone;
 
             let canDelete = false;
@@ -1522,7 +1320,7 @@
                 return;
             }
 
-            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            const isAdmin = HUB.isAdmin(currentUser);
             let likedPosts = JSON.parse(localStorage.getItem("likedPosts")) || {};
             let index = snapshot.size;
             
