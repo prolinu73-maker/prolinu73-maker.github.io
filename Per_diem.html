@@ -852,5 +852,121 @@ footer{color:var(--muted);font-size:13.5px}
   lookup();
 })();
 </script>
+<!-- 방문 기록 수집 (관리자 방문기록용) -->
+<script>
+/* ===== 방문 기록 수집 (방문 일시 · 페이지 · 시도 단위 지역) =====
+   - IP는 지역 확인에만 잠깐 쓰이고 저장하지 않음
+   - 페이지 자체의 Firebase와 완전히 분리 (웹 주소로 직접 저장) */
+(function () {
+    if (window.__visitTrackerLoaded) return;
+    window.__visitTrackerLoaded = true;
+
+    var PROJECT_ID = "prolinu73-6c409";
+    var API_KEY = "AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw";
+    var DOC_BASE = "projects/" + PROJECT_ID + "/databases/(default)/documents";
+    var COMMIT_URL = "https://firestore.googleapis.com/v1/" + DOC_BASE + ":commit?key=" + API_KEY;
+
+    var REGION_MAP = [
+        ["seoul", "서울특별시"], ["busan", "부산광역시"], ["daegu", "대구광역시"],
+        ["incheon", "인천광역시"], ["gwangju", "광주광역시"], ["daejeon", "대전광역시"],
+        ["ulsan", "울산광역시"], ["sejong", "세종특별자치시"], ["gyeonggi", "경기도"],
+        ["gangwon", "강원특별자치도"],
+        ["chungcheongbuk", "충청북도"], ["northchungcheong", "충청북도"], ["chungbuk", "충청북도"],
+        ["chungcheongnam", "충청남도"], ["southchungcheong", "충청남도"], ["chungnam", "충청남도"],
+        ["jeollabuk", "전북특별자치도"], ["northjeolla", "전북특별자치도"], ["jeonbuk", "전북특별자치도"],
+        ["jeollanam", "전라남도"], ["southjeolla", "전라남도"], ["jeonnam", "전라남도"],
+        ["gyeongsangbuk", "경상북도"], ["northgyeongsang", "경상북도"], ["gyeongbuk", "경상북도"],
+        ["gyeongsangnam", "경상남도"], ["southgyeongsang", "경상남도"], ["gyeongnam", "경상남도"],
+        ["jeju", "제주특별자치도"]
+    ];
+
+    function getPageName() {
+        var p = location.pathname.split("/").pop();
+        if (!p) p = "index.html";
+        try { p = decodeURIComponent(p); } catch (e) {}
+        return p;
+    }
+
+    function toKoreanRegion(region, countryCode, countryName) {
+        if (countryCode && countryCode !== "KR") return "해외(" + (countryName || countryCode) + ")";
+        var key = (region || "").toLowerCase().replace(/[^a-z]/g, "");
+        for (var i = 0; i < REGION_MAP.length; i++) {
+            if (key.indexOf(REGION_MAP[i][0]) !== -1) return REGION_MAP[i][1];
+        }
+        return region ? region : "알 수 없음";
+    }
+
+    function fetchJson(url) {
+        var ctrl = new AbortController();
+        var timer = setTimeout(function () { ctrl.abort(); }, 4000);
+        return fetch(url, { signal: ctrl.signal })
+            .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
+            .finally(function () { clearTimeout(timer); });
+    }
+
+    function getRegion() {
+        try {
+            var cached = sessionStorage.getItem("visitRegion");
+            if (cached) return Promise.resolve(cached);
+        } catch (e) {}
+        return fetchJson("https://ipapi.co/json/")
+            .then(function (d) {
+                if (!d || d.error) throw new Error("ipapi 실패");
+                return toKoreanRegion(d.region, d.country_code, d.country_name);
+            })
+            .catch(function () {
+                return fetchJson("https://ipwho.is/?fields=success,country,country_code,region")
+                    .then(function (d) { return (d && d.success !== false) ? toKoreanRegion(d.region, d.country_code, d.country) : "알 수 없음"; })
+                    .catch(function () { return "알 수 없음"; });
+            })
+            .then(function (region) {
+                try { sessionStorage.setItem("visitRegion", region); } catch (e) {}
+                return region;
+            });
+    }
+
+    function newId() {
+        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", id = "";
+        for (var i = 0; i < 20; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
+        return id;
+    }
+
+    function recordVisit() {
+        getRegion().then(function (region) {
+            var now = new Date();
+            var dateKey = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+            var body = {
+                writes: [{
+                    update: {
+                        name: DOC_BASE + "/stats/" + newId(),
+                        fields: {
+                            kind: { stringValue: "visit" },
+                            page: { stringValue: getPageName() },
+                            title: { stringValue: document.title || "" },
+                            region: { stringValue: region },
+                            dateKey: { stringValue: dateKey }
+                        }
+                    },
+                    updateTransforms: [{ fieldPath: "visitedAt", setToServerValue: "REQUEST_TIME" }],
+                    currentDocument: { exists: false }
+                }]
+            };
+            return fetch(COMMIT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            }).then(function (res) {
+                if (!res.ok) return res.text().then(function (t) { throw new Error(res.status + " " + t); });
+            });
+        }).catch(function (err) {
+            try { console.log("방문 기록 저장 실패:", err); } catch (e) {}
+        });
+    }
+
+    function startLater() { setTimeout(recordVisit, 1500); }
+    if (document.readyState === "complete") startLater();
+    else window.addEventListener("load", startLater);
+})();
+</script>
 </body>
 </html>

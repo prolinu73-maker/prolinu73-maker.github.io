@@ -442,32 +442,21 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    <!-- 방문 기록 수집 (방문 일시·페이지·시도 단위 지역) -->
-    <script>
-/* =========================================================
-   방문 기록 수집기 (visit_tracker.js)
-   - 수집 항목: 방문 일시, 방문 페이지, 지역(시·도 단위)
-   - IP 주소는 지역 확인에만 잠깐 쓰이고 저장하지 않습니다.
-   - 사용법: 각 페이지의 </body> 바로 위에 아래 한 줄 추가
-       (index.html에는 이 코드가 직접 들어 있음)
-   ========================================================= */
+    <!-- 방문 기록 수집 (관리자 방문기록용) -->
+<script>
+/* ===== 방문 기록 수집 (방문 일시 · 페이지 · 시도 단위 지역) =====
+   - IP는 지역 확인에만 잠깐 쓰이고 저장하지 않음
+   - 페이지 자체의 Firebase와 완전히 분리 (웹 주소로 직접 저장) */
 (function () {
-    if (window.__visitTrackerLoaded) return;      // 한 페이지에서 두 번 실행 방지
+    if (window.__visitTrackerLoaded) return;
     window.__visitTrackerLoaded = true;
 
-    const FIREBASE_CONFIG = {
-        apiKey: "AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw",
-        authDomain: "prolinu73-6c409.firebaseapp.com",
-        projectId: "prolinu73-6c409",
-        storageBucket: "prolinu73-6c409.firebasestorage.app",
-        messagingSenderId: "399358344473",
-        appId: "1:399358344473:web:491d5e74448b4f0f029988"
-    };
-    const APP_NAME = "visitTracker";              // 페이지 자체 Firebase와 충돌하지 않도록 별도 이름 사용
-    const SDK_BASE = "https://www.gstatic.com/firebasejs/10.7.1/";
+    var PROJECT_ID = "prolinu73-6c409";
+    var API_KEY = "AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw";
+    var DOC_BASE = "projects/" + PROJECT_ID + "/databases/(default)/documents";
+    var COMMIT_URL = "https://firestore.googleapis.com/v1/" + DOC_BASE + ":commit?key=" + API_KEY;
 
-    // 영문 지역명 → 한글 시·도 (구체적인 이름을 먼저 검사)
-    const REGION_MAP = [
+    var REGION_MAP = [
         ["seoul", "서울특별시"], ["busan", "부산광역시"], ["daegu", "대구광역시"],
         ["incheon", "인천광역시"], ["gwangju", "광주광역시"], ["daejeon", "대전광역시"],
         ["ulsan", "울산광역시"], ["sejong", "세종특별자치시"], ["gyeonggi", "경기도"],
@@ -481,21 +470,8 @@
         ["jeju", "제주특별자치도"]
     ];
 
-    function loadScript(src) {
-        return new Promise((resolve, reject) => {
-            const s = document.createElement("script");
-            s.src = src; s.onload = resolve; s.onerror = reject;
-            document.head.appendChild(s);
-        });
-    }
-
-    async function ensureFirebase() {
-        if (!window.firebase || !window.firebase.initializeApp) await loadScript(SDK_BASE + "firebase-app-compat.js");
-        if (!window.firebase.firestore) await loadScript(SDK_BASE + "firebase-firestore-compat.js");
-    }
-
     function getPageName() {
-        let p = location.pathname.split("/").pop();
+        var p = location.pathname.split("/").pop();
         if (!p) p = "index.html";
         try { p = decodeURIComponent(p); } catch (e) {}
         return p;
@@ -503,84 +479,85 @@
 
     function toKoreanRegion(region, countryCode, countryName) {
         if (countryCode && countryCode !== "KR") return "해외(" + (countryName || countryCode) + ")";
-        const key = (region || "").toLowerCase().replace(/[^a-z]/g, "");
-        for (const [k, v] of REGION_MAP) {
-            if (key.includes(k)) return v;
+        var key = (region || "").toLowerCase().replace(/[^a-z]/g, "");
+        for (var i = 0; i < REGION_MAP.length; i++) {
+            if (key.indexOf(REGION_MAP[i][0]) !== -1) return REGION_MAP[i][1];
         }
         return region ? region : "알 수 없음";
     }
 
-    async function fetchJson(url) {
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 4000);
-        try {
-            const res = await fetch(url, { signal: ctrl.signal });
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            return await res.json();
-        } finally {
-            clearTimeout(timer);
-        }
+    function fetchJson(url) {
+        var ctrl = new AbortController();
+        var timer = setTimeout(function () { ctrl.abort(); }, 4000);
+        return fetch(url, { signal: ctrl.signal })
+            .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
+            .finally(function () { clearTimeout(timer); });
     }
 
-    async function getRegion() {
+    function getRegion() {
         try {
-            const cached = sessionStorage.getItem("visitRegion");
-            if (cached) return cached;               // 같은 창에서는 한 번만 조회
+            var cached = sessionStorage.getItem("visitRegion");
+            if (cached) return Promise.resolve(cached);
         } catch (e) {}
-
-        let region = "알 수 없음";
-        try {
-            const d = await fetchJson("https://ipapi.co/json/");
-            if (!d || d.error) throw new Error("ipapi 실패");
-            region = toKoreanRegion(d.region, d.country_code, d.country_name);
-        } catch (e1) {
-            try {   // 예비 조회 서비스
-                const d = await fetchJson("https://ipwho.is/?fields=success,country,country_code,region");
-                if (d && d.success !== false) region = toKoreanRegion(d.region, d.country_code, d.country);
-            } catch (e2) {}
-        }
-        try { sessionStorage.setItem("visitRegion", region); } catch (e) {}
-        return region;
-    }
-
-    async function recordVisit() {
-        try {
-            await ensureFirebase();
-            // 페이지가 이미 같은 Firebase를 쓰고 있으면 그것을 그대로 사용 (페이지 초기화를 방해하지 않음)
-            const apps = window.firebase.apps || [];
-            const app = apps.find(a => a.name === "[DEFAULT]" && a.options && a.options.projectId === FIREBASE_CONFIG.projectId)
-                     || apps.find(a => a.name === APP_NAME)
-                     || window.firebase.initializeApp(FIREBASE_CONFIG, APP_NAME);
-            const region = await getRegion();
-            const now = new Date();
-            const dateKey = now.getFullYear() + "-" +
-                String(now.getMonth() + 1).padStart(2, "0") + "-" +
-                String(now.getDate()).padStart(2, "0");
-
-            // 방문자 수가 이미 저장되고 있는 'stats' 공간에 함께 저장 (Firebase 규칙 수정 불필요)
-            await app.firestore().collection("stats").add({
-                kind: "visit",
-                page: getPageName(),
-                title: document.title || "",
-                region: region,
-                dateKey: dateKey,
-                visitedAt: window.firebase.firestore.FieldValue.serverTimestamp()
+        return fetchJson("https://ipapi.co/json/")
+            .then(function (d) {
+                if (!d || d.error) throw new Error("ipapi 실패");
+                return toKoreanRegion(d.region, d.country_code, d.country_name);
+            })
+            .catch(function () {
+                return fetchJson("https://ipwho.is/?fields=success,country,country_code,region")
+                    .then(function (d) { return (d && d.success !== false) ? toKoreanRegion(d.region, d.country_code, d.country) : "알 수 없음"; })
+                    .catch(function () { return "알 수 없음"; });
+            })
+            .then(function (region) {
+                try { sessionStorage.setItem("visitRegion", region); } catch (e) {}
+                return region;
             });
-        } catch (err) {
-            console.log("방문 기록 저장 실패:", err);
-        }
     }
 
-    // 페이지가 완전히 뜨고 자체 준비를 마친 뒤(1.5초 후)에 기록
+    function newId() {
+        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", id = "";
+        for (var i = 0; i < 20; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
+        return id;
+    }
+
+    function recordVisit() {
+        getRegion().then(function (region) {
+            var now = new Date();
+            var dateKey = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+            var body = {
+                writes: [{
+                    update: {
+                        name: DOC_BASE + "/stats/" + newId(),
+                        fields: {
+                            kind: { stringValue: "visit" },
+                            page: { stringValue: getPageName() },
+                            title: { stringValue: document.title || "" },
+                            region: { stringValue: region },
+                            dateKey: { stringValue: dateKey }
+                        }
+                    },
+                    updateTransforms: [{ fieldPath: "visitedAt", setToServerValue: "REQUEST_TIME" }],
+                    currentDocument: { exists: false }
+                }]
+            };
+            return fetch(COMMIT_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            }).then(function (res) {
+                if (!res.ok) return res.text().then(function (t) { throw new Error(res.status + " " + t); });
+            });
+        }).catch(function (err) {
+            try { console.log("방문 기록 저장 실패:", err); } catch (e) {}
+        });
+    }
+
     function startLater() { setTimeout(recordVisit, 1500); }
-    if (document.readyState === "complete") {
-        startLater();
-    } else {
-        window.addEventListener("load", startLater);
-    }
+    if (document.readyState === "complete") startLater();
+    else window.addEventListener("load", startLater);
 })();
-    </script>
-
+</script>
     <script>
         const ADMIN_PHONE = "010-9848-0309"; 
 
