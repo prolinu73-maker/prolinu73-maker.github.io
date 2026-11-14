@@ -120,8 +120,14 @@
   .help-tg:has(input:checked){color:#1d4ed8 !important;font-weight:bold !important}
   .hl-tip{font-size:11.5px;color:#6b7280}
   .set-list{margin:6px 0 8px;padding-left:20px;font-size:13px;line-height:1.8}
+  .gate-banner{background:#fff7ed;border:2px solid #fb923c;border-radius:8px;padding:9px 12px;margin-bottom:10px;font-size:13px;line-height:1.6}
+  .gate-banner .gate-sub{color:#9a3412;font-size:12px}
+  .gate-paper{text-align:center;padding:60px 20px;color:#475569}.gate-paper h3{margin:8px 0 14px;color:#1e3a8a}
+  .gate-paper ol{list-style:none;padding:0;display:inline-block;text-align:left;font-size:15px;line-height:2}.gate-paper li.done{color:#16a34a}
+  body.gate-wait #nwFormArea .rec[data-rec]{display:none}
   .gbox{background:#f0f6ff;border:1px solid #c7dafc;border-left:4px solid var(--blue);border-radius:6px;padding:9px 11px;margin-top:6px;font-size:12.5px;line-height:1.6;color:#1f2937;font-weight:normal}
   .gbox .g-t{font-weight:bold;color:#1e3a8a;margin-bottom:2px}
+  .gbox .g-law{margin-top:6px;background:#eef2ff;color:#1e3a8a;border-radius:4px;padding:5px 8px;line-height:1.6}
   .gbox .g-w{margin-top:6px;background:var(--orange-l);color:#92400e;border-radius:4px;padding:5px 8px}
   .gbox .g-ex{margin-top:6px;color:#374151}.gbox .g-ex span{background:#fff;border:1px dashed #9db6e8;border-radius:4px;padding:1px 6px}
   .gbox .g-opts{margin:6px 0 0;padding-left:16px}.gbox .g-opts li{margin:3px 0;color:#4b5563}.gbox .g-opts li.on{color:#1e3a8a;background:#dbe8ff;border-radius:4px;padding:2px 4px}
@@ -253,6 +259,7 @@
             <label class="chk" style="display:inline-flex;gap:4px;margin:0"><input type="checkbox" id="hintShowChk" onchange="setHintShow(this.checked)"> 💬 모든 설명 보기</label>
             <span class="hl-tip">항목 옆 <b>☐ 설명</b>에 체크하면 그 항목 설명만 보입니다.</span></div>
         </div>
+        <div id="gateBanner" class="gate-banner hidden"></div>
         <div id="resetBanner" class="banner hidden">🧹 입력값을 초기화했습니다. <button type="button" class="small" onclick="undoReset()">↩ 되돌리기</button> <button type="button" class="small" onclick="this.parentNode.classList.add('hidden')">닫기</button></div>
         <div id="chgSummary" class="chg-sum hidden"></div>
         <div id="typeBanner" class="type-banner"></div>
@@ -425,7 +432,7 @@
               <button type="button" class="tag" data-tk="notice.extraNote" data-tt="본 공사는 노무비 구분관리 및 지급확인제 적용 대상입니다." data-tl="노무비 관리" onclick="toggleTag(this)">+ 노무비 관리</button>
               <button type="button" class="tag" data-tk="notice.extraNote" data-tt="본 공사는 「중대재해 처벌 등에 관한 법률」 적용 대상으로, 참가자는 사업주와 경영책임자의 안전 및 보건 확보 의무를 숙지하고 참여하여야 합니다." data-tl="중대재해처벌법" onclick="toggleTag(this)">+ 중대재해처벌법</button>
              <button type="button" class="tag" data-tk="notice.extraNote" data-tt="본 공사는 「공직자의 이해충돌 방지법」 제12조에 따른 수의계약 체결 제한 대상 여부를 확인하며, 낙찰자는 수의계약 체결 제한 여부 확인서를 제출하여야 합니다." data-tl="이해충돌방지법" onclick="toggleTag(this)">+ 이해충돌방지법</button>
-             <button type="button" class="tag" data-tk="notice.extraNote" data-tt="계약상대자는 「지방계약법 시행령」 제31조의5 및 행정안전부 예규에 따른 수의계약 배제사유에 해당하지 않아야 하며, 계약 시 배제사유 각서를 제출하여야 합니다." data-tl="수의배제사유" onclick="toggleTag(this)">+ 수의배제사유</button>
+             <button type="button" class="tag" data-tk="notice.extraNote" data-tt="계약상대자는 「지방자치단체 입찰 및 계약 집행기준」 제5장 수의계약 운영요령 &lt;별표 1&gt;의 수의계약 배제사유에 해당하지 않아야 하며, 계약 시 배제사유에 해당하지 않는다는 각서를 제출하여야 합니다." data-tl="수의배제사유" onclick="toggleTag(this)">+ 수의배제사유</button>
             </div>
             <textarea data-k="notice.extraNote"></textarea>
           </div>
@@ -568,6 +575,9 @@ function applyPreset(val) {
   else if(val === 'bid_elec') p.method = "일반경쟁입찰";
   $('presetSel').value = "";
   syncField("method"); p.notice.rateManual = false;
+  if (!isReady(p)) {   // 기본항목 입력 전: 계약방법만 정하고, 나머지는 기본항목이 다 들어오면 자동으로 채움
+    autoFill(p, "method"); renderNotice(true); updateFormUI(); autoSave();
+    const m = basicsMissing(p); toast(m.length ? `템플릿의 계약방법을 넣었습니다. ${m.join("·")}을(를) 입력하면 나머지가 자동으로 채워집니다.` : "템플릿이 적용되었습니다.", 4500); return; }
   applyMethodDefaults(p, true); autoFill(p, "method"); renderNotice(true); autoSave(); toast("템플릿이 적용되었습니다. 계약방법 기본값으로 모두 맞췄습니다.");
 }
 
@@ -578,12 +588,13 @@ const TXT_SUUI_GAKSEO = "수의계약 각서";
 const TXT_CONFLICT_DOC = "수의계약 체결 제한 여부 확인서(이해충돌방지법)";
 const TXT_JOINT_DOC = "공동수급협정서(공동도급으로 참가한 경우)";
 const TXT_NOTE_CONFLICT = "본 공사는 「공직자의 이해충돌 방지법」 제12조에 따른 수의계약 체결 제한 대상 여부를 확인하며, 낙찰자는 수의계약 체결 제한 여부 확인서를 제출하여야 합니다.";
-const TXT_NOTE_EXCLUDE = "계약상대자는 「지방계약법 시행령」 제31조의5 및 행정안전부 예규에 따른 수의계약 배제사유에 해당하지 않아야 하며, 계약 시 배제사유 각서를 제출하여야 합니다.";
+const TXT_NOTE_EXCLUDE = "계약상대자는 「지방자치단체 입찰 및 계약 집행기준」 제5장 수의계약 운영요령 <별표 1>의 수의계약 배제사유에 해당하지 않아야 하며, 계약 시 배제사유에 해당하지 않는다는 각서를 제출하여야 합니다.";
+const TXT_NOTE_EXCLUDE_OLD = "계약상대자는 「지방계약법 시행령」 제31조의5 및 행정안전부 예규에 따른 수의계약 배제사유에 해당하지 않아야 하며, 계약 시 배제사유 각서를 제출하여야 합니다.";   // 예전 문구(저장된 공고에 남아 있으면 새 문구로 바꿈)
 
 const isSuui = m => m.includes("수의");
 // 계약방법마다 자동으로 정할 값 (화면 이름, 값)
 function methodPlan(p){
-  const m = p.method, suui = isSuui(m), bid = m.includes("입찰"), one = m.includes("1인") || m.includes("긴급");
+  const m = p.method, T = docTypeOf(p), suui = isSuui(m), bid = T === "bid", one = T === "quote1";
   const region = settings.region || "종전 전라남도";
   const plan = {
     "notice.docType":   { label:"문서 종류", value:"" },  // 계약방법에 맞춰 자동 선택
@@ -596,7 +607,7 @@ function methodPlan(p){
     "notice.rebidMode": { label:"재입찰 일정", value:"개찰 당일 재입찰" },
     "notice.rebidScope":{ label:"재입찰 참가 범위", value: bid ? "참가 제한 없음" : "최초 입찰에 참가한 자" },
     "notice.reAnnounce":{ label:"재공고 안내", value:false, show: v => v ? "넣음" : "뺌" },
-    "notice.reOne":     { label:"재공고 후 1인 견적 안내", value: m === "2인 이상 견적 수의계약", show: v => v ? "넣음" : "뺌" },
+    "notice.reOne":     { label:"재공고 후 1인 견적 안내", value: T === "quote2", show: v => v ? "넣음" : "뺌" },
     "notice.urgent":    { label:"긴급공고(5일)", value:false, show: v => v ? "적용" : "미적용" },
     "notice.regionSince":{ label:"소재지 유지 기준", value: bid ? "입찰공고일 180일 전" : "공고일 전일" },
     "notice.optSerious":{ label:"중대재해처벌법 안내", value: !one, show: v => v ? "넣음" : "뺌" },
@@ -646,7 +657,7 @@ function applyMethodDefaults(p, force){
 
 // 계약방법 칸 아래 안내
 function updateMethodNote(){
-  const p = cur(), el = $("methodNote"); if (!p || !el) return;
+  const p = cur(), el = $("methodNote"); if (!p || !el) return; if (!isReady(p)) { el.classList.add("hidden"); return; }
   const n = p.notice, { plan } = methodPlan(p);
   const r = rateCalc(p), type = docTypeOf(p);
   const docName = { quote1:"견적서 제출 요청서", quote2:"소액수의 견적제출 안내공고", bid:"입찰공고" }[type];
@@ -757,8 +768,14 @@ function autoTrack(n, name, val, flag, label, keep){
 // 입력값이 바뀔 때마다 관련 칸을 자동으로 채움
 function autoFill(p, key){ // key는 아래에서 바뀔 수 있음
   if (!p) return; const n = p.notice;
+  if (!isReady(p)) {
+    const AMT0 = ["notice.totalAmt","notice.basePrice","designAmt","estPrice","notice.vat","notice.govMat","notice.vatFree"];
+    if (AMT0.includes(key)) calcAmounts(p, key);
+    if (basicsMissing(p).length) return;          // 아직 대기
+    activateNotice(p); key = "init";               // 이제 한꺼번에 자동 채움
+  }
   // ⓪ 계약방법별 기본 설정
-  if (key === "method" || key === "init" || key === "notice.joint") {
+  if (key === "method" || key === "init" || key === "notice.joint" || key === "notice.docType") {
     const r = applyMethodDefaults(p, false);
     if (key === "method") {
       let msg = r.set.length ? `계약방법에 맞춰 ${r.set.length}개 항목을 바꿨습니다` : "계약방법을 바꿨습니다";
@@ -790,7 +807,7 @@ function autoFill(p, key){ // key는 아래에서 바뀔 수 있음
     if (n.autoSched === false && prev !== undefined && val !== undefined && prev !== val && !["notice.start","notice.end","notice.open"].includes(key)) {
       n.autoSched = true; const c = $("autoSchedChk"); if (c) c.checked = true; key = key === "init" ? key : "autoSched";
       toast("🔄 공고일·금액·계약방법이 바뀌어 제출기간·개찰일시를 규정에 맞게 다시 계산했습니다.", 3500); } }
-  if (["notice.date","designAmt","estPrice","method","notice.docType","notice.urgent","autoSched","init"].includes(key) && n.autoSched !== false) {
+  if (["notice.date","designAmt","estPrice","method","notice.docType","notice.urgent","autoSched","init","notice.site"].includes(key) && n.autoSched !== false) {
     const s = scheduleCalc(p);
     if (s) { n.start = s.start; n.end = s.end; n.open = s.open; ["notice.start","notice.end","notice.open"].forEach(syncField); }
   }
@@ -804,7 +821,7 @@ function autoFill(p, key){ // key는 아래에서 바뀔 수 있음
   // ⑥ 적격심사 통과점수 (추정가격 100억 기준 95/92점, 직접 고치면 유지)
   if (key === "notice.passScore") n.passManual = String(n.passScore) !== String(rateCalc(p).score || "");
   autoTrack(n, "pass", rateCalc(p).score, "passManual", "적격심사 통과 점수");
-  { const r = rateCalc(p); if (r.score && !n.passManual && String(n.passScore) !== r.score) { n.passScore = r.score; syncField("notice.passScore"); } }
+  { const r = rateCalc(p), want = n.award === "적격심사" ? (r.score || "") : ""; if (!n.passManual && String(n.passScore ?? "") !== String(want)) { n.passScore = want; syncField("notice.passScore"); } }
   // ⑦ 현장설명 실시 → 현장설명 일시·마감 (시행령 제35조제2항)
   if (key === "notice.siteTime") n.siteManual = n.siteTime !== siteCalc(p)?.site;
   if (n.site === "실시") autoTrack(n, "site", siteCalc(p)?.site, "siteManual", "현장설명 일시(공고일)");
@@ -1056,7 +1073,7 @@ function restoreJSON(input){
 function download(name, text, type){ const blob = new Blob([text], {type}); const a=document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href); }
 
 function blankProject(){
-  return { id: uid(), year: new Date().getFullYear(), name:"", location:"", method: METHODS[1], industry: INDUSTRIES[5], industry2:"", manager:"", budgetItem:"", budget:"", designAmt:"", estPrice:"", period:"", memo:"", notice: noticeDefaults(), createdAt: new Date().toISOString() };
+  return { id: uid(), year: new Date().getFullYear(), name:"", location:"", method: "", industry: "", industry2:"", manager:"", budgetItem:"", budget:"", designAmt:"", estPrice:"", period:"", memo:"", notice: Object.assign(noticeDefaults(), pendingNotice()), createdAt: new Date().toISOString() };
 }
 function noticeDefaults(){
   return { no:"", date:"", start:"", end:"", open:"", system:"나라장터(국가종합전자조달)", region:"", lowerRate:"", docType:"", toCompany:"", scope:"", basePrice:"", govMat:"", periodBase:"착공일로부터", extraQual:"", joint:"허용하지 않음", preRange:3, award:"낙찰하한율 이상 최저가", passScore:"", docsText: DEFAULT_DOCS.join("\n"), optIntegrity:true, optBond:true, optCalc:true, optSub:true, optSafety:true, extraNote:"", dept: settings.dept || "", tel: settings.tel || "", html:"", edited:false, autoSched:true, urgent:false, rateManual:false,
@@ -1064,7 +1081,32 @@ function noticeDefaults(){
     site:"생략", siteTime:"", sitePlace:"", govMatG:"", evalBracket:"", aPension:"", aHealth:"", aRetire:"", aCare:"", aSafetyHealth:"", aSafety:"", aQuality:"",
     optDocs:true, rebid:true, rebidMode:"개찰 당일 재입찰", rebidStart:"", rebidEnd:"", rebidOpen:"", rebidManual:false, rebidScope:"최초 입찰에 참가한 자", reAnnounce:false, reOne:false, rebidNote:"" };
 }
-function ensureNotice(p){ p.notice = Object.assign(noticeDefaults(), p.notice || {}); }
+function ensureNotice(p){
+  const fresh = !p.notice; p.notice = Object.assign(noticeDefaults(), p.notice || {});
+  if (fresh) Object.assign(p.notice, pendingNotice());              // 새 공고: 기본항목 입력 전 대기 상태
+  else if (p.notice._ready === undefined) p.notice._ready = !!p.method;  // 예전에 만든 공고는 그대로 사용
+  const n0 = p.notice;   // 예전 배제사유 문구 → 현행 예규 명칭으로
+  if (String(n0.extraNote || "").includes(TXT_NOTE_EXCLUDE_OLD)) { n0.extraNote = n0.extraNote.split(TXT_NOTE_EXCLUDE_OLD).join(TXT_NOTE_EXCLUDE); n0.edited = false; }
+  if (n0._autoLines && n0._autoLines["notice.extraNote"]) n0._autoLines["notice.extraNote"] = n0._autoLines["notice.extraNote"].map(x => x === TXT_NOTE_EXCLUDE_OLD ? TXT_NOTE_EXCLUDE : x);
+}
+/* ── 기본항목(계약방법·참가자격 업종·기초금액)을 먼저 넣어야 나머지가 자동으로 채워짐 ── */
+const WAIT_KEYS = ["joint","award","preRange","docsText","contractTerm","site","rebidMode","rebidScope","regionSince"];
+function pendingNotice(){ const D = noticeDefaults(), o = { _ready:false };
+  Object.keys(D).forEach(k => { if (D[k] === true) o[k] = false; });   // 자동으로 켜지는 체크 항목은 모두 끔
+  WAIT_KEYS.forEach(k => o[k] = ""); o.docsText = ""; return o; }
+function basicsMissing(p){ const m = [];
+  if (!p.method) m.push("① 계약방법"); if (!p.industry) m.push("② 참가자격 업종"); if (!num(p.notice.basePrice) && !num(p.estPrice)) m.push("③ 기초금액");
+  return m; }
+const isReady = p => p.notice._ready !== false;
+function activateNotice(p){
+  const n = p.notice, D = noticeDefaults(), P = pendingNotice();
+  // 대기 상태 그대로인 칸만 기본값으로 되돌림(그사이 직접 넣은 값은 유지)
+  Object.keys(P).forEach(k => { if (k !== "_ready" && String(n[k] ?? "") === String(P[k] ?? "")) n[k] = D[k]; });
+  n._ready = true; n._auto = {}; n._autoLines = {};
+  applyMethodDefaults(p, false);
+  [...new Set([...document.querySelectorAll("#nwFormArea [data-k]")].map(e => e.dataset.k))].forEach(k => syncField(k));   // 화면 칸도 모두 새 값으로
+  toast("✅ 기본항목(계약방법·업종·기초금액)이 입력되어 나머지 항목을 자동으로 채우고 체크했습니다.", 4500);
+}
 
 /* =========================================================
    4. 목록 화면
@@ -1127,8 +1169,10 @@ async function saveCurrent(showMsg){ const p = cur(); if(!p) return; await persi
 
 function showDetail(){
   $("listView").classList.add("hidden"); $("detailView").classList.remove("hidden");
-  $("methodSel").innerHTML = METHODS.map(m=>`<option>${m}</option>`).join("");
-  $("industrySel").innerHTML = INDUSTRIES.map(m=>`<option>${m}</option>`).join("");
+  $("methodSel").innerHTML = `<option value="" disabled>— 계약방법을 선택하세요 —</option>` + METHODS.map(m=>`<option>${m}</option>`).join("");
+  $("industrySel").innerHTML = `<option value="" disabled>— 업종을 선택하세요 —</option>` + INDUSTRIES.map(m=>`<option>${m}</option>`).join("");
+  // 자동 선택 대기 중인 선택 상자는 빈칸 대신 안내 문구
+  document.querySelectorAll("#nwFormArea select[data-k]").forEach(sel => { if (!sel.querySelector('option[value=""]')) sel.insertAdjacentHTML("afterbegin", `<option value="" hidden>— 기본항목 입력 후 자동 선택 —</option>`); });
   $("industrySel2").innerHTML = `<option value="">(선택 안 함 — 업종 1개만)</option>` + INDUSTRIES.map(m=>`<option>${m}</option>`).join("");
   const p = cur(); ensureNotice(p);
   if(wizardMode) { toggleWizard(); toggleWizard(); }
@@ -1258,7 +1302,7 @@ function buildNotice(p){
     const q = [`${ind.qual("에 따른", true)}${ind.eul} 등록한 자`];
     if (n.region) q.push(`법인의 경우 본점 소재지(개인의 경우 사업자등록증상 사업장 소재지)가 ${V(n.region)}에 소재한 자`);
     lines(n.extraQual).forEach(x => q.push(esc(x)));
-    q.push(`｢지방자치단체를 당사자로 하는 계약에 관한 법률｣ 제31조의5 및 같은 법 시행령 제30조의2 등에 따른 수의계약 배제사유에 해당하지 않는 자`);
+    q.push(`｢지방자치단체 입찰 및 계약 집행기준｣ 제5장 수의계약 운영요령 &lt;별표 1&gt;의 수의계약 배제사유에 해당하지 않는 자`);
     h += H(k++, "견적 참가 자격") + items(q);
     const docs = lines(n.docsText).map(esc); if (docs.length) h += H(k++, "계약 시 제출서류") + items(docs);
     const etc = [n.optCalc ? "계약상대자는 계약체결 전까지 산출내역서를 제출하여야 합니다." : "",
@@ -1536,6 +1580,14 @@ function noticeChecks(p){
 
 function renderNotice(force){
   const p = cur(); if (!p) return; const n = p.notice, paper = $("noticePaper");
+  const gate = $("gateBanner"), miss = isReady(p) ? [] : basicsMissing(p);
+  if (gate) { gate.classList.toggle("hidden", !miss.length); if (miss.length) gate.innerHTML = `🔒 <b>먼저 기본항목을 입력하세요:</b> ${miss.map(esc).join(" · ")} <span class="gate-sub">— 이 세 가지가 들어가면 문서 종류·낙찰방법·하한율·지역제한·체크 항목 등이 한꺼번에 자동으로 채워집니다.</span>`; }
+  if (miss.length) { const h = `<div class="gate-paper"><div style="font-size:40px">📝</div><h3>기본항목을 먼저 입력해 주세요</h3><p>왼쪽 <b>⭐ 먼저 입력하세요</b> 상자에서</p><ol>${["① 계약방법","② 참가자격 업종","③ 기초금액"].map(x => `<li class="${miss.includes(x) ? "" : "done"}">${miss.includes(x) ? "⬜" : "✅"} ${x}</li>`).join("")}</ol><p>를 입력하면 공고문이 자동으로 만들어집니다.</p></div>`;
+    if (paper.innerHTML !== h) paper.innerHTML = h;
+    ["editedBanner","restoreBanner","checkBox","chgSummary"].forEach(id => $(id)?.classList.add("hidden"));
+    updateTodo(); updateAutoNotes(); updateRebidUI(); updateMethodNote(); updateFormUI(); updateHints(); updateChgWarns(); updateMethodAlert(); trackMethodChange();
+    const tb = $("typeBanner"); if (tb) tb.innerHTML = "📄 계약방법을 고르면 알맞은 문서 종류(1인 견적·2인 이상 견적·입찰공고)가 정해집니다.";
+    return; }
   if (force === "form" && n.edited) { n.editedBackup = n.html; n.edited = false; toast("입력값이 바뀌어 미리보기를 다시 만들었습니다. 직접 고친 내용은 위쪽 [되살리기]로 되돌릴 수 있습니다.", 4000); }
   if (force || !n.edited || !n.html) { const h = buildNotice(p); if (paper.innerHTML !== h || n.html !== h) { n.html = h; paper.innerHTML = h; } n.edited = false; } else if (paper.innerHTML !== n.html) paper.innerHTML = n.html;
   $("editedBanner").classList.toggle("hidden", !n.edited);
@@ -1706,6 +1758,8 @@ function injectHints(){
 }
 function updateHints(){
   const p = cur(); if (!p) return; let diff = 0;
+  document.body.classList.toggle("gate-wait", !isReady(p));
+  if (!isReady(p)) { const b = $("recAllBtn"); if (b) { b.disabled = true; b.textContent = "🔒 기본항목 입력 후 권장 표시"; } return; }
   document.querySelectorAll("#nwFormArea .rec[data-rec]").forEach(sp => {
     const key = sp.dataset.rec, H = HINTS[key]; if (!H?.rec) return;
     const [rec, why] = H.rec(p), on = !!getPath(p, key);
@@ -1787,11 +1841,81 @@ const L = {
   reg25r: "지방계약법 시행규칙 제25조제4항(소재지 기준일)",
   dec:    "「지방자치단체 입찰시 낙찰자 결정기준」(행정안전부 예규)",
   exe5:   "「지방자치단체 입찰 및 계약 집행기준」 제5장(수의계약 운영요령)",
-  exe9:   "「지방자치단체 입찰 및 계약 집행기준」 제9장(노무비 구분관리 및 지급확인제)",
+  exe9:   "「지방자치단체 입찰 및 계약 집행기준」 제9장 계약 일반조건 제9절 9.(노무비의 구분관리 및 지급확인)",
+  law9:   "지방계약법 제9조(계약의 방법)",
+  law24:  "지방계약법 제24조(계약의 종류)",
+  law29:  "지방계약법 제29조(공동계약)",
+  def2:   "지방계약법 시행령 제2조(정의: 추정가격·예정가격)",
+  price10:"지방계약법 시행령 제10조(예정가격의 결정기준)",
+  bid36:  "지방계약법 시행령 제36조(입찰공고의 내용)",
+  dec42:  "지방계약법 시행령 제42조(낙찰자의 결정)",
+  exe2:   "「지방자치단체 입찰 및 계약 집행기준」 제2장(예정가격 작성요령 — 기초금액 ±3% 범위의 복수예비가격 15개)",
+  exe6:   "「지방자치단체 입찰 및 계약 집행기준」 제6장(공동계약 운영요령)",
+  exe8:   "「지방자치단체 입찰 및 계약 집행기준」 제8장 입찰 유의서 제2절 10.(산출내역서의 제출)",
+  coi12:  "「공직자의 이해충돌 방지법」 제12조(공공기관 직무 관련자와의 거래 신고)",
+  sep:    "「전기공사업법」 제11조·「정보통신공사업법」 제25조·「소방시설공사업법」 제21조(분리발주)",
+  sub29:  "「건설산업기본법」 제29조(건설공사의 하도급 제한)",
+  osh:    "「산업안전보건법」 제5조·제63조",
+  vat26:  "「부가가치세법」 제26조(면세)",
   re19:   "지방계약법 시행령 제19조(재입찰 및 재공고입찰)",
   bond37: "지방계약법 시행령 제37조제3항·제4항(입찰보증금 면제·지급확약)",
   int6:   "지방계약법 제6조의2(청렴서약제)",
   sapa:   "「중대재해 처벌 등에 관한 법률」 부칙(50억원 미만 공사 2024.1.27. 적용)"
+};
+const GUIDE_LAW = {
+  "method": [L.law9, L.enc25, L.enc30, L.reg20],
+  "industry": [L.bid36 + " — 참가자격을 공고에 적어야 함", L.sep],
+  "industry2": [L.bid36, L.reg20],
+  "notice.docType": [L.enc30, L.bid33],
+  "notice.totalAmt": [L.def2, L.exe2],
+  "notice.basePrice": [L.exe2, L.price10],
+  "estPrice": [L.def2 + " — 부가가치세를 뺀 금액, 계약방법·공고기간·하한율의 기준", L.enc25],
+  "notice.vat": ["「부가가치세법」 제30조(세율 10%)", L.def2],
+  "notice.vatFree": [L.vat26],
+  "notice.govMat": [L.def2, L.exe2],
+  "notice.govMatG": [L.exe2],
+  "name": [L.bid36 + " — 입찰에 부치는 사항"],
+  "location": [L.bid36 + " — 입찰에 부치는 사항"],
+  "period": [L.bid36, L.exe9],
+  "notice.scope": [L.bid36 + " — 입찰에 부치는 사항"],
+  "notice.date": [L.bid35, L.exe5 + " — 소액수의 견적 공고기간"],
+  "notice.start": [L.bid35, L.exe5],
+  "notice.end": [L.bid35, L.exe5],
+  "notice.open": [L.bid36 + " — 입찰·개찰의 장소와 일시"],
+  "notice.urgent": [L.bid35 + " 제4항(긴급공고 5일)"],
+  "notice.toCompany": [L.enc30 + " 제1항 단서(1인 견적)"],
+  "notice.region": [L.reg20, "지방계약법 시행규칙 제25조(제한입찰의 제한기준)"],
+  "notice.regionSince": [L.reg25r],
+  "notice.extraQual": [L.enc30 + " 제1항제2호(여성·장애인·청년창업기업 등 1인 견적 5천만원 특례)", L.exe5],
+  "notice.joint": [L.law29, L.exe6],
+  "notice.contractTerm": [L.law24],
+  "notice.bidForm": [L.bid36 + " — 입찰방법을 공고에 적음"],
+  "notice.laborMode": [L.exe9],
+  "notice.site": [L.bid35 + " — 현장설명을 하면 현장설명일 전날부터 7일 전 공고", L.bid36 + " — 현장설명 장소·일시"],
+  "notice.siteTime": [L.bid35, L.bid36],
+  "notice.sitePlace": [L.bid36],
+  "notice.preRange": [L.exe2],
+  "notice.lowerRate": [L.dec42, L.dec + " [별표]", L.exe5 + " — 소액수의 견적 하한율"],
+  "notice.award": [L.dec42, L.dec],
+  "notice.passScore": [L.dec + " — 100억원 미만 95점, 100억원 이상 92점"],
+  "notice.evalBracket": [L.dec + " [별표 1]~[별표 7]"],
+  "notice.optAval": [L.dec + " — A값(국민연금·건강보험료 등) 공개"],
+  "notice.aPension": [L.dec + " (A값)"], "notice.aHealth": [L.dec + " (A값)"], "notice.aRetire": [L.dec + " (A값)"], "notice.aCare": [L.dec + " (A값)"],
+  "notice.aSafetyHealth": [L.dec + " (A값)"], "notice.aSafety": [L.dec + " (A값)"], "notice.aQuality": [L.dec + " (A값)"],
+  "notice.rebid": [L.re19], "notice.rebidMode": [L.re19], "notice.rebidStart": [L.re19], "notice.rebidEnd": [L.re19], "notice.rebidOpen": [L.re19],
+  "notice.rebidScope": [L.re19], "notice.rebidNote": [L.re19], "notice.reAnnounce": [L.re19],
+  "notice.reOne": [L.enc30 + " 제1항제3호 — 넣을지는 기관이 정하는 선택 사항"],
+  "notice.optSerious": [L.sapa],
+  "notice.optInsurance": ["설계서·공사계약 특수조건(보험·공제 가입 조건이 있을 때)"],
+  "notice.optBond": [L.bond37],
+  "notice.optCalc": [L.exe8],
+  "notice.optSub": [L.sub29],
+  "notice.optSafety": [L.osh],
+  "notice.optIntegrity": [L.int6],
+  "notice.optDocs": [L.exe5, L.coi12],
+  "notice.docsText": [L.exe5 + " — 수의계약 각서 등", L.coi12],
+  "notice.extraNote": [L.bid36],
+  "notice.periodText": [L.bid36]
 };
 const naturalType = p => docTypeOf({ ...p, notice: { ...p.notice, docType: "" } });
 const planVal = (p, k) => { try { return methodPlan(p).plan[k]?.value; } catch(e){ return undefined; } };
@@ -1869,6 +1993,7 @@ const showVal = (key, v) => { if (typeof v === "boolean") return v ? "체크" : 
 
 function updateChgWarns(){
   const p = cur(); if (!p) return; const list = [];
+  if (!isReady(p)) { document.querySelectorAll("#nwFormArea .chg-warn").forEach(x => x.remove()); $("chgSummary")?.classList.add("hidden"); return; }
   Object.keys(CHG).forEach(key => {
     const el = document.querySelector(`#nwFormArea [data-k="${CSS.escape(key)}"]`); if (!el) return;
     const host = el.type === "checkbox" ? el.closest("label") : el.closest(".f"); if (!host) return;
@@ -1921,7 +2046,7 @@ function limitsOf(p){
 }
 function methodCheck(p){
   const est = Math.floor(num(p.estPrice)), m = p.method, L = limitsOf(p);
-  if (!est) return null;
+  if (!est || !m) return null;
   const urgentNote = "※ 금액과 상관없이 수의계약을 할 수 있는 사유(천재지변·긴급복구·특정 위치·기술로 경쟁이 불가능한 경우 등, 시행령 제25조제1항제1호~제4호)가 있을 때만 '긴급·기타 수의계약'을 고르세요.";
   const toBid = ["제한경쟁입찰", "일반경쟁입찰"];
   if (m === "1인 견적 수의계약" && est > L.one) {
@@ -2011,7 +2136,7 @@ const REASON = {
   "notice.preRange":  p => CHG["notice.preRange"].why(p),
   "notice.joint":     p => CHG["notice.joint"].why(p)
 };
-function snapOf(p){ const s = { method: p.method, v:{}, lines:{} };
+function snapOf(p){ const s = { method: p.method, ready: isReady(p), v:{}, lines:{} };
   SNAP_ITEMS.forEach(([lab, f, k]) => { try { s.v[k] = f(p); } catch(e){ s.v[k] = "-"; } });
   LINE_ITEMS.forEach(([lab, k]) => s.lines[k] = lines(getPath(p, k)));
   s.hidden = document.querySelectorAll("#nwFormArea .hide-type [data-k]").length; return s; }
@@ -2021,6 +2146,7 @@ function trackMethodChange(){
   if (!mSnap || mSnap.id !== p.id) { mSnap = { id: p.id, s: snapOf(p) }; return; }
   const before = mSnap.s, after = snapOf(p); mSnap.s = after;
   if (before.method === p.method) return;
+  if (!before.method || !isReady(p) || before.ready === false) return;
   const rows = [];
   SNAP_ITEMS.forEach(([lab, f, k]) => { if (before.v[k] !== after.v[k]) { let r = ["", ""]; try { r = REASON[k] ? REASON[k](p) : r; } catch(e){} rows.push({ lab, from: before.v[k], to: after.v[k], why: r[0], law: r[1] }); } });
   LINE_ITEMS.forEach(([lab, k]) => { const add = after.lines[k].filter(x => !before.lines[k].includes(x)), del = before.lines[k].filter(x => !after.lines[k].includes(x));
@@ -2098,9 +2224,9 @@ function verifyRules(p){
   if (!q1 && n.contractTerm && n.contractTerm !== "단년도") add("자격", "계약 기간 방식", "notice.contractTerm", n.contractTerm, [n.contractTerm + "계약"]);
   if (!q1) add("자격", "입찰 방식", "notice.bidForm", bidFormOf(p), [bidFormOf(p) + "대상"]);
   if (!q1) { const lm = n.laborMode;
-    if (lm === "지급확인제만 대상 (구분관리 제외)") add("자격", "노무비", "notice.laborMode", lm, ["노무비 지급확인제"], ["노무비 구분관리 및 지급확인제"]);
-    else if (lm === "적용 제외") add("자격", "노무비", "notice.laborMode", lm, [], ["노무비 구분관리", "노무비 지급확인제"]);
-    else add("자격", "노무비", "notice.laborMode", lm, ["노무비 구분관리 및 지급확인제"]); }
+    if (lm === "지급확인제만 대상 (구분관리 제외)") add("자격", "노무비", "notice.laborMode", lm, ["노무비 지급확인제 대상공사"], ["구분관리 및 지급확인제 대상공사"]);
+    else if (lm === "적용 제외") add("자격", "노무비", "notice.laborMode", lm, [], ["지급확인제 대상공사"]);
+    else add("자격", "노무비", "notice.laborMode", lm, ["구분관리 및 지급확인제 대상공사"]); }
   // 낙찰
   if (!q1) add("낙찰", "복수예비가격", "notice.preRange", "±" + (n.preRange || 3) + "%", [`±${n.preRange || 3}%`]);
   if (!q1 && n.award === "낙찰하한율 이상 최저가" && n.lowerRate) add("낙찰", "낙찰하한율", "notice.lowerRate", n.lowerRate + "%", [n.lowerRate + "%"]);
@@ -2176,7 +2302,7 @@ function injectGuides(){
   });
   document.querySelectorAll(".nw-form details").forEach((d, i) => { if (d.dataset.intro) return; d.dataset.intro = "1"; d.querySelector("summary").insertAdjacentHTML("beforeend", ` <span class="sec-st"></span>`); });
 }
-function toggleGuide(key, manual){ const box = document.querySelector(`.gbox[data-for="${CSS.escape(key)}"]`); if (!box) return; const el = document.querySelector(`#detailView [data-k="${CSS.escape(key)}"]`); if (box.classList.contains("hidden")) { box.innerHTML = `<div class="g-t">💡 ${esc(GUIDE[key].t)}</div><div>${esc(GUIDE[key].d)}</div>${GUIDE[key].w?`<div class="g-w">⚠️ ${esc(GUIDE[key].w)}</div>`:""}`; box.classList.remove("hidden"); box.dataset.manual = manual ? "1" : ""; } else box.classList.add("hidden"); }
+function toggleGuide(key, manual){ const box = document.querySelector(`.gbox[data-for="${CSS.escape(key)}"]`); if (!box) return; const el = document.querySelector(`#detailView [data-k="${CSS.escape(key)}"]`); if (box.classList.contains("hidden")) { box.innerHTML = `<div class="g-t">💡 ${esc(GUIDE[key].t)}</div><div>${esc(GUIDE[key].d)}</div>${GUIDE[key].w?`<div class="g-w">⚠️ ${esc(GUIDE[key].w)}</div>`:""}${GUIDE_LAW[key]?`<div class="g-law"><b>📖 근거</b><br>${GUIDE_LAW[key].map(x => "· " + esc(x)).join("<br>")}</div>`:""}`; box.classList.remove("hidden"); box.dataset.manual = manual ? "1" : ""; } else box.classList.add("hidden"); }
 // 마우스를 누르고 있는 동안 설명 상자를 열고 닫으면 화면이 움직여 클릭이 빗나가므로, 손을 뗀 뒤에 처리
 let guideMouseDown = false;
 document.addEventListener("mousedown", () => { guideMouseDown = true; }, true);
@@ -2190,7 +2316,8 @@ function updateTodo(){
   const p = cur(); if (!p || !$("todoBanner")) return;
   const n = p.notice, type = docTypeOf(p), t = []; t.checked = 0;
   const need = (cond, k, label, sec) => { t.checked++; if (!cond) t.push({k, label, sec}); };
-  need(p.name, "name", "공사명", 0); need(num(p.estPrice), "estPrice", "추정가격", 0); need(p.period, "period", "공사기간", 0);
+  need(p.method, "method", "계약방법", 0); need(p.industry, "industry", "참가자격 업종", 0); need(num(p.notice.basePrice) || num(p.estPrice), "notice.basePrice", "기초금액", 0);   // 기본항목 먼저
+  need(p.name, "name", "공사명", 0); need(p.period, "period", "공사기간", 0);
   need(n.date, "notice.date", "공고일", 0); if (type!=="quote1") { need(n.no, "notice.no", "공고번호", 1); need(n.start, "notice.start", "제출 시작", 1); need(n.open, "notice.open", "개찰일시", 1); }
   need(n.end, "notice.end", "제출 마감", 1);
   if (type!=="quote1" && n.award==="낙찰하한율 이상 최저가") need(n.lowerRate, "notice.lowerRate", "낙찰하한율", 3);
