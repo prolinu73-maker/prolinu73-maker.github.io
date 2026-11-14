@@ -33,6 +33,9 @@
         .stat-today, .stat-total { color: var(--board-light); font-weight: 900; font-variant-numeric: tabular-nums; }
         .stat-divider { color: #cbd5e1; }
         #liveClock { font-weight: 700; color: var(--board-light); background: #E3EEE8; padding: 7px 14px; border-radius: 999px; font-size: 13px; font-variant-numeric: tabular-nums; }
+        .home-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 999px; background: var(--board-light); color: #fff; font-weight: 800; font-size: 14px; text-decoration: none; white-space: nowrap; transition: background .2s; }
+        .home-btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .home-btn:hover { background: var(--board); }
         .auth-btn { background: #1e293b; color: #fff; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: 'Pretendard', sans-serif; transition: filter .15s; }
         .auth-btn:hover { filter: brightness(.9); }
         #userInfoArea { display: flex; align-items: center; }
@@ -232,7 +235,7 @@
 <body>
 
     <header class="top">
-        <a href="index.html" class="logo" title="포털 첫 화면으로">🚀 조효식 허브 PRO</a>
+        <a href="index.html" class="home-btn" title="포털 첫 화면(index.html)으로 이동합니다"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>홈으로</a>
         <nav class="nav-wrap" aria-label="업무 페이지">
             <div class="nav-pill">
                 <a href="labor.html" class="nav-item"><svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/></svg>노무관리</a>
@@ -251,7 +254,6 @@
                 <span class="stat-divider">|</span>
                 <span>누적 <strong id="totalCount" class="stat-total">0</strong></span>
             </div>
-            <div id="liveClock">시간 로딩중...</div>
             <div id="userInfoArea">
                 <button class="auth-btn" onclick="openModal('login')">로그인</button>
             </div>
@@ -628,7 +630,8 @@
             const now = new Date();
             const timeString = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const dateString = now.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
-            document.getElementById('liveClock').innerText = `${dateString} ${timeString}`;
+            const clockEl = document.getElementById('liveClock');   // 시계 표시는 없앴으므로 있을 때만 갱신
+            if (clockEl) clockEl.innerText = `${dateString} ${timeString}`;
         }
 
         // 방문자 카운트 로직
