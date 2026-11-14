@@ -770,8 +770,8 @@
 
                 let controlBtns = `<div class="card-controls">`;
                 
-                if (isAdmin) {
-                    controlBtns += `<button class="control-btn btn-edit" onclick="editTool(event, '${doc.id}', '${(tool.title || '').replace(/'/g, "\\'")}', '${(tool.link || '').replace(/'/g, "\\'")}', '${(tool.desc || '').replace(/'/g, "\\'")}')" title="도구 수정">✏️</button>`;
+                if (isAdmin || isOwner || isGuestPost) {
+                    controlBtns += `<button class="control-btn btn-edit" onclick="editTool(event, '${doc.id}', '${(tool.title || '').replace(/'/g, "\\'")}', '${(tool.link || '').replace(/'/g, "\\'")}', '${(tool.desc || '').replace(/'/g, "\\'")}', '${tool.authorPhone}', '${tool.guestPw}')" title="도구 수정">✏️</button>`;
                 }
                 if (isAdmin || isOwner || isGuestPost) {
                     controlBtns += `<button class="control-btn btn-del" onclick="deleteTool(event, '${doc.id}', '${tool.authorPhone}', '${tool.guestPw}')" title="도구 삭제">✖</button>`;
@@ -850,9 +850,10 @@
             loadTools(); 
         }
 
-        async function editTool(event, docId, currentTitle, currentLink, currentDesc) {
+        async function editTool(event, docId, currentTitle, currentLink, currentDesc, authorPhone, guestPwStr) {
             event.preventDefault(); 
             event.stopPropagation();
+            if (!checkEditRight(authorPhone, guestPwStr, "업무 도구")) return;
             const newTitle = prompt("수정할 도구 이름을 입력하세요:", currentTitle);
             if (newTitle === null) return;
             const newLink = prompt("수정할 파일명 또는 링크를 입력하세요:", currentLink);
@@ -1089,7 +1090,8 @@
                 
                 let delBtn = '';
                 if (isAdmin || isOwner || isGuestPost) {
-                    delBtn = `<span style="color: #ef4444; font-size: 12px; cursor: pointer; margin-left: 10px; font-weight:700;" onclick="deleteComment('${docId}', '${docSnap.id}', '${c.authorPhone}', '${c.guestPw}')">삭제</span>`;
+                    delBtn = `<span style="color: #2F6FDE; font-size: 12px; cursor: pointer; margin-left: 10px; font-weight:700;" onclick="editComment('${docId}', '${docSnap.id}', '${c.authorPhone}', '${c.guestPw}', '${encodeURIComponent(c.text || '').replace(/'/g, '%27')}')">수정</span>`
+                           + `<span style="color: #ef4444; font-size: 12px; cursor: pointer; margin-left: 10px; font-weight:700;" onclick="deleteComment('${docId}', '${docSnap.id}', '${c.authorPhone}', '${c.guestPw}')">삭제</span>`;
                 }
                 
                 const badge = (isAdmin && c.authorPhone === ADMIN_PHONE) ? `<span class="admin-badge" style="font-size:9px; padding: 2px 5px;">ADMIN</span>` : '';
@@ -1148,6 +1150,15 @@
             loadComments(docId);
         }
         
+        async function editComment(postDocId, commentDocId, authorPhone, guestPwStr, encodedText) {
+            if (!checkEditRight(authorPhone, guestPwStr, "댓글")) return;
+            const newText = prompt("수정할 댓글 내용을 입력하세요:", decodeURIComponent(encodedText));
+            if (newText === null) return;
+            if (!newText.trim()) return alert("댓글 내용을 입력해주세요!");
+            await db.collection(currentTab).doc(postDocId).collection("comments").doc(commentDocId).update({ text: newText.trim() });
+            loadComments(postDocId);
+        }
+
         async function deleteComment(postDocId, commentDocId, authorPhone, guestPwStr) {
             const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
             const isOwner = currentUser && currentUser.phone === authorPhone;
@@ -1193,7 +1204,24 @@
             }
         }
 
-        async function editPost(docId, currentTitle, currentFileLink) {
+        /* 수정 권한 확인: 관리자 → 모든 글 / 회원 → 자기 글 / 게스트 글 → 작성할 때 넣은 비밀번호 */
+        function checkEditRight(authorPhone, guestPwStr, what) {
+            const isAdmin = currentUser && currentUser.phone === ADMIN_PHONE;
+            if (isAdmin) return true;
+            if (currentUser && currentUser.phone === authorPhone) return true;
+            if (authorPhone === "guest") {
+                const pw = prompt(`게스트가 등록한 ${what}입니다. 등록할 때 넣은 비밀번호를 입력하세요.`);
+                if (pw === null) return false;
+                if (pw === guestPwStr) return true;
+                alert("비밀번호가 일치하지 않습니다.");
+                return false;
+            }
+            alert(`본인이 등록한 ${what}만 수정할 수 있습니다.`);
+            return false;
+        }
+
+        async function editPost(docId, currentTitle, currentFileLink, authorPhone, guestPwStr) {
+            if (!checkEditRight(authorPhone, guestPwStr, "글")) return;
             const newTitle = prompt("수정할 내용(제목)을 입력하세요:", currentTitle);
             if (newTitle === null) return;
             const updateData = { title: newTitle };
@@ -1288,7 +1316,7 @@
                 const isGuestPost = post.authorPhone === "guest";
                 
                 let adminBtns = '';
-                if (isAdmin) adminBtns += `<button class="btn-micro btn-edit-sm" onclick="editPost('${doc.id}', '${(post.title || '').replace(/'/g, "\\'")}', '${(post.fileLink || '').replace(/'/g, "\\'")}')">수정</button>`;
+                if (isAdmin || isOwner || isGuestPost) adminBtns += `<button class="btn-micro btn-edit-sm" onclick="editPost('${doc.id}', '${(post.title || '').replace(/'/g, "\\'")}', '${(post.fileLink || '').replace(/'/g, "\\'")}', '${post.authorPhone}', '${post.guestPw}')">수정</button>`;
                 
                 let attachStr = post.attachments ? JSON.stringify(post.attachments).replace(/"/g, '&quot;') : '[]';
                 if (isAdmin || isOwner || isGuestPost) adminBtns += `<button class="btn-micro btn-delete-sm" onclick="deletePost('${doc.id}', '${post.authorPhone}', '${post.guestPw}', ${attachStr})">삭제</button>`;

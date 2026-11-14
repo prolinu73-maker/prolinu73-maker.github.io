@@ -808,18 +808,22 @@ footer{color:var(--muted);font-size:13.5px}
         art.querySelector('.body').textContent=p.text||'';   // 글 내용은 글자로만 보여 줌(코드 실행 방지)
         var del=art.querySelector('.del');
         var mine=u&&p.authorPhone===u.phone;
+        function mkBtn(label,fn){var x=document.createElement('button');x.type='button';x.className='btn small ghost';x.textContent=label;x.addEventListener('click',fn);return x}
+        // 권한: 관리자 → 모든 글 / 회원 → 자기 글 / 게스트 글 → 작성할 때 넣은 비밀번호
         if(admin||mine){
-          var b=document.createElement('button');b.type='button';b.className='btn small ghost';b.textContent='삭제';
-          b.addEventListener('click',function(){removePost(doc.id,null,b)});del.appendChild(b);
+          var e=mkBtn('수정',function(){startEdit(art,doc.id,p)});
+          var b=mkBtn('삭제',function(){removePost(doc.id,null,b)});
+          del.appendChild(e);del.appendChild(b);
         }else if(p.authorPhone==='guest'){
-          var pw=document.createElement('input');pw.type='password';pw.placeholder='비밀번호';pw.setAttribute('aria-label','삭제용 비밀번호');pw.hidden=true;
-          var b2=document.createElement('button');b2.type='button';b2.className='btn small ghost';b2.textContent='삭제';
-          b2.addEventListener('click',function(){
+          var pw=document.createElement('input');pw.type='password';pw.placeholder='비밀번호';pw.setAttribute('aria-label','수정·삭제용 비밀번호');pw.hidden=true;
+          function checkPw(btn,go){
             if(pw.hidden){pw.hidden=false;pw.focus();return}
-            if(pw.value!==String(p.guestPw||'')){b2.textContent='비밀번호 다름';setTimeout(function(){b2.textContent='삭제'},1500);return}
-            removePost(doc.id,pw,b2);
-          });
-          del.appendChild(pw);del.appendChild(b2);
+            if(pw.value!==String(p.guestPw||'')){var o=btn.textContent;btn.textContent='비밀번호 다름';setTimeout(function(){btn.textContent=o},1500);return}
+            go();
+          }
+          var e2=mkBtn('수정',function(){checkPw(e2,function(){startEdit(art,doc.id,p)})});
+          var b2=mkBtn('삭제',function(){checkPw(b2,function(){removePost(doc.id,pw,b2)})});
+          del.appendChild(pw);del.appendChild(e2);del.appendChild(b2);
         }
         box.appendChild(art);
       });
@@ -828,6 +832,24 @@ footer{color:var(--muted);font-size:13.5px}
       var box=$('bList');box.innerHTML='<p class="empty"></p>';
       box.firstChild.textContent='게시판을 불러오지 못했습니다. '+why(err);
     });
+  }
+  // 글 수정: 글 자리에 입력칸을 열고 저장하면 내용만 바꿈
+  function startEdit(art,id,p){
+    var body=art.querySelector('.body');if(body.querySelector('textarea'))return;
+    var ta=document.createElement('textarea');ta.value=p.text||'';ta.rows=4;
+    ta.style.cssText='width:100%;box-sizing:border-box;font:inherit;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px';
+    var row=document.createElement('div');row.style.cssText='display:flex;gap:6px;justify-content:flex-end;margin-top:6px';
+    var cancel=document.createElement('button');cancel.type='button';cancel.className='btn small ghost';cancel.textContent='취소';
+    var save=document.createElement('button');save.type='button';save.className='btn small';save.textContent='수정 저장';
+    cancel.addEventListener('click',loadPosts);
+    save.addEventListener('click',function(){
+      var t=ta.value.trim();if(!t){bMsg('내용을 입력해 주세요.',true);ta.focus();return}
+      save.disabled=true;save.textContent='저장하는 중…';
+      getDb().then(function(db){return db.collection(BOARD).doc(id).update({text:t})})
+        .then(function(){bMsg('글을 수정했습니다.');loadPosts()})
+        .catch(function(err){save.disabled=false;save.textContent='수정 저장';bMsg('수정하지 못했습니다. '+why(err),true)});
+    });
+    body.textContent='';body.appendChild(ta);row.appendChild(cancel);row.appendChild(save);body.appendChild(row);ta.focus();
   }
   function removePost(id,pw,btn){
     btn.disabled=true;btn.textContent='지우는 중…';
