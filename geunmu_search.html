@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>근무상황 검색 프로그램</title>
+<link rel="stylesheet" href="common.css?v=2">
+<script src="common.js?v=2"></script>
 <style>
   :root{
     --navy:#1e3a5f; --navy2:#2c5282; --bg:#f3f5f9; --card:#fff; --line:#e2e8f0;
@@ -151,19 +153,11 @@
   @media (max-width:1000px){.main{grid-template-columns:1fr}.side{position:static;max-height:none}.kpis{grid-template-columns:repeat(2,1fr)}.set-grid{grid-template-columns:1fr}}
   @media print{.topbar .tb-right,.side,.tabs,.toolbar .btn,.pager,.drop{display:none!important}.main{display:block}.tbl-wrap{max-height:none;overflow:visible}}
 </style>
-<style>
-/* ===== 홈으로 버튼 (apps.html과 같은 디자인) ===== */
-#hubHomeBtn{display:inline-flex !important;align-items:center;gap:7px;padding:9px 16px;border-radius:999px;background:#1B5442 !important;color:#fff !important;font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;font-weight:800;font-size:14px;line-height:1.2;text-decoration:none !important;white-space:nowrap;border:1.5px solid rgba(255,255,255,.25);flex-shrink:0;transition:background .2s;cursor:pointer}
-#hubHomeBtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
-#hubHomeBtn:hover{background:#123D30 !important}
-#hubHomeBtn:focus-visible{outline:3px solid #F4C430;outline-offset:2px}
-.hub-home-wrap{display:flex;align-items:center;gap:16px;min-width:0}
-</style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="hub-home-wrap"><a id="hubHomeBtn" href="index.html" title="홈(index.html)으로 이동합니다"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>홈으로</a><div>
+  <div class="hub-home-wrap"><span data-hub-home></span><script>HUB.mountHomeButton()</script><div>
     <h1>🗂 근무상황 검색 프로그램</h1>
     <div class="sub">나이스 근무상황목록·출장목록을 불러와 조건별로 검색·집계합니다</div>
   </div></div>
@@ -1056,14 +1050,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
    저장 위치: Firestore  stats / page_geunmu
    세는 방식: 브라우저 창(세션)마다 처음 열 때 1번만 셈 · 날짜가 바뀌면 오늘 숫자는 0부터 */
 (function(){
-  var FIREBASE_CONFIG={
-    apiKey:"AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw",
-    authDomain:"prolinu73-6c409.firebaseapp.com",
-    projectId:"prolinu73-6c409",
-    storageBucket:"prolinu73-6c409.firebasestorage.app",
-    messagingSenderId:"399358344473",
-    appId:"1:399358344473:web:491d5e74448b4f0f029988"
-  };
+  /* 연결값은 common.js(HUB.FIREBASE_CONFIG) 한곳에서 관리 */
   var SDK='https://www.gstatic.com/firebasejs/10.7.1/';
   function el(id){return document.getElementById(id)}
   function addScript(src){return new Promise(function(ok,no){var t=document.createElement('script');t.src=src;t.onload=ok;t.onerror=no;document.head.appendChild(t)})}
@@ -1074,12 +1061,11 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   var isNew=false;
   try{if(!sessionStorage.getItem('visited_geunmu')){sessionStorage.setItem('visited_geunmu','true');isNew=true}}catch(e){isNew=true}
   // 관리자(또는 이 브라우저에서 관리자로 로그인한 적이 있으면)는 접속자 수를 세지 않음
-  if((function(){try{var u=JSON.parse(localStorage.getItem('currentUser')||'null');if(u&&u.phone==='010-9848-0309')localStorage.setItem('hubAdminDevice','1');return localStorage.getItem('hubAdminDevice')==='1';}catch(e){return false;}})())isNew=false;
+  if(HUB.isAdminDevice())isNew=false;
   var p=(window.firebase&&firebase.firestore)?Promise.resolve()
     :addScript(SDK+'firebase-app-compat.js').then(function(){return addScript(SDK+'firebase-firestore-compat.js')});
   p.then(function(){
-    if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
-    var db=firebase.firestore(), ref=db.collection('stats').doc('page_geunmu');
+    var db=HUB.db(), ref=db.collection('stats').doc('page_geunmu');
     var d=new Date(),todayFmt=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
     // 여러 사람이 동시에 들어와도 숫자가 꼬이지 않게 트랜잭션으로 처리
     return db.runTransaction(function(tx){
@@ -1096,148 +1082,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   });
 })();
 </script>
-<!-- 방문 기록 수집 (관리자 방문기록용) -->
-<script>
-/* ===== 방문 기록 수집 (방문 일시 · 페이지 · 시도 단위 지역) =====
-   - IP는 지역 확인에만 잠깐 쓰이고 저장하지 않음
-   - 페이지 자체의 Firebase와 완전히 분리 (웹 주소로 직접 저장) */
-(function () {
-    if (window.__visitTrackerLoaded) return;
-    window.__visitTrackerLoaded = true;
-
-    /* 관리자 접속은 기록하지 않음
-       - 메인 허브에서 관리자로 로그인되어 있거나
-       - 이 브라우저에서 한 번이라도 관리자로 로그인한 적이 있으면 (로그아웃해도 계속 제외) */
-    var ADMIN_PHONE = "010-9848-0309";
-    try {
-        var hubUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-        if (hubUser && hubUser.phone === ADMIN_PHONE) localStorage.setItem("hubAdminDevice", "1");
-        if (localStorage.getItem("hubAdminDevice") === "1") return;
-    } catch (e) {}
-
-    var PROJECT_ID = "prolinu73-6c409";
-    var API_KEY = "AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw";
-    var DOC_BASE = "projects/" + PROJECT_ID + "/databases/(default)/documents";
-    var COMMIT_URL = "https://firestore.googleapis.com/v1/" + DOC_BASE + ":commit?key=" + API_KEY;
-
-    var REGION_MAP = [
-        ["seoul", "서울특별시"], ["busan", "부산광역시"], ["daegu", "대구광역시"],
-        ["incheon", "인천광역시"], ["gwangju", "광주광역시"], ["daejeon", "대전광역시"],
-        ["ulsan", "울산광역시"], ["sejong", "세종특별자치시"], ["gyeonggi", "경기도"],
-        ["gangwon", "강원특별자치도"],
-        ["chungcheongbuk", "충청북도"], ["northchungcheong", "충청북도"], ["chungbuk", "충청북도"],
-        ["chungcheongnam", "충청남도"], ["southchungcheong", "충청남도"], ["chungnam", "충청남도"],
-        ["jeollabuk", "전북특별자치도"], ["northjeolla", "전북특별자치도"], ["jeonbuk", "전북특별자치도"],
-        ["jeollanam", "전라남도"], ["southjeolla", "전라남도"], ["jeonnam", "전라남도"],
-        ["gyeongsangbuk", "경상북도"], ["northgyeongsang", "경상북도"], ["gyeongbuk", "경상북도"],
-        ["gyeongsangnam", "경상남도"], ["southgyeongsang", "경상남도"], ["gyeongnam", "경상남도"],
-        ["jeju", "제주특별자치도"]
-    ];
-
-    function getPageName() {
-        var p = location.pathname.split("/").pop();
-        if (!p) p = "index.html";
-        try { p = decodeURIComponent(p); } catch (e) {}
-        return p;
-    }
-
-    function toKoreanRegion(region, countryCode, countryName) {
-        if (countryCode && countryCode !== "KR") return "해외(" + (countryName || countryCode) + ")";
-        var key = (region || "").toLowerCase().replace(/[^a-z]/g, "");
-        for (var i = 0; i < REGION_MAP.length; i++) {
-            if (key.indexOf(REGION_MAP[i][0]) !== -1) return REGION_MAP[i][1];
-        }
-        return region ? region : "알 수 없음";
-    }
-
-    function fetchJson(url) {
-        var ctrl = new AbortController();
-        var timer = setTimeout(function () { ctrl.abort(); }, 4000);
-        return fetch(url, { signal: ctrl.signal })
-            .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
-            .finally(function () { clearTimeout(timer); });
-    }
-
-    function getRegion() {
-        try {
-            var cached = sessionStorage.getItem("visitRegion");
-            if (cached) return Promise.resolve(cached);
-        } catch (e) {}
-        return fetchJson("https://ipapi.co/json/")
-            .then(function (d) {
-                if (!d || d.error) throw new Error("ipapi 실패");
-                return toKoreanRegion(d.region, d.country_code, d.country_name);
-            })
-            .catch(function () {
-                return fetchJson("https://ipwho.is/?fields=success,country,country_code,region")
-                    .then(function (d) { return (d && d.success !== false) ? toKoreanRegion(d.region, d.country_code, d.country) : "알 수 없음"; })
-                    .catch(function () { return "알 수 없음"; });
-            })
-            .then(function (region) {
-                try { sessionStorage.setItem("visitRegion", region); } catch (e) {}
-                return region;
-            });
-    }
-
-    function newId() {
-        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", id = "";
-        for (var i = 0; i < 20; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
-        return id;
-    }
-
-    function isAdminDevice() {
-        try {
-            var u = JSON.parse(localStorage.getItem("currentUser") || "null");
-            if (u && u.phone === ADMIN_PHONE) localStorage.setItem("hubAdminDevice", "1");
-            return localStorage.getItem("hubAdminDevice") === "1";
-        } catch (e) { return false; }
-    }
-
-    function recordVisit() {
-        if (isAdminDevice()) return;   // 기다리는 사이 관리자로 로그인했어도 기록하지 않음
-        var docId = newId();
-        getRegion().then(function (region) {
-            var now = new Date();
-            var dateKey = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
-            var body = {
-                writes: [{
-                    update: {
-                        name: DOC_BASE + "/stats/" + docId,
-                        fields: {
-                            kind: { stringValue: "visit" },
-                            page: { stringValue: getPageName() },
-                            title: { stringValue: document.title || "" },
-                            region: { stringValue: region },
-                            dateKey: { stringValue: dateKey }
-                        }
-                    },
-                    updateTransforms: [{ fieldPath: "visitedAt", setToServerValue: "REQUEST_TIME" }],
-                    currentDocument: { exists: false }
-                }]
-            };
-            return fetch(COMMIT_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            }).then(function (res) {
-                if (!res.ok) return res.text().then(function (t) { throw new Error(res.status + " " + t); });
-                // 이 브라우저가 남긴 기록 번호를 기억 → 나중에 관리자로 로그인하면 홈에서 자동 삭제
-                try {
-                    var ids = JSON.parse(localStorage.getItem("myVisitIds") || "[]");
-                    ids.push(docId);
-                    if (ids.length > 300) ids = ids.slice(-300);
-                    localStorage.setItem("myVisitIds", JSON.stringify(ids));
-                } catch (e) {}
-            });
-        }).catch(function (err) {
-            try { console.log("방문 기록 저장 실패:", err); } catch (e) {}
-        });
-    }
-
-    function startLater() { setTimeout(recordVisit, 1500); }
-    if (document.readyState === "complete") startLater();
-    else window.addEventListener("load", startLater);
-})();
-</script>
+<!-- 방문 기록은 common.js가 자동으로 남깁니다 -->
 </body>
 </html>

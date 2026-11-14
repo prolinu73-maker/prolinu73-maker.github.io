@@ -6,12 +6,10 @@
 <title>내 페이지 - 조효식 허브 PRO</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css">
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="common.css?v=2">
+<script src="common.js?v=2"></script>
 <style>
-  :root {
-    --board: #123D30; --board-light: #1B5442; --chalk: #EAF1EC; --chalk-dim: #A9C2B6;
-    --marker: #F4C430; --ink: #17231D; --paper: #F2F5F3; --line: #D5DFD9; --muted: #5B6B63;
-    --wood: #8A5A36; --chalk-font: 'Nanum Pen Script', 'Pretendard', cursive;
-  }
+  /* 칠판 테마 색은 common.css에 있음 */
   * { box-sizing: border-box; }
   body { margin: 0; font-family: 'Pretendard', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.6; -webkit-font-smoothing: antialiased; }
   a { color: inherit; }
@@ -19,35 +17,16 @@
   [hidden] { display: none !important; }
 
   /* ───── 상단바 ───── */
-  header.top { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,.94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 20px; padding: 10px 40px; min-height: 66px; }
-  .home-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 999px; background: var(--board-light); color: #fff; font-weight: 800; font-size: 14px; text-decoration: none; white-space: nowrap; }
-  .home-btn:hover { background: var(--board); }
-  .home-btn svg, .nav-item svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
-  .nav-wrap { flex: 1; display: flex; justify-content: center; min-width: 0; }
-  .nav-pill { display: flex; align-items: center; gap: 4px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 999px; padding: 5px; }
-  .nav-item { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; color: #475569; font-size: 14px; font-weight: 500; text-decoration: none; white-space: nowrap; }
-  .nav-item:hover { background: #fff; color: #1e293b; }
-  @media (max-width: 1300px) { header.top { flex-wrap: wrap; } .nav-wrap { order: 3; flex-basis: 100%; } .um-wrap { margin-left: auto; } }
-  @media (max-width: 860px) { header.top { padding: 10px 16px; } .nav-pill { flex-wrap: wrap; justify-content: center; border-radius: 18px; } }
+  /* 기본 모양은 common.css. 이 페이지만 다른 값 */
+  .nav-item { border: 0; transition: none; }
+  .home-btn { transition: none; }
+  .home-btn svg, .nav-item svg { stroke-width: 1.9; flex-shrink: 0; }
 
   /* ───── 프로필 그림 ───── */
-  .av { display: inline-grid; place-items: center; border-radius: 50%; overflow: hidden; color: #fff; font-weight: 800; flex-shrink: 0; background: var(--board-light); line-height: 1; }
-  .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .av.sm { width: 30px; height: 30px; font-size: 16px; }
-  .av.lg { width: 116px; height: 116px; font-size: 58px; box-shadow: 0 0 0 5px #fff, 0 0 0 6px var(--line); }
-  .av.md { width: 72px; height: 72px; font-size: 36px; }
 
   /* ───── 닉네임 펼침 메뉴 ───── */
-  .um-wrap { position: relative; }
-  .um-btn { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 4px 14px 4px 4px; font-family: inherit; font-size: 14px; font-weight: 800; color: var(--ink); cursor: pointer; }
-  .um-btn:hover { border-color: var(--board-light); }
   .um-btn .caret { font-size: 11px; color: var(--muted); }
-  .um-menu { position: absolute; right: 0; top: calc(100% + 8px); min-width: 210px; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 36px rgba(0,0,0,.14); padding: 6px; z-index: 300; }
-  .um-menu a, .um-menu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: none; background: none; border-radius: 8px; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none; cursor: pointer; text-align: left; }
-  .um-menu a:hover, .um-menu button:hover { background: var(--paper); }
-  .um-menu .here { background: #E3EEE8; color: var(--board-light); }
   .um-sec { font-size: 11.5px; font-weight: 800; color: var(--muted); padding: 8px 12px 4px; border-top: 1px solid var(--line); margin-top: 4px; }
-  .um-menu .logout { border-top: 1px solid var(--line); border-radius: 0 0 8px 8px; margin-top: 4px; color: #64748b; }
 
   /* ───── 칠판 머리말 ───── */
   .board-wrap { background: #2B1D14; padding: 12px 12px 0; }
@@ -119,6 +98,7 @@
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(14,50,39,.55); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px); padding: 16px; }
   .modal-content { background: #fff; padding: 26px; border-radius: 14px; width: 460px; max-width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,.25); border-top: 6px solid var(--board-light); }
   .modal-content h3 { margin: 0 0 16px; font-size: 21px; text-align: center; }
+  .modal-content input { margin-bottom: 0; }   /* common.css의 입력칸 아래 여백을 이 창에서는 쓰지 않음 */
   .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
   .field label { font-size: 13px; font-weight: 700; color: #3E4C45; }
   .field input, .field textarea { width: 100%; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 8px; font-family: inherit; font-size: 15px; }
@@ -146,21 +126,10 @@
 </head>
 <body>
 
-<header class="top">
-  <a href="index.html" class="home-btn" title="홈(index.html)으로 이동합니다"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>홈으로</a>
-  <nav class="nav-wrap" aria-label="업무 페이지">
-    <div class="nav-pill">
-      <a href="labor.html" class="nav-item"><svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/></svg>노무관리</a>
-      <a href="budget.html" class="nav-item"><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13" rx="2"/><path d="M2.5 10h19"/><path d="M16 15h2"/></svg>예산관리</a>
-      <a href="Per_diem.html" class="nav-item"><svg viewBox="0 0 24 24"><path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v2H3z"/><circle cx="7.5" cy="13" r="0.8"/><circle cx="16.5" cy="13" r="0.8"/><path d="M5 11h14"/></svg>여비관리</a>
-      <a href="mulpum_sys.html" class="nav-item"><svg viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>물품관리</a>
-      <a href="geunmu_search.html" class="nav-item"><svg viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>복무 통계 작성</a>
-      <a href="facility.html" class="nav-item"><svg viewBox="0 0 24 24"><path d="M2 20h20"/><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M8 10h8"/></svg>시설공사 공고문 작성</a>
-      <a href="apps.html" class="nav-item"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>스마트 업무도구</a>
-    </div>
-  </nav>
-  <div class="um-wrap" id="umWrap"></div>
-</header>
+<header id="hubHeader"></header>
+<script>
+  HUB.renderHeader({ home: true, homeTitle: '홈(index.html)으로 이동합니다', wrapAt: 1300, rightClass: 'um-wrap', rightId: 'umWrap', right: '' });
+</script>
 
 <section class="board-wrap" aria-label="페이지 소개">
   <div class="board">
@@ -232,33 +201,21 @@
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <script>
-  const ADMIN_PHONE = "010-9848-0309";
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw",
-    authDomain: "prolinu73-6c409.firebaseapp.com",
-    projectId: "prolinu73-6c409",
-    storageBucket: "prolinu73-6c409.firebasestorage.app",
-    messagingSenderId: "399358344473",
-    appId: "1:399358344473:web:491d5e74448b4f0f029988"
-  };
+  const ADMIN_PHONE = HUB.ADMIN_PHONE;   // 관리자 확인은 HUB.isAdmin()
   const NICK_RULE = /^[가-힣ㄱ-ㅎa-zA-Z0-9_\- ]{2,12}$/;
-  const EMOJIS = ["🧑‍💼", "👩‍💼", "👨‍🏫", "👩‍🏫", "🧑‍💻", "👷", "🦉", "🐻", "🐯", "🐰", "🦊", "🐼", "🌱", "🌻", "📚", "⚖️"];
-  const COLORS = ["#1B5442", "#2F6FDE", "#7C5CD6", "#E0598B", "#E07A2F", "#1A9C7B", "#9A6B00", "#475569"];
+  const EMOJIS = HUB.AV_EMOJIS, COLORS = HUB.AV_COLORS;   // 고를 수 있는 그림·색 (common.js)
   const $ = id => document.getElementById(id);
   let db = null, storage = null, me = null, profile = null;
-  let currentUser = null;
-  try { currentUser = JSON.parse(localStorage.getItem("currentUser") || "null"); } catch (e) {}
+  let currentUser = HUB.getUser();
+  // 로그인 상태가 바뀌면(다른 탭에서 로그아웃, Firebase 확인 결과 등) 메뉴를 다시 그리고, 로그아웃이면 안내 화면으로
+  HUB.onUserChange(u => {
+    currentUser = u; renderUserMenu();
+    if (!u || !u.uid) { $('main').hidden = true; $('gate').hidden = false; }
+  });
 
-  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+  const esc = HUB.esc;
 
-  /* 프로필 그림 (이모지·색 또는 사진). 다른 페이지와 같은 규칙 */
-  function avatarHTML(u, size) {
-    const a = (u && u.avatar) || {};
-    if (a.type === "photo" && /^https:\/\//.test(a.url || "")) return `<span class="av ${size}"><img src="${esc(a.url)}" alt="" onerror="this.remove()"></span>`;
-    const color = COLORS.includes(a.color) ? a.color : "#1B5442";
-    const face = EMOJIS.includes(a.emoji) ? a.emoji : esc(String((u && u.name) || "?").slice(0, 1));
-    return `<span class="av ${size}" style="background:${color}" aria-hidden="true">${face}</span>`;
-  }
+  const avatarHTML = HUB.avatarHTML;   // 프로필 그림 (common.js)
 
   /* ───── 닉네임 펼침 메뉴 ───── */
   function renderUserMenu() {
@@ -267,7 +224,7 @@
       w.innerHTML = `<a class="home-btn" style="background:#1e293b" href="index.html#login">로그인</a>`;
       return;
     }
-    const admin = currentUser.phone === ADMIN_PHONE;
+    const admin = HUB.isAdmin(currentUser);
     w.innerHTML = `
       <button class="um-btn" id="umBtn" aria-haspopup="true" aria-expanded="false" onclick="toggleUserMenu(event)">${avatarHTML(currentUser, 'sm')}<span>${esc(currentUser.name)}</span><span class="caret">▼</span></button>
       <div class="um-menu" id="umMenu" role="menu" hidden>
@@ -281,14 +238,8 @@
         <a href="index.html#logout" class="logout" role="menuitem">로그아웃</a>
       </div>`;
   }
-  function toggleUserMenu(e) {
-    e.stopPropagation();
-    const m = $('umMenu'), b = $('umBtn'); const open = m.hidden;
-    m.hidden = !open; b.setAttribute('aria-expanded', String(open));
-  }
-  function closeUserMenu() { const m = $('umMenu'); if (m) { m.hidden = true; $('umBtn').setAttribute('aria-expanded', 'false'); } }
-  document.addEventListener('click', e => { if (!e.target.closest('#umWrap')) closeUserMenu(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeUserMenu(); closeEdit(); } });
+  const toggleUserMenu = HUB.toggleUserMenu, closeUserMenu = HUB.closeUserMenu;   // 메뉴 열고 닫기 (common.js)
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEdit(); });   // 메뉴 닫기는 common.js가 함
 
   /* ───── 내 활동: 게시판별 내가 쓴 글 ───── */
   const SOURCES = [
@@ -484,9 +435,8 @@
       const upd = { name: nick, org: $('eOrg').value.trim(), title: $('eTitle').value.trim(), bio: $('eBio').value.trim(), avatar: avatar || null };
       await db.collection("users").doc(currentUser.uid).update(upd);
       Object.assign(profile, upd);
-      currentUser.name = nick; currentUser.avatar = upd.avatar;
-      localStorage.setItem("currentUser", JSON.stringify(currentUser));
-      renderProfile(); renderUserMenu(); closeEdit();
+      HUB.setUser(Object.assign({}, currentUser, { name: nick, avatar: upd.avatar }));   // 저장 + 메뉴 다시 그림
+      renderProfile(); closeEdit();
     } catch (e) {
       console.error(e);
       const c = String(e.code || '');
@@ -500,17 +450,15 @@
   async function start() {
     renderUserMenu();
     if (!currentUser || !currentUser.uid) { $('gate').hidden = false; return; }
-    if (!firebase.apps.some(a => a.name === "[DEFAULT]")) firebase.initializeApp(FIREBASE_CONFIG);
-    db = firebase.firestore();
-    try { storage = firebase.storage(); } catch (e) { storage = null; }
+    db = HUB.db();
+    try { storage = HUB.storage(); } catch (e) { storage = null; }
     try {
       const snap = await db.collection("users").doc(currentUser.uid).get();
       if (!snap.exists) { $('gate').hidden = false; $('gate').querySelector('p').textContent = '회원 정보를 찾을 수 없어요. 탈퇴 처리되었거나 다시 로그인이 필요해요.'; return; }
       profile = snap.data();
       // 다른 곳에서 바뀐 닉네임·그림을 이 브라우저 로그인 정보에도 반영
       if (currentUser.name !== profile.name || JSON.stringify(currentUser.avatar || null) !== JSON.stringify(profile.avatar || null)) {
-        currentUser.name = profile.name; currentUser.avatar = profile.avatar || null;
-        localStorage.setItem("currentUser", JSON.stringify(currentUser)); renderUserMenu();
+        HUB.setUser(Object.assign({}, currentUser, { name: profile.name, avatar: profile.avatar || null }));
       }
     } catch (e) {
       console.error(e); $('gate').hidden = false; $('gate').querySelector('p').textContent = '회원 정보를 불러오지 못했어요. 인터넷 연결을 확인한 뒤 새로고침해 주세요.'; return;
@@ -526,148 +474,6 @@
     setTimeout(() => { clearInterval(t); if (typeof firebase === 'undefined') { $('gate').hidden = false; $('gate').querySelector('p').textContent = '서버에 연결하지 못했어요. 인터넷 연결을 확인한 뒤 새로고침해 주세요.'; } }, 10000);
   });
 </script>
-<!-- 방문 기록 수집 (관리자 방문기록용) -->
-<script>
-/* ===== 방문 기록 수집 (방문 일시 · 페이지 · 시도 단위 지역) =====
-   - IP는 지역 확인에만 잠깐 쓰이고 저장하지 않음
-   - 페이지 자체의 Firebase와 완전히 분리 (웹 주소로 직접 저장) */
-(function () {
-    if (window.__visitTrackerLoaded) return;
-    window.__visitTrackerLoaded = true;
-
-    /* 관리자 접속은 기록하지 않음
-       - 메인 허브에서 관리자로 로그인되어 있거나
-       - 이 브라우저에서 한 번이라도 관리자로 로그인한 적이 있으면 (로그아웃해도 계속 제외) */
-    var ADMIN_PHONE = "010-9848-0309";
-    try {
-        var hubUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-        if (hubUser && hubUser.phone === ADMIN_PHONE) localStorage.setItem("hubAdminDevice", "1");
-        if (localStorage.getItem("hubAdminDevice") === "1") return;
-    } catch (e) {}
-
-    var PROJECT_ID = "prolinu73-6c409";
-    var API_KEY = "AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw";
-    var DOC_BASE = "projects/" + PROJECT_ID + "/databases/(default)/documents";
-    var COMMIT_URL = "https://firestore.googleapis.com/v1/" + DOC_BASE + ":commit?key=" + API_KEY;
-
-    var REGION_MAP = [
-        ["seoul", "서울특별시"], ["busan", "부산광역시"], ["daegu", "대구광역시"],
-        ["incheon", "인천광역시"], ["gwangju", "광주광역시"], ["daejeon", "대전광역시"],
-        ["ulsan", "울산광역시"], ["sejong", "세종특별자치시"], ["gyeonggi", "경기도"],
-        ["gangwon", "강원특별자치도"],
-        ["chungcheongbuk", "충청북도"], ["northchungcheong", "충청북도"], ["chungbuk", "충청북도"],
-        ["chungcheongnam", "충청남도"], ["southchungcheong", "충청남도"], ["chungnam", "충청남도"],
-        ["jeollabuk", "전북특별자치도"], ["northjeolla", "전북특별자치도"], ["jeonbuk", "전북특별자치도"],
-        ["jeollanam", "전라남도"], ["southjeolla", "전라남도"], ["jeonnam", "전라남도"],
-        ["gyeongsangbuk", "경상북도"], ["northgyeongsang", "경상북도"], ["gyeongbuk", "경상북도"],
-        ["gyeongsangnam", "경상남도"], ["southgyeongsang", "경상남도"], ["gyeongnam", "경상남도"],
-        ["jeju", "제주특별자치도"]
-    ];
-
-    function getPageName() {
-        var p = location.pathname.split("/").pop();
-        if (!p) p = "index.html";
-        try { p = decodeURIComponent(p); } catch (e) {}
-        return p;
-    }
-
-    function toKoreanRegion(region, countryCode, countryName) {
-        if (countryCode && countryCode !== "KR") return "해외(" + (countryName || countryCode) + ")";
-        var key = (region || "").toLowerCase().replace(/[^a-z]/g, "");
-        for (var i = 0; i < REGION_MAP.length; i++) {
-            if (key.indexOf(REGION_MAP[i][0]) !== -1) return REGION_MAP[i][1];
-        }
-        return region ? region : "알 수 없음";
-    }
-
-    function fetchJson(url) {
-        var ctrl = new AbortController();
-        var timer = setTimeout(function () { ctrl.abort(); }, 4000);
-        return fetch(url, { signal: ctrl.signal })
-            .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
-            .finally(function () { clearTimeout(timer); });
-    }
-
-    function getRegion() {
-        try {
-            var cached = sessionStorage.getItem("visitRegion");
-            if (cached) return Promise.resolve(cached);
-        } catch (e) {}
-        return fetchJson("https://ipapi.co/json/")
-            .then(function (d) {
-                if (!d || d.error) throw new Error("ipapi 실패");
-                return toKoreanRegion(d.region, d.country_code, d.country_name);
-            })
-            .catch(function () {
-                return fetchJson("https://ipwho.is/?fields=success,country,country_code,region")
-                    .then(function (d) { return (d && d.success !== false) ? toKoreanRegion(d.region, d.country_code, d.country) : "알 수 없음"; })
-                    .catch(function () { return "알 수 없음"; });
-            })
-            .then(function (region) {
-                try { sessionStorage.setItem("visitRegion", region); } catch (e) {}
-                return region;
-            });
-    }
-
-    function newId() {
-        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", id = "";
-        for (var i = 0; i < 20; i++) id += chars.charAt(Math.floor(Math.random() * chars.length));
-        return id;
-    }
-
-    function isAdminDevice() {
-        try {
-            var u = JSON.parse(localStorage.getItem("currentUser") || "null");
-            if (u && u.phone === ADMIN_PHONE) localStorage.setItem("hubAdminDevice", "1");
-            return localStorage.getItem("hubAdminDevice") === "1";
-        } catch (e) { return false; }
-    }
-
-    function recordVisit() {
-        if (isAdminDevice()) return;   // 기다리는 사이 관리자로 로그인했어도 기록하지 않음
-        var docId = newId();
-        getRegion().then(function (region) {
-            var now = new Date();
-            var dateKey = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
-            var body = {
-                writes: [{
-                    update: {
-                        name: DOC_BASE + "/stats/" + docId,
-                        fields: {
-                            kind: { stringValue: "visit" },
-                            page: { stringValue: getPageName() },
-                            title: { stringValue: document.title || "" },
-                            region: { stringValue: region },
-                            dateKey: { stringValue: dateKey }
-                        }
-                    },
-                    updateTransforms: [{ fieldPath: "visitedAt", setToServerValue: "REQUEST_TIME" }],
-                    currentDocument: { exists: false }
-                }]
-            };
-            return fetch(COMMIT_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
-            }).then(function (res) {
-                if (!res.ok) return res.text().then(function (t) { throw new Error(res.status + " " + t); });
-                // 이 브라우저가 남긴 기록 번호를 기억 → 나중에 관리자로 로그인하면 홈에서 자동 삭제
-                try {
-                    var ids = JSON.parse(localStorage.getItem("myVisitIds") || "[]");
-                    ids.push(docId);
-                    if (ids.length > 300) ids = ids.slice(-300);
-                    localStorage.setItem("myVisitIds", JSON.stringify(ids));
-                } catch (e) {}
-            });
-        }).catch(function (err) {
-            try { console.log("방문 기록 저장 실패:", err); } catch (e) {}
-        });
-    }
-
-    function startLater() { setTimeout(recordVisit, 1500); }
-    if (document.readyState === "complete") startLater();
-    else window.addEventListener("load", startLater);
-})();
-</script>
+<!-- 방문 기록은 common.js가 자동으로 남깁니다 -->
 </body>
 </html>

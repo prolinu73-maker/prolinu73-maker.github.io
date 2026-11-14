@@ -237,6 +237,7 @@
     //   <script>HUB.renderHeader({ active: 'apps.html', home: true, wrapAt: 1500, right: '...' });</script>
     //   - active : 강조할 메뉴 파일 (없으면 강조 안 함)
     //   - home   : 왼쪽에 '홈으로' 버튼 표시 여부
+    //   - homeTitle : '홈으로' 버튼에 마우스를 올렸을 때 나오는 설명 (생략 가능)
     //   - wrapAt : 이 폭보다 좁으면 메뉴바를 아래 줄로 (1140 / 1300 / 1500)
     //   - right  : 오른쪽에 넣을 HTML (로그인 버튼 등). 바깥 칸에 'hub-right'가 붙습니다
     //   - rightClass, rightId : 오른쪽 칸의 class·id
@@ -249,7 +250,7 @@
             const on = m.file === opt.active;
             return `<a href="${m.file}" class="nav-item${on ? " active" : ""}"${on ? ' aria-current="page"' : ""}><svg viewBox="0 0 24 24">${m.icon}</svg>${m.label}</a>`;
         }).join("");
-        const home = opt.home ? `<a href="index.html" class="home-btn" title="포털 첫 화면(index.html)으로 이동합니다"><svg viewBox="0 0 24 24">${HOME_ICON}</svg>홈으로</a>` : "";
+        const home = opt.home ? `<a href="index.html" class="home-btn" title="${HUB.esc(opt.homeTitle || "포털 첫 화면(index.html)으로 이동합니다")}"><svg viewBox="0 0 24 24">${HOME_ICON}</svg>홈으로</a>` : "";
         const right = opt.right != null
             ? `<div class="hub-right${opt.rightClass ? " " + opt.rightClass : ""}"${opt.rightId ? ` id="${opt.rightId}"` : ""}>${opt.right}</div>` : "";
         h.innerHTML = home + `<nav class="nav-wrap" aria-label="업무 페이지"><div class="nav-pill">${items}</div></nav>` + right;
