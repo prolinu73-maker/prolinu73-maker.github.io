@@ -151,20 +151,27 @@
   @media (max-width:1000px){.main{grid-template-columns:1fr}.side{position:static;max-height:none}.kpis{grid-template-columns:repeat(2,1fr)}.set-grid{grid-template-columns:1fr}}
   @media print{.topbar .tb-right,.side,.tabs,.toolbar .btn,.pager,.drop{display:none!important}.main{display:block}.tbl-wrap{max-height:none;overflow:visible}}
 </style>
+<style>
+/* ===== 홈으로 버튼 (apps.html과 같은 디자인) ===== */
+#hubHomeBtn{display:inline-flex !important;align-items:center;gap:7px;padding:9px 16px;border-radius:999px;background:#1B5442 !important;color:#fff !important;font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;font-weight:800;font-size:14px;line-height:1.2;text-decoration:none !important;white-space:nowrap;border:1.5px solid rgba(255,255,255,.25);flex-shrink:0;transition:background .2s;cursor:pointer}
+#hubHomeBtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+#hubHomeBtn:hover{background:#123D30 !important}
+#hubHomeBtn:focus-visible{outline:3px solid #F4C430;outline-offset:2px}
+.hub-home-wrap{display:flex;align-items:center;gap:16px;min-width:0}
+</style>
 </head>
 <body>
 
 <div class="topbar">
-  <div>
+  <div class="hub-home-wrap"><a id="hubHomeBtn" href="index.html" title="홈(index.html)으로 이동합니다"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>홈으로</a><div>
     <h1>🗂 근무상황 검색 프로그램</h1>
     <div class="sub">나이스 근무상황목록·출장목록을 불러와 조건별로 검색·집계합니다</div>
-  </div>
+  </div></div>
   <div class="tb-right">
     <span class="visits" id="visits" title="이 페이지 접속자 수 (같은 창에서 새로 고침하면 세지 않음)">👥 오늘 <b id="vToday">-</b>명 · 누적 <b id="vTotal">-</b>명</span>
     <span class="finfo" id="finfo"></span>
     <button class="tbtn load" id="loadBtn" title="나이스에서 내려받은 근무상황목록 또는 출장목록 엑셀 선택 (여러 개 한꺼번에 선택 가능)">📂 원본 파일 불러오기</button>
     <button class="tbtn reset" id="resetBtn" title="원본 자료를 모두 지움 · 확인 후 실행">🗑 원본 데이터 초기화</button>
-    <a class="tbtn hub" href="index.html">🏠 메인 허브로 돌아가기</a>
     <input type="file" id="fileIn" accept=".xlsx,.xls,.xlsm" multiple class="hidden">
   </div>
 </div>

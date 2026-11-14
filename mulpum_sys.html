@@ -177,19 +177,26 @@
   @media print{.topbar .file-btn,.side,.tabs,.pager,.toolbar .btn{display:none!important}.main{display:block}
     .tbl-wrap{max-height:none;overflow:visible}}
 </style>
+<style>
+/* ===== 홈으로 버튼 (apps.html과 같은 디자인) ===== */
+#hubHomeBtn{display:inline-flex !important;align-items:center;gap:7px;padding:9px 16px;border-radius:999px;background:#1B5442 !important;color:#fff !important;font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;font-weight:800;font-size:14px;line-height:1.2;text-decoration:none !important;white-space:nowrap;border:1.5px solid rgba(255,255,255,.25);flex-shrink:0;transition:background .2s;cursor:pointer}
+#hubHomeBtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+#hubHomeBtn:hover{background:#123D30 !important}
+#hubHomeBtn:focus-visible{outline:3px solid #F4C430;outline-offset:2px}
+.hub-home-wrap{display:flex;align-items:center;gap:16px;min-width:0}
+</style>
 </head>
 <body>
 
 <div class="topbar">
-  <div>
+  <div class="hub-home-wrap"><a id="hubHomeBtn" href="index.html" title="홈(index.html)으로 이동합니다"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>홈으로</a><div>
     <h1>📦 물품 관리 시스템 <span class="visit" id="visitBox" title="접속자 수 집계 중...">👥 오늘 <b id="vToday">-</b> · 누적 <b id="vTotal">-</b> <span id="vMode"></span></span></h1>
     <div class="sub">물품목록정보 엑셀 파일을 불러와 내용연수·부서·금액·목록구분별로 조회합니다</div>
-  </div>
+  </div></div>
   <div>
     <span class="file-info" id="fileInfo"></span>
     <button class="file-btn clear hidden" id="clearBtn" title="불러온 엑셀 데이터를 모두 지우고 처음 화면으로 돌아갑니다">🗑 데이터 초기화</button>
     <button class="file-btn" id="openBtn">📂 엑셀 파일 불러오기</button>
-    <a class="file-btn hub" href="index.html" title="메인 허브(index.html)로 이동합니다">🏠 메인 허브로 돌아가기</a>
     <input type="file" id="excelFile" accept=".xlsx,.xls" class="hidden">
   </div>
 </div>
