@@ -6,6 +6,7 @@
 <title>시설공사 공고문 작성 프로그램</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <link rel="stylesheet" href="common.css?v=4">
 <script src="common.js?v=4"></script>
 <style>
@@ -995,15 +996,17 @@ const LS_DATA = "facility_projects_v2", LS_SET = "facility_settings_v2";
    (⚙️ 설정·백업의 'Firebase 연동키' 칸에 다른 값을 넣으면 그 값이 우선합니다) */
 const BUILTIN_FB_CONFIG = HUB.FIREBASE_CONFIG;   // (common.js 한곳에서 관리)
 let settings = Object.assign({ org:"", head:"", dept:"", tel:"", fb:"" }, JSON.parse(localStorage.getItem(LS_SET) || "{}"));
-let projects = {}; let db = null; let curId = null;
+let projects = {}; let db = null; let curId = null; let usingHubDb = true;
 
 function parseFbConfig(text){ const cfg = {}; const re = /(\w+)\s*:\s*["'`]([^"'`]+)["'`]/g; let m; while((m = re.exec(text||""))) cfg[m[1]] = m[2]; return cfg.apiKey && cfg.projectId ? cfg : null; }
 async function initStore(){
   projects = cleanProjects(JSON.parse(localStorage.getItem(LS_DATA) || "{}"));
-  const cfg = parseFbConfig(settings.fb) || BUILTIN_FB_CONFIG;
+  const own = parseFbConfig(settings.fb), cfg = own || BUILTIN_FB_CONFIG;
+  usingHubDb = !own || own.projectId === BUILTIN_FB_CONFIG.projectId;
   if (cfg && window.firebase) {
     try {
-      const app = firebase.apps.find(a=>a.name==="facility") || firebase.initializeApp(cfg, "facility");
+      // 허브와 같은 저장소를 쓰면 허브의 기본 연결을 함께 씀 → 관리자로 로그인한 상태가 그대로 적용됨(삭제 권한)
+      const app = usingHubDb ? HUB.app() : (firebase.apps.find(a=>a.name==="facility") || firebase.initializeApp(cfg, "facility"));
       db = app.firestore();
       $("saveState").textContent = "☁️ Firebase 연동 완료";
       const MIGRATED = "facility_migrated_v1";
@@ -1074,8 +1077,12 @@ async function persist(p){
   if (db) { try { await db.collection("facility_notices").doc(p.id).set(JSON.parse(JSON.stringify(p))); } catch(e){} }
 }
 async function removeStore(id){
+  if (db) {
+    try { await db.collection("facility_notices").doc(id).delete(); }
+    catch(e){ alert("공고 삭제는 관리자만 할 수 있습니다.\n홈에서 관리자로 로그인한 뒤 다시 해 주세요."); return false; }
+  }
   delete projects[id]; localStorage.setItem(LS_DATA, JSON.stringify(projects));
-  if (db) { try { await db.collection("facility_notices").doc(id).delete(); } catch(e){} }
+  return true;
 }
 
 function openSettings(){ $("setOrg").value=settings.org; $("setHead").value=settings.head||""; $("setDept").value=settings.dept||""; $("setTel").value=settings.tel||""; $("setRegion").value=settings.region||"종전 전라남도"; $("setAddr").value=settings.address||""; $("setCDept").value=settings.contractDept||""; $("setCTel").value=settings.contractTel||""; $("setFb").value=settings.fb; $("setHoli").value=settings.extraHolidays||""; $("setFont").value=settings.hwpxFont||"맑은 고딕"; $("setQDays").value=settings.quoteDays||3; $("settingsModal").classList.remove("hidden"); }
@@ -1185,7 +1192,7 @@ function askSettings(){
 }
 function openProject(id){ curId = id; showDetail(); }
 function backToList(){ if (cur() && !cur().name) { if(!confirm("공사명이 비어 있습니다. 저장하지 않고 나갈까요?")) return; delete projects[curId]; } else if (cur()) saveCurrent(false); curId = null; $("detailView").classList.add("hidden"); $("listView").classList.remove("hidden"); renderList(); window.scrollTo(0,0); }
-async function deleteProject(){ if (!confirm(`'${cur().name||"이 문서"}'를 삭제할까요?`)) return; await removeStore(curId); curId=null; $("detailView").classList.add("hidden"); $("listView").classList.remove("hidden"); renderList(); }
+async function deleteProject(){ if (!confirm(`'${cur().name||"이 문서"}'를 삭제할까요?`)) return; if (!(await removeStore(curId))) return; curId=null; $("detailView").classList.add("hidden"); $("listView").classList.remove("hidden"); renderList(); }
 // 메인 허브(index.html)로 이동 — 작성 중인 공고를 먼저 저장
 async function goHub(){
   try { const p = cur(); if (p && (p.name || "").trim()) await persist(p); } catch(e){}
