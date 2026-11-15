@@ -1045,7 +1045,7 @@ function showLock(){
   : first ? `<form class="lock-box" onsubmit="event.preventDefault();setupVault()">
       <div class="lock-ico">🔐</div><h2>새로운 접근 비밀번호를 설정하세요</h2>
       <p>공고 자료는 <b>이 PC에만</b>, 이 비밀번호로 <b>암호화</b>해서 저장합니다.<br>프로그램을 열 때마다 이 비밀번호를 물어봅니다.</p>
-      <input type="password" id="lockPw1" placeholder="새 비밀번호 (8자 이상)" autocomplete="new-password" autofocus>
+      <input type="password" id="lockPw1" placeholder="새 비밀번호 (4자 이상, 숫자 4자리 가능)" autocomplete="new-password" autofocus>
       <input type="password" id="lockPw2" placeholder="한 번 더 입력" autocomplete="new-password">
       ${old ? `<label class="lock-chk"><input type="checkbox" id="lockKeepOld" checked> 이 PC에 저장돼 있던 공고 ${old}건을 암호화해서 계속 보관 <span>(체크를 풀면 지웁니다. 다른 사람이 쓴 공고가 섞여 있으면 푸세요.)</span></label>` : ""}
       <div class="lock-msg" id="lockMsg"></div>
@@ -1062,7 +1062,7 @@ function showLock(){
 const lockMsg = t => { const m = $("lockMsg"); if (m) m.textContent = t; };
 async function setupVault(){
   const a = $("lockPw1").value, b = $("lockPw2").value;
-  if (a.length < 8) return lockMsg("비밀번호는 8자 이상으로 정해 주세요.");
+  if (a.length < 4) return lockMsg("비밀번호는 4자 이상으로 정해 주세요.");
   if (a !== b) return lockMsg("두 비밀번호가 서로 다릅니다.");
   lockMsg("암호화 준비 중…");
   let old = {}; if ($("lockKeepOld")?.checked) { try { old = cleanProjects(JSON.parse(localStorage.getItem(LS_DATA) || "{}")); } catch(e){} }
@@ -1118,7 +1118,7 @@ async function changeVaultPw(){
   const v = readVault();
   try { const k = await deriveKey(cur0, unb64(v.salt), v.iter || KDF_ITER); await crypto.subtle.decrypt({ name:"AES-GCM", iv: unb64(v.iv) }, k, unb64(v.ct)); }
   catch(e){ return alert("비밀번호가 일치하지 않습니다."); }
-  const a = prompt("새 비밀번호 (8자 이상)"); if (a === null) return; if (a.length < 8) return alert("8자 이상으로 정해 주세요.");
+  const a = prompt("새 비밀번호 (4자 이상, 숫자 4자리 가능)"); if (a === null) return; if (a.length < 4) return alert("4자 이상으로 정해 주세요.");
   if (prompt("새 비밀번호를 한 번 더 입력하세요.") !== a) return alert("두 비밀번호가 서로 다릅니다.");
   vaultSalt = crypto.getRandomValues(new Uint8Array(16)); vaultKey = await deriveKey(a, vaultSalt, KDF_ITER); await saveVault();
   toast("비밀번호를 바꿨습니다");
