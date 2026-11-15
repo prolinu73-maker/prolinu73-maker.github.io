@@ -16,7 +16,7 @@
   html { scroll-behavior: smooth; }
   body { margin: 0; font-family: 'Pretendard', sans-serif; color: var(--ink); background: var(--paper); line-height: 1.6; -webkit-font-smoothing: antialiased; }
   a { color: inherit; }
-  :focus-visible { outline: 3px solid var(--marker); outline-offset: 3px; border-radius: 6px; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
 
   /* ───────── 상단바 ───────── */
   .logo { font-size: 22px; font-weight: 900; text-decoration: none; background: linear-gradient(to right, #f12711, #f5af19); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; }
@@ -25,142 +25,137 @@
   .login-link { background: #1e293b; color: #fff; text-decoration: none; padding: 8px 16px; border-radius: 8px; }
   .login-link:hover { background: #0f172a; }
   .admin-tag { background: #fef08a; color: #854d0e; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 900; }
-  /* ───────── 칠판 (첫 화면) ───────── */
-  .board-wrap { background: #2B1D14; padding: 14px 14px 0; }
+  /* ───────── 밝고 간결한 첫 화면 ───────── */
+  :root { --bg: #E6EBF2; --text: #0F172A; --sub: #475569; --accent: #2563EB; --accent-soft: #EAF1FF; --line2: #CBD5E1; }
+  body { background: var(--bg); color: var(--text); }
+  .board-wrap { background: linear-gradient(135deg, #1E3A8A 0%, #1D4ED8 60%, #2563EB 100%); }
   .board {
-    position: relative; overflow: hidden;
-    background:
-      radial-gradient(ellipse 60% 50% at 20% 30%, rgba(255,255,255,.045), transparent 70%),
-      radial-gradient(ellipse 50% 40% at 80% 70%, rgba(255,255,255,.035), transparent 70%),
-      radial-gradient(ellipse 30% 20% at 55% 15%, rgba(255,255,255,.03), transparent 70%),
-      linear-gradient(160deg, var(--board-light), var(--board) 55%, #0E3227);
-    color: var(--chalk);
-    border-radius: 6px 6px 0 0;
-    box-shadow: inset 0 0 80px rgba(0,0,0,.35);
-    min-height: min(78vh, 680px);
-    display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 40px;
-    padding: 72px clamp(24px, 6vw, 96px) 64px;
+    max-width: 1180px; margin: 0 auto;
+    display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 48px; align-items: center;
+    padding: 72px 28px 76px;
   }
-  /* 분필 지운 자국 */
-  .board::before { content: ""; position: absolute; inset: 0; pointer-events: none;
-    background:
-      linear-gradient(100deg, transparent 8%, rgba(255,255,255,.035) 12%, transparent 22%),
-      linear-gradient(95deg, transparent 52%, rgba(255,255,255,.03) 58%, transparent 68%);
-  }
-  .board > * { position: relative; }
-
-  .board-main { align-self: center; max-width: 760px; }
-  .board-tagline { font-family: var(--chalk-font); font-size: clamp(22px, 2.2vw, 28px); color: var(--chalk-dim); margin: 0 0 18px; }
-  .board h1 { margin: 0; font-weight: 800; letter-spacing: -0.02em; line-height: 1.18; font-size: clamp(36px, 5.2vw, 68px); }
+  .board-main { max-width: 720px; }
+  .board-tagline { display: inline-block; font-size: 14px; font-weight: 700; color: #fff; background: rgba(255,255,255,.16); border-radius: 999px; padding: 6px 14px; margin: 0 0 20px; }
+  .board h1 { margin: 0; font-weight: 800; letter-spacing: -0.03em; line-height: 1.25; font-size: clamp(34px, 4.6vw, 58px); color: #fff; }
   .board h1 .line { display: block; }
-  /* 분필로 쓰는 줄 (이 페이지의 유일한 큰 움직임) */
-  .chalk-line { display: block; font-family: var(--chalk-font); font-weight: 400; font-size: 1.35em; line-height: 1.05; color: var(--marker); min-height: 1.15em; margin: 6px 0 4px; text-shadow: 0 0 1px rgba(244,196,48,.6), 1px 1px 0 rgba(244,196,48,.12); }
-  .chalk-line span { display: inline-block; clip-path: inset(0 100% 0 0); }
-  .chalk-line span.write { animation: chalkWrite 1.1s steps(18, end) forwards; }
-  .chalk-line span.erase { clip-path: inset(0 0 0 0); animation: chalkErase .45s ease-in forwards; }
+  /* 바뀌는 문구 (글자가 왼쪽부터 써지는 효과) */
+  .chalk-line { display: block; color: #FDE68A; min-height: 1.25em; margin: 2px 0; }
+  .chalk-line span { display: inline-block; clip-path: inset(0 100% 0 0); background: linear-gradient(transparent 70%, rgba(253,230,138,.28) 70%); }
+  .chalk-line span.write { animation: chalkWrite .9s ease-out forwards; }
+  .chalk-line span.erase { clip-path: inset(0 0 0 0); animation: chalkErase .4s ease-in forwards; }
   @keyframes chalkWrite { to { clip-path: inset(0 0 0 0); } }
-  @keyframes chalkErase { to { opacity: 0; filter: blur(6px); transform: translateX(10px); } }
-  .board-lead { font-size: 18px; color: var(--chalk-dim); margin: 26px 0 34px; max-width: 34em; }
+  @keyframes chalkErase { to { opacity: 0; transform: translateY(-6px); } }
+  .board-lead { font-size: 18px; color: #DBEAFE; margin: 24px 0 32px; max-width: 34em; }
   .board-actions { display: flex; flex-wrap: wrap; gap: 12px; }
-  .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 800; font-size: 16px; padding: 14px 22px; border-radius: 10px; transition: transform .15s, background .15s; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 800; font-size: 16px; padding: 14px 24px; border-radius: 12px; transition: transform .15s, background .15s, border-color .15s, box-shadow .15s; }
   .btn:active { transform: translateY(1px); }
-  .btn-primary { background: var(--marker); color: #2A2109; }
-  .btn-primary:hover { background: #FFD24D; }
-  .btn-ghost { color: var(--chalk); border: 2px solid rgba(234,241,236,.35); }
-  .btn-ghost:hover { border-color: var(--chalk); }
+  .btn-primary { background: #FACC15; color: #1E293B; box-shadow: 0 6px 16px rgba(0,0,0,.18); }
+  .btn-primary:hover { background: #FDE047; }
+  .btn-ghost { background: rgba(255,255,255,.1); color: #fff; border: 1.5px solid rgba(255,255,255,.55); }
+  .btn-ghost:hover { background: #fff; color: #1E3A8A; border-color: #fff; }
 
-  /* 칠판 오른쪽 위 '날짜 · 주번' 칸 */
-  .board-corner { align-self: center; border-left: 2px dashed rgba(234,241,236,.25); padding-left: 28px; font-family: var(--chalk-font); }
-  .corner-row { display: flex; align-items: baseline; gap: 10px; font-size: 30px; line-height: 1.25; }
-  .corner-row .k { font-size: 22px; color: var(--chalk-dim); min-width: 3.2em; }
-  .corner-date { font-size: 46px; line-height: 1.1; margin-bottom: 4px; }
-  .corner-time { font-family: 'Pretendard', sans-serif; font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 600; color: var(--chalk-dim); margin-bottom: 22px; }
-  .corner-visits { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding-bottom: 20px; border-bottom: 2px dashed rgba(234,241,236,.25); }
-  .corner-visits > div { display: flex; flex-direction: column; }
-  .v-label { font-size: 22px; color: var(--chalk-dim); line-height: 1.2; }
-  .v-num { font-size: 52px; line-height: 1.05; color: var(--chalk); font-variant-numeric: tabular-nums; }
-  .corner-visits > div:first-child .v-num { color: var(--marker); }
-  .corner-block { margin-top: 22px; }
-  .corner-label { font-size: 22px; color: var(--chalk-dim); display: flex; justify-content: space-between; }
-  .corner-label b { color: var(--chalk); font-weight: 400; }
-  .chalk-bar { height: 10px; margin-top: 6px; border-radius: 6px; background: rgba(234,241,236,.12); overflow: hidden; }
-  .chalk-bar i { display: block; height: 100%; width: 0; border-radius: 6px; background: repeating-linear-gradient(90deg, rgba(234,241,236,.9) 0 6px, rgba(234,241,236,.7) 6px 9px); transition: width 1.2s ease .6s; }
-  .corner-note { font-family: 'Pretendard', sans-serif; font-size: 12px; color: var(--chalk-dim); margin-top: 4px; }
+  /* 오른쪽 '오늘' 카드 */
+  .board-corner { background: #fff; border: 1px solid var(--line2); border-radius: 18px; padding: 24px 24px 22px; box-shadow: 0 14px 34px rgba(0,0,0,.22); }
+  .corner-visits { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid var(--line2); }
+  .corner-visits > div { display: flex; flex-direction: column; background: #EEF2F7; border-radius: 12px; padding: 12px 14px; }
+  .v-label { font-size: 13px; font-weight: 700; color: var(--sub); }
+  .v-num { font-size: 32px; font-weight: 800; line-height: 1.2; color: var(--text); font-variant-numeric: tabular-nums; }
+  .corner-visits > div:first-child .v-num { color: var(--accent); }
+  .corner-block { margin-top: 16px; }
+  .corner-label { font-size: 14px; font-weight: 600; color: var(--sub); display: flex; justify-content: space-between; }
+  .corner-label b { color: var(--text); font-weight: 800; }
+  .chalk-bar { height: 8px; margin-top: 7px; border-radius: 999px; background: #EEF2F7; overflow: hidden; }
+  .chalk-bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #60A5FA, var(--accent)); transition: width 1.2s ease .5s; }
+  .corner-note { font-size: 12px; color: #94A3B8; margin-top: 3px; }
+  .ledge { display: none; }
 
-  /* 분필 받침대 */
-  .ledge { height: 18px; background: linear-gradient(#9C6A43, var(--wood) 60%, #6B4428); position: relative; box-shadow: 0 6px 12px rgba(0,0,0,.18); }
-  .ledge i { position: absolute; top: -5px; height: 7px; border-radius: 3px; }
-  .ledge i:nth-child(1) { left: 12%; width: 46px; background: #F4F4EE; }
-  .ledge i:nth-child(2) { left: 16%; width: 28px; background: var(--marker); transform: rotate(-4deg); }
-  .ledge i:nth-child(3) { left: 71%; width: 38px; background: #F3A6B5; transform: rotate(3deg); }
-  .ledge i:nth-child(4) { left: 84%; width: 60px; height: 14px; top: -10px; background: #3B3B3B; border-radius: 4px; } /* 칠판지우개 */
+  /* ── 동적 텍스트 ── */
+  .type-cursor { display: inline-block; width: 2px; height: 1em; background: #fff; margin-left: 3px; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .corner-greet { margin: 0 0 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line2); }
+  .corner-greet .hello { font-size: 17px; font-weight: 800; color: var(--text); }
+  .corner-greet .clock { font-size: 13.5px; color: var(--sub); font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .ticker { background: #0F1F4D; color: #E2E8F0; overflow: hidden; white-space: nowrap; font-size: 14.5px; font-weight: 600; }
+  .ticker-inner { display: inline-flex; gap: 56px; padding: 12px 0; animation: tickerMove 45s linear infinite; }
+  .ticker:hover .ticker-inner { animation-play-state: paused; }
+  .ticker-inner span b { color: #FDE68A; margin-right: 6px; }
+  @keyframes tickerMove { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .feature-chalk { transition: opacity .35s ease; }
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+  .reveal.show { opacity: 1; transform: none; }
 
   /* ───────── 업무 바로가기 ───────── */
-  main { max-width: 1180px; margin: 0 auto; padding: 72px 28px 40px; }
-  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 26px; }
-  .sec-head h2 { margin: 0; font-size: 30px; letter-spacing: -0.02em; }
-  .sec-head p { margin: 0; color: #5B6B63; }
-  .visit-pill { font-size: 13px; font-weight: 700; color: #475569; background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; }
-  .visit-pill b { color: var(--board-light); font-variant-numeric: tabular-nums; }
+  main { max-width: 1180px; margin: 0 auto; padding: 64px 28px 40px; }
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; }
+  .sec-head h2 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
+  .sec-head p { margin: 4px 0 0; color: var(--sub); }
+  .visit-pill { font-size: 13px; font-weight: 700; color: #475569; background: #fff; border: 1px solid var(--line2); border-radius: 999px; padding: 6px 14px; }
+  .visit-pill b { color: var(--accent); font-variant-numeric: tabular-nums; }
 
   .services { display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; }
-  .svc { grid-column: span 2; display: flex; flex-direction: column; text-decoration: none; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 24px 24px 20px; position: relative; overflow: hidden; transition: border-color .2s, transform .2s; }
-  .svc::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--tab, var(--board-light)); }
-  .svc:hover { border-color: var(--tab, var(--board-light)); transform: translateY(-3px); }
-  .svc-icon { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--tab) 14%, white); color: var(--tab); margin-bottom: 16px; }
+  .svc { grid-column: span 2; display: flex; flex-direction: column; text-decoration: none; background: #fff; border: 1px solid var(--line2); border-radius: 16px; padding: 24px; position: relative; transition: border-color .2s, transform .2s, box-shadow .2s; }
+  .svc:hover { border-color: var(--tab, var(--accent)); transform: translateY(-3px); box-shadow: 0 12px 28px rgba(15,23,42,.08); }
+  .svc-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: color-mix(in srgb, var(--tab) 13%, white); color: var(--tab); margin-bottom: 16px; }
   .svc-icon svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .svc h3 { margin: 0 0 6px; font-size: 20px; letter-spacing: -0.01em; }
-  .svc p { margin: 0 0 16px; color: #52625A; font-size: 15px; }
+  .svc h3 { margin: 0 0 6px; font-size: 19px; letter-spacing: -0.01em; color: var(--text); }
+  .svc p { margin: 0 0 16px; color: var(--sub); font-size: 15px; }
   .svc ul { list-style: none; margin: auto 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-  .svc li { font-size: 12.5px; font-weight: 600; color: #3E4C45; background: var(--paper); border-radius: 6px; padding: 3px 9px; }
+  .svc li { font-size: 12.5px; font-weight: 600; color: #334155; background: #EEF2F7; border-radius: 6px; padding: 3px 9px; }
   .svc .go { margin-top: 18px; font-size: 14px; font-weight: 800; color: var(--tab); }
 
-  /* 노무관리는 가장 기능이 많아 크게 */
-  .svc.feature { grid-column: span 3; grid-row: span 2; background: var(--board); color: var(--chalk); border-color: var(--board); }
-  .svc.feature::before { background: var(--marker); }
-  .svc.feature .svc-icon { background: rgba(244,196,48,.16); color: var(--marker); }
-  .svc.feature h3 { font-size: 30px; }
-  .svc.feature p { color: var(--chalk-dim); font-size: 16px; }
-  .svc.feature li { background: rgba(234,241,236,.1); color: var(--chalk); font-size: 14px; padding: 5px 11px; }
-  .svc.feature .go { color: var(--marker); }
-  .svc.feature .feature-chalk { font-family: var(--chalk-font); font-size: 26px; color: var(--chalk-dim); margin: 6px 0 18px; }
+  /* 노무관리는 가장 기능이 많아 크게 (밝은 노란 바탕) */
+  .svc.feature { grid-column: span 3; grid-row: span 2; background: linear-gradient(160deg, #FFFBEB, #FFF4D1); border-color: #F7E2A0; }
+  .svc.feature:hover { border-color: #E9B10F; }
+  .svc.feature .svc-icon { background: #fff; color: #C98A00; }
+  .svc.feature h3 { font-size: 28px; }
+  .svc.feature p { color: #6B5B2E; font-size: 16px; }
+  .svc.feature li { background: #fff; color: #6B5B2E; font-size: 14px; padding: 5px 11px; }
+  .svc.feature .go { color: #B07800; }
+  .svc.feature .feature-chalk { font-size: 17px; font-weight: 600; color: #8A6D1F; background: rgba(255,255,255,.7); border-radius: 10px; padding: 10px 14px; margin: 4px 0 18px; }
   .svc.half { grid-column: span 3; }
 
-  /* 함께 쓰는 공간 (apps.html) */
-  .commons { margin-top: 18px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 0; background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; text-decoration: none; }
-  .commons:hover { border-color: #2F6FDE; }
+  /* 스마트 업무도구 · 커뮤니티 (apps.html) */
+  .commons { margin-top: 18px; display: grid; grid-template-columns: 1.3fr 1fr; background: #fff; border: 1px solid var(--line2); border-radius: 16px; overflow: hidden; text-decoration: none; transition: border-color .2s, box-shadow .2s; }
+  .commons:hover { border-color: var(--accent); box-shadow: 0 12px 28px rgba(15,23,42,.08); }
   .commons-text { padding: 30px 32px; }
-  .commons-text h3 { margin: 0 0 8px; font-size: 24px; }
-  .commons-text p { margin: 0 0 18px; color: #52625A; }
-  .commons-text .go { font-weight: 800; color: #2F6FDE; }
-  .commons-list { background: #EEF3FD; padding: 26px 32px; display: grid; gap: 12px; align-content: center; }
-  .commons-list div { display: flex; gap: 12px; align-items: center; font-weight: 700; color: #1F3B73; }
+  .commons-text h3 { margin: 0 0 8px; font-size: 22px; color: var(--text); }
+  .commons-text p { margin: 0 0 18px; color: var(--sub); }
+  .commons-text .go { font-weight: 800; color: var(--accent); }
+  .commons-list { background: var(--accent-soft); padding: 26px 32px; display: grid; gap: 12px; align-content: center; }
+  .commons-list div { display: flex; gap: 12px; align-items: center; font-weight: 700; color: #1E3A8A; }
   .commons-list span { font-size: 22px; }
 
-  footer { max-width: 1180px; margin: 0 auto; padding: 30px 28px 50px; color: #6B7B73; font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--line); }
-  footer .chalk-sign { font-family: var(--chalk-font); font-size: 24px; color: var(--board-light); }
-
+  footer { max-width: 1180px; margin: 0 auto; padding: 30px 28px 50px; color: #475569; font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--line2); }
+  footer .chalk-sign { font-size: 16px; font-weight: 800; color: var(--text); }
 
   /* ───────── 로그인 · 회원관리 · 방문기록 ───────── */
+  /* common.css를 못 불러올 때만 쓰이는 예비 모양 (:where → common.css 설정이 항상 우선) */
+  :where(.modal-overlay) { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(15,23,42,.55); align-items: center; justify-content: center; padding: 16px; }
+  :where(.modal-content) { background: #fff; color: var(--text); width: 420px; max-width: 94%; max-height: 90vh; overflow-y: auto; border-radius: 16px; padding: 28px; box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+  :where(.modal-content h3) { margin: 0 0 16px; text-align: center; font-size: 20px; }
+  :where(.modal-content input) { width: 100%; padding: 11px 12px; border: 1px solid #CBD5E1; border-radius: 8px; font-family: inherit; margin-bottom: 10px; }
+  :where(.modal-content input:focus) { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+  :where(.auth-toggle) { text-align: center; font-size: 13.5px; margin-top: 12px; color: var(--sub); }
+  :where(.auth-toggle a) { color: var(--accent); font-weight: 700; text-decoration: none; }
   button.login-link { border: none; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 700; }
-  .hdr-btn { border: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; color: #fff; padding: 8px 13px; border-radius: 8px; background: var(--board-light); }
+  .hdr-btn { border: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; color: #fff; padding: 8px 13px; border-radius: 8px; background: #0F766E; }
   .hdr-btn.visit { background: #2F6FDE; }
   .hdr-btn.logout { background: #ef4444; }
   .hdr-btn:hover { filter: brightness(.9); }
   .user-area { flex-wrap: wrap; justify-content: flex-end; }
   .modal-content input { font-size: 15px; }   /* 이 페이지 입력칸 글씨 크기 */
-  .btn-submit { background: var(--marker); color: #2A2109; border: none; padding: 13px 24px; border-radius: 8px; font-weight: 800; font-size: 15px; cursor: pointer; font-family: 'Pretendard', sans-serif; }
+  .btn-submit { background: var(--accent); color: #fff; border: none; padding: 13px 24px; border-radius: 8px; font-weight: 800; font-size: 15px; cursor: pointer; font-family: 'Pretendard', sans-serif; }
   .btn-submit:hover { filter: brightness(1.06); }
   .auth-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
   .auth-field[hidden] { display: none; }
   .auth-field label { font-size: 13px; font-weight: 700; color: #3E4C45; }
   .auth-field input { margin-bottom: 0 !important; }
   .auth-hint { font-size: 12px; color: #6B7B73; }
-  .auth-guide { font-size: 13.5px; line-height: 1.55; color: #3E4C45; background: var(--paper); border-left: 4px solid var(--marker); border-radius: 6px; padding: 10px 12px; margin: -4px 0 14px; }
+  .auth-guide { font-size: 13.5px; line-height: 1.55; color: #3E4C45; background: var(--paper); border-left: 4px solid var(--accent); border-radius: 6px; padding: 10px 12px; margin: -4px 0 14px; }
   .auth-msg { min-height: 1.2em; font-size: 13px; font-weight: 700; color: #dc2626; margin: 4px 0 10px; }
   .auth-msg.ok { color: #1A9C7B; }
   .auth-close { width: 100%; padding: 10px; margin-top: 12px; background: #e2e8f0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: inherit; }
-  .hdr-btn.signup { background: #fff; color: var(--board-light); border: 1.5px solid var(--board-light); }
+  .hdr-btn.signup { background: #fff; color: var(--accent); border: 1.5px solid var(--accent); }
   .hdr-btn.mine { background: #64748b; }
   .board-table { width: 100%; border-collapse: collapse; }
   .board-table th, .board-table td { padding: 12px; border-bottom: 1px solid #EDF2EF; font-size: 14px; }
@@ -170,10 +165,10 @@
   .visit-toolbar { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; }
   .visit-range-btn { padding: 7px 14px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; border-radius: 999px; font-family: 'Pretendard', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s; }
   .visit-range-btn:hover { background: #ffffff; color: #1e293b; }
-  .visit-range-btn.active { background: #1B5442; border-color: #1B5442; color: #ffffff; }
+  .visit-range-btn.active { background: #2563EB; border-color: #2563EB; color: #ffffff; }
   .visit-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
   .visit-stat { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center; }
-  .visit-stat .num { font-size: 22px; font-weight: 900; color: #1B5442; line-height: 1.3; }
+  .visit-stat .num { font-size: 22px; font-weight: 900; color: #2563EB; line-height: 1.3; }
   .visit-stat .label { font-size: 12px; font-weight: 700; color: #64748b; }
   .visit-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
   .visit-box { border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
@@ -181,7 +176,7 @@
   .visit-bar-row { display: grid; grid-template-columns: 120px 1fr 44px; gap: 8px; align-items: center; font-size: 13px; margin-bottom: 6px; }
   .visit-bar-row .name { font-weight: 600; color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .visit-bar-track { background: #f1f5f9; border-radius: 999px; height: 10px; overflow: hidden; }
-  .visit-bar-fill { background: #1B5442; height: 100%; border-radius: 999px; }
+  .visit-bar-fill { background: #2563EB; height: 100%; border-radius: 999px; }
   .visit-bar-row .cnt { text-align: right; font-weight: 800; color: #1e293b; }
   .visit-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .visit-table th { background: #f8fafc; color: #475569; font-weight: 800; padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: center; position: sticky; top: 0; }
@@ -192,8 +187,7 @@
   }
 
   @media (max-width: 1000px) {
-    .board { grid-template-columns: 1fr; gap: 36px; padding-top: 52px; }
-    .board-corner { border-left: none; border-top: 2px dashed rgba(234,241,236,.25); padding: 24px 0 0; }
+    .board { grid-template-columns: 1fr; gap: 32px; padding: 52px 24px 56px; }
     .services { grid-template-columns: repeat(2, 1fr); }
     .svc, .svc.half { grid-column: span 1; }
     .svc.feature { grid-column: span 2; grid-row: auto; }
@@ -207,6 +201,8 @@
     .chalk-line span, .chalk-line span.write { animation: none; clip-path: none; }
     .chalk-bar i { transition: none; }
     .svc, .btn { transition: none; }
+    .ticker-inner, .type-cursor { animation: none; }
+    .reveal { opacity: 1; transform: none; transition: none; }
   }
 </style>
 </head>
@@ -218,11 +214,11 @@
     right: `<button class="hdr-btn signup" onclick="openModal('signup')">회원가입</button> <button class="login-link" onclick="openModal('login')">로그인</button>` });
 </script>
 
-<!-- 칠판 -->
+<!-- 첫 화면 -->
 <section class="board-wrap" aria-label="포털 소개">
   <div class="board">
     <div class="board-main">
-      <p class="board-tagline">현장을 가장 잘 아는 사람이, 현장을 바꿉니다</p>
+      <p class="board-tagline"><span id="typeText">현장을 가장 잘 아는 사람이, 현장을 바꿉니다</span><span class="type-cursor" aria-hidden="true"></span></p>
       <h1>
         <span class="line">교육행정 업무,</span>
         <span class="chalk-line" aria-live="polite"><span id="chalkWord">노무 상담부터</span></span>
@@ -231,11 +227,12 @@
       <p class="board-lead">교육행정 실무자가 현장에서 직접 만든 업무 도구 모음입니다. 필요한 화면을 골라 바로 시작하세요.</p>
       <div class="board-actions">
         <a class="btn btn-primary" href="#services">업무 바로가기</a>
-        <a class="btn btn-ghost" href="apps.html">업무도구·자료실 열기</a>
+        <a class="btn btn-ghost" href="apps.html">스마트업무도구ㆍ커뮤니티</a>
       </div>
     </div>
 
     <aside class="board-corner" aria-label="오늘">
+      <div class="corner-greet"><div class="hello" id="greetText">안녕하세요!</div><div class="clock" id="liveClock"></div></div>
       <div class="corner-visits">
         <div><span class="v-label">오늘 방문</span><span class="v-num" id="todayCount">-</span></div>
         <div><span class="v-label">누적 방문</span><span class="v-num" id="totalCount">-</span></div>
@@ -257,6 +254,18 @@
   <div class="ledge" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 </section>
 
+<!-- 흘러가는 안내 문구 (마우스를 올리면 멈춤) -->
+<div class="ticker" aria-label="안내">
+  <div class="ticker-inner" id="tickerInner">
+    <span><b>노무</b>궁금한 노무 문제는 노무관리 정보마당의 AI 노무상담에 물어보세요</span>
+    <span><b>복무</b>나이스 근무상황목록 엑셀만 있으면 복무 통계를 바로 낼 수 있어요</span>
+    <span><b>여비</b>출장지와 일정을 넣으면 여비를 자동으로 계산합니다</span>
+    <span><b>공사</b>시설공사 공고문 초안을 단계별 입력으로 만들어 보세요</span>
+    <span><b>물품</b>물품목록정보 엑셀로 보유 물품을 빠르게 찾을 수 있어요</span>
+    <span><b>공유</b>나만의 업무 노하우를 커뮤니티에 나눠 주세요</span>
+  </div>
+</div>
+
 <main id="services">
   <div class="sec-head">
     <div>
@@ -270,7 +279,7 @@
       <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/></svg></div>
       <h3>노무관리 정보마당</h3>
       <p>교육공무직원 노무 업무에 필요한 정보를 한 화면에 모았습니다. 궁금한 점은 AI에게 묻거나 게시판에 남겨 두세요.</p>
-      <div class="feature-chalk">"이 경우 수당은 어떻게 계산하지?"</div>
+      <div class="feature-chalk" id="faqQ" aria-live="polite">"이 경우 수당은 어떻게 계산하지?"</div>
       <ul><li>AI 노무상담</li><li>질문·답변</li><li>정보·자료실</li><li>핵심 노무 FAQ</li><li>노무 계산기</li><li>업무 체크리스트</li></ul>
       <span class="go">노무관리 열기</span>
     </a>
@@ -315,7 +324,7 @@
     <div class="commons-text">
       <h3>스마트 업무도구 · 커뮤니티</h3>
       <p>동료들이 만든 업무 도구를 내려받고, 유용한 사이트와 업무 노하우를 함께 나눕니다. 로그인과 회원 관리도 이곳에서 합니다.</p>
-      <span class="go">업무도구·자료실 열기</span>
+      <span class="go">스마트업무도구ㆍ커뮤니티</span>
     </div>
     <div class="commons-list">
       <div><span>💡</span>스마트 업무 도구 공유</div>
@@ -363,6 +372,61 @@
     }, 3200);
   }
 
+  /* ── 동적 텍스트 1: 위쪽 한 줄 문구를 타자 치듯 바꿔 가며 보여 줌 ── */
+  const typeMsgs = ["현장을 가장 잘 아는 사람이, 현장을 바꿉니다", "반복 업무는 도구에 맡기고, 사람은 더 중요한 일에", "실무자가 만들고 실무자가 씁니다", "오늘도 수고 많으십니다 🙂"];
+  const typeEl = $('typeText');
+  if (!reduceMotion) {
+    let ti = 0, ci = 0, del = false;
+    (function typeLoop() {
+      const msg = typeMsgs[ti];
+      if (!del) { ci++; typeEl.textContent = msg.slice(0, ci); if (ci === msg.length) { del = true; return setTimeout(typeLoop, 2600); } }
+      else { ci--; typeEl.textContent = msg.slice(0, ci); if (ci === 0) { del = false; ti = (ti + 1) % typeMsgs.length; } }
+      setTimeout(typeLoop, del ? 28 : 70);
+    })();
+  }
+
+  /* ── 동적 텍스트 2: 시간대별 인사말 + 실시간 시계 ── */
+  const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+  function tickClock() {
+    const d = new Date(), h = d.getHours();
+    const greet = h < 6 ? '늦은 시간까지 수고 많으세요 🌙' : h < 11 ? '좋은 아침입니다 ☀️' : h < 14 ? '점심 맛있게 드세요 🍚' : h < 18 ? '오후도 힘내세요 💪' : '오늘 하루 수고하셨습니다 🌆';
+    $('greetText').textContent = greet;
+    const ap = h < 12 ? '오전' : '오후', hh = h % 12 || 12;
+    $('liveClock').textContent = `${d.getMonth() + 1}월 ${d.getDate()}일 (${DAYS[d.getDay()]}) · ${ap} ${hh}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+  }
+  tickClock(); setInterval(tickClock, 1000);
+
+  /* ── 동적 텍스트 3: 숫자가 0부터 올라가며 나타남 ── */
+  function countUp(el, target, suffix) {
+    suffix = suffix || '';
+    if (reduceMotion) { el.textContent = target.toLocaleString('ko-KR') + suffix; return; }
+    const start = performance.now(), dur = 1200;
+    (function step(t) {
+      const p = Math.min(1, (t - start) / dur), eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased).toLocaleString('ko-KR') + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    })(start);
+  }
+  window.hubCountUp = countUp;
+
+  /* ── 동적 텍스트 4: 노무관리 카드의 질문이 바뀜 ── */
+  const faqs = ['"이 경우 수당은 어떻게 계산하지?"', '"연차휴가는 며칠이 생기지?"', '"방학 중 비근무자 임금은?"', '"연장근로 한도는 몇 시간이지?"', '"퇴직금 평균임금은 어떻게 내지?"'];
+  if (!reduceMotion) {
+    let fi = 0; const fq = $('faqQ');
+    setInterval(() => { fq.style.opacity = 0; setTimeout(() => { fi = (fi + 1) % faqs.length; fq.textContent = faqs[fi]; fq.style.opacity = 1; }, 350); }, 3500);
+  }
+
+  /* ── 흘러가는 안내 문구: 끊김 없이 이어지도록 한 번 더 붙임 ── */
+  const tk = $('tickerInner'); tk.innerHTML += tk.innerHTML;
+
+  /* ── 아래로 내리면 카드가 하나씩 떠오름 ── */
+  const revealEls = document.querySelectorAll('.sec-head, .svc, .commons');
+  if ('IntersectionObserver' in window && !reduceMotion) {
+    revealEls.forEach((el, i) => { el.classList.add('reveal'); el.style.transitionDelay = (i % 3) * 0.08 + 's'; });
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('show'); io.unobserve(e.target); } }), { threshold: 0.12 });
+    revealEls.forEach(el => io.observe(el));
+  }
+
   /* ── 칠판 오른쪽: 근무일 · 진행률 ── */
   const now = new Date();
   // 이번 달 남은 근무일 (오늘 포함, 토·일 제외)
@@ -372,19 +436,19 @@
     const w = new Date(now.getFullYear(), now.getMonth(), d).getDay();
     if (w !== 0 && w !== 6) work++;
   }
-  $('cWork').textContent = `${work}일`;
+  countUp($('cWork'), work, '일');
 
   function progress(start, end) { return Math.min(100, Math.max(0, (now - start) / (end - start) * 100)); }
   // 회계연도: 1월 1일 ~ 12월 31일
   const fy = now.getFullYear();
   const fyPct = progress(new Date(fy, 0, 1), new Date(fy + 1, 0, 1));
   $('fyLabel').textContent = `${fy} 회계연도`;
-  $('fyPct').textContent = `${fyPct.toFixed(0)}%`;
+  countUp($('fyPct'), Math.round(fyPct), '%');
   // 학년도: 3월 1일 ~ 다음 해 2월 말
   const sy = now.getMonth() >= 2 ? now.getFullYear() : now.getFullYear() - 1;
   const syPct = progress(new Date(sy, 2, 1), new Date(sy + 1, 2, 1));
   $('syLabel').textContent = `${sy} 학년도`;
-  $('syPct').textContent = `${syPct.toFixed(0)}%`;
+  countUp($('syPct'), Math.round(syPct), '%');
   requestAnimationFrame(() => {
     $('fyBar').style.width = fyPct + '%';
     $('syBar').style.width = syPct + '%';
@@ -418,8 +482,8 @@
           ref.set(upd, { merge: true }).catch(err => console.log("방문자 수 저장 실패", err));
           try { sessionStorage.setItem("countedVisitDate", data.todayDate); } catch (e) {}   // 나중에 관리자로 로그인하면 되돌리기 위해 기억
         }
-        $('todayCount').textContent = (data.todayCount || 0).toLocaleString('ko-KR');
-        $('totalCount').textContent = (data.total || 0).toLocaleString('ko-KR');
+        countUp($('todayCount'), data.todayCount || 0);
+        countUp($('totalCount'), data.total || 0);
       }).catch(err => console.log("방문자 수 불러오기 실패", err));
     } catch (err) { console.log("방문자 수 오류", err); }
   }
@@ -510,7 +574,7 @@
             <div style="margin-top:16px; padding:14px; border:1px dashed #F2D27A; background:#FFFBEB; border-radius:10px; text-align:left;">
                 <b style="font-size:14px;">🛡️ 개인정보 정리</b>
                 <p style="margin:6px 0 10px; font-size:12.5px; color:#64748b; line-height:1.5;">회원정보·게시글에 남아 있는 <b>휴대폰 번호</b>를 고유번호로 바꾸고, 예전 회원과 게스트 글의 <b>원문 비밀번호</b>를 암호화합니다. 예전 글은 계속 본인 글로 인식되고, 예전 회원도 휴대폰 번호로 그대로 로그인할 수 있습니다. 여러 번 눌러도 안전합니다.</p>
-                <button id="privacyBtn" onclick="runPrivacyCleanup()" style="background:#1B5442; color:#fff; border:none; padding:9px 16px; border-radius:8px; font-weight:800; cursor:pointer; font-family:inherit;">정리 시작</button>
+                <button id="privacyBtn" onclick="runPrivacyCleanup()" style="background:#2563EB; color:#fff; border:none; padding:9px 16px; border-radius:8px; font-weight:800; cursor:pointer; font-family:inherit;">정리 시작</button>
                 <div id="privacyLog" style="margin-top:8px; font-size:12.5px; color:#334155; white-space:pre-wrap;"></div>
             </div>
             <button onclick="closeAdminModal()" style="width: 100%; padding: 12px; margin-top: 20px; background: #e2e8f0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">닫기</button>
