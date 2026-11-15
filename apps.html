@@ -6,8 +6,8 @@
     <title>스마트 업무도구 - 조효식 허브</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="common.css?v=2">
-    <script src="common.js?v=2"></script>
+    <link rel="stylesheet" href="common.css?v=3">
+    <script src="common.js?v=3"></script>
     <style>
         /* ===== 조효식 허브 PRO · 칠판 테마 (index.html과 같은 색) ===== */
         :root {
@@ -407,7 +407,48 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     <!-- 방문 기록은 common.js가 자동으로 남깁니다 -->
     <script>
-        const ADMIN_PHONE = HUB.ADMIN_PHONE;   // 관리자 확인은 HUB.isAdmin()
+        const ADMIN_PHONE = HUB.ADMIN_PHONE;   // (예전 이름, 쓰지 않음) 관리자 확인은 HUB.isAdmin()
+
+        /* ===== 보안 도우미 =====
+           - 화면에 그린 글을 ROWS에 기억해 두고, 버튼에는 글 번호만 넣음 (비밀번호를 화면 코드에 넣지 않음)
+           - 글·이름·링크는 모두 글자로 바꿔 넣어 악성 코드가 실행되지 않게 함
+           - 게스트 비밀번호는 암호화해서 저장 (예전 글의 원문 비밀번호도 확인은 됨) */
+        const ROWS = {};
+        const E = s => HUB.esc(s == null ? '' : s);
+        function safeUrl(u) {
+            u = String(u || '').trim();
+            if (!u) return '';
+            if (!/^https?:\/\//i.test(u)) u = 'http://' + u;
+            try { const x = new URL(u); return (x.protocol === 'http:' || x.protocol === 'https:') ? x.href : ''; } catch (e) { return ''; }
+        }
+        function multiline(s) { return E(s).replace(/\n/g, '<br>'); }
+        function isMine(d) { return !!(currentUser && currentUser.phone && d && d.authorPhone === currentUser.phone); }
+        // 수정·삭제 권한: 관리자 → 모든 글 / 회원 → 자기 글 / 게스트 글 → 등록할 때 넣은 비밀번호
+        async function canTouch(d, what) {
+            if (HUB.isAdmin(currentUser)) return 'admin';
+            if (isMine(d)) return 'owner';
+            if (d && d.authorPhone === 'guest') {
+                const pw = prompt(`게스트가 등록한 ${what}입니다. 등록할 때 넣은 비밀번호를 입력하세요.`);
+                if (pw === null) return '';
+                if (await HUB.verifySecret(pw, d.guestPwHash, d.guestPw)) return 'guest';
+                alert("비밀번호가 일치하지 않습니다.");
+                return '';
+            }
+            alert(`본인이 등록한 ${what}만 고치거나 지울 수 있습니다.`);
+            return '';
+        }
+        // 게스트가 지우면 '숨김' 처리 (실수·장난으로 지워져도 관리자가 되살릴 수 있음), 회원·관리자는 완전 삭제
+        async function removeDoc(ref, right) {
+            if (right === 'guest') await ref.update({ deleted: true, deletedAt: Date.now() });
+            else await ref.delete();
+        }
+        // 새 글의 글쓴이 정보 (게스트는 비밀번호를 암호화해서 저장)
+        async function authorFields(pw) {
+            const f = { authorPhone: currentUser ? currentUser.phone : "guest" };
+            if (!currentUser) f.guestPwHash = await HUB.hashSecret(pw);
+            if (HUB.isAdmin(currentUser)) f.byAdmin = true;
+            return f;
+        }
 
         // 스크립트 지연 로딩 대응: DOM과 Firebase가 모두 로드된 후 실행
         document.addEventListener("DOMContentLoaded", () => {
@@ -615,21 +656,22 @@
 
             snapshot.forEach(doc => {
                 const site = doc.data();
-                const isOwner = currentUser && currentUser.phone === site.authorPhone;
+                if (site.deleted) return;
+                ROWS['usefulSites/' + doc.id] = site;
+                const isOwner = isMine(site);
                 const isGuestPost = site.authorPhone === "guest";
                 
                 let delBtn = '';
                 if (isAdmin || isOwner || isGuestPost) {
-                    delBtn = `<button class="site-chip-del" onclick="deleteSite(event, '${doc.id}', '${site.authorPhone}', '${site.guestPw}')" title="삭제">✖</button>`;
+                    delBtn = `<button class="site-chip-del" onclick="deleteSite(event, '${doc.id}')" title="삭제">✖</button>`;
                 }
                 
-                let safeLink = site.url;
-                if(safeLink && !safeLink.startsWith('http')) safeLink = 'http://' + safeLink;
+                const safeLink = safeUrl(site.url);
 
                 const chipWrapper = document.createElement("div");
                 chipWrapper.className = "site-chip-wrapper";
                 
-                let innerHTML = `<a href="${safeLink}" target="_blank" class="site-chip">${site.title}</a>`;
+                let innerHTML = `<a href="${E(safeLink || '#')}" target="_blank" rel="noopener" class="site-chip">${E(site.title)}</a>`;
                 if(delBtn) innerHTML += delBtn;
                 
                 chipWrapper.innerHTML = innerHTML;
@@ -652,41 +694,26 @@
                 finalUrl = 'http://' + finalUrl;
             }
 
-            await db.collection("usefulSites").add({
+            if (!safeUrl(finalUrl)) return alert("접속 주소(URL)를 확인해 주세요.");
+            await db.collection("usefulSites").add(Object.assign({
                 title: titleInput.value.trim(),
-                url: finalUrl,
-                authorPhone: currentUser ? currentUser.phone : "guest",
-                guestPw: currentUser ? null : guestPwInput.value.trim(),
+                url: safeUrl(finalUrl),
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            }, await authorFields(guestPwInput.value.trim())));
 
             titleInput.value = ""; urlInput.value = ""; guestPwInput.value = "";
             loadSites();
         }
 
-        async function deleteSite(event, docId, authorPhone, guestPwStr) {
+        async function deleteSite(event, docId) {
             event.preventDefault(); 
             event.stopPropagation();
-            
-            const isAdmin = HUB.isAdmin(currentUser);
-            const isOwner = currentUser && currentUser.phone === authorPhone;
-
-            if (isAdmin || isOwner) {
-                if (confirm("이 사이트를 즐겨찾기에서 삭제하시겠습니까?")) {
-                    await db.collection("usefulSites").doc(docId).delete();
-                    loadSites();
-                }
-            } else if (authorPhone === "guest") {
-                const inputPw = prompt("게스트가 등록한 사이트입니다. 삭제용 비밀번호를 입력하세요.");
-                if (inputPw === guestPwStr) {
-                    await db.collection("usefulSites").doc(docId).delete();
-                    loadSites();
-                } else if (inputPw !== null) {
-                    alert("비밀번호가 일치하지 않습니다.");
-                }
-            } else {
-                alert("삭제 권한이 없습니다.");
-            }
+            const right = await canTouch(ROWS['usefulSites/' + docId], '사이트');
+            if (!right) return;
+            if (right !== 'guest' && !confirm("이 사이트를 삭제하시겠습니까?")) return;
+            try { await removeDoc(db.collection("usefulSites").doc(docId), right); }
+            catch (e) { console.error(e); return alert("삭제하지 못했습니다. (" + (e.code || e.message) + ")"); }
+            loadSites();
         }
 
         async function loadTools() {
@@ -704,31 +731,34 @@
 
             snapshot.forEach(doc => {
                 const tool = doc.data();
-                const isOwner = currentUser && currentUser.phone === tool.authorPhone;
+                if (tool.deleted) return;
+                ROWS['smartTools/' + doc.id] = tool;
+                const isOwner = isMine(tool);
                 const isGuestPost = tool.authorPhone === "guest";
 
                 let controlBtns = `<div class="card-controls">`;
                 
                 if (isAdmin || isOwner || isGuestPost) {
-                    controlBtns += `<button class="control-btn btn-edit" onclick="editTool(event, '${doc.id}', '${(tool.title || '').replace(/'/g, "\\'")}', '${(tool.link || '').replace(/'/g, "\\'")}', '${(tool.desc || '').replace(/'/g, "\\'")}', '${tool.authorPhone}', '${tool.guestPw}')" title="도구 수정">✏️</button>`;
+                    controlBtns += `<button class="control-btn btn-edit" onclick="editTool(event, '${doc.id}')" title="도구 수정">✏️</button>`;
                 }
                 if (isAdmin || isOwner || isGuestPost) {
-                    controlBtns += `<button class="control-btn btn-del" onclick="deleteTool(event, '${doc.id}', '${tool.authorPhone}', '${tool.guestPw}')" title="도구 삭제">✖</button>`;
+                    controlBtns += `<button class="control-btn btn-del" onclick="deleteTool(event, '${doc.id}')" title="도구 삭제">✖</button>`;
                 }
                 controlBtns += `</div>`;
 
                 const card = document.createElement("a");
                 card.target = "_blank";
-                card.href = tool.link;
-                card.className = `card bg-${tool.category}`;
+                card.href = safeUrl(tool.link) || '#';
+                card.rel = 'noopener';
+                card.className = `card bg-${/^[a-z]+$/.test(tool.category || '') ? tool.category : 'gray'}`;
                 
                 const downloads = tool.downloads || 0;
                 const likedPosts = JSON.parse(localStorage.getItem("likedPosts")) || {};
                 card.innerHTML = `
                     ${controlBtns}
-                    <div class="badge ${tool.category}">${tool.badgeText}</div>
-                    <h4 class="card-title">${tool.title}</h4>
-                    <p class="card-desc">${tool.desc}</p>
+                    <div class="badge ${E(tool.category)}">${E(tool.badgeText)}</div>
+                    <h4 class="card-title">${E(tool.title)}</h4>
+                    <p class="card-desc">${E(tool.desc)}</p>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
                         <span style="font-size: 12px; color: #64748b; font-weight: 700;">다운로드 <span class="dl-count" style="font-size: 13px; font-weight: 800; color: #1B5442;">${downloads}회</span></span>
                         <span style="display:flex; gap:6px; align-items:center;">
@@ -777,45 +807,31 @@
                 finalLink = 'http://' + finalLink;
             }
 
-            await db.collection("smartTools").add({
+            if (!safeUrl(finalLink)) return alert("링크 주소를 확인해 주세요.");
+            await db.collection("smartTools").add(Object.assign({
                 category: categorySelect.value,
                 title: titleInput.value,
-                link: finalLink,
+                link: safeUrl(finalLink),
                 desc: descInput.value || "설명이 없습니다.",
                 badgeText: badgeText,
-                authorPhone: currentUser ? currentUser.phone : "guest",
-                guestPw: currentUser ? null : guestPwInput.value.trim(),
                 downloads: 0,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            }, await authorFields(guestPwInput.value.trim())));
 
             titleInput.value = ""; linkInput.value = ""; descInput.value = ""; guestPwInput.value = "";
             loadTools(); 
         }
 
 
-        async function deleteTool(event, docId, authorPhone, guestPwStr) {
+        async function deleteTool(event, docId) {
             event.preventDefault(); 
             event.stopPropagation();
-            const isAdmin = HUB.isAdmin(currentUser);
-            const isOwner = currentUser && currentUser.phone === authorPhone;
-
-            if (isAdmin || isOwner) {
-                if (confirm("이 업무 도구를 삭제하시겠습니까?")) {
-                    await db.collection("smartTools").doc(docId).delete();
-                    loadTools();
-                }
-            } else if (authorPhone === "guest") {
-                const inputPw = prompt("게스트 등록 자료입니다. 삭제용 비밀번호를 입력하세요.");
-                if (inputPw === guestPwStr) {
-                    await db.collection("smartTools").doc(docId).delete();
-                    loadTools();
-                } else if (inputPw !== null) {
-                    alert("비밀번호가 일치하지 않습니다.");
-                }
-            } else {
-                alert("삭제 권한이 없습니다. (본인이 등록한 자료만 삭제 가능)");
-            }
+            const right = await canTouch(ROWS['smartTools/' + docId], '업무 도구');
+            if (!right) return;
+            if (right !== 'guest' && !confirm("이 업무 도구를 삭제하시겠습니까?")) return;
+            try { await removeDoc(db.collection("smartTools").doc(docId), right); }
+            catch (e) { console.error(e); return alert("삭제하지 못했습니다. (" + (e.code || e.message) + ")"); }
+            loadTools();
         }
 
         function switchTab(tabName) {
@@ -943,21 +959,18 @@
             const today = new Date();
             const dateStr = `${today.getMonth() + 1}.${today.getDate()}`;
 
-            const postData = {
+            const postData = Object.assign({
                 title: titleInput.value,
                 author: authorName,
-                authorPhone: currentUser ? currentUser.phone : "guest",
-                guestPw: currentUser ? null : guestPwInput.value.trim(),
                 date: dateStr,
                 likes: 0,
                 attachments: [], 
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
+            }, await authorFields(guestPwInput.value.trim()));
             
             if (currentTab === 'dataBoard' && fileLinkInput.value.trim()) {
-                let finalLink = fileLinkInput.value.trim();
-                if (!finalLink.startsWith('http')) finalLink = 'http://' + finalLink;
-                postData.fileLink = finalLink;
+                const finalLink = safeUrl(fileLinkInput.value);
+                if (finalLink) postData.fileLink = finalLink;
             }
 
             try {
@@ -1012,30 +1025,34 @@
             // 최적화: Fragment 처리
             const fragment = document.createDocumentFragment();
 
+            let shown = 0;
             snapshot.forEach(docSnap => {
                 const c = docSnap.data();
-                const isOwner = currentUser && currentUser.phone === c.authorPhone;
+                if (c.deleted) return;
+                shown++;
+                ROWS[`${currentTab}/${docId}/comments/${docSnap.id}`] = c;
+                const isOwner = isMine(c);
                 const isGuestPost = c.authorPhone === "guest";
                 
                 let delBtn = '';
                 if (isAdmin || isOwner || isGuestPost) {
-                    delBtn = `<span style="color: #2F6FDE; font-size: 12px; cursor: pointer; margin-left: 10px; font-weight:700;" onclick="editComment('${docId}', '${docSnap.id}', '${c.authorPhone}', '${c.guestPw}', '${encodeURIComponent(c.text || '').replace(/'/g, '%27')}')">수정</span>`
-                           + `<span style="color: #ef4444; font-size: 12px; cursor: pointer; margin-left: 10px; font-weight:700;" onclick="deleteComment('${docId}', '${docSnap.id}', '${c.authorPhone}', '${c.guestPw}')">삭제</span>`;
+                    delBtn = `<span style="color: #2F6FDE; font-size: 12px; cursor: pointer; margin-left: 10px; font-weight:700;" onclick="editComment('${docId}', '${docSnap.id}')">수정</span>`
+                           + `<span style="color: #ef4444; font-size: 12px; cursor: pointer; margin-left: 10px; font-weight:700;" onclick="deleteComment('${docId}', '${docSnap.id}')">삭제</span>`;
                 }
                 
-                const badge = (isAdmin && c.authorPhone === ADMIN_PHONE) ? `<span class="admin-badge" style="font-size:9px; padding: 2px 5px;">ADMIN</span>` : '';
+                const badge = c.byAdmin ? `<span class="admin-badge" style="font-size:9px; padding: 2px 5px;">ADMIN</span>` : '';
                 
                 const commentWrap = document.createElement("div");
                 commentWrap.innerHTML = `
                     <div style="padding: 12px; background: #ffffff; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
                         <div style="display: flex; justify-content: space-between; align-items: baseline;">
                             <div>
-                                <strong style="font-size: 13px; color: #334155;">${c.author}</strong> ${badge}
-                                <span style="font-size: 11px; color: #94a3b8; margin-left: 8px;">${c.date}</span>
+                                <strong style="font-size: 13px; color: #334155;">${E(c.author)}</strong> ${badge}
+                                <span style="font-size: 11px; color: #94a3b8; margin-left: 8px;">${E(c.date)}</span>
                             </div>
                             <div>${delBtn}</div>
                         </div>
-                        <div style="font-size: 14px; color: #1e293b; margin-top: 6px; white-space: pre-wrap; line-height: 1.5;">${c.text}</div>
+                        <div style="font-size: 14px; color: #1e293b; margin-top: 6px; white-space: pre-wrap; line-height: 1.5;">${E(c.text)}</div>
                     </div>
                 `;
                 fragment.appendChild(commentWrap);
@@ -1043,8 +1060,9 @@
             
             listDiv.appendChild(fragment);
             
+            if (!shown) listDiv.innerHTML = '<div style="padding: 10px; color: #94a3b8; font-size: 13px;">아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!</div>';
             const btn = document.getElementById(`btn-comment-${docId}`);
-            if(btn) btn.innerText = `💬 ${snapshot.size}`;
+            if(btn) btn.innerText = `💬 ${shown}`;
         }
         
         async function addComment(docId) {
@@ -1058,20 +1076,16 @@
             }
             
             const authorName = currentUser ? currentUser.name : authorInput.value.trim();
-            const authorPhone = currentUser ? currentUser.phone : "guest";
-            const guestPw = currentUser ? null : pwInput.value.trim();
             
             const today = new Date();
             const dateStr = `${today.getMonth() + 1}.${today.getDate()} ${today.getHours()}:${String(today.getMinutes()).padStart(2, '0')}`;
             
-            await db.collection(currentTab).doc(docId).collection("comments").add({
+            await db.collection(currentTab).doc(docId).collection("comments").add(Object.assign({
                 text: textInput.value.trim(),
                 author: authorName,
-                authorPhone: authorPhone,
-                guestPw: guestPw,
                 date: dateStr,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            }, await authorFields(currentUser ? '' : pwInput.value.trim())));
             
             textInput.value = '';
             if (pwInput) pwInput.value = '';
@@ -1079,35 +1093,24 @@
             loadComments(docId);
         }
         
-        async function editComment(postDocId, commentDocId, authorPhone, guestPwStr, encodedText) {
-            if (!checkEditRight(authorPhone, guestPwStr, "댓글")) return;
-            const newText = prompt("수정할 댓글 내용을 입력하세요:", decodeURIComponent(encodedText));
+        async function editComment(postDocId, commentDocId) {
+            const c = ROWS[`${currentTab}/${postDocId}/comments/${commentDocId}`];
+            if (!(await canTouch(c, "댓글"))) return;
+            const newText = prompt("수정할 댓글 내용을 입력하세요:", (c && c.text) || '');
             if (newText === null) return;
             if (!newText.trim()) return alert("댓글 내용을 입력해주세요!");
-            await db.collection(currentTab).doc(postDocId).collection("comments").doc(commentDocId).update({ text: newText.trim() });
+            try { await db.collection(currentTab).doc(postDocId).collection("comments").doc(commentDocId).update({ text: newText.trim() }); }
+            catch (e) { console.error(e); return alert("수정하지 못했습니다. (" + (e.code || e.message) + ")"); }
             loadComments(postDocId);
         }
 
-        async function deleteComment(postDocId, commentDocId, authorPhone, guestPwStr) {
-            const isAdmin = HUB.isAdmin(currentUser);
-            const isOwner = currentUser && currentUser.phone === authorPhone;
-            
-            if (isAdmin || isOwner) {
-                if (confirm("이 댓글을 삭제하시겠습니까?")) {
-                    await db.collection(currentTab).doc(postDocId).collection("comments").doc(commentDocId).delete();
-                    loadComments(postDocId);
-                }
-            } else if (authorPhone === "guest") {
-                const inputPw = prompt("게스트 작성 댓글입니다. 삭제용 비밀번호를 입력하세요.");
-                if (inputPw === guestPwStr) {
-                    await db.collection(currentTab).doc(postDocId).collection("comments").doc(commentDocId).delete();
-                    loadComments(postDocId);
-                } else if (inputPw !== null) {
-                    alert("비밀번호가 일치하지 않습니다.");
-                }
-            } else {
-                alert("본인이 작성한 댓글만 삭제할 수 있습니다.");
-            }
+        async function deleteComment(postDocId, commentDocId) {
+            const right = await canTouch(ROWS[`${currentTab}/${postDocId}/comments/${commentDocId}`], "댓글");
+            if (!right) return;
+            if (right !== 'guest' && !confirm("이 댓글을 삭제하시겠습니까?")) return;
+            try { await removeDoc(db.collection(currentTab).doc(postDocId).collection("comments").doc(commentDocId), right); }
+            catch (e) { console.error(e); return alert("삭제하지 못했습니다. (" + (e.code || e.message) + ")"); }
+            loadComments(postDocId);
         }
 
         // 업무도구 좋아요 (한 브라우저에서 도구 하나에 한 번)
@@ -1147,37 +1150,21 @@
             }
         }
 
-        /* 수정 권한 확인: 관리자 → 모든 글 / 회원 → 자기 글 / 게스트 글 → 작성할 때 넣은 비밀번호 */
-        function checkEditRight(authorPhone, guestPwStr, what) {
-            const isAdmin = HUB.isAdmin(currentUser);
-            if (isAdmin) return true;
-            if (currentUser && currentUser.phone === authorPhone) return true;
-            if (authorPhone === "guest") {
-                const pw = prompt(`게스트가 등록한 ${what}입니다. 등록할 때 넣은 비밀번호를 입력하세요.`);
-                if (pw === null) return false;
-                if (pw === guestPwStr) return true;
-                alert("비밀번호가 일치하지 않습니다.");
-                return false;
-            }
-            alert(`본인이 등록한 ${what}만 수정할 수 있습니다.`);
-            return false;
-        }
-
         /* ===== 수정 창: 업무도구·게시글의 모든 항목을 한 화면에서 고침 ===== */
         const TOOL_BADGES = { blue: "인사 · 복무", purple: "예산 · 기획", orange: "계약 · 지출", green: "재산 · 회계", pink: "문서 · 디자인", gray: "기타 · 공통" };
         const BOARD_NAMES = { freeBoard: "자유게시판", qaBoard: "묻고 답하기", dataBoard: "자료 공유방" };
         let editing = null;   // { type, col, id, data, removed:Set, newFiles:[] }
 
-        async function editPost(docId, _title, _link, authorPhone, guestPwStr) {
-            if (!checkEditRight(authorPhone, guestPwStr, "글")) return;
+        async function editPost(docId) {
+            if (!(await canTouch(ROWS[currentTab + '/' + docId], "글"))) return;
             const snap = await db.collection(currentTab).doc(docId).get();
             if (!snap.exists) return alert("글을 찾을 수 없습니다. 이미 지워졌을 수 있어요.");
             openEditModal({ type: 'post', col: currentTab, id: docId, data: snap.data() });
         }
-        async function editTool(event, docId, _title, _link, _desc, authorPhone, guestPwStr) {
+        async function editTool(event, docId) {
             event.preventDefault();
             event.stopPropagation();
-            if (!checkEditRight(authorPhone, guestPwStr, "업무 도구")) return;
+            if (!(await canTouch(ROWS['smartTools/' + docId], "업무 도구"))) return;
             const snap = await db.collection("smartTools").doc(docId).get();
             if (!snap.exists) return alert("업무 도구를 찾을 수 없습니다. 이미 지워졌을 수 있어요.");
             openEditModal({ type: 'tool', col: 'smartTools', id: docId, data: snap.data() });
@@ -1207,7 +1194,7 @@
             const e = editing, box = document.getElementById('eFileList');
             const old = (e.data.attachments || []).map((a, i) => {
                 const gone = e.removed.has(i);
-                return `<div class="e-file ${gone ? 'gone' : ''}"><span>${a.type === 'image' ? '🖼️' : '📎'} <a href="${escText(a.url)}" target="_blank" rel="noopener">${escText(a.name || '파일')}</a>${gone ? ' (지워질 예정)' : ''}</span>
+                return `<div class="e-file ${gone ? 'gone' : ''}"><span>${a.type === 'image' ? '🖼️' : '📎'} <a href="${escText(safeUrl(a.url))}" target="_blank" rel="noopener">${escText(a.name || '파일')}</a>${gone ? ' (지워질 예정)' : ''}</span>
                         <button type="button" onclick="toggleEditFile(${i})">${gone ? '되살리기' : '빼기'}</button></div>`;
             });
             const add = e.newFiles.map((f, i) => `<div class="e-file new"><span>🆕 ${escText(f.name)} (${Math.ceil(f.size / 1024)}KB)</span><button type="button" onclick="dropNewFile(${i})">빼기</button></div>`);
@@ -1231,7 +1218,7 @@
             const btn = $('eSave');
             try {
                 if (e.type === 'tool') {
-                    const title = $('eToolTitle').value.trim(), link = fixLink($('eToolLink').value);
+                    const title = $('eToolTitle').value.trim(), link = safeUrl($('eToolLink').value);
                     if (!title || !link) return msg('도구 이름과 링크 주소를 모두 입력해 주세요.');
                     btn.disabled = true; msg('저장하는 중입니다...');
                     const cat = $('eCat').value;
@@ -1242,7 +1229,7 @@
                     if (!text) return msg('내용을 입력해 주세요.');
                     btn.disabled = true; msg('저장하는 중입니다...');
                     const upd = { title: text };
-                    if (!$('ePostLinkWrap').hidden) upd.fileLink = fixLink($('ePostLink').value);
+                    if (!$('ePostLinkWrap').hidden) upd.fileLink = safeUrl($('ePostLink').value);
                     const old = e.data.attachments || [];
                     const kept = old.filter((a, i) => !e.removed.has(i));
                     const added = [];
@@ -1266,44 +1253,23 @@
         }
 
 
-        async function deletePost(docId, authorPhone, guestPwStr, attachments = []) {
-            const isAdmin = HUB.isAdmin(currentUser);
-            const isOwner = currentUser && currentUser.phone === authorPhone;
-
-            let canDelete = false;
-
-            if (isAdmin || isOwner) {
-                canDelete = confirm("이 게시글을 삭제하시겠습니까?");
-            } else if (authorPhone === "guest") {
-                const inputPw = prompt("게스트 작성 글입니다. 삭제용 비밀번호를 입력하세요.");
-                if (inputPw === guestPwStr) {
-                    canDelete = true;
-                } else if (inputPw !== null) {
-                    alert("비밀번호가 일치하지 않습니다.");
-                }
-            } else {
-                alert("본인이 작성한 글만 삭제할 수 있습니다.");
-            }
-            
-            if (canDelete) {
-                try {
-                    if (attachments && attachments.length > 0) {
-                        for(let file of attachments) {
-                            try {
-                                const fileRef = storage.refFromURL(file.url);
-                                await fileRef.delete();
-                            } catch(err) {
-                                console.log("파일 삭제 패스(이미 삭제됨):", err);
-                            }
-                        }
+        async function deletePost(docId) {
+            const post = ROWS[currentTab + '/' + docId];
+            const right = await canTouch(post, "글");
+            if (!right) return;
+            if (right !== 'guest' && !confirm("이 게시글을 삭제하시겠습니까?")) return;
+            try {
+                // 첨부파일은 회원·관리자가 지울 때만 저장소에서 지움 (게스트 삭제는 숨김이라 파일을 남겨 둠)
+                if (right !== 'guest') {
+                    for (const file of ((post && post.attachments) || [])) {
+                        try { await storage.refFromURL(file.url).delete(); } catch (err) { console.log("파일 삭제 패스:", err); }
                     }
-                    
-                    await db.collection(currentTab).doc(docId).delete();
-                    loadPosts();
-                } catch (error) {
-                    console.error("삭제 실패:", error);
-                    alert("삭제 중 오류가 발생했습니다.");
                 }
+                await removeDoc(db.collection(currentTab).doc(docId), right);
+                loadPosts();
+            } catch (error) {
+                console.error("삭제 실패:", error);
+                alert("삭제 중 오류가 발생했습니다. (" + (error.code || error.message) + ")");
             }
         }
 
@@ -1322,38 +1288,42 @@
 
             const isAdmin = HUB.isAdmin(currentUser);
             let likedPosts = JSON.parse(localStorage.getItem("likedPosts")) || {};
-            let index = snapshot.size;
             
             // 최적화: Fragment 생성
             const fragment = document.createDocumentFragment();
             const commentPromises = [];
 
+            let index = 0;
+            snapshot.forEach(doc => { if (!doc.data().deleted) index++; });
             snapshot.forEach(doc => {
                 const post = doc.data();
+                if (post.deleted) return;
+                ROWS[currentTab + '/' + doc.id] = post;
                 const titlePrefix = currentTab === 'qaBoard' ? '<span style="color:#ec4899; font-weight:900; margin-right:5px;">Q.</span>' : '';
                 
-                let fileBadgeHTML = post.fileLink ? `<br><a href="${post.fileLink}" target="_blank" class="file-badge">💾 외부링크 열기</a>` : '';
+                const fl = safeUrl(post.fileLink);
+                let fileBadgeHTML = fl ? `<br><a href="${E(fl)}" target="_blank" rel="noopener" class="file-badge">💾 외부링크 열기</a>` : '';
                 
                 if (post.attachments && post.attachments.length > 0) {
                     post.attachments.forEach(att => {
+                        const au = safeUrl(att.url);
+                        if (!au) return;
                         if (att.type === 'image') {
-                            fileBadgeHTML += `<br><img src="${att.url}" class="attached-img" alt="첨부이미지" onclick="window.open('${att.url}')" style="cursor:zoom-in;">`;
+                            fileBadgeHTML += `<br><img src="${E(au)}" class="attached-img" alt="첨부이미지" onclick="window.open(this.src, '_blank', 'noopener')" style="cursor:zoom-in;">`;
                         } else {
-                            fileBadgeHTML += `<br><a href="${att.url}" target="_blank" class="file-badge" download>📎 ${att.name} 다운로드</a>`;
+                            fileBadgeHTML += `<br><a href="${E(au)}" target="_blank" rel="noopener" class="file-badge" download>📎 ${E(att.name)} 다운로드</a>`;
                         }
                     });
                 }
                 
-                const isOwner = currentUser && currentUser.phone === post.authorPhone;
+                const isOwner = isMine(post);
                 const isGuestPost = post.authorPhone === "guest";
                 
                 let adminBtns = '';
-                if (isAdmin || isOwner || isGuestPost) adminBtns += `<button class="btn-micro btn-edit-sm" onclick="editPost('${doc.id}', '${(post.title || '').replace(/'/g, "\\'")}', '${(post.fileLink || '').replace(/'/g, "\\'")}', '${post.authorPhone}', '${post.guestPw}')">수정</button>`;
-                
-                let attachStr = post.attachments ? JSON.stringify(post.attachments).replace(/"/g, '&quot;') : '[]';
-                if (isAdmin || isOwner || isGuestPost) adminBtns += `<button class="btn-micro btn-delete-sm" onclick="deletePost('${doc.id}', '${post.authorPhone}', '${post.guestPw}', ${attachStr})">삭제</button>`;
+                if (isAdmin || isOwner || isGuestPost) adminBtns += `<button class="btn-micro btn-edit-sm" onclick="editPost('${doc.id}')">수정</button>`;
+                if (isAdmin || isOwner || isGuestPost) adminBtns += `<button class="btn-micro btn-delete-sm" onclick="deletePost('${doc.id}')">삭제</button>`;
 
-                const badge = (isAdmin && post.authorPhone === ADMIN_PHONE) ? `<span class="admin-badge">A</span>` : '';
+                const badge = post.byAdmin ? `<span class="admin-badge">A</span>` : '';
                 
                 const likeBtnClass = likedPosts[doc.id] ? 'btn-micro btn-like-sm liked' : 'btn-micro btn-like-sm';
                 const likeBtnText = `👍 ${Math.max(0, post.likes || 0)}`;
@@ -1362,9 +1332,9 @@
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
                     <td class="center">${index--}</td>
-                    <td style="font-weight: 700; color: #1e293b; line-height: 1.5; font-size: 13px;">${titlePrefix}${post.title} ${fileBadgeHTML}</td>
-                    <td class="center" style="font-weight: 600; font-size: 12px;">${post.author} ${badge}</td>
-                    <td class="center" style="font-size: 11px; color: #64748b;">${post.date}</td>
+                    <td style="font-weight: 700; color: #1e293b; line-height: 1.5; font-size: 13px;">${titlePrefix}${multiline(post.title)} ${fileBadgeHTML}</td>
+                    <td class="center" style="font-weight: 600; font-size: 12px;">${E(post.author)} ${badge}</td>
+                    <td class="center" style="font-size: 11px; color: #64748b;">${E(post.date)}</td>
                     <td class="center">
                         <div class="btn-micro-group">
                             ${favButton(currentTab, doc.id, post.title, '', 'btn-micro fav-sm')}
@@ -1406,7 +1376,8 @@
                 commentPromises.push(
                     db.collection(currentTab).doc(doc.id).collection("comments").get().then(snap => {
                         const btn = document.getElementById(`btn-comment-${doc.id}`);
-                        if(btn) btn.innerText = `💬 ${snap.size}`;
+                        let n = 0; snap.forEach(c => { if (!c.data().deleted) n++; });
+                        if(btn) btn.innerText = `💬 ${n}`;
                     })
                 );
             });

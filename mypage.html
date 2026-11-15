@@ -6,8 +6,8 @@
 <title>내 페이지 - 조효식 허브 PRO</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css">
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="common.css?v=2">
-<script src="common.js?v=2"></script>
+<link rel="stylesheet" href="common.css?v=3">
+<script src="common.js?v=3"></script>
 <style>
   /* 칠판 테마 색은 common.css에 있음 */
   * { box-sizing: border-box; }
@@ -201,7 +201,7 @@
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <script>
-  const ADMIN_PHONE = HUB.ADMIN_PHONE;   // 관리자 확인은 HUB.isAdmin()
+  // 관리자 확인은 HUB.isAdmin() / HUB.ADMIN_UIDS (휴대폰 번호는 쓰지 않음)
   const NICK_RULE = /^[가-힣ㄱ-ㅎa-zA-Z0-9_\- ]{2,12}$/;
   const EMOJIS = HUB.AV_EMOJIS, COLORS = HUB.AV_COLORS;   // 고를 수 있는 그림·색 (common.js)
   const $ = id => document.getElementById(id);
@@ -351,7 +351,7 @@
     $('pAvatar').innerHTML = avatarHTML(p, 'lg');
     $('pNick').textContent = p.name || '';
     $('pLoginId').textContent = p.loginId ? '@' + p.loginId : '';
-    const admin = (p.ownerKey || '') === ADMIN_PHONE;
+    const admin = HUB.ADMIN_UIDS.indexOf(currentUser.uid) !== -1;   // 관리자는 UID로 확인
     $('pRole').textContent = admin ? '👑 관리자' : '🌱 회원';
     $('pRole').classList.toggle('admin', admin);
     const org = [p.org, p.title].filter(Boolean).join(' · ');

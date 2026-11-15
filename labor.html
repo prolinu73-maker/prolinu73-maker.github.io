@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>교육공무직원 노무관리 정보마당</title>
 <!-- 화면 디자인(외부 인터넷 연결 없이 작동하도록 파일 안에 포함) -->
-<link rel="stylesheet" href="common.css?v=2">
-<script src="common.js?v=2"></script>
+<link rel="stylesheet" href="common.css?v=3">
+<script src="common.js?v=3"></script>
 <script>
 /* 비상용: common.js를 서버에서 찾지 못해도 페이지가 멈추지 않도록 최소 기능만 대신 채움
    (common.js가 정상적으로 불러와지면 이 부분은 쓰이지 않습니다) */
@@ -186,7 +186,7 @@ if (!window.HUB) {
         <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50"></div>
         <div id="chatChips" class="px-4 pt-3 flex flex-wrap gap-2 bg-white"></div>
         <div class="p-4 bg-white flex gap-2">
-          <input type="text" id="chatInput" class="flex-1 border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="노무 관련 질문을 입력하세요..." onkeypress="if(event.key==='Enter')sendMessage()">
+          <input type="text" id="chatInput" maxlength="2000" class="flex-1 border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="노무 관련 질문을 입력하세요..." onkeypress="if(event.key==='Enter')sendMessage()">
           <button id="sendBtn" onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium disabled:bg-slate-400 disabled:cursor-not-allowed">전송</button>
         </div>
       </div>
@@ -341,7 +341,10 @@ const CONFIG = {
   hubUrl: "index.html",
 
   // ⑤ 첨부파일 최대 크기 (KB) — Firebase 문서 한도 때문에 700KB 이하 권장
-  maxFileKB: 700
+  maxFileKB: 700,
+
+  // ⑥ 올릴 수 있는 첨부파일 종류 (실행 파일 등 위험한 파일 차단)
+  allowedExt: ['hwp', 'hwpx', 'pdf', 'xls', 'xlsx', 'csv', 'doc', 'docx', 'ppt', 'pptx', 'txt', 'jpg', 'jpeg', 'png', 'gif', 'zip']
 };
 
 /* =========================================================
@@ -380,6 +383,32 @@ function blockAutofill(box) {
   [50, 300, 800, 1500].forEach(t => setTimeout(wipe, t));
 }
 function closeModal() { $('modal').classList.add('hidden'); $('modal').classList.remove('flex'); }
+/* 글 비밀번호 보호 (2단계)
+   - 새 글: 글마다 다른 '소금값'을 섞고 10만 번 반복 암호화(PBKDF2) → 짧은 비밀번호도 대입으로 풀기 어렵게
+   - 예전 글: 예전 방식 값도 그대로 확인되도록 함 */
+const PW_MIN = 6;   // 새 글 비밀번호 최소 글자 수
+const b64 = (u8) => btoa(String.fromCharCode(...u8));
+async function makePwHash(pw) {
+  try {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, key, 256);
+    return 'pbkdf2$100000$' + b64(salt) + '$' + b64(new Uint8Array(bits));
+  } catch (e) { return hashPw(pw); }
+}
+async function verifyPw(pw, stored) {
+  if (!stored || pw == null) return false;
+  if (String(stored).startsWith('pbkdf2$')) {
+    try {
+      const [, it, saltB64, hashB64] = stored.split('$');
+      const salt = Uint8Array.from(atob(saltB64), c => c.charCodeAt(0));
+      const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+      const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: Number(it), hash: 'SHA-256' }, key, 256);
+      return b64(new Uint8Array(bits)) === hashB64;
+    } catch (e) { return false; }
+  }
+  return (await hashPw(pw)) === stored;   // 예전 방식
+}
 async function hashPw(pw) {
   try {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('labor::' + pw));
@@ -427,6 +456,17 @@ const DB = {
   }
 };
 const COL = { qna: 'labor_qna', board: 'labor_board', file: 'labor_files' };
+/* 삭제 처리
+   - 관리자: 완전히 삭제
+   - 작성자(비밀번호 확인): '숨김' 처리 → 목록에서 사라짐. 실수·장난으로 지워져도 관리자가 되살릴 수 있음
+     (Firebase 보안 규칙상 완전 삭제는 관리자만 할 수 있음) */
+async function removeOrHide(col, id) {
+  if (isAdmin) {
+    try { await DB.remove(col, id); return; }
+    catch (e) { console.warn('완전 삭제 권한 없음 → 숨김 처리 (허브에서 관리자로 다시 로그인해 주세요)', e); }
+  }
+  await DB.update(col, id, { deleted: true, deletedAt: Date.now() });
+}
 
 /* =========================================================
    화면 이동 · 관리자
@@ -471,7 +511,7 @@ const QNA_CATS = ['전체', '채용·계약', '임금·수당', '근로시간·�
 let qnaData = [], qnaCat = '전체', qnaPage = 1;
 const unlocked = new Set();
 
-async function loadQna() { try { qnaData = await DB.list(COL.qna); } catch (e) { console.error(e); toast('질문 목록을 불러오지 못했습니다'); } }
+async function loadQna() { try { qnaData = (await DB.list(COL.qna)).filter(x => !x.deleted); } catch (e) { console.error(e); toast('질문 목록을 불러오지 못했습니다'); } }
 function renderQnaChips() {
   $('qnaCatChips').innerHTML = QNA_CATS.map(c => `<button onclick="qnaCat='${c}';qnaPage=1;renderQnaChips();renderQna()" class="chip px-3 py-1.5 rounded-full border border-slate-300 text-sm ${c === qnaCat ? 'active' : ''}">${c}</button>`).join('');
 }
@@ -507,10 +547,10 @@ function openQnaWrite(editId) {
         <input id="qTitle" placeholder="제목" class="w-full border border-slate-300 rounded-lg px-3 py-2">
         <textarea id="qContent" rows="7" placeholder="질문 내용을 자세히 적어 주세요. (근무형태, 입사일, 주 근로시간 등을 적어 주시면 더 정확히 답변할 수 있습니다)" class="w-full border border-slate-300 rounded-lg px-3 py-2"></textarea>
         <div class="grid grid-cols-2 gap-3 items-center">
-          <input id="qPw" type="password" placeholder="비밀번호 (삭제·비밀글 확인용)" class="border border-slate-300 rounded-lg px-3 py-2${old ? ' hidden' : ''}">
+          <input id="qPw" type="password" placeholder="비밀번호 6자리 이상 (삭제·비밀글 확인용)" class="border border-slate-300 rounded-lg px-3 py-2${old ? ' hidden' : ''}">
           <label class="flex items-center gap-2 text-sm"><input id="qSecret" type="checkbox" class="w-4 h-4"> 🔒 비밀글로 작성</label>
         </div>
-        <p class="text-xs text-slate-400">※ 주민등록번호 등 민감한 개인정보는 적지 마세요.</p>
+        <p class="text-xs p-2 rounded bg-amber-50 text-amber-800 leading-relaxed">⚠️ <b>이름·연락처·주민등록번호·건강 정보 등 개인정보는 적지 마세요.</b><br>🔒 비밀글은 목록에서 내용이 가려지지만, 완전한 비공개 저장소는 아닙니다. 개인 사정이 담긴 상담은 담당자에게 직접 연락해 주세요.</p>
       </div>
       <div class="flex justify-end gap-2 mt-5"><button onclick="closeModal()" class="px-4 py-2 rounded-lg border">취소</button><button id="qSave" onclick="saveQna(${old ? `'${editId}'` : ''})" class="px-4 py-2 rounded-lg bg-blue-600 text-white">${old ? '수정 저장' : '등록'}</button></div>
     </div>`);
@@ -537,7 +577,7 @@ async function editQna(id) {
   const q = qnaData.find(x => x.id === id); if (!q) return;
   if (!isAdmin) {
     const pw = prompt('작성할 때 입력한 비밀번호를 입력하세요'); if (pw === null) return;
-    if (await hashPw(pw) !== q.pwHash) return toast('비밀번호가 맞지 않습니다');
+    if (!(await verifyPw(pw, q.pwHash))) return toast('비밀번호가 맞지 않습니다');
   }
   openQnaWrite(id);
 }
@@ -551,10 +591,10 @@ async function saveQna(editId) {
     catch (e) { console.error(e); toast('수정에 실패했습니다'); $('qSave').disabled = false; }
     return;
   }
-  if (pw.length < 4) return toast('비밀번호를 4자리 이상 입력하세요');
+  if (pw.length < PW_MIN) return toast(`비밀번호를 ${PW_MIN}자리 이상 입력하세요`);
   $('qSave').disabled = true;
   try {
-    d.pwHash = await hashPw(pw); d.createdAt = Date.now(); d.views = 0; d.answer = null;
+    d.pwHash = await makePwHash(pw); d.createdAt = Date.now(); d.views = 0; d.answer = null;
     const hu = hubLogin(); if (hu && hu.phone) d.authorKey = hu.phone;   // 로그인한 회원이면 내 페이지에 모이도록 표시
     await DB.add(COL.qna, d); closeModal(); toast('질문이 등록되었습니다'); await refresh();
   } catch (e) { console.error(e); toast('저장에 실패했습니다'); $('qSave').disabled = false; }
@@ -604,7 +644,7 @@ async function openQna(id) {
 }
 async function unlockQna(id) {
   const q = qnaData.find(x => x.id === id);
-  if (await hashPw($('unlockPw').value) === q.pwHash) { unlocked.add(id); openQna(id); }
+  if (await verifyPw($('unlockPw').value, q.pwHash)) { unlocked.add(id); openQna(id); }
   else toast('비밀번호가 맞지 않습니다');
 }
 async function saveAnswer(id) {
@@ -616,9 +656,10 @@ async function deleteQna(id) {
   const q = qnaData.find(x => x.id === id);
   if (!isAdmin) {
     const pw = prompt('작성할 때 입력한 비밀번호를 입력하세요'); if (pw === null) return;
-    if (await hashPw(pw) !== q.pwHash) return toast('비밀번호가 맞지 않습니다');
+    if (!(await verifyPw(pw, q.pwHash))) return toast('비밀번호가 맞지 않습니다');
   } else if (!confirm('이 질문을 삭제할까요?')) return;
-  await DB.remove(COL.qna, id); closeModal(); toast('삭제되었습니다'); await refresh();
+  try { await removeOrHide(COL.qna, id); } catch (e) { console.error(e); return toast('삭제하지 못했습니다'); }
+  closeModal(); toast('삭제되었습니다'); await refresh();
 }
 async function aiDraft(id) {
   const q = qnaData.find(x => x.id === id);
@@ -635,7 +676,7 @@ const BOARD_CATS = ['전체', '공지사항', '법령·지침', '서식', '매�
 const CAT_COLOR = { '공지사항': 'bg-rose-100 text-rose-700', '법령·지침': 'bg-indigo-100 text-indigo-700', '서식': 'bg-emerald-100 text-emerald-700', '매뉴얼': 'bg-amber-100 text-amber-700', '사례·판례': 'bg-purple-100 text-purple-700', '기타': 'bg-slate-100 text-slate-600' };
 let boardData = [], boardCat = '전체', boardPage = 1;
 
-async function loadBoard() { try { boardData = await DB.list(COL.board); } catch (e) { console.error(e); toast('자료 목록을 불러오지 못했습니다'); } }
+async function loadBoard() { try { boardData = (await DB.list(COL.board)).filter(x => !x.deleted); } catch (e) { console.error(e); toast('자료 목록을 불러오지 못했습니다'); } }
 function renderBoardChips() {
   $('boardCatChips').innerHTML = BOARD_CATS.map(c => `<button onclick="boardCat='${c}';boardPage=1;renderBoardChips();renderBoard()" class="chip px-3 py-1.5 rounded-full border border-slate-300 text-sm ${c === boardCat ? 'active' : ''}">${c}</button>`).join('');
 }
@@ -676,22 +717,24 @@ function openBoardWrite(id) {
         <input id="bLink" value="${esc(b.link || '')}" placeholder="관련 링크 (선택, https://...)" class="w-full border border-slate-300 rounded-lg px-3 py-2">
         <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
           <label class="block text-sm font-semibold mb-1">📎 첨부파일 (선택, ${CONFIG.maxFileKB}KB 이하)</label>
-          <input id="bFile" type="file" class="w-full text-sm">
+          <input id="bFile" type="file" accept="${CONFIG.allowedExt.map(x => '.' + x).join(',')}" class="w-full text-sm">
           ${b.fileName ? `<p class="text-xs text-slate-500 mt-1">현재 첨부: ${esc(b.fileName)} (새 파일을 고르면 바뀝니다)</p>` : ''}
-          <p class="text-xs text-slate-400 mt-1">한글(hwp)·PDF·엑셀 등 모두 가능합니다. 큰 파일은 구글드라이브 등에 올리고 '관련 링크'에 주소를 넣어 주세요.</p>
+          <p class="text-xs text-slate-400 mt-1">올릴 수 있는 파일: ${CONFIG.allowedExt.join(', ')}. 큰 파일은 구글드라이브 등에 올리고 '관련 링크'에 주소를 넣어 주세요.</p>
         </div>
         ${isNewPost && !isAdmin ? `
         <div class="grid grid-cols-2 gap-3">
           <input id="bAuthor" placeholder="작성자 (예: ○○초 행정실)" class="border border-slate-300 rounded-lg px-3 py-2">
-          <input id="bPw" type="password" placeholder="비밀번호 (수정·삭제용)" class="border border-slate-300 rounded-lg px-3 py-2">
+          <input id="bPw" type="password" placeholder="비밀번호 6자리 이상 (수정·삭제용)" class="border border-slate-300 rounded-lg px-3 py-2">
         </div>` : ''}
         ${isNewPost && isAdmin ? `<input id="bAuthor" value="관리자" placeholder="작성자" class="w-full border border-slate-300 rounded-lg px-3 py-2">` : ''}
-        <p class="text-xs text-slate-400">※ 개인정보가 들어 있는 자료는 올리지 마세요.</p>
+        <p class="text-xs p-2 rounded bg-amber-50 text-amber-800">⚠️ 개인정보(명단·연락처·주민등록번호 등)가 들어 있는 자료는 올리지 마세요. 누구나 내려받을 수 있습니다.</p>
       </div>
       <div class="flex justify-end gap-2 mt-5"><button onclick="closeModal()" class="px-4 py-2 rounded-lg border">취소</button><button id="bSave" onclick="saveBoard(${id ? `'${id}'` : ''})" class="px-4 py-2 rounded-lg bg-blue-600 text-white">${id ? '저장' : '올리기'}</button></div>
     </div>`);
   if (isNewPost && !isAdmin) applyNick('bAuthor');
 }
+function fileExt(name) { const m = String(name || '').toLowerCase().match(/\.([a-z0-9]+)$/); return m ? m[1] : ''; }
+function fileAllowed(name) { return CONFIG.allowedExt.includes(fileExt(name)); }
 function readFileB64(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); }); }
 async function saveBoard(id) {
   const d = { category: $('bCat').value, title: $('bTitle').value.trim(), content: $('bContent').value.trim(), link: $('bLink').value.trim() };
@@ -703,13 +746,14 @@ async function saveBoard(id) {
     if (!d.author) return toast('작성자를 입력하세요');
     const hu = hubLogin(); if (hu && hu.phone) d.authorKey = hu.phone;   // 로그인한 회원이면 내 페이지에 모이도록 표시
     if (!isAdmin) {
-      const pw = $('bPw').value; if (pw.length < 4) return toast('비밀번호를 4자리 이상 입력하세요');
-      pwHash = await hashPw(pw);
+      const pw = $('bPw').value; if (pw.length < PW_MIN) return toast(`비밀번호를 ${PW_MIN}자리 이상 입력하세요`);
+      pwHash = await makePwHash(pw);
     }
   }
   if (d.link && !/^https?:\/\//.test(d.link)) return toast('링크는 http:// 또는 https:// 로 시작해야 합니다');
   const f = $('bFile').files[0];
   if (f && f.size > CONFIG.maxFileKB * 1024) return toast(`첨부파일은 ${CONFIG.maxFileKB}KB 이하만 가능합니다`);
+  if (f && !fileAllowed(f.name)) return toast('올릴 수 없는 파일 종류입니다. (한글·PDF·엑셀·워드·파워포인트·그림·압축 파일만 가능)');
   $('bSave').disabled = true;
   try {
     if (f) {
@@ -773,7 +817,11 @@ async function downloadFile(fid) {
   toast('파일을 준비하고 있습니다...');
   try {
     const f = await DB.get(COL.file, fid); if (!f) return toast('파일을 찾을 수 없습니다');
-    const a = document.createElement('a'); a.href = f.data; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+    // 허용 목록에 없는 예전 파일은 경고 후 받기
+    if (!fileAllowed(f.name) && !confirm(`'${f.name}'은(는) 허용되지 않는 종류의 파일입니다.\n출처를 확인한 경우에만 받으세요. 그래도 받을까요?`)) return;
+    // 브라우저가 파일을 열어 실행하지 않고 '저장'만 하도록 형식을 바꿔서 받음
+    const data = String(f.data).replace(/^data:[^;,]*/, 'data:application/octet-stream');
+    const a = document.createElement('a'); a.href = data; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
   } catch (e) { console.error(e); toast('다운로드에 실패했습니다'); }
 }
 // 작성자 확인: 관리자이거나, 올릴 때 넣은 비밀번호가 맞아야 함
@@ -782,7 +830,7 @@ async function checkBoardOwner(id) {
   const b = boardData.find(x => x.id === id);
   if (!b || !b.pwHash) { toast('관리자만 수정·삭제할 수 있습니다'); return false; }
   const pw = prompt('자료를 올릴 때 입력한 비밀번호를 입력하세요'); if (pw === null) return false;
-  if (await hashPw(pw) !== b.pwHash) { toast('비밀번호가 맞지 않습니다'); return false; }
+  if (!(await verifyPw(pw, b.pwHash))) { toast('비밀번호가 맞지 않습니다'); return false; }
   unlockedBoard.add(id); return true;
 }
 async function editBoard(id) { if (await checkBoardOwner(id)) openBoardWrite(id); }
@@ -790,8 +838,9 @@ async function deleteBoard(id) {
   if (!(await checkBoardOwner(id))) return;
   if (!confirm('이 자료를 삭제할까요?')) return;
   const b = boardData.find(x => x.id === id);
-  if (b.fileId) await DB.remove(COL.file, b.fileId).catch(() => {});
-  await DB.remove(COL.board, id); closeModal(); toast('삭제되었습니다'); await refresh();
+  try { await removeOrHide(COL.board, id); } catch (e) { console.error(e); return toast('삭제하지 못했습니다'); }
+  if (isAdmin && b.fileId) await DB.remove(COL.file, b.fileId).catch(() => {});   // 첨부파일은 관리자 삭제 때만 지움
+  closeModal(); toast('삭제되었습니다'); await refresh();
 }
 
 /* =========================================================

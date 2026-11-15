@@ -6,7 +6,7 @@
        <script src="common.js"></script>
 
    여기 들어 있는 것
-     1. 기본 설정       HUB.ADMIN_PHONE, HUB.FIREBASE_CONFIG, HUB.MENU, HUB.PAGE_LABELS
+     1. 기본 설정       HUB.ADMIN_UIDS, HUB.FIREBASE_CONFIG, HUB.MENU, HUB.PAGE_LABELS
      2. 작은 도구       HUB.esc(), HUB.loadScript(), HUB.toast()
      3. Firebase        HUB.firebaseReady(), HUB.db(), HUB.storage(), HUB.auth()
      4. 로그인 정보     HUB.getUser(), HUB.setUser(), HUB.clearUser(), HUB.isAdmin(),
@@ -22,12 +22,18 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.0.0';
+    HUB.VERSION = '1.1.0';
 
     /* =================================================================
        1. 기본 설정
        ================================================================= */
-    HUB.ADMIN_PHONE = "010-9848-0309";             // 관리자 계정의 '글 주인 표시값'
+    // 관리자 계정의 Firebase '사용자 UID' (Firebase 콘솔 → Authentication → 사용자 탭에서 확인)
+    //  - 무작위 글자라 공개되어도 개인정보가 드러나지 않습니다.
+    //  - Firebase 보안 규칙(isAdmin)에도 같은 값을 넣어야 실제 관리자 권한이 생깁니다.
+    //  - 관리자를 더 두려면 쉼표로 이어 적으세요.
+    HUB.ADMIN_UIDS = Object.freeze(["S7rzFPrdAMQ0uMRnfyJXQdQEHFZ2"]);
+    // (예전 버전 호환용 이름. 개인정보 보호를 위해 휴대폰 번호는 더 이상 적지 않습니다)
+    HUB.ADMIN_PHONE = null;
     HUB.FIREBASE_CONFIG = Object.freeze({
         apiKey: "AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw",
         authDomain: "prolinu73-6c409.firebaseapp.com",
@@ -101,6 +107,34 @@
             d.head.appendChild(s);
         });
     };
+    // 비밀번호 암호화 (게스트 글 비밀번호 등)
+    //  - hashSecret: 글마다 다른 소금값 + 10만 번 반복(PBKDF2) → 'pbkdf2$반복$소금$값'
+    //  - verifySecret: 암호화 값과 비교 (예전 글의 원문 비밀번호도 확인됨)
+    //  - sha256: 같은 입력이면 항상 같은 값 (예전 회원 휴대폰 번호 찾기용)
+    const b64 = u8 => btoa(String.fromCharCode.apply(null, u8));
+    const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+    async function pbkdf2(pw, salt, it) {
+        const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(String(pw)), "PBKDF2", false, ["deriveBits"]);
+        return new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations: it, hash: "SHA-256" }, key, 256));
+    }
+    HUB.hashSecret = async function (pw) {
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        return "pbkdf2$100000$" + b64(salt) + "$" + b64(await pbkdf2(pw, salt, 100000));
+    };
+    HUB.verifySecret = async function (pw, stored, legacyPlain) {
+        if (pw == null) return false;
+        if (stored && String(stored).indexOf("pbkdf2$") === 0) {
+            try { const p = stored.split("$"); return b64(await pbkdf2(pw, unb64(p[2]), Number(p[1]))) === p[3]; } catch (e) { return false; }
+        }
+        return legacyPlain != null && legacyPlain !== "" && String(pw) === String(legacyPlain);   // 예전 원문 비밀번호
+    };
+    HUB.sha256 = async function (text) {
+        const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(text)));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+    };
+    // 예전 회원 휴대폰 번호 → 찾기용 값 (번호 원문은 저장하지 않음)
+    HUB.phoneKey = function (phone) { return HUB.sha256("hub-phone:" + String(phone || "").replace(/[^0-9]/g, "")); };
+
     // 화면 아래 가운데에 잠깐 뜨는 알림
     let toastTimer;
     HUB.toast = function (msg, ms) {
@@ -170,9 +204,11 @@
     HUB.getUser = function () {
         try { return JSON.parse(localStorage.getItem(USER_KEY) || "null"); } catch (e) { return null; }
     };
+    // 관리자 여부: 로그인한 계정의 UID로 확인 (휴대폰 번호로 확인하지 않음)
+    //  ※ 화면 표시용 확인입니다. 실제 수정·삭제 권한은 Firebase 보안 규칙이 로그인 정보로 다시 확인합니다.
     HUB.isAdmin = function (u) {
         if (u === undefined) u = HUB.getUser();
-        return !!(u && u.phone === HUB.ADMIN_PHONE);
+        return !!(u && u.uid && HUB.ADMIN_UIDS.indexOf(u.uid) !== -1);
     };
     // 관리자 브라우저 표시 (방문기록·방문자 수에서 제외). 한 번 관리자로 로그인하면 계속 유지
     HUB.isAdminDevice = function () {

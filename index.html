@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="common.css?v=2">
-<script src="common.js?v=2"></script>
+<link rel="stylesheet" href="common.css?v=3">
+<script src="common.js?v=3"></script>
 <style>
   /* 색(칠판 테마)은 common.css에 있음 */
   * { box-sizing: border-box; }
@@ -498,6 +498,12 @@
                     </tbody>
                 </table>
             </div>
+            <div style="margin-top:16px; padding:14px; border:1px dashed #F2D27A; background:#FFFBEB; border-radius:10px; text-align:left;">
+                <b style="font-size:14px;">🛡️ 개인정보 정리</b>
+                <p style="margin:6px 0 10px; font-size:12.5px; color:#64748b; line-height:1.5;">회원정보·게시글에 남아 있는 <b>휴대폰 번호</b>를 고유번호로 바꾸고, 예전 회원과 게스트 글의 <b>원문 비밀번호</b>를 암호화합니다. 예전 글은 계속 본인 글로 인식되고, 예전 회원도 휴대폰 번호로 그대로 로그인할 수 있습니다. 여러 번 눌러도 안전합니다.</p>
+                <button id="privacyBtn" onclick="runPrivacyCleanup()" style="background:#1B5442; color:#fff; border:none; padding:9px 16px; border-radius:8px; font-weight:800; cursor:pointer; font-family:inherit;">정리 시작</button>
+                <div id="privacyLog" style="margin-top:8px; font-size:12.5px; color:#334155; white-space:pre-wrap;"></div>
+            </div>
             <button onclick="closeAdminModal()" style="width: 100%; padding: 12px; margin-top: 20px; background: #e2e8f0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">닫기</button>
         </div>
     </div>
@@ -727,10 +733,14 @@
                     // ① 예전 회원: 휴대폰 번호로 로그인 → 확인되면 '옮기기' 화면으로
                     if (/^[0-9\-\s]+$/.test(raw)) {
                         const phone = raw.replace(/\s/g, '');
-                        const snap = await db.collection("users").where("phone", "==", phone).where("pw", "==", pw).get();
-                        if (snap.empty) return authMsg('휴대폰 번호 또는 비밀번호가 맞지 않습니다. 이미 새 방식으로 옮겼다면 새 아이디로 로그인해 주세요.');
-                        const d = snap.docs[0];
-                        legacyMember = { docId: d.id, phone: d.data().phone, name: d.data().name || '' };
+                        let d = null;
+                        // 개인정보 정리 뒤: 휴대폰 번호는 찾기용 암호화 값(phoneKey)으로만, 비밀번호는 암호화 값(pwHash)으로만 저장됨
+                        const ks = await db.collection("users").where("phoneKey", "==", await HUB.phoneKey(phone)).get();
+                        for (const x of ks.docs) { if (await HUB.verifySecret(pw, x.data().pwHash)) { d = x; break; } }
+                        // 정리 전 예전 방식
+                        if (!d) { const snap = await db.collection("users").where("phone", "==", phone).where("pw", "==", pw).get(); if (!snap.empty) d = snap.docs[0]; }
+                        if (!d) return authMsg('휴대폰 번호 또는 비밀번호가 맞지 않습니다. 이미 새 방식으로 옮겼다면 새 아이디로 로그인해 주세요.');
+                        legacyMember = { docId: d.id, ownerKey: d.data().ownerKey || d.data().phone, name: d.data().name || '' };
                         changeAuthMode('migrate');
                         document.getElementById('authId').value = '';
                         document.getElementById('authPw').value = '';
@@ -795,7 +805,7 @@
                     const prof = {
                         loginId: id,
                         name: nick,
-                        ownerKey: authMode === 'migrate' ? legacyMember.phone : ('uid:' + uid),
+                        ownerKey: authMode === 'migrate' ? legacyMember.ownerKey : ('uid:' + uid),
                         mailLock: await lockEmail(email, pw),
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
@@ -986,8 +996,8 @@
                 rows.forEach(u => {
                     const isNew = !!u.loginId;
                     const owner = u.ownerKey || u.phone;
-                    const isSuperAdmin = owner === ADMIN_PHONE;
-                    const idText = isNew ? escHtml(u.loginId) : escHtml(maskPhone(u.phone));
+                    const isSuperAdmin = HUB.ADMIN_UIDS.indexOf(u.id) !== -1;   // 관리자는 UID로 확인
+                    const idText = isNew ? escHtml(u.loginId) : (u.phone ? escHtml(maskPhone(u.phone)) : '<span style="color:#94a3b8;">(예전 회원·번호 정리됨)</span>');
                     const state = isNew ? '<span style="color:#1A9C7B; font-weight:700;">새 방식</span>' : '<span style="color:#E07A2F; font-weight:700;">옮기기 전</span>';
                     const actionHtml = isSuperAdmin
                         ? `<span style="color:#94a3b8; font-size:12px; font-weight:bold;">최고관리자</span>`
@@ -1154,6 +1164,93 @@
                 console.error("방문 기록 로드 오류:", err);
                 box.innerHTML = `<div style="padding:30px; color:#ef4444;">방문 기록을 불러오지 못했습니다.<br><span style="font-size:12px; color:#94a3b8;">오류 내용: ${escHtml(err.code || err.message)}</span></div>`;
             }
+        }
+
+        /* ===== 🛡️ 개인정보 정리 (관리자 전용, 여러 번 실행해도 안전) =====
+           ① 글 주인 표시값: 휴대폰 번호 → 'uid:고유번호'(새 회원) / 'legacy:문서번호'(아직 옮기지 않은 예전 회원)
+           ② 예전 회원 문서: 휴대폰 번호·원문 비밀번호 → 찾기용 암호화 값(phoneKey)·암호화 비밀번호(pwHash)
+           ③ 게스트 글·댓글: 원문 비밀번호(guestPw) → 암호화 비밀번호(guestPwHash)
+           순서: 게시글을 먼저 바꾸고 회원정보를 나중에 바꿈 (중간에 멈춰도 다시 누르면 이어서 정리됨) */
+        const OWNER_COLS = [
+            { col: 'smartTools', field: 'authorPhone', guest: true },
+            { col: 'usefulSites', field: 'authorPhone', guest: true },
+            { col: 'freeBoard', field: 'authorPhone', guest: true, sub: 'comments' },
+            { col: 'qaBoard', field: 'authorPhone', guest: true, sub: 'comments' },
+            { col: 'dataBoard', field: 'authorPhone', guest: true, sub: 'comments' },
+            { col: 'perdiemBoard', field: 'authorPhone', guest: false },   // 여비 게시판: 게스트 비밀번호 방식은 그 페이지를 확인한 뒤 정리
+            { col: 'labor_qna', field: 'authorKey', guest: false },
+            { col: 'labor_board', field: 'authorKey', guest: false },
+        ];
+        async function runPrivacyCleanup() {
+            if (!HUB.isAdmin(currentUser)) return alert("관리자만 할 수 있습니다.");
+            const auth = hubAuth();
+            if (!auth || !auth.currentUser) return alert("관리자 로그인 정보를 확인하는 중입니다. 잠시 후 다시 눌러 주세요. (계속 안 되면 로그아웃 후 다시 로그인)");
+            if (!confirm("회원정보와 게시글의 휴대폰 번호·원문 비밀번호를 정리합니다.\n몇십 초 걸릴 수 있어요. 시작할까요?")) return;
+            const btn = document.getElementById('privacyBtn'), logEl = document.getElementById('privacyLog');
+            const log = t => { logEl.textContent += t + '\n'; };
+            const del = firebase.firestore.FieldValue.delete();
+            btn.disabled = true; logEl.textContent = '';
+            const cnt = { owner: 0, guest: 0, users: 0, legacy: 0, fail: 0 };
+            try {
+                // 0) 바꿀 표시값 목록 만들기
+                const us = await db.collection("users").get();
+                const map = {};          // 예전 표시값(휴대폰 번호) → 새 표시값
+                const userJobs = [];     // 회원 문서 바꿀 일
+                us.forEach(d => {
+                    const u = d.data();
+                    if (u.loginId) {
+                        if (u.ownerKey && !String(u.ownerKey).startsWith('uid:')) {
+                            map[u.ownerKey] = 'uid:' + d.id;
+                            userJobs.push({ ref: d.ref, upd: { ownerKey: 'uid:' + d.id } });
+                        }
+                    } else if (u.phone) {    // 아직 옮기지 않은 예전 회원
+                        const nk = 'legacy:' + d.id;
+                        map[u.phone] = nk;
+                        userJobs.push({ ref: d.ref, legacy: u, nk });
+                    }
+                });
+                log(`바꿀 회원 ${userJobs.length}명`);
+                // 1) 게시글·댓글
+                const fix = async (ref, data, guest) => {
+                    const upd = {};
+                    if (map[data._owner]) upd[data._field] = map[data._owner];
+                    if (guest && data.guestPw) { upd.guestPwHash = await HUB.hashSecret(data.guestPw); upd.guestPw = del; }
+                    if (!Object.keys(upd).length) return;
+                    try {
+                        await ref.update(upd);
+                        if (upd[data._field]) cnt.owner++;
+                        if (upd.guestPwHash) cnt.guest++;
+                    } catch (e) { cnt.fail++; console.log('정리 실패', ref.path, e); }
+                };
+                for (const c of OWNER_COLS) {
+                    let snap;
+                    try { snap = await db.collection(c.col).get(); } catch (e) { log(`- ${c.col}: 읽지 못함 (${e.code || e.message})`); continue; }
+                    for (const d of snap.docs) {
+                        const x = d.data();
+                        await fix(d.ref, Object.assign({ _owner: x[c.field], _field: c.field }, x), c.guest);
+                        if (c.sub) {
+                            const cs = await d.ref.collection(c.sub).get();
+                            for (const cd of cs.docs) { const y = cd.data(); await fix(cd.ref, Object.assign({ _owner: y.authorPhone, _field: 'authorPhone' }, y), true); }
+                        }
+                    }
+                    log(`- ${c.col}: 확인 완료`);
+                }
+                // 2) 회원 문서
+                for (const j of userJobs) {
+                    try {
+                        if (j.legacy) {
+                            await j.ref.update({ phoneKey: await HUB.phoneKey(j.legacy.phone), pwHash: await HUB.hashSecret(j.legacy.pw || ''), ownerKey: j.nk, phone: del, pw: del });
+                            cnt.legacy++;
+                        } else { await j.ref.update(j.upd); cnt.users++; }
+                    } catch (e) { cnt.fail++; console.log('회원 정리 실패', j.ref.path, e); }
+                }
+                // 3) 지금 로그인한 관리자 정보도 새 표시값으로
+                if (currentUser && map[currentUser.phone]) HUB.setUser(Object.assign({}, currentUser, { phone: map[currentUser.phone] }));
+                log(`\n✅ 완료: 글 주인 표시값 ${cnt.owner}건, 게스트 비밀번호 ${cnt.guest}건 암호화, 새 회원 ${cnt.users}명·예전 회원 ${cnt.legacy}명 정리` + (cnt.fail ? `\n⚠️ 실패 ${cnt.fail}건 (다시 눌러 주세요. 계속 실패하면 Firebase 규칙을 확인해 주세요)` : ''));
+                loadUsers();
+            } catch (e) {
+                console.error(e); log('⚠️ 중간에 멈췄습니다: ' + (e.code || e.message) + '\n다시 누르면 이어서 정리됩니다.');
+            } finally { btn.disabled = false; }
         }
 
         async function forceDeleteUser(docId, userName) {
