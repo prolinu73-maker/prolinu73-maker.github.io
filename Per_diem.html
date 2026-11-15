@@ -6,8 +6,8 @@
 <title>출장 여비 계산기</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="common.css?v=2">
-<script src="common.js?v=2"></script>
+<link rel="stylesheet" href="common.css?v=3">
+<script src="common.js?v=3"></script>
 <style>
 /* 레이아웃: 위에서 아래로 1→2→3 순서로 입력(왼쪽), 결과는 오른쪽에 항상 고정. 좁은 화면에서는 한 줄로 쌓임. */
 :root{
@@ -248,7 +248,7 @@ footer{color:var(--muted);font-size:13.5px}
       <button class="btn ghost" id="clearRelay">연결 해제</button>
       <span class="hint" id="relayMsg" aria-live="polite"></span>
     </div>
-    <p class="note">이 탭은 관리자 모드(주소 끝에 #admin)에서만 보입니다. 위 칸에 저장한 주소는 이 브라우저에만 남습니다. 모든 접속자가 자동 조회를 쓰게 하려면, 이 HTML 파일을 메모장으로 열어 <code>RELAY_URL=''</code> 의 따옴표 안에 주소를 넣고 저장한 뒤 그 파일을 올리세요.</p>
+    <p class="note">이 탭은 관리자 모드(메인 허브에서 관리자로 로그인한 뒤 주소 끝에 #admin)에서만 보입니다. 위 칸에 저장한 주소는 이 브라우저에만 남습니다. 모든 접속자가 자동 조회를 쓰게 하려면, 이 HTML 파일을 메모장으로 열어 <code>RELAY_URL=''</code> 의 따옴표 안에 주소를 넣고 저장한 뒤 그 파일을 올리세요.</p>
     <h2>처음 연결하는 순서</h2>
     <ol class="steps">
       <li><b>인증키 받기.</b> 공공데이터포털(data.go.kr)에서 아래 4개에 각각 <b>활용신청</b>을 하고, 마이페이지에서 인증키를 복사합니다.<br>
@@ -376,7 +376,8 @@ footer{color:var(--muted);font-size:13.5px}
   $('conn').addEventListener('click',function(){if(isAdmin())show('api')});
 
   /* ---------- 관리자 모드: 주소 끝에 #admin 이 있을 때만 "자동 조회 연결" 탭을 보여 줌 ---------- */
-  function isAdmin(){return !!ADMIN_WORD&&location.hash.replace('#','')===ADMIN_WORD}
+  // 관리자 모드: 메인 허브에서 관리자로 로그인한 상태에서 주소 끝에 #admin 을 붙여 열 때만
+  function isAdmin(){return HUB.isAdmin()&&!!ADMIN_WORD&&location.hash.replace('#','')===ADMIN_WORD}
   function applyAdmin(){
     var a=isAdmin();
     $('tab-api').hidden=!a;
@@ -719,7 +720,7 @@ footer{color:var(--muted);font-size:13.5px}
     function addScript(src){return new Promise(function(ok,no){var t=document.createElement('script');t.src=src;t.onload=ok;t.onerror=no;document.head.appendChild(t)})}
     dbPromise=((window.firebase&&firebase.firestore)?Promise.resolve()
       :addScript(SDK+'firebase-app-compat.js').then(function(){return addScript(SDK+'firebase-firestore-compat.js')}))
-      .then(function(){return HUB.db()});
+      .then(function(){HUB.startAuthSync();return HUB.db()});
     dbPromise.catch(function(){dbPromise=null});   // 실패하면 다음에 다시 시도
     return dbPromise;
   }
@@ -755,7 +756,8 @@ footer{color:var(--muted);font-size:13.5px}
   })();
 
   /* ---------- 자유게시판 — Firestore  perdiemBoard 모음에 저장 ---------- */
-  var ADMIN_PHONE=HUB.ADMIN_PHONE;   // 메인 허브와 같은 관리자 번호 (common.js)
+  // 회원으로 글을 쓰거나 고칠 때는 Firebase 로그인 확인이 끝난 뒤에 함
+  function authReady(){return new Promise(function(ok){HUB.whenAuthChecked(ok);setTimeout(ok,5000)})}
   var BOARD='perdiemBoard';
   function hubUser(){return HUB.getUser()}   // 메인 허브 로그인 정보
   function boardAdmin(){return HUB.isAdmin()}
@@ -792,9 +794,10 @@ footer{color:var(--muted);font-size:13.5px}
       if(snap.empty){box.innerHTML='<p class="empty">아직 등록된 글이 없습니다. 첫 글을 남겨 보세요.</p>';return}
       var u=hubUser(),admin=boardAdmin();
       snap.forEach(function(doc){
-        var p=doc.data(),art=document.createElement('article');art.className='post';
+        var p=doc.data();if(p.deleted)return;
+        var art=document.createElement('article');art.className='post';
         art.innerHTML='<div class="meta"><b></b><span></span><span class="del"></span></div><div class="body"></div>';
-        art.querySelector('b').textContent=p.author||'게스트';
+        art.querySelector('b').textContent=(p.author||'게스트')+(p.byAdmin?' 👑':'');
         art.querySelector('.meta span').textContent=p.date||'';
         art.querySelector('.body').textContent=p.text||'';   // 글 내용은 글자로만 보여 줌(코드 실행 방지)
         var del=art.querySelector('.del');
@@ -820,17 +823,19 @@ footer{color:var(--muted);font-size:13.5px}
         // 권한: 관리자 → 모든 글 / 회원 → 자기 글 / 게스트 글 → 작성할 때 넣은 비밀번호
         if(admin||mine){
           var e=mkBtn('수정',function(){startEdit(art,doc.id,p)});
-          var b=mkBtn('삭제',function(){removePost(doc.id,null,b)});
+          var b=mkBtn('삭제',function(){if(confirm('이 글을 삭제할까요?'))removePost(doc.id,false,b)});
           del.appendChild(e);del.appendChild(b);
         }else if(p.authorPhone==='guest'){
           var pw=document.createElement('input');pw.type='password';pw.placeholder='비밀번호';pw.setAttribute('aria-label','수정·삭제용 비밀번호');pw.hidden=true;
           function checkPw(btn,go){
             if(pw.hidden){pw.hidden=false;pw.focus();return}
-            if(pw.value!==String(p.guestPw||'')){var o=btn.textContent;btn.textContent='비밀번호 다름';setTimeout(function(){btn.textContent=o},1500);return}
-            go();
+            HUB.verifySecret(pw.value,p.guestPwHash,p.guestPw).then(function(ok){
+              if(!ok){var o=btn.textContent;btn.textContent='비밀번호 다름';setTimeout(function(){btn.textContent=o},1500);return}
+              go();
+            });
           }
           var e2=mkBtn('수정',function(){checkPw(e2,function(){startEdit(art,doc.id,p)})});
-          var b2=mkBtn('삭제',function(){checkPw(b2,function(){removePost(doc.id,pw,b2)})});
+          var b2=mkBtn('삭제',function(){checkPw(b2,function(){removePost(doc.id,true,b2)})});
           del.appendChild(pw);del.appendChild(e2);del.appendChild(b2);
         }
         box.appendChild(art);
@@ -853,15 +858,18 @@ footer{color:var(--muted);font-size:13.5px}
     save.addEventListener('click',function(){
       var t=ta.value.trim();if(!t){bMsg('내용을 입력해 주세요.',true);ta.focus();return}
       save.disabled=true;save.textContent='저장하는 중…';
-      getDb().then(function(db){return db.collection(BOARD).doc(id).update({text:t})})
+      authReady().then(getDb).then(function(db){return db.collection(BOARD).doc(id).update({text:t})})
         .then(function(){bMsg('글을 수정했습니다.');loadPosts()})
         .catch(function(err){save.disabled=false;save.textContent='수정 저장';bMsg('수정하지 못했습니다. '+why(err),true)});
     });
     body.textContent='';body.appendChild(ta);row.appendChild(cancel);row.appendChild(save);body.appendChild(row);ta.focus();
   }
-  function removePost(id,pw,btn){
+  function removePost(id,asGuest,btn){
     btn.disabled=true;btn.textContent='지우는 중…';
-    getDb().then(function(db){return db.collection(BOARD).doc(id).delete()})
+    authReady().then(getDb).then(function(db){
+      var ref=db.collection(BOARD).doc(id);
+      return asGuest?ref.update({deleted:true,deletedAt:Date.now()}):ref.delete();
+    })
       .then(loadPosts)
       .catch(function(err){btn.disabled=false;btn.textContent='삭제 실패';bMsg('삭제하지 못했습니다. '+why(err),true)});
   }
@@ -873,12 +881,15 @@ footer{color:var(--muted);font-size:13.5px}
     if(!u&&!pw){bMsg('게스트로 쓸 때는 삭제용 비밀번호를 넣어 주세요.',true);$('bPw').focus();return}
     var d=new Date();
     $('bSubmit').disabled=true;bMsg('등록하는 중입니다…');
-    getDb().then(function(db){
-      return db.collection(BOARD).add({
-        text:text,author:name,authorPhone:u?u.phone:'guest',guestPw:u?null:pw,
+    Promise.all([authReady().then(getDb),u?null:HUB.hashSecret(pw)]).then(function(r){
+      var db=r[0],doc={
+        text:text,author:name,authorPhone:u?u.phone:'guest',
         date:(d.getMonth()+1)+'.'+d.getDate()+' '+d.getHours()+':'+('0'+d.getMinutes()).slice(-2),
         createdAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
+      };
+      if(!u)doc.guestPwHash=r[1];
+      if(HUB.isAdmin())doc.byAdmin=true;
+      return db.collection(BOARD).add(doc);
     }).then(function(){
       $('bText').value='';$('bPw').value='';bMsg('등록했습니다.');loadPosts();
     }).catch(function(err){

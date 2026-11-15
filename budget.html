@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>예산집행현황 다차원 통계/관리 시스템</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-    <link rel="stylesheet" href="common.css?v=2">
-<script src="common.js?v=2"></script>
+    <link rel="stylesheet" href="common.css?v=3">
+<script src="common.js?v=3"></script>
 <style>
         :root {
             --primary: #0f172a;
@@ -357,6 +356,9 @@
         }
         
         document.getElementById('yearFilter').addEventListener('change', () => { renderApp(); renderPivot(); });
+        // '데이터 저장' 버튼 연결 (빠져 있어서 누르면 화면만 새로고침되고 저장되지 않던 문제)
+        document.getElementById('budgetForm').addEventListener('submit', handleFormSubmit);
+        if (!document.getElementById('f_year').value) document.getElementById('f_year').value = new Date().getFullYear();
         
         // 검색 텍스트박스 한글 씹힘을 방지하기 위한 디바운싱
         let renderTimer;
@@ -386,6 +388,7 @@
     }
 
     const fmt = (num) => parseInt(num || 0).toLocaleString('ko-KR');
+    const E = (v) => HUB.esc(v);   // 엑셀 칸 내용을 글자로만 표시 (코드가 실행되지 않게)
     const getRateColor = (rate) => {
         if (rate < 50) return 'var(--danger)';
         if (rate < 70) return 'var(--warning)';
@@ -445,7 +448,7 @@
             
             renderPivot();
         } else {
-            btnPivot.innerHTML = '📊 피벗 분석기 켜기';
+            btnPivot.innerHTML = '📊 분석기 켜기';
             btnPivot.style.backgroundColor = 'var(--purple)';
             tableTitle.innerText = "원장 상세 데이터";
             
@@ -469,7 +472,7 @@
             btn.innerHTML = '👀 72열 보기 (해제)';
             btn.style.backgroundColor = 'var(--text-muted)';
         } else {
-            btn.innerHTML = '👀 간편보기 (0값 숨김)';
+            btn.innerHTML = '👀 간편보기';
             btn.style.backgroundColor = 'var(--warning)';
         }
         renderApp();
@@ -485,7 +488,7 @@
         if(filterYear.options.length <= 1 && uniqueYears.length > 0) {
             const currentVal = filterYear.value;
             filterYear.innerHTML = '<option value="all">전체 연도</option>';
-            uniqueYears.forEach(y => filterYear.innerHTML += `<option value="${y}">${y}년도</option>`);
+            uniqueYears.forEach(y => filterYear.innerHTML += `<option value="${E(y)}">${E(y)}년도</option>`);
             if (uniqueYears.includes(parseInt(currentVal))) filterYear.value = currentVal;
         }
 
@@ -543,8 +546,8 @@
             visibleHeaders.forEach(h => {
                 const filterVal = colFilters[h] || '';
                 theadHTML += `<th style="vertical-align: top;">
-                    <div style="margin-bottom: 5px;">${h}</div>
-                    <input type="text" class="col-filter" data-col="${h}" placeholder="필터..." oninput="handleColFilter(event)" value="${filterVal}">
+                    <div style="margin-bottom: 5px;">${E(h)}</div>
+                    <input type="text" class="col-filter" data-col="${E(h)}" placeholder="필터..." oninput="handleColFilter(event)" value="${E(filterVal)}">
                 </th>`;
             });
             theadHTML += '</tr>';
@@ -596,7 +599,7 @@
             
             trHTML += `
                 <td style="text-align: center;">
-                    <button class="btn-icon btn-delete" onclick="deleteRecord('${row._id}')">삭제</button>
+                    <button class="btn-icon btn-delete" onclick="deleteRecord('${E(row._id)}')">삭제</button>
                 </td>
                 <td class="number">
                     ${rate.toFixed(2)}%
@@ -608,12 +611,12 @@
             visibleHeaders.forEach(h => {
                 let val = row[h] !== undefined ? row[h] : '';
                 if (h.includes('코드') || h.includes('번호') || h.includes('연도') || h.includes('구분')) {
-                    trHTML += `<td style="text-align: center;">${val}</td>`;
+                    trHTML += `<td style="text-align: center;">${E(val)}</td>`;
                 } 
                 else if (!isNaN(parseFloat(String(val).replace(/,/g, ''))) && val !== '' && String(val).trim() !== '') {
                     trHTML += `<td class="number">${fmt(String(val).replace(/,/g, ''))}</td>`;
                 } else {
-                    trHTML += `<td>${val}</td>`;
+                    trHTML += `<td>${E(val)}</td>`;
                 }
             });
             trHTML += `</tr>`;
@@ -775,13 +778,13 @@
 
         let trTop = '<tr>', trBottom = '<tr>';
         rowFields.forEach(f => {
-            trTop += `<th rowspan="2" style="background-color: var(--primary); color: white;">${f}</th>`;
+            trTop += `<th rowspan="2" style="background-color: var(--primary); color: white;">${E(f)}</th>`;
         });
 
         colValues.forEach(cVal => {
             let title = cVal === 'Total' ? '총합계' : cVal;
             let bg = cVal === 'Total' ? 'var(--purple)' : 'var(--text-muted)';
-            trTop += `<th colspan="5" style="text-align: center; background-color: ${bg}; color: white; border-bottom: 1px solid rgba(255,255,255,0.2);">${title}</th>`;
+            trTop += `<th colspan="5" style="text-align: center; background-color: ${bg}; color: white; border-bottom: 1px solid rgba(255,255,255,0.2);">${E(title)}</th>`;
             
             trBottom += `
                 <th class="number" style="background: #f1f5f9;">예산액</th>
@@ -807,7 +810,7 @@
                 for(let k=0; k<=idx; k++) { if(row.rowVals[k] !== lastRowVals[k]) isSameAsAbove = false; }
                 
                 if (isSameAsAbove) trHTML += `<td style="border-top: none; color: transparent;">-</td>`;
-                else trHTML += `<td style="font-weight: bold; border-top: 1px solid var(--border);">${cellVal}</td>`;
+                else trHTML += `<td style="font-weight: bold; border-top: 1px solid var(--border);">${E(cellVal)}</td>`;
             });
             lastRowVals = [...row.rowVals];
 
@@ -858,7 +861,7 @@
         if (typeof XLSX === 'undefined') return alert("엑셀 다운로드 모듈을 사용할 수 없습니다.");
         
         const wb = XLSX.utils.book_new();
-        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const _d = new Date(), dateStr = `${_d.getFullYear()}${String(_d.getMonth() + 1).padStart(2, '0')}${String(_d.getDate()).padStart(2, '0')}`;
 
         if (isPivotMode) {
             const tableEle = document.getElementById('pivotTable');
@@ -931,7 +934,10 @@
         if (!idInput) budgetData.push(targetRow);
         
         resetForm();
+        document.getElementById('yearFilter').innerHTML = '<option value="all">전체 연도</option>';   // 새 연도가 목록에 나오도록
+        currentHeaderState = '';
         renderApp();
+        alert('저장했습니다.');
     }
 
     window.deleteRecord = function(id) {
@@ -943,6 +949,7 @@
 
     window.resetForm = function() {
         document.getElementById('budgetForm').reset();
+        document.getElementById('f_year').value = new Date().getFullYear();
         document.getElementById('f_id').value = "";
         document.getElementById('formTitle').innerText = "신규 사업 등록";
         document.getElementById('btnSubmit').innerText = "데이터 저장";
