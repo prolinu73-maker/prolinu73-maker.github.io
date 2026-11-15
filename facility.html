@@ -134,6 +134,8 @@
   .lock-box button.primary{width:100%;padding:11px;font-size:15px;margin-top:4px}
   .lock-msg{min-height:20px;color:#dc2626;font-size:13px;font-weight:bold;margin:2px 0 6px}
   .lock-chk{display:block;text-align:left;font-size:12.5px;margin:4px 0 8px;line-height:1.5}.lock-chk input{width:auto}.lock-chk span{color:#6b7280}
+  .lock-skip{background:none !important;border:none !important;color:#475569 !important;text-decoration:underline;margin-top:10px;font-size:13px;cursor:pointer}
+  .lock-skip-note{font-size:11.5px !important;color:#94a3b8 !important;margin:2px 0 0 !important}
   .lock-warn{font-size:12px !important;color:#92400e !important;margin-top:12px !important}
   body.locked > *:not(#lockView):not(script):not(style){display:none !important}
   .gbox{background:#f0f6ff;border:1px solid #c7dafc;border-left:4px solid var(--blue);border-radius:6px;padding:9px 11px;margin-top:6px;font-size:12.5px;line-height:1.6;color:#1f2937;font-weight:normal}
@@ -196,7 +198,7 @@
   <span class="visit-box" id="visitBox" title="접속자 수: 같은 브라우저는 하루 1번만 셉니다">👥 오늘 <b id="visitToday">-</b> · 누적 <b id="visitTotal">-</b></span>
   <button onclick="openGlossary()">📖 용어 사전</button>
   <button onclick="openSettings()">⚙️ 설정·백업</button>
-  <button onclick="lockNow()" title="자리를 비울 때 누르세요. 저장한 뒤 바로 잠급니다.">🔒 화면 잠금</button>
+  <button id="lockTopBtn" onclick="lockNow()" title="자리를 비울 때 누르세요. 저장한 뒤 바로 잠급니다.">🔒 화면 잠금</button>
 </header>
 <div id="lockView" class="lock-view"></div>
 
@@ -509,7 +511,10 @@
       <select id="setFont"><option>맑은 고딕</option><option>함초롬바탕</option><option>함초롬돋움</option><option>휴먼명조</option><option>바탕</option></select>
       <div class="help">한글 파일(.hwpx)로 저장할 때 쓰는 글꼴입니다. 컴퓨터에 없는 글꼴이면 한글이 비슷한 글꼴로 바꿔 보여 줍니다.</div>
     </div>
-    <div class="f" style="margin-top:10px"><label>🔐 보안</label><div><button type="button" onclick="changeVaultPw()">🔑 접근 비밀번호 바꾸기</button> <span class="help" style="display:inline">공고 자료는 이 PC에만 암호화해서 저장합니다. 10분 동안 쓰지 않으면 자동으로 잠깁니다.</span></div></div>
+    <div class="f" style="margin-top:10px"><label>🔐 보안</label><div>
+      <label class="chk" style="display:inline-flex;gap:6px;align-items:center;margin:0 10px 0 0"><input type="checkbox" id="lockModeChk" onchange="toggleLockMode(this.checked)"> <b>잠금 사용 (비밀번호)</b></label>
+      <button type="button" id="lockPwBtn" onclick="changeVaultPw()">🔑 접근 비밀번호 바꾸기</button>
+      <div class="help" id="lockModeTip" style="margin-top:4px"></div></div></div>
     <div class="f hidden"><label>Firebase 연동키 (비워 두면 허브와 같은 Firebase에 자동 연결)</label>
       <textarea id="setFb" style="min-height:80px;font-family:monospace;font-size:12px" placeholder='비워 두면 파일에 들어 있는 허브(index.html)와 같은 연결값을 사용합니다'></textarea>
       <div class="help">다른 Firebase 프로젝트를 쓰려는 경우에만 const firebaseConfig = { ... }; 를 붙여 넣으세요.</div>
@@ -1027,8 +1032,13 @@ async function deriveKey(pw, salt, iter){
 }
 function readVault(){ try { const v = JSON.parse(localStorage.getItem(LS_VAULT) || "null"); return v && v.ct && v.salt && v.iv ? v : null; } catch(e){ return null; } }
 let vaultChain = Promise.resolve();
-function saveVault(){   // projects 전체를 암호화해서 저장 (차례대로 한 번씩)
-  if (!unlocked || !vaultKey) return Promise.resolve();
+// 잠금 사용 여부 (⚙️ 설정·백업에서 켜고 끔). 예전에 비밀번호를 만든 PC는 켜진 상태로 봄
+const LS_LOCKMODE = "facility_lock_mode";
+const lockOn = () => { const m = localStorage.getItem(LS_LOCKMODE); return m ? m === "on" : !!readVault(); };
+function saveVault(){   // 잠금 켜짐: projects 전체를 암호화해서 저장 / 꺼짐: 이 PC에 그대로 저장
+  if (!unlocked) return Promise.resolve();
+  if (!lockOn()) { try { localStorage.setItem(LS_DATA, JSON.stringify(projects)); } catch(e){ toast("⚠️ 저장하지 못했습니다(저장 공간 부족일 수 있음).", 5000); } return Promise.resolve(); }
+  if (!vaultKey) return Promise.resolve();
   vaultChain = vaultChain.then(async () => {
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const ct = await crypto.subtle.encrypt({ name:"AES-GCM", iv }, vaultKey, new TextEncoder().encode(JSON.stringify(projects)));
@@ -1050,7 +1060,9 @@ function showLock(){
       ${old ? `<label class="lock-chk"><input type="checkbox" id="lockKeepOld" checked> 이 PC에 저장돼 있던 공고 ${old}건을 암호화해서 계속 보관 <span>(체크를 풀면 지웁니다. 다른 사람이 쓴 공고가 섞여 있으면 푸세요.)</span></label>` : ""}
       <div class="lock-msg" id="lockMsg"></div>
       <button class="primary" type="submit">비밀번호 설정하고 시작</button>
-      <p class="lock-warn">⚠️ 비밀번호를 잊으면 <b>누구도 자료를 되살릴 수 없습니다.</b> 꼭 기억해 두세요.</p></form>`
+      <p class="lock-warn">⚠️ 비밀번호를 잊으면 <b>누구도 자료를 되살릴 수 없습니다.</b> 꼭 기억해 두세요.</p>
+      <button type="button" class="lock-skip" onclick="useWithoutLock()">비밀번호 없이 사용하기 (나만 쓰는 PC)</button>
+      <p class="lock-skip-note">나중에 ⚙️ 설정·백업에서 언제든 잠금을 켤 수 있습니다.</p></form>`
   : `<form class="lock-box" onsubmit="event.preventDefault();unlockVault()">
       <div class="lock-ico">🔒</div><h2>잠겨 있습니다</h2><p>접근 비밀번호를 입력하세요.</p>
       <input type="password" id="lockPw1" placeholder="비밀번호" autocomplete="current-password" autofocus>
@@ -1060,6 +1072,12 @@ function showLock(){
   setTimeout(() => $("lockPw1")?.focus(), 50);
 }
 const lockMsg = t => { const m = $("lockMsg"); if (m) m.textContent = t; };
+// 잠금 없이 시작: 공고는 이 PC에만, 비밀번호 없이 저장
+function useWithoutLock(){
+  localStorage.setItem(LS_LOCKMODE, "off");
+  let old = {}; if (!$("lockKeepOld") || $("lockKeepOld").checked) { try { old = cleanProjects(JSON.parse(localStorage.getItem(LS_DATA) || "{}")); } catch(e){} }
+  projects = old; unlocked = true; saveVault(); enterApp();
+}
 async function setupVault(){
   const a = $("lockPw1").value, b = $("lockPw2").value;
   if (a.length < 4) return lockMsg("비밀번호는 4자 이상으로 정해 주세요.");
@@ -1067,7 +1085,7 @@ async function setupVault(){
   lockMsg("암호화 준비 중…");
   let old = {}; if ($("lockKeepOld")?.checked) { try { old = cleanProjects(JSON.parse(localStorage.getItem(LS_DATA) || "{}")); } catch(e){} }
   vaultSalt = crypto.getRandomValues(new Uint8Array(16)); vaultKey = await deriveKey(a, vaultSalt, KDF_ITER);
-  projects = old; unlocked = true; await saveVault();
+  localStorage.setItem(LS_LOCKMODE, "on"); projects = old; unlocked = true; await saveVault();
   if (!readVault()) { unlocked = false; return lockMsg("저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요."); }
   localStorage.removeItem(LS_DATA);   // 암호화되지 않은 예전 자료 삭제
   enterApp();
@@ -1092,15 +1110,16 @@ async function unlockVault(){
 function wipeVault(){
   if (!confirm("저장된 공고를 모두 지우고 새 비밀번호로 시작합니다.\n지운 자료는 되살릴 수 없습니다. 계속할까요?")) return;
   if (prompt('정말 지우려면 "삭제"라고 입력하세요.') !== "삭제") return;
-  localStorage.removeItem(LS_VAULT); localStorage.removeItem(LS_DATA); showLock();
+  localStorage.removeItem(LS_VAULT); localStorage.removeItem(LS_DATA); localStorage.removeItem(LS_LOCKMODE); showLock();
 }
 function enterApp(){
   $("lockView").classList.add("hidden"); $("lockView").innerHTML = ""; document.body.classList.remove("locked");
-  $("saveState").textContent = "🔐 이 PC에만 암호화 저장";
-  renderList(); armAutoLock();
+  $("saveState").textContent = lockOn() ? "🔐 이 PC에만 암호화 저장" : "💻 이 PC에만 저장";
+  updateLockUI(); renderList(); if (lockOn()) armAutoLock();
 }
 // 🔒 화면 잠금: 저장 → 메모리의 자료·열쇠를 지우고(새로고침) 잠금 화면으로
 async function lockNow(){
+  if (!lockOn()) return;
   try { const p = cur(); if (p && (p.name || "").trim()) { p.updatedAt = new Date().toISOString(); projects[p.id] = p; } await saveVault(); } catch(e){}
   projects = {}; curId = null; vaultKey = null; vaultSalt = null; unlocked = false;
   document.body.classList.add("locked"); $("noticePaper").innerHTML = "";
@@ -1108,9 +1127,37 @@ async function lockNow(){
 }
 let idleT = null;
 function armAutoLock(){
-  const reset = () => { clearTimeout(idleT); if (unlocked) idleT = setTimeout(lockNow, AUTO_LOCK_MIN * 60000); };
+  const reset = () => { clearTimeout(idleT); if (unlocked && lockOn()) idleT = setTimeout(lockNow, AUTO_LOCK_MIN * 60000); };
   ["mousedown","keydown","touchstart","wheel"].forEach(ev => document.addEventListener(ev, reset, { passive:true, capture:true }));
   reset();
+}
+function updateLockUI(){
+  const on = lockOn();
+  const b = $("lockTopBtn"); if (b) b.classList.toggle("hidden", !on);
+  const c = $("lockModeChk"); if (c) c.checked = on;
+  const w = $("lockPwBtn"); if (w) w.classList.toggle("hidden", !on);
+  const t = $("lockModeTip"); if (t) t.textContent = on ? "켜짐: 열 때마다 비밀번호를 묻고, 공고를 암호화해서 저장합니다. 10분 동안 쓰지 않으면 자동으로 잠깁니다."
+                                                        : "꺼짐: 비밀번호 없이 바로 열립니다. 공고는 이 PC에만 저장되어 다른 PC 사용자에게는 보이지 않습니다.";
+}
+async function toggleLockMode(on){
+  if (!unlocked) return;
+  if (on) {
+    const a = prompt("잠금을 켭니다. 새 접근 비밀번호를 정하세요 (4자 이상, 숫자 4자리 가능)");
+    if (a === null || a.length < 4) { if (a !== null) alert("4자 이상으로 정해 주세요."); return updateLockUI(); }
+    if (prompt("새 비밀번호를 한 번 더 입력하세요.") !== a) { alert("두 비밀번호가 서로 다릅니다."); return updateLockUI(); }
+    vaultSalt = crypto.getRandomValues(new Uint8Array(16)); vaultKey = await deriveKey(a, vaultSalt, KDF_ITER);
+    localStorage.setItem(LS_LOCKMODE, "on"); await saveVault();
+    if (!readVault()) { localStorage.setItem(LS_LOCKMODE, "off"); alert("암호화 저장에 실패했습니다."); return updateLockUI(); }
+    localStorage.removeItem(LS_DATA);   // 암호화되지 않은 자료 삭제
+    armAutoLock(); toast("🔐 잠금을 켰습니다. 다음부터 열 때 비밀번호를 묻습니다.", 4000);
+  } else {
+    if (!confirm("잠금을 끌까요?\n비밀번호 없이 바로 열리고, 공고는 암호화하지 않고 이 PC에만 저장합니다.")) return updateLockUI();
+    localStorage.setItem(LS_LOCKMODE, "off"); await saveVault();
+    localStorage.removeItem(LS_VAULT); vaultKey = null; vaultSalt = null; clearTimeout(idleT);
+    toast("잠금을 껐습니다. 다음부터 비밀번호 없이 열립니다.", 4000);
+  }
+  $("saveState").textContent = lockOn() ? "🔐 이 PC에만 암호화 저장" : "💻 이 PC에만 저장";
+  updateLockUI();
 }
 async function changeVaultPw(){
   if (!unlocked) return;
@@ -1126,8 +1173,10 @@ async function changeVaultPw(){
 async function initStore(){
   projects = {}; db = null;
   try { if (window.firebase && window.HUB && HUB.app) db = HUB.app().firestore(); } catch(e){ db = null; }   // 접속자 수 표시에만 사용(공고 자료는 보내지 않음)
-  $("saveState").textContent = "🔒 잠김";
-  showLock();
+  if (localStorage.getItem(LS_LOCKMODE) === "off") {   // 잠금을 끈 PC: 비밀번호 없이 바로 열기
+    try { projects = cleanProjects(JSON.parse(localStorage.getItem(LS_DATA) || "{}")); } catch(e){ projects = {}; }
+    unlocked = true; enterApp();
+  } else { $("saveState").textContent = "🔒 잠김"; showLock(); }
   initVisitCounter();
 }
 /* ── 일일·누적 접속자 수 ──
@@ -1182,7 +1231,7 @@ async function removeStore(id){
   delete projects[id]; await saveVault();
   return true;
 }
-function openSettings(){ $("setOrg").value=settings.org; $("setHead").value=settings.head||""; $("setDept").value=settings.dept||""; $("setTel").value=settings.tel||""; $("setRegion").value=settings.region||"종전 전라남도"; $("setAddr").value=settings.address||""; $("setCDept").value=settings.contractDept||""; $("setCTel").value=settings.contractTel||""; $("setFb").value=settings.fb; $("setHoli").value=settings.extraHolidays||""; $("setFont").value=settings.hwpxFont||"맑은 고딕"; $("setQDays").value=settings.quoteDays||3; $("settingsModal").classList.remove("hidden"); }
+function openSettings(){ updateLockUI(); $("setOrg").value=settings.org; $("setHead").value=settings.head||""; $("setDept").value=settings.dept||""; $("setTel").value=settings.tel||""; $("setRegion").value=settings.region||"종전 전라남도"; $("setAddr").value=settings.address||""; $("setCDept").value=settings.contractDept||""; $("setCTel").value=settings.contractTel||""; $("setFb").value=settings.fb; $("setHoli").value=settings.extraHolidays||""; $("setFont").value=settings.hwpxFont||"맑은 고딕"; $("setQDays").value=settings.quoteDays||3; $("settingsModal").classList.remove("hidden"); }
 function closeSettings(){ $("settingsModal").classList.add("hidden"); }
 function saveSettings(){
   const fbChanged = $("setFb").value.trim() !== (settings.fb||"").trim();
