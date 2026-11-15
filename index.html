@@ -1131,15 +1131,22 @@
         // 전체 기간 방문 기록을 한 번만 읽어 둠 (기간 버튼을 눌러도 다시 읽지 않음 → 서버 사용량 절약)
         async function getAllVisits() {
             if (allVisitCache) return allVisitCache;
-            const snap = await db.collection("stats")
-                .where("visitedAt", ">=", firebase.firestore.Timestamp.fromDate(new Date(2000, 0, 1)))
-                .orderBy("visitedAt", "desc").limit(20000).get();
+            // 한 번에 읽을 수 있는 양에 한도가 있어 5,000건씩 나눠 읽음 (최대 10번 = 5만 건)
             const list = [];
-            snap.forEach(d => {
-                const v = d.data();
-                if (v.kind !== "visit" || !v.visitedAt) return;
-                list.push({ time: v.visitedAt.toDate(), page: HUB.normalizePage(v.page), dateKey: v.dateKey || "" });
-            });
+            const base = db.collection("stats")
+                .where("visitedAt", ">=", firebase.firestore.Timestamp.fromDate(new Date(2000, 0, 1)))
+                .orderBy("visitedAt", "desc");
+            let lastDoc = null;
+            for (let round = 0; round < 10; round++) {
+                const snap = await (lastDoc ? base.startAfter(lastDoc) : base).limit(5000).get();
+                snap.forEach(d => {
+                    const v = d.data();
+                    if (v.kind !== "visit" || !v.visitedAt) return;
+                    list.push({ time: v.visitedAt.toDate(), page: HUB.normalizePage(v.page), dateKey: v.dateKey || "" });
+                });
+                if (snap.size < 5000) break;
+                lastDoc = snap.docs[snap.docs.length - 1];
+            }
             allVisitCache = list;
             return list;
         }
