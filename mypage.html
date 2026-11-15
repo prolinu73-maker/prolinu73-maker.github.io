@@ -368,7 +368,7 @@
   function openEdit() {
     if (!profile) return;
     draftAvatar = Object.assign({ type: 'emoji', emoji: '', color: '#1B5442' }, profile.avatar || {});
-    draftPhotoBlob = null;
+    draftPhotoBlob = null; draftPhotoData = null;
     $('eNick').value = profile.name || ''; $('eOrg').value = profile.org || ''; $('eTitle').value = profile.title || ''; $('eBio').value = profile.bio || '';
     $('eMsg').textContent = ''; $('eMsg').classList.remove('ok');
     $('emojiGrid').innerHTML = EMOJIS.map(e => `<button type="button" aria-label="${e}" onclick="pickEmoji('${e}')" data-e="${e}">${e}</button>`).join('');
@@ -393,7 +393,9 @@
     document.querySelectorAll('#emojiGrid button').forEach(b => b.classList.toggle('on', draftAvatar.type === 'emoji' && b.dataset.e === draftAvatar.emoji));
     document.querySelectorAll('#colorRow button').forEach(b => b.classList.toggle('on', draftAvatar.type === 'emoji' && b.dataset.c === draftAvatar.color));
   }
-  // 사진: 가운데를 정사각형으로 잘라 256×256 JPEG로 줄여서 올림
+  // 사진: 가운데를 정사각형으로 잘라 160×160 JPEG로 줄인 뒤, 글자(데이터 주소)로 바꿔 회원 정보에 바로 저장
+  // (Firebase 무료 요금제는 Storage를 쓸 수 없어서 Storage에 올리지 않음)
+  let draftPhotoData = null;
   function pickPhoto(ev) {
     const f = ev.target.files[0]; ev.target.value = '';
     if (!f) return;
@@ -402,9 +404,12 @@
     const img = new Image();
     img.onload = () => {
       const s = Math.min(img.width, img.height), c = document.createElement('canvas');
-      c.width = c.height = 256;
-      c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 256, 256);
-      c.toBlob(b => { draftPhotoBlob = b; drawPreview(); msg('저장하기를 누르면 사진이 올라가요.', true); }, 'image/jpeg', 0.85);
+      c.width = c.height = 160;
+      const g = c.getContext('2d');
+      g.fillStyle = '#fff'; g.fillRect(0, 0, 160, 160);   // 투명한 PNG도 바탕을 흰색으로
+      g.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 160, 160);
+      draftPhotoData = c.toDataURL('image/jpeg', 0.8);   // 보통 10KB 안팎
+      c.toBlob(b => { draftPhotoBlob = b; drawPreview(); msg('저장하기를 누르면 사진이 저장돼요.', true); }, 'image/jpeg', 0.8);
       URL.revokeObjectURL(img.src);
     };
     img.onerror = () => msg('사진을 읽지 못했어요. 다른 사진을 골라 주세요.');
@@ -423,14 +428,12 @@
         if (taken) { btn.disabled = false; return msg('이미 사용 중인 닉네임입니다.'); }
       }
       let avatar = draftAvatar.type === 'photo' ? profile.avatar : { type: 'emoji', emoji: draftAvatar.emoji || '', color: draftAvatar.color || '#1B5442' };
-      if (draftPhotoBlob) {
-        if (!storage) throw Object.assign(new Error('storage'), { code: 'storage/unavailable' });
-        const ref = storage.ref().child(`uploads/profile/${currentUser.uid}_${Date.now()}.jpg`);
-        await ref.put(draftPhotoBlob, { contentType: 'image/jpeg' });
-        avatar = { type: 'photo', url: await ref.getDownloadURL() };
+      if (draftPhotoBlob && draftPhotoData) {
+        if (draftPhotoData.length > 200000) { btn.disabled = false; return msg('사진이 너무 커요. 다른 사진을 골라 주세요.'); }
+        avatar = { type: 'photo', url: draftPhotoData };   // 사진을 회원 정보(Firestore)에 바로 저장
       }
-      // 예전 사진은 지움 (실패해도 괜찮음)
-      if (profile.avatar && profile.avatar.type === 'photo' && (!avatar || avatar.url !== profile.avatar.url)) {
+      // 예전에 Storage에 올렸던 사진이 있으면 지움 (Storage를 못 쓰면 그냥 넘어감)
+      if (storage && profile.avatar && profile.avatar.type === 'photo' && /^https:/.test(profile.avatar.url || '') && (!avatar || avatar.url !== profile.avatar.url)) {
         try { await storage.refFromURL(profile.avatar.url).delete(); } catch (e) {}
       }
       const upd = { name: nick, org: $('eOrg').value.trim(), title: $('eTitle').value.trim(), bio: $('eBio').value.trim(), avatar: avatar || null };
