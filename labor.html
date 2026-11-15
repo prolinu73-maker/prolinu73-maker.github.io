@@ -144,16 +144,16 @@
     </div>
   </section>
 
+  
   <!-- ========== 1. AI 챗봇 ========== -->
   <section id="page-chat" class="page p-6 md:p-8 max-w-5xl mx-auto w-full">
     <div class="h-[calc(100vh-10rem)] min-h-[480px] flex flex-col">
       <div class="mb-4 flex flex-wrap justify-between items-end gap-2">
         <div>
           <h2 class="text-2xl font-bold border-b-2 border-blue-500 pb-2 inline-block">AI 노무상담 챗봇</h2>
-          <p class="text-slate-600 mt-2 text-sm">제미나이(Gemini) AI가 근로기준법 등을 바탕으로 1차 안내를 해 드립니다. <b>중요한 결정은 반드시 질문·답변 게시판이나 담당자에게 확인하세요.</b></p>
+          <p class="text-slate-600 mt-2 text-sm">제미나이 노트북(교육공무직 관련) 데이터베이스 연동 모드입니다. <b>중요한 결정은 반드시 게시판을 통해 담당자에게 확인하세요.</b></p>
         </div>
         <div class="flex gap-2">
-          <button id="aiKeyBtn" onclick="openAiKey()" class="hidden text-sm px-3 py-2 rounded-lg border border-blue-300 text-blue-700 hover:bg-blue-50">🔑 AI 키 설정</button>
           <button onclick="resetChat()" class="text-sm px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-100">🧹 대화 지우기</button>
         </div>
       </div>
@@ -161,8 +161,8 @@
         <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50"></div>
         <div id="chatChips" class="px-4 pt-3 flex flex-wrap gap-2 bg-white"></div>
         <div class="p-4 bg-white flex gap-2">
-          <input type="text" id="chatInput" class="flex-1 border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="질문을 입력하세요..." onkeypress="if(event.key==='Enter')sendMessage()">
-          <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium">전송</button>
+          <input type="text" id="chatInput" class="flex-1 border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="노무 관련 질문을 입력하세요..." onkeypress="if(event.key==='Enter')sendMessage()">
+          <button id="sendBtn" onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium disabled:bg-slate-400 disabled:cursor-not-allowed">전송</button>
         </div>
       </div>
     </div>
@@ -944,151 +944,3 @@ function renderChecks() {
 function setCheck(key, v) { const st = loadChecks(); st[key] = v; localStorage.setItem('labor_checks', JSON.stringify(st)); renderChecks(); }
 function resetCheck(k) { if (!confirm('체크 내용을 모두 지울까요?')) return; const st = loadChecks(); Object.keys(st).forEach(x => { if (x.startsWith(k)) delete st[x]; }); localStorage.setItem('labor_checks', JSON.stringify(st)); renderChecks(); }
 
-/* =========================================================
-   AI 챗봇 (제미나이)
-   ========================================================= */
-const SYSTEM_PROMPT = `당신은 교육청 소속 '교육공무직원 노무관리 전문가'입니다.
-사용자의 질문에 대해 근로기준법 및 교육공무직원 관리 규정을 바탕으로 정확하고 실무적으로 답변해주세요.
-근거 법령 조항을 함께 밝히고, 기관별 취업규칙·단체협약에 따라 달라질 수 있는 부분은 확인이 필요하다고 안내하세요.
-답변은 보기 좋게 단락을 나누고 핵심을 요약해서 친절하게 작성해주세요.`;
-let chatHistory = [];
-const CHAT_HELLO = '안녕하세요! 교육공무직원 노무관리와 관련된 질문을 남겨 주시면 근로기준법 등에 기반하여 안내해 드리겠습니다.\n아래 예시 질문을 눌러 보셔도 됩니다.';
-const CHAT_CHIPS = ['방학 중 비근무자의 연차휴가 산정 방법은?', '주 15시간 미만 근로자도 퇴직금을 받나요?', '연차휴가 사용촉진 절차를 알려줘', '육아휴직 중 퇴직금 산정기간은 어떻게 하나요?'];
-
-/* AI 키는 파일에 적지 않고, 관리자가 입력하면 이 브라우저에만 저장됩니다 */
-function getAiKey() { try { return localStorage.getItem('labor_gemini_key') || ''; } catch (e) { return ''; } }
-function openAiKey() {
-  const has = !!getAiKey();
-  openModal(`
-    <div class="p-6">
-      <h3 class="text-lg font-bold mb-2">🔑 AI(제미나이) 키 설정</h3>
-      <p class="text-sm text-slate-600 mb-4">키는 파일에 들어가지 않고 <b>지금 쓰는 이 브라우저에만</b> 저장됩니다. 다른 컴퓨터에서는 다시 넣어야 합니다.</p>
-      <p class="text-sm mb-2">현재 상태: ${has ? '<span class="text-emerald-600 font-semibold">설정됨</span>' : '<span class="text-rose-600 font-semibold">설정 안 됨</span>'}</p>
-      <input id="aiKeyIn" type="password" placeholder="AIza... 로 시작하는 키" class="w-full border border-slate-300 rounded-lg px-4 py-2">
-      <div class="flex justify-between mt-5">
-        <button onclick="localStorage.removeItem('labor_gemini_key');closeModal();toast('키를 지웠습니다')" class="text-sm text-rose-600 hover:underline">키 지우기</button>
-        <div class="flex gap-2"><button onclick="closeModal()" class="px-4 py-2 rounded-lg border">취소</button>
-        <button onclick="const v=$('aiKeyIn').value.trim(); if(!v) return toast('키를 입력하세요'); localStorage.setItem('labor_gemini_key', v); closeModal(); toast('이 브라우저에 저장했습니다')" class="px-4 py-2 rounded-lg bg-blue-600 text-white">저장</button></div>
-      </div>
-    </div>`);
-}
-async function askGemini(contents) {
-  const key = getAiKey();
-  if (!key) return { ok: false, text: 'AI 키가 이 브라우저에 설정되지 않았습니다.\n메인 허브에서 관리자로 로그인한 뒤 [🔑 AI 키 설정] 버튼에서 키를 넣어 주세요.' };
-  try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.geminiModel}:generateContent?key=${encodeURIComponent(key)}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents, systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] } })
-    });
-    const r = await res.json();
-    if (r.candidates && r.candidates[0]?.content?.parts?.[0]?.text) return { ok: true, text: r.candidates[0].content.parts.map(p => p.text || '').join('') };
-    return { ok: false, text: '죄송합니다. 응답을 생성하지 못했습니다.' + (r.error ? ` (${r.error.message})` : '') };
-  } catch (e) { console.error(e); return { ok: false, text: '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.' }; }
-}
-function mdLite(t) {
-  return esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/^#{1,4}\s*(.+)$/gm, '<b>$1</b>').replace(/^\s*[\*\-]\s+/gm, '• ');
-}
-function addBubble(text, who, id) {
-  const w = document.createElement('div');
-  w.className = 'flex items-start gap-3 w-full ' + (who === 'user' ? 'flex-row-reverse' : '');
-  if (id) w.id = id;
-  w.innerHTML = `<div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${who === 'user' ? 'bg-slate-800 text-white' : 'bg-blue-100 text-blue-600'}">${who === 'user' ? '나' : 'AI'}</div>
-    <div class="bubble px-4 py-3 rounded-2xl shadow-sm max-w-[80%] whitespace-pre-wrap text-sm leading-relaxed ${who === 'user' ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white border border-slate-200 text-slate-700 rounded-tl-none'}">${who === 'user' ? esc(text) : mdLite(text)}</div>`;
-  $('chatBox').appendChild(w); $('chatBox').scrollTop = $('chatBox').scrollHeight;
-  return w;
-}
-function resetChat() {
-  chatHistory = []; $('chatBox').innerHTML = ''; addBubble(CHAT_HELLO, 'bot');
-  $('chatChips').innerHTML = CHAT_CHIPS.map(c => `<button onclick="$('chatInput').value=this.textContent;sendMessage()" class="text-xs px-3 py-1.5 rounded-full bg-slate-100 hover:bg-blue-50 hover:text-blue-700 border border-slate-200">${c}</button>`).join('');
-}
-async function sendMessage() {
-  const inp = $('chatInput'), msg = inp.value.trim(); if (!msg) return;
-  $('chatChips').innerHTML = '';
-  addBubble(msg, 'user'); inp.value = '';
-  chatHistory.push({ role: 'user', parts: [{ text: msg }] });
-  const lid = 'ld' + Date.now(); addBubble('답변을 작성하고 있습니다...', 'bot', lid);
-  const r = await askGemini(chatHistory);
-  $(lid)?.remove();
-  addBubble(r.text, 'bot');
-  if (r.ok) chatHistory.push({ role: 'model', parts: [{ text: r.text }] });
-  else chatHistory.pop();
-  if (r.ok) {
-    const tip = document.createElement('div'); tip.className = 'pl-11 text-xs text-slate-400';
-    tip.innerHTML = 'AI 답변은 참고용입니다. 정확한 확인이 필요하면 <button class="text-blue-600 underline" onclick="go(\'qna\');openQnaWrite()">담당자에게 질문하기</button>';
-    $('chatBox').appendChild(tip); $('chatBox').scrollTop = $('chatBox').scrollHeight;
-  }
-}
-
-/* =========================================================
-   일일·누적 접속자 수 (facility.html과 같은 방식)
-   같은 브라우저는 하루 1번만 셉니다(새로고침해도 늘지 않음).
-   Firebase 연결 시: Firestore 'labor_stats' 컬렉션에 모든 사용자의 접속을 함께 셈
-   연결이 없거나 권한이 없으면: 이 컴퓨터(브라우저)에서의 접속만 셈
-   ========================================================= */
-const LS_VISIT = 'labor_visit_v1';
-function todayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-function showVisits(today, total, local) {
-  $('visitToday').textContent = Number(today || 0).toLocaleString('ko-KR');
-  $('visitTotal').textContent = Number(total || 0).toLocaleString('ko-KR');
-  $('visitBox').title = local ? '접속자 수(이 컴퓨터 기준). Firebase를 연결하면 모든 사용자의 접속을 함께 셉니다. 같은 브라우저는 하루 1번만 셉니다.'
-                              : '접속자 수(모든 사용자). 같은 브라우저는 하루 1번만 셉니다.';
-  $('visitBox').classList.toggle('local', !!local);
-}
-async function initVisitCounter() {
-  const day = todayKey();
-  // 관리자(또는 관리자로 로그인한 적이 있는 브라우저)는 접속자 수를 세지 않고 숫자만 보여 줌
-  let skipCount = isAdmin;
-  if (HUB.isAdminDevice()) skipCount = true;
-  // ① 이 PC 기준 숫자: 항상 먼저 계산해서 바로 보여 줌 (빈칸 '-'이 남지 않도록)
-  let v = {}; try { v = JSON.parse(localStorage.getItem(LS_VISIT) || '{}'); } catch (e) {}
-  if (!skipCount && v.lastDay !== day) { v.total = (v.total || 0) + 1; v.days = v.days || {}; v.days[day] = (v.days[day] || 0) + 1; v.lastDay = day; try { localStorage.setItem(LS_VISIT, JSON.stringify(v)); } catch (e) {} }
-  const showLocal = (why) => { showVisits(v.days?.[day] || 0, v.total || 0, true); if (why) $('visitBox').title = why; };
-  showLocal();
-  if (DB.mode !== 'firebase') return;
-
-  // ② Firebase(모든 사용자) 숫자: 성공하면 위 숫자를 바꿔 씀
-  const FB_KEY = 'labor_visit_fb_v1';            // Firebase에 오늘 이미 셌는지 (이 PC 기록과 따로 관리)
-  const RULE_MSG = '모든 사용자 접속자 수를 불러오지 못해 이 PC 기준으로 표시합니다. Firebase 규칙에 labor_stats 줄이 있는지 확인하세요.';
-  try {
-    const col = DB.fs.collection('labor_stats'), inc = firebase.firestore.FieldValue.increment(1);
-    const fbDay = localStorage.getItem(FB_KEY);
-    const totalSnap = await col.doc('total').get();
-    if (!skipCount && (fbDay !== day || !totalSnap.exists)) {      // 오늘 처음 들어왔거나, 아직 한 번도 안 센 경우
-      const b = DB.fs.batch();
-      b.set(col.doc('total'), { count: inc }, { merge: true });
-      b.set(col.doc('day_' + day), { count: inc, date: day }, { merge: true });
-      await b.commit();
-      localStorage.setItem(FB_KEY, day);
-    }
-    let t = null, d = null;
-    const paint = () => { if (t !== null && d !== null) showVisits(d, t, false); };
-    const fail = (e) => { console.warn('접속자 수 불러오기 실패(labor_stats)', e); showLocal(RULE_MSG); };
-    col.doc('total').onSnapshot(x => { t = x.data()?.count || 0; paint(); }, fail);
-    col.doc('day_' + day).onSnapshot(x => { d = x.data()?.count || 0; paint(); }, fail);
-  } catch (e) {
-    console.warn('접속자 수: Firebase 권한 확인 필요(labor_stats)', e);
-    showLocal(RULE_MSG);
-  }
-}
-
-/* =========================================================
-   시작
-   ========================================================= */
-function renderAll() { renderQnaChips(); renderQna(); renderBoardChips(); renderBoard(); renderHome(); }
-async function refresh() { await Promise.all([loadQna(), loadBoard()]); renderAll(); }
-(async function init() {
-  DB.init();
-  $('saveState').textContent = DB.mode === 'firebase' ? '☁️ 공유 저장 (Firebase)' : '💾 이 PC에만 저장';
-  initVisitCounter();
-  $('localBanner').classList.toggle('hidden', DB.mode === 'firebase');
-  const _n = new Date(); const today = `${_n.getFullYear()}-${String(_n.getMonth()+1).padStart(2,'0')}-${String(_n.getDate()).padStart(2,'0')}`; $('annBase').value = today; $('sevOut').value = today;
-  applyAdminUI(); renderFaq(); renderChecks(); resetChat(); subTab('wage');
-  const start = location.hash.replace('#', '');
-  go(['home', 'chat', 'qna', 'board', 'faq', 'calc', 'check'].includes(start) ? start : 'home');
-  await refresh();
-})();
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-</script>
-<!-- 방문 기록은 common.js가 자동으로 남깁니다 -->
-</body>
-</html>
