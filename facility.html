@@ -134,6 +134,7 @@
   .lock-box button.primary{width:100%;padding:11px;font-size:15px;margin-top:4px}
   .lock-msg{min-height:20px;color:#dc2626;font-size:13px;font-weight:bold;margin:2px 0 6px}
   .lock-chk{display:block;text-align:left;font-size:12.5px;margin:4px 0 8px;line-height:1.5}.lock-chk input{width:auto}.lock-chk span{color:#6b7280}
+  .join-ask .mr-box{text-align:center}
   .gate-btn{display:block;width:100%;box-sizing:border-box;padding:11px;font-size:15px;border-radius:8px;margin-top:8px;text-decoration:none;border:1px solid #cbd5e1;color:#1e3a8a;background:#fff;font-weight:bold}
   .gate-btn.primary{background:#2563eb;color:#fff;border-color:#2563eb}
   .lock-skip{background:none !important;border:none !important;color:#475569 !important;text-decoration:underline;margin-top:10px;font-size:13px;cursor:pointer}
@@ -615,6 +616,7 @@ function wizardMove(dir) {
 
 /* 프리셋 설정 */
 function applyPreset(val) {
+  if (!memberOnly()) return;
   if(!val) return;
   if(!confirm("일부 설정이 템플릿에 맞게 덮어씌워집니다. 진행하시겠습니까?")) { $('presetSel').value = ""; return; }
   const p = cur();
@@ -1217,11 +1219,47 @@ async function initStore(){
   } else {
     // 🔐 회원 전용: 로그인하지 않으면 공고 목록·입력 화면을 열지 않음
     //   (이 PC에 남아 있던 예전 공고는 지우지 않고 두었다가, 로그인하면 내 계정으로 옮길지 물어봄)
-    showMemberGate(db ? "login" : "offline");
+    enterGuest(db ? "login" : "offline");
   }
   watchAuth();
 }
-// 회원이 아니면 보이는 화면
+// 손님(회원 아님): 화면은 볼 수 있지만 공고 작성·저장은 못 함
+let guestWhy = "login";
+const isGuest = () => !isCloud();
+function enterGuest(why){
+  guestWhy = why; projects = {}; curId = null; unlocked = false;
+  $("lockView").classList.add("hidden"); $("lockView").innerHTML = ""; document.body.classList.remove("locked");
+  document.body.classList.add("guest");
+  $("saveState").textContent = "👀 둘러보기 중 (작성은 회원만)";
+  const note = $("storeNote");
+  if (note) note.innerHTML = why === "offline"
+    ? "📡 지금은 로그인 서버에 연결되지 않아 둘러보기만 할 수 있습니다. 인터넷 연결을 확인한 뒤 새로고침해 주세요."
+    : "👀 지금은 <b>둘러보기</b> 중입니다. 공고문 작성은 <b>회원만</b> 할 수 있어요. <a href=\"index.html#login\">로그인</a> · <a href=\"index.html#signup\">30초 회원가입</a>";
+  try { updateLockUI(); } catch(e){}
+  renderList();
+}
+// 회원만 쓸 수 있는 기능을 누르면: 안내 + 회원가입 유도. 회원이면 true
+function memberOnly(){
+  if (!isGuest()) return true;
+  showJoinModal(); return false;
+}
+function showJoinModal(){
+  document.querySelectorAll(".join-ask").forEach(x => x.remove());
+  const d = document.createElement("div"); d.className = "mr-back join-ask";
+  d.innerHTML = guestWhy === "offline"
+    ? `<div class="mr-box lock-box" style="max-width:420px"><div class="lock-ico">📡</div><h2>회원 확인을 할 수 없습니다</h2>
+        <p>공고문 작성은 <b>회원만</b> 할 수 있는데, 지금은 로그인 서버에 연결되지 않습니다.<br>인터넷 연결을 확인한 뒤 다시 시도해 주세요.</p>
+        <button class="primary" type="button" onclick="location.reload()">🔄 다시 시도</button>
+        <button type="button" class="lock-skip" onclick="this.closest('.join-ask').remove()">닫기</button></div>`
+    : `<div class="mr-box lock-box" style="max-width:420px"><div class="lock-ico">🔐</div><h2>회원만 공고문을 작성할 수 있습니다</h2>
+        <p>무료 회원가입(30초)만 하면 바로 쓸 수 있어요.<br>작성한 공고는 <b>내 계정</b>에 저장되어<br>집·사무실 어느 PC에서나 이어서 작업할 수 있고,<br>나와 관리자만 볼 수 있습니다.</p>
+        <a class="gate-btn primary" href="index.html#signup">📝 회원가입하고 시작하기</a>
+        <a class="gate-btn" href="index.html#login">🔑 이미 회원이에요 (로그인)</a>
+        <button type="button" class="lock-skip" onclick="this.closest('.join-ask').remove()">계속 둘러보기</button></div>`;
+  d.addEventListener("click", e => { if (e.target === d) d.remove(); });
+  document.body.appendChild(d); d.querySelector(".gate-btn.primary, button.primary")?.focus();
+}
+// 회원이 아니면 보이는 화면 (지금은 쓰지 않음 — 둘러보기로 바뀜)
 function showMemberGate(why){
   projects = {}; curId = null; unlocked = false;
   document.body.classList.add("locked");
@@ -1367,6 +1405,7 @@ function saveSettings(){
 }
 function backupJSON(){ if (!confirm("백업 파일을 내려받습니다.\n다른 사람이 볼 수 없는 곳에 보관하세요. 계속할까요?")) return; download(`공고문_백업_${today()}.json`, JSON.stringify(projects, null, 2), "application/json"); }
 function restoreJSON(input){
+  if (!memberOnly()) { input.value = ""; return; }
   const f = input.files[0]; if(!f) return; const r = new FileReader();
   r.onload = async () => { try { const data = JSON.parse(r.result); for (const p of Object.values(data)) await persist(p); toast("불러오기 완료"); renderList(); } catch(e){ alert("백업 파일을 읽지 못했습니다."); } input.value = ""; };
   r.readAsText(f, "utf-8");
@@ -1441,7 +1480,7 @@ function renderAlerts(all){
    5. 상세 화면 로직 및 이벤트 바인딩
    ========================================================= */
 function cur(){ return projects[curId]; }
-function newProject(){ const p = blankProject(); projects[p.id] = p; curId = p.id; ensureNotice(p); autoFill(p, "init"); showDetail(); askSettings(); }
+function newProject(){ if (!memberOnly()) return; const p = blankProject(); projects[p.id] = p; curId = p.id; ensureNotice(p); autoFill(p, "init"); showDetail(); askSettings(); }
 // 새 공고를 시작할 때 [설정·백업] 항목을 먼저 넣도록 안내
 const SET_ITEMS = [["org","기관명",true],["head","공고자 명칭",true],["address","기관 주소"],["contractDept","계약 부서"],["contractTel","계약 부서 전화"],["dept","기본 담당부서"],["tel","기본 전화번호"]];
 function askSettings(){
@@ -1458,7 +1497,7 @@ function askSettings(){
       <button type="button" class="primary" onclick="this.closest('.set-ask').remove();openSettings();setTimeout(()=>$('setOrg').focus(),50)">⚙️ 지금 설정하기</button></div></div>`;
   document.body.appendChild(d); d.querySelector(".primary").focus();
 }
-function openProject(id){ curId = id; showDetail(); const p = cur(); if (p && p._owner && p._owner !== myUid) toast(`👤 ${p._ownerName || "다른 회원"}의 공고입니다. 보기 전용이라 고쳐도 저장되지 않습니다.`, 5000); }
+function openProject(id){ if (!memberOnly()) return; curId = id; showDetail(); const p = cur(); if (p && p._owner && p._owner !== myUid) toast(`👤 ${p._ownerName || "다른 회원"}의 공고입니다. 보기 전용이라 고쳐도 저장되지 않습니다.`, 5000); }
 function backToList(){ if (cur() && !cur().name) { if(!confirm("공사명이 비어 있습니다. 저장하지 않고 나갈까요?")) return; delete projects[curId]; } else if (cur()) saveCurrent(false); curId = null; $("detailView").classList.add("hidden"); $("listView").classList.remove("hidden"); renderList(); window.scrollTo(0,0); }
 async function deleteProject(){ if (!confirm(`'${cur().name||"이 문서"}'를 삭제할까요?`)) return; if (!(await removeStore(curId))) return; curId=null; $("detailView").classList.add("hidden"); $("listView").classList.remove("hidden"); renderList(); }
 // 메인 허브(index.html)로 이동 — 작성 중인 공고를 먼저 저장
