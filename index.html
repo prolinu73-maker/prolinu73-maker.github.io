@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="common.css?v=4">
-<script src="common.js?v=4"></script>
+<link rel="stylesheet" href="common.css?v=5">
+<script src="common.js?v=5"></script>
 <style>
   /* 색(칠판 테마)은 common.css에 있음 */
   * { box-sizing: border-box; }
@@ -599,12 +599,14 @@
             } catch (e) { return null; }   // 비밀번호가 다르면 풀리지 않음
         }
         // 로그인에 성공하면, 잠가 둔 이메일을 지금 이메일·비밀번호에 맞게 새로 잠금 (재설정·이메일 변경 뒤에도 아이디 로그인이 되도록)
+        //  (보안) 잠금 값은 회원 정보가 아니라 아이디 찾기표(logins)에 둠
         async function syncMailLock(uid, prof, user, pw) {
-            if (!user || isTempEmail(user.email) || !user.email) return;
-            const now = await unlockEmail(prof.mailLock, pw);
-            if (now === user.email && !prof.mailLockOld) return;
+            if (!user || isTempEmail(user.email) || !user.email || !prof.loginId) return;
+            const cur = (await HUB.idx.login(db, prof.loginId)) || {};
+            const now = await unlockEmail(cur.mailLock, pw);
+            if (now === user.email && !cur.mailLockOld) return;
             try {
-                await db.collection("users").doc(uid).update({ mailLock: await lockEmail(user.email, pw), mailLockOld: firebase.firestore.FieldValue.delete() });
+                await HUB.idx.saveLock(db, uid, prof.loginId, { mailLock: await lockEmail(user.email, pw), mailLockOld: firebase.firestore.FieldValue.delete() });
             } catch (e) { console.log("이메일 잠금 갱신 실패", e); }
         }
 
@@ -695,11 +697,9 @@
         }
 
         // 닉네임이 이미 쓰이는지 (exceptDocId: 옮기는 중인 내 예전 문서는 제외)
-        async function nicknameTaken(nick, exceptDocId) {
-            const snap = await db.collection("users").where("name", "==", nick).get();
-            let taken = false;
-            snap.forEach(d => { if (d.id !== exceptDocId) taken = true; });
-            return taken;
+        //  (보안) 회원 정보를 뒤지지 않고 닉네임 찾기표(nicknames)로 확인
+        async function nicknameTaken(nick, exceptUid) {
+            return HUB.idx.nickTaken(db, nick, exceptUid);
         }
 
         // 로그인 성공 → 이 브라우저에 로그인 정보 저장 (다른 페이지들도 이 정보를 읽음)
@@ -766,9 +766,13 @@
                     } else {
                         // ③ 아이디로 로그인: 잠가 둔 이메일을 비밀번호로 풀어서 로그인
                         const id = raw.toLowerCase();
-                        const snap = await db.collection("users").where("loginId", "==", id).get();
-                        if (snap.empty) return authMsg('아이디(또는 이메일)나 비밀번호가 맞지 않습니다.');
-                        const p = snap.docs[0].data();
+                        // (보안) 아이디 찾기표(logins)에서 잠가 둔 이메일을 가져옴
+                        let p = await HUB.idx.login(db, id);
+                        if (!p) {   // 찾기표가 아직 없으면 예전 방식으로 한 번 더 (보안 규칙을 바꾼 뒤에는 막혀 있음)
+                            try { const snap = await db.collection("users").where("loginId", "==", id).get(); if (!snap.empty) p = snap.docs[0].data(); } catch (e) {}
+                        }
+                        p = p || {};
+                        if (!p.mailLock) hint = ' 아이디로 안 되면, 처음 한 번은 가입한 이메일 주소로 로그인해 주세요.';
                         const tries = [];
                         for (const lock of [p.mailLock, p.mailLockOld]) { const e = await unlockEmail(lock, pw); if (e && !tries.includes(e)) tries.push(e); }
                         tries.push(idToEmail(id));   // 이메일 등록 전 계정
@@ -785,6 +789,7 @@
                         return authMsg('탈퇴 처리된 계정입니다. 다시 가입해 주세요.');
                     }
                     prof = ps.data();
+                    await HUB.idx.ensure(db, cred.user.uid, prof);   // 아이디·닉네임 찾기표에 빠진 것 채우기
                     await syncMailLock(cred.user.uid, prof, cred.user, pw);
                     setSession(cred.user.uid, prof);
 
@@ -797,9 +802,8 @@
                     if (!NICK_RULE.test(nick)) return authMsg('닉네임은 한글·영문·숫자로 2~12자로 정해 주세요.');
                     if (authMode === 'migrate' && !legacyMember) { changeAuthMode('login'); return authMsg('처음부터 다시 로그인해 주세요.'); }
                     busy(true);
-                    const idSnap = await db.collection("users").where("loginId", "==", id).get();
-                    if (!idSnap.empty) return authMsg('이미 사용 중인 아이디입니다. 다른 아이디를 정해 주세요.');
-                    if (await nicknameTaken(nick, legacyMember && legacyMember.docId)) return authMsg('이미 사용 중인 닉네임입니다. 다른 닉네임을 정해 주세요.');
+                    if (await HUB.idx.login(db, id)) return authMsg('이미 사용 중인 아이디입니다. 다른 아이디를 정해 주세요.');
+                    if (await nicknameTaken(nick, null)) return authMsg('이미 사용 중인 닉네임입니다. 다른 닉네임을 정해 주세요.');
 
                     let cred, created = true;
                     try {
@@ -813,11 +817,11 @@
                         if (exist.exists) { await auth.signOut(); return authMsg('이미 가입된 이메일입니다. 로그인해 주세요.'); }
                     }
                     const uid = cred.user.uid;
+                    const mailLock = await lockEmail(email, pw);
                     const prof = {
                         loginId: id,
                         name: nick,
                         ownerKey: authMode === 'migrate' ? legacyMember.ownerKey : ('uid:' + uid),
-                        mailLock: await lockEmail(email, pw),
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
                     if (authMode === 'migrate') prof.migratedFrom = legacyMember.docId;
@@ -828,6 +832,11 @@
                         else { try { await auth.signOut(); } catch (e2) {} }
                         throw e;
                     }
+                    // 아이디·닉네임 찾기표에 등록 (아이디 로그인·닉네임 중복 확인용)
+                    try {
+                        await HUB.idx.saveLock(db, uid, id, { mailLock: mailLock });
+                        await HUB.idx.moveNick(db, uid, nick, null);
+                    } catch (e) { console.log("찾기표 등록 실패", e); }
                     if (authMode === 'migrate') {
                         // 예전 문서(휴대폰 번호·암호화 안 된 비밀번호)는 지움
                         try { await db.collection("users").doc(legacyMember.docId).delete(); } catch (e) { console.log("예전 회원 정보 삭제 실패", e); }
@@ -896,6 +905,7 @@
                     if (!NICK_RULE.test(nick)) return msg('닉네임은 한글·영문·숫자로 2~12자로 정해 주세요.');
                     if (await nicknameTaken(nick, user.uid)) return msg('이미 사용 중인 닉네임입니다.');
                     await db.collection("users").doc(user.uid).update({ name: nick });
+                    await HUB.idx.moveNick(db, user.uid, nick, currentUser.name);
                     HUB.setUser(Object.assign({}, currentUser, { name: nick }));
                     notes.push('닉네임을 바꿨어요.');
                 }
@@ -917,7 +927,7 @@
                     } else if (np && !isTempEmail(user.email)) {
                         upd.mailLock = await lockEmail(user.email, np);   // 새 비밀번호로 다시 잠금
                     }
-                    if (Object.keys(upd).length) await db.collection("users").doc(user.uid).update(upd);
+                    if (Object.keys(upd).length) await HUB.idx.saveLock(db, user.uid, currentUser.loginId, upd);   // (보안) 잠금 값은 찾기표에
                 }
                 if (!notes.length) return msg('바뀐 내용이 없어요.');
                 msg(notes.join(' '), true);
@@ -995,6 +1005,8 @@
             tbody.innerHTML = '<tr><td colspan="4" class="center">회원 목록을 불러오는 중입니다...</td></tr>';
             try {
                 const snapshot = await db.collection("users").get();
+                // 관리자가 회원관리를 열면 모든 회원의 아이디·닉네임 찾기표를 채워 둠 (예전 가입자 포함)
+                snapshot.forEach(d => { if (HUB.okId(d.id)) HUB.idx.ensure(db, d.id, d.data()); });
                 tbody.innerHTML = '';
                 if (snapshot.empty) {
                     tbody.innerHTML = '<tr><td colspan="4" class="center">가입된 회원이 없습니다.</td></tr>';
@@ -1267,6 +1279,13 @@
         async function forceDeleteUser(docId, userName) {
             if (confirm(`⚠️ [${userName}] 회원을 정말 강제로 탈퇴 처리하시겠습니까?\n해당 회원은 더 이상 로그인할 수 없고, 같은 닉네임으로 다시 가입할 수 있게 됩니다.`)) {
                 try {
+                    // 아이디·닉네임 찾기표에서도 지움
+                    try {
+                        const us = await db.collection("users").doc(docId).get();
+                        const ud = us.exists ? us.data() : {};
+                        if (ud.loginId) await db.collection("logins").doc(ud.loginId).delete();
+                        if (HUB.idx.okNick(ud.name)) { const n = await db.collection("nicknames").doc(ud.name).get(); if (n.exists && n.data().uid === docId) await db.collection("nicknames").doc(ud.name).delete(); }
+                    } catch (e) { console.log("찾기표 정리 실패", e); }
                     await db.collection("users").doc(docId).delete();
                     alert(`${userName} 회원이 탈퇴 처리되었습니다.`);
                     loadUsers();
