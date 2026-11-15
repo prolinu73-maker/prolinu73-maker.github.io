@@ -106,9 +106,11 @@
   .field input:focus, .field textarea:focus { border-color: var(--board-light); outline: none; }
   .hint { font-size: 12px; color: var(--muted); }
   .av-edit { display: flex; gap: 16px; align-items: center; margin-bottom: 10px; }
-  .av-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
-  .av-tabs button { flex: 1; padding: 8px; border: 1.5px solid var(--line); background: #fff; border-radius: 8px; font-family: inherit; font-weight: 700; cursor: pointer; }
-  .av-tabs button.on { border-color: var(--board-light); background: #E3EEE8; color: var(--board-light); }
+  .photo-row { display: flex; gap: 8px; }
+  .photo-pick .photo-row .btn { flex: 1 1 auto; width: auto; }
+  .photo-pick .photo-row .btn.del { flex: 0 0 auto; border: 1.5px solid #fca5a5; color: #dc2626; }
+  .photo-pick .btn.del:hover { background: #fef2f2; }
+  .av-sub { font-size: 13px; font-weight: 700; color: #3E4C45; margin: 14px 0 6px; }
   .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-bottom: 10px; }
   .emoji-grid button { aspect-ratio: 1; border: 1.5px solid var(--line); background: #fff; border-radius: 8px; font-size: 22px; cursor: pointer; padding: 0; }
   .emoji-grid button.on { border-color: var(--board-light); background: #E3EEE8; }
@@ -178,17 +180,20 @@
 <div class="modal-overlay" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
   <div class="modal-content">
     <h3 id="editTitle">프로필 편집</h3>
-    <div class="av-edit"><div id="avPreview"></div><div class="hint">프로필 그림은 그림·색을 고르거나<br>사진을 올려서 정할 수 있어요.</div></div>
-    <div class="av-tabs"><button id="avTabEmoji" class="on" onclick="avTab('emoji')">그림 고르기</button><button id="avTabPhoto" onclick="avTab('photo')">사진 올리기</button></div>
-    <div id="avEmojiBox">
-      <div class="emoji-grid" id="emojiGrid"></div>
-      <div class="color-row" id="colorRow"></div>
-    </div>
-    <div id="avPhotoBox" class="photo-pick" hidden>
-      <button type="button" class="btn" onclick="openPicker()">📷 사진 고르기</button>
+    <div class="av-edit"><div id="avPreview"></div><div class="hint">프로필 그림은 사진을 올리거나<br>아래에서 그림·색을 골라 정할 수 있어요.</div></div>
+    <div id="avPhotoBox" class="photo-pick">
+      <div class="photo-row">
+        <button type="button" class="btn" onclick="openPicker()">📷 사진 고르기</button>
+        <button type="button" class="btn del" id="photoDel" onclick="deletePhoto()" hidden>🗑 사진 삭제</button>
+      </div>
       <input type="file" id="photoIn" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp" class="vh" onchange="pickPhoto(event)">
       <span class="photo-msg" id="photoMsg" aria-live="polite"></span>
       <span class="hint">사진을 고르면 바로 저장돼요. 얼굴이 가운데 오도록 정사각형으로 잘라서 올려요. (JPG·PNG, 최대 5MB)</span>
+    </div>
+    <div class="av-sub">또는 그림·바탕색 고르기 <span class="hint" style="font-weight:400">(고른 뒤 저장하기를 눌러요)</span></div>
+    <div id="avEmojiBox">
+      <div class="emoji-grid" id="emojiGrid"></div>
+      <div class="color-row" id="colorRow"></div>
     </div>
     <hr style="border:none;border-top:1px solid var(--line);margin:16px 0;">
     <div class="field"><label for="eNick">닉네임</label><input id="eNick" maxlength="12" autocomplete="nickname"><span class="hint">한글·영문·숫자 2~12자 · 앞으로 쓰는 글에 표시돼요</span></div>
@@ -377,16 +382,33 @@
     $('eMsg').textContent = ''; $('eMsg').classList.remove('ok');
     $('emojiGrid').innerHTML = EMOJIS.map(e => `<button type="button" aria-label="${e}" onclick="pickEmoji('${e}')" data-e="${e}">${e}</button>`).join('');
     $('colorRow').innerHTML = COLORS.map(c => `<button type="button" aria-label="바탕색 ${c}" style="background:${c}" onclick="pickColor('${c}')" data-c="${c}"></button>`).join('');
-    avTab(draftAvatar.type === 'photo' ? 'photo' : 'emoji');
+    updatePhotoBtns();
     drawPreview();
     $('editModal').style.display = 'flex';
     setTimeout(() => $('eNick').focus(), 50);
   }
   function closeEdit() { $('editModal').style.display = 'none'; if (location.hash === '#edit') history.replaceState(null, '', 'mypage.html'); }
-  function avTab(t) {
-    $('avTabEmoji').classList.toggle('on', t === 'emoji'); $('avTabPhoto').classList.toggle('on', t === 'photo');
-    $('avEmojiBox').hidden = t !== 'emoji'; $('avPhotoBox').hidden = t !== 'photo';
-    if (t === 'emoji' && draftAvatar.type === 'photo' && !draftPhotoBlob) { /* 사진을 쓰던 사람은 그림을 눌러야 바뀜 */ }
+  // 지금 사진을 쓰고 있을 때만 '사진 삭제' 버튼을 보여 줌
+  function updatePhotoBtns() { $('photoDel').hidden = !(profile && profile.avatar && profile.avatar.type === 'photo'); }
+  // 사진 삭제: 바로 저장하고 기본 그림(닉네임 첫 글자)으로 되돌림
+  async function deletePhoto() {
+    if (!profile || !profile.avatar || profile.avatar.type !== 'photo') return;
+    if (!confirm('프로필 사진을 삭제할까요?')) return;
+    const old = profile.avatar;
+    const color = (draftAvatar && COLORS.includes(draftAvatar.color)) ? draftAvatar.color : '#1B5442';
+    const avatar = { type: 'emoji', emoji: '', color: color };
+    const btn = $('eSave'); btn.disabled = true; msg('사진을 삭제하는 중입니다...', true);
+    try {
+      await db.collection("users").doc(currentUser.uid).update({ avatar: avatar });
+      // 예전 방식(Storage)으로 올린 사진이면 파일도 지움 (못 지워도 괜찮음)
+      if (storage && /^https:/.test(old.url || '')) { try { await storage.refFromURL(old.url).delete(); } catch (e) {} }
+      profile.avatar = avatar; draftAvatar = avatar; draftPhotoBlob = null; draftPhotoData = null;
+      HUB.setUser(Object.assign({}, currentUser, { avatar: avatar }));
+      renderProfile(); drawPreview(); updatePhotoBtns();
+      msg('✔ 사진을 삭제했어요.', true);
+    } catch (e) {
+      console.error(e); msg('사진을 삭제하지 못했습니다. (' + (e.code || e.message) + ')');
+    } finally { btn.disabled = false; }
   }
   function pickEmoji(e) { draftAvatar = { type: 'emoji', emoji: e, color: draftAvatar.color || '#1B5442' }; draftPhotoBlob = null; draftPhotoData = null; drawPreview(); }
   function pickColor(c) { draftAvatar = { type: 'emoji', emoji: draftAvatar.type === 'emoji' ? draftAvatar.emoji : '', color: c }; draftPhotoBlob = null; draftPhotoData = null; drawPreview(); }
@@ -433,7 +455,7 @@
       profile.avatar = avatar;
       draftAvatar = avatar; draftPhotoBlob = null; draftPhotoData = null;
       HUB.setUser(Object.assign({}, currentUser, { avatar: avatar }));   // 상단 메뉴 사진도 바로 바뀜
-      renderProfile(); drawPreview();
+      renderProfile(); drawPreview(); updatePhotoBtns();
       msg('✔ 사진이 저장됐어요.', true);
     } catch (e) {
       console.error(e);
@@ -472,7 +494,7 @@
       if (nick !== oldNick) { try { await HUB.idx.moveNick(db, currentUser.uid, nick, oldNick); } catch (e) { console.log("닉네임 찾기표 갱신 실패", e); } }
       Object.assign(profile, upd);
       HUB.setUser(Object.assign({}, currentUser, { name: nick, avatar: upd.avatar }));   // 저장 + 메뉴 다시 그림
-      renderProfile(); closeEdit();
+      renderProfile(); updatePhotoBtns(); closeEdit();
     } catch (e) {
       console.error(e);
       const c = String(e.code || '');
