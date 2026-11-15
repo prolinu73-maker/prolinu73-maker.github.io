@@ -392,7 +392,8 @@ function closeModal() { $('modal').classList.add('hidden'); $('modal').classList
 /* 글 비밀번호 보호 (2단계)
    - 새 글: 글마다 다른 '소금값'을 섞고 10만 번 반복 암호화(PBKDF2) → 짧은 비밀번호도 대입으로 풀기 어렵게
    - 예전 글: 예전 방식 값도 그대로 확인되도록 함 */
-const PW_MIN = 6;   // 새 글 비밀번호 최소 글자 수
+const PW_MIN = 6;   // 새 글 비밀번호 최소 글자 수 (질문·답변)
+const BOARD_PW_RULE = /^[0-9]{4}$/;   // 정보·자료실 비밀번호: 숫자 4자리
 const b64 = (u8) => btoa(String.fromCharCode(...u8));
 async function makePwHash(pw) {
   try {
@@ -776,7 +777,7 @@ function openBoardWrite(id) {
         ${isNewPost && !isAdmin ? `
         <div class="grid grid-cols-2 gap-3">
           <input id="bAuthor" placeholder="작성자 (예: ○○초 행정실)" class="border border-slate-300 rounded-lg px-3 py-2">
-          <input id="bPw" type="password" placeholder="비밀번호 6자리 이상 (수정·삭제용)" class="border border-slate-300 rounded-lg px-3 py-2">
+          <input id="bPw" type="password" inputmode="numeric" maxlength="4" placeholder="비밀번호 숫자 4자리 (수정·삭제용)" class="border border-slate-300 rounded-lg px-3 py-2">
         </div>` : ''}
         ${isNewPost && isAdmin ? `<input id="bAuthor" value="관리자" placeholder="작성자" class="w-full border border-slate-300 rounded-lg px-3 py-2">` : ''}
         <p class="text-xs p-2 rounded bg-amber-50 text-amber-800">⚠️ 개인정보(명단·연락처·주민등록번호 등)가 들어 있는 자료는 올리지 마세요. 누구나 내려받을 수 있습니다.</p>
@@ -801,7 +802,7 @@ async function saveBoard(id) {
     if (!d.author) return toast('작성자를 입력하세요');
     const hu = hubLogin(); if (hu && hu.phone) d.authorKey = hu.phone;   // 로그인한 회원이면 내 페이지에 모이도록 표시
     if (!isAdmin) {
-      const pw = $('bPw').value; if (pw.length < PW_MIN) return toast(`비밀번호를 ${PW_MIN}자리 이상 입력하세요`);
+      const pw = $('bPw').value; if (!BOARD_PW_RULE.test(pw)) return toast('비밀번호는 숫자 4자리로 입력하세요');
       pwHash = await makePwHash(pw);
     }
   }
