@@ -193,6 +193,7 @@
         .e-field label, .e-label { font-size: 13px; font-weight: 800; color: #3E4C45; }
         .e-field input, .e-field select, .e-field textarea { width: 100%; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 8px; font-family: inherit; font-size: 15px; box-sizing: border-box; margin: 0; }
         .e-field textarea { resize: vertical; }
+        .e-field[hidden] { display: none; }   /* 숨김 칸이 실제로 숨겨지도록 */
         .e-field input:focus, .e-field select:focus, .e-field textarea:focus { border-color: var(--board-light); outline: none; }
         .e-files { display: flex; flex-direction: column; gap: 6px; }
         .e-file { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; background: var(--paper); border-radius: 8px; font-size: 13.5px; }
@@ -333,12 +334,14 @@
                 <div class="board-form" id="postFormWrapper">
                     <textarea id="postTitle" class="title-input" placeholder="새로운 업무 노하우나 질문을 자유롭게 작성해주세요!" autocomplete="off"></textarea>
                     
-                    <div id="postFileLinkGroup" style="display: none;">
-                        <input type="text" id="postFileLink" placeholder="🔗 외부 공유 링크 (구글드라이브 등) - 직접 파일 첨부를 원하시면 아래 버튼을 누르세요" autocomplete="off">
+                    <div id="postFileLinkGroup">
+                        <input type="text" id="postFileLink" placeholder="🔗 파일 공유 링크 (구글드라이브·네이버 MYBOX 등) 붙여넣기 — 첨부할 파일이 없으면 비워 두세요" autocomplete="off">
+                        <small style="display:block; margin-top:6px; font-size:12.5px; color:#64748b; line-height:1.5;">📎 파일 올리는 법: 구글드라이브에 파일 올리기 → 파일에서 마우스 오른쪽 <b>[공유] → [링크 복사]</b> (일반 액세스를 <b>'링크가 있는 모든 사용자'</b>로 바꿔야 다른 사람이 열 수 있어요) → 위 칸에 붙여넣기</small>
                     </div>
-                    
-                    <p class="member-note" hidden>✏️ 글쓰기는 누구나 할 수 있어요. 🔒 <b>파일 첨부·외부 링크</b>는 회원만 올릴 수 있어요. <a href="index.html#signup">30초 만에 회원가입</a> · <a href="index.html#login">로그인</a></p>
-                    <div class="file-upload-wrapper">
+
+                    <p class="member-note" hidden>✏️ 글쓰기는 누구나 할 수 있어요. 🔒 <b>파일 공유 링크</b>는 회원만 올릴 수 있어요. <a href="index.html#signup">30초 만에 회원가입</a> · <a href="index.html#login">로그인</a></p>
+                    <!-- 직접 파일 첨부는 쓰지 않음 (Firebase 무료 요금제에서는 파일 저장소를 쓸 수 없음) → 위 '파일 공유 링크' 칸 사용 -->
+                    <div class="file-upload-wrapper" style="display:none;">
                         <span class="file-upload-label">📎 내 컴퓨터에서 파일 및 이미지 직접 첨부하기</span>
                         <input type="file" id="actualFileInput" class="custom-file-input" multiple onchange="handleFileSelect(event)">
                         <label for="actualFileInput" class="custom-file-btn">
@@ -348,7 +351,7 @@
                     </div>
                     
                     <div style="display: flex; gap: 10px; margin-top: 5px; width: 100%; justify-content: flex-end; align-items: center;">
-                        <span id="uploadStatusMsg" style="color: #1B5442; font-size: 13px; font-weight: bold; margin-right: auto; display: none;">파일을 업로드하는 중입니다... 잠시만 기다려주세요 ⏳</span>
+                        <span id="uploadStatusMsg" style="color: #1B5442; font-size: 13px; font-weight: bold; margin-right: auto; display: none;">등록하는 중입니다... ⏳</span>
                         <input type="text" id="postAuthor" value="게스트" style="text-align: center; width: 150px;" placeholder="이름" autocomplete="off">
                         <input type="password" id="postGuestPw" style="text-align: center; width: 150px;" placeholder="🔒 게스트 비번" autocomplete="new-password">
                         <button class="btn-submit" id="postSubmitBtn" onclick="addPost()">✨ 등록하기</button>
@@ -392,12 +395,12 @@
             </div>
             <div id="ePostBox">
                 <div class="e-field"><label for="ePostText">내용</label><textarea id="ePostText" rows="5"></textarea></div>
-                <div class="e-field" id="ePostLinkWrap"><label for="ePostLink">외부 공유 링크 (구글드라이브 등, 없으면 비워 두세요)</label><input id="ePostLink" placeholder="https://..."></div>
-                <div class="e-field"><span class="e-label">첨부파일</span>
+                <div class="e-field" id="ePostLinkWrap"><label for="ePostLink">파일 공유 링크 (구글드라이브 등, 없으면 비워 두세요)</label><input id="ePostLink" placeholder="https://..."></div>
+                <!-- 예전에 직접 올린 첨부파일이 있는 글만 보임 ('빼기'로 정리 가능). 새 파일 추가는 위 공유 링크 사용 -->
+                <div class="e-field" id="eOldFilesWrap"><span class="e-label">예전 첨부파일</span>
                     <div id="eFileList" class="e-files"></div>
-                    <label class="custom-file-btn" for="eFileIn" style="margin-top:6px; width:max-content;">📁 파일 추가</label>
                     <input type="file" id="eFileIn" multiple hidden onchange="pickEditFiles(event)">
-                    <small class="e-hint">파일 하나에 10MB까지 · '빼기'를 누른 파일은 저장할 때 지워져요</small>
+                    <small class="e-hint">새 파일은 위 '파일 공유 링크' 칸에 링크로 넣어 주세요 · '빼기'를 누른 파일은 저장할 때 목록에서 지워져요</small>
                 </div>
             </div>
             <p id="eMsg" class="e-msg" role="alert"></p>
@@ -886,11 +889,10 @@
             document.getElementById('filePreviewArea').innerHTML = '';
             document.getElementById('actualFileInput').value = '';
             
+            fileLinkGroup.style.display = 'block';   // 파일 공유 링크 칸은 세 게시판 모두에 보임
             if(tabName === 'data') {
-                fileLinkGroup.style.display = 'block';
                 titleInput.placeholder = "자료의 이름과 설명, 사용 노하우 등을 작성해주세요.";
             } else {
-                fileLinkGroup.style.display = 'none';
                 titleInput.placeholder = "새로운 업무 노하우나 질문을 자유롭게 작성해주세요!";
             }
             loadPosts();
@@ -979,7 +981,8 @@
             
             if (!titleInput.value.trim()) return alert("내용을 입력해주세요!");
             if (!currentUser && !guestPwInput.value.trim()) return alert("게스트 작성 시 삭제용 비밀번호를 입력해주세요.");
-            if ((fileLinkInput.value.trim() || pendingUploadFiles.length) && memberOnly('파일 첨부·외부 링크는')) return;
+            if ((fileLinkInput.value.trim() || pendingUploadFiles.length) && memberOnly('파일 공유 링크는')) return;
+            if (fileLinkInput.value.trim() && !safeUrl(fileLinkInput.value)) return alert("파일 공유 링크 주소를 확인해 주세요.");
             
             submitBtn.disabled = true;
             submitBtn.style.background = "#94a3b8";
@@ -998,17 +1001,13 @@
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             }, await authorFields(guestPwInput.value.trim()));
             
-            if (currentTab === 'dataBoard' && fileLinkInput.value.trim()) {
+            // 파일 공유 링크: 세 게시판 모두 저장 (직접 파일 올리기는 쓰지 않음)
+            if (fileLinkInput.value.trim()) {
                 const finalLink = safeUrl(fileLinkInput.value);
                 if (finalLink) postData.fileLink = finalLink;
             }
 
             try {
-                const uploadedFiles = await uploadFilesToStorage();
-                if (uploadedFiles.length > 0) {
-                    postData.attachments = uploadedFiles;
-                }
-                
                 await db.collection(currentTab).add(postData);
                 
                 titleInput.value = ""; 
@@ -1214,7 +1213,8 @@
             } else {
                 $('ePostText').value = d.title || '';
                 $('ePostLink').value = d.fileLink || '';
-                $('ePostLinkWrap').hidden = !(e.col === 'dataBoard' || d.fileLink) || e.right === 'guest';   // 손님은 링크를 고칠 수 없음(회원 전용)
+                $('ePostLinkWrap').hidden = e.right === 'guest';   // 링크 칸은 세 게시판 모두 보임 (손님은 링크를 고칠 수 없음 - 회원 전용)
+                $('eOldFilesWrap').hidden = !(d.attachments && d.attachments.length);   // 예전 첨부파일이 있을 때만
                 $('eFileIn').value = '';
                 renderEditFiles();
             }
@@ -1341,7 +1341,7 @@
                 const titlePrefix = currentTab === 'qaBoard' ? '<span style="color:#ec4899; font-weight:900; margin-right:5px;">Q.</span>' : '';
                 
                 const fl = safeUrl(post.fileLink);
-                let fileBadgeHTML = fl ? `<br><a href="${E(fl)}" target="_blank" rel="noopener" class="file-badge">💾 외부링크 열기</a>` : '';
+                let fileBadgeHTML = fl ? `<br><a href="${E(fl)}" target="_blank" rel="noopener" class="file-badge">🔗 첨부 파일 열기</a>` : '';
                 
                 if (post.attachments && post.attachments.length > 0) {
                     post.attachments.forEach(att => {
