@@ -127,7 +127,7 @@
         .tab-btn.active::before { content: ''; position: absolute; top: -1px; left: -1px; right: -1px; height: 4px; background: var(--marker); border-radius: 12px 12px 0 0; }
         .board-container { background: #fff; padding: 26px; border: 1px solid var(--line); border-radius: 0 12px 12px 12px; margin-bottom: 60px; }
 
-        .board-form { display: none; gap: 12px; margin-bottom: 22px; padding-bottom: 22px; border-bottom: 1px dashed var(--line); flex-wrap: wrap; }
+        .board-form { display: flex; gap: 12px;   /* 처음 접속할 때부터 글 입력란이 보이도록 (예전: none) */ margin-bottom: 22px; padding-bottom: 22px; border-bottom: 1px dashed var(--line); flex-wrap: wrap; }
         .board-form input, .board-form textarea { padding: 11px 14px; border: 1.5px solid var(--line); border-radius: 8px; font-family: 'Pretendard', sans-serif; font-size: 15px; }
         .board-form input:focus, .board-form textarea:focus { border-color: var(--board-light); outline: none; }
         .board-form textarea.title-input { flex: 1 1 100%; height: 90px; resize: vertical; line-height: 1.5; }
