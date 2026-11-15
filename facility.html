@@ -126,6 +126,16 @@
   .gate-paper{text-align:center;padding:60px 20px;color:#475569}.gate-paper h3{margin:8px 0 14px;color:#1e3a8a}
   .gate-paper ol{list-style:none;padding:0;display:inline-block;text-align:left;font-size:15px;line-height:2}.gate-paper li.done{color:#16a34a}
   body.gate-wait #nwFormArea .rec[data-rec]{display:none}
+  .lock-view{position:fixed;inset:0;z-index:1000;background:linear-gradient(135deg,#1e3a8a,#0f172a);display:flex;align-items:center;justify-content:center;padding:20px}
+  .lock-view.hidden{display:none}
+  .lock-box{background:#fff;border-radius:16px;padding:32px 30px;width:100%;max-width:420px;text-align:center;box-shadow:0 30px 60px rgba(0,0,0,.4)}
+  .lock-box .lock-ico{font-size:46px}.lock-box h2{margin:6px 0 8px;font-size:20px;color:#1e3a8a}.lock-box p{font-size:13px;color:#475569;line-height:1.6;margin:6px 0 12px}
+  .lock-box input[type=password]{width:100%;padding:11px 12px;font-size:16px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:8px;box-sizing:border-box}
+  .lock-box button.primary{width:100%;padding:11px;font-size:15px;margin-top:4px}
+  .lock-msg{min-height:20px;color:#dc2626;font-size:13px;font-weight:bold;margin:2px 0 6px}
+  .lock-chk{display:block;text-align:left;font-size:12.5px;margin:4px 0 8px;line-height:1.5}.lock-chk input{width:auto}.lock-chk span{color:#6b7280}
+  .lock-warn{font-size:12px !important;color:#92400e !important;margin-top:12px !important}
+  body.locked > *:not(#lockView):not(script):not(style){display:none !important}
   .gbox{background:#f0f6ff;border:1px solid #c7dafc;border-left:4px solid var(--blue);border-radius:6px;padding:9px 11px;margin-top:6px;font-size:12.5px;line-height:1.6;color:#1f2937;font-weight:normal}
   .gbox .g-t{font-weight:bold;color:#1e3a8a;margin-bottom:2px}
   .gbox .g-law{margin-top:6px;background:#eef2ff;color:#1e3a8a;border-radius:4px;padding:5px 8px;line-height:1.6}
@@ -186,7 +196,9 @@
   <span class="visit-box" id="visitBox" title="접속자 수: 같은 브라우저는 하루 1번만 셉니다">👥 오늘 <b id="visitToday">-</b> · 누적 <b id="visitTotal">-</b></span>
   <button onclick="openGlossary()">📖 용어 사전</button>
   <button onclick="openSettings()">⚙️ 설정·백업</button>
+  <button onclick="lockNow()" title="자리를 비울 때 누르세요. 저장한 뒤 바로 잠급니다.">🔒 화면 잠금</button>
 </header>
+<div id="lockView" class="lock-view"></div>
 
 <main>
   <!-- ===================== 목록 화면 ===================== -->
@@ -497,7 +509,8 @@
       <select id="setFont"><option>맑은 고딕</option><option>함초롬바탕</option><option>함초롬돋움</option><option>휴먼명조</option><option>바탕</option></select>
       <div class="help">한글 파일(.hwpx)로 저장할 때 쓰는 글꼴입니다. 컴퓨터에 없는 글꼴이면 한글이 비슷한 글꼴로 바꿔 보여 줍니다.</div>
     </div>
-    <div class="f" style="margin-top:10px"><label>Firebase 연동키 (비워 두면 허브와 같은 Firebase에 자동 연결)</label>
+    <div class="f" style="margin-top:10px"><label>🔐 보안</label><div><button type="button" onclick="changeVaultPw()">🔑 접근 비밀번호 바꾸기</button> <span class="help" style="display:inline">공고 자료는 이 PC에만 암호화해서 저장합니다. 10분 동안 쓰지 않으면 자동으로 잠깁니다.</span></div></div>
+    <div class="f hidden"><label>Firebase 연동키 (비워 두면 허브와 같은 Firebase에 자동 연결)</label>
       <textarea id="setFb" style="min-height:80px;font-family:monospace;font-size:12px" placeholder='비워 두면 파일에 들어 있는 허브(index.html)와 같은 연결값을 사용합니다'></textarea>
       <div class="help">다른 Firebase 프로젝트를 쓰려는 경우에만 const firebaseConfig = { ... }; 를 붙여 넣으세요.</div>
     </div>
@@ -999,34 +1012,122 @@ let settings = Object.assign({ org:"", head:"", dept:"", tel:"", fb:"" }, JSON.p
 let projects = {}; let db = null; let curId = null; let usingHubDb = true;
 
 function parseFbConfig(text){ const cfg = {}; const re = /(\w+)\s*:\s*["'`]([^"'`]+)["'`]/g; let m; while((m = re.exec(text||""))) cfg[m[1]] = m[2]; return cfg.apiKey && cfg.projectId ? cfg : null; }
+/* ═══════════ 🔐 잠금·암호화 ═══════════
+   - 공고 자료는 이 PC(브라우저)에만, 비밀번호로 암호화해서 저장합니다. (Firebase 등 밖으로 보내지 않음)
+   - 암호화: 브라우저에 들어 있는 Web Crypto 사용 — PBKDF2(SHA-256, 31만 회)로 비밀번호에서 열쇠를 만들고 AES-256-GCM으로 암호화
+   - 비밀번호·열쇠는 저장하지 않습니다. 비밀번호가 틀리면 복호화 자체가 되지 않습니다. */
+const LS_VAULT = "facility_vault_v1", KDF_ITER = 310000, AUTO_LOCK_MIN = 10;
+let vaultKey = null, vaultSalt = null, unlocked = false;
+const b64 = u8 => { let t = ""; u8.forEach(c => t += String.fromCharCode(c)); return btoa(t); };
+const unb64 = t => Uint8Array.from(atob(t), c => c.charCodeAt(0));
+const hasCrypto = () => !!(window.crypto && crypto.subtle);
+async function deriveKey(pw, salt, iter){
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name:"PBKDF2", salt, iterations: iter, hash:"SHA-256" }, base, { name:"AES-GCM", length:256 }, false, ["encrypt","decrypt"]);
+}
+function readVault(){ try { const v = JSON.parse(localStorage.getItem(LS_VAULT) || "null"); return v && v.ct && v.salt && v.iv ? v : null; } catch(e){ return null; } }
+let vaultChain = Promise.resolve();
+function saveVault(){   // projects 전체를 암호화해서 저장 (차례대로 한 번씩)
+  if (!unlocked || !vaultKey) return Promise.resolve();
+  vaultChain = vaultChain.then(async () => {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name:"AES-GCM", iv }, vaultKey, new TextEncoder().encode(JSON.stringify(projects)));
+    localStorage.setItem(LS_VAULT, JSON.stringify({ v:1, kdf:"PBKDF2-SHA256", iter: KDF_ITER, salt: b64(vaultSalt), iv: b64(iv), ct: b64(new Uint8Array(ct)) }));
+  }).catch(e => { console.warn("암호화 저장 실패", e); toast("⚠️ 저장하지 못했습니다(저장 공간 부족일 수 있음). 백업을 받아 두세요.", 5000); });
+  return vaultChain;
+}
+function legacyCount(){ try { return Object.keys(JSON.parse(localStorage.getItem(LS_DATA) || "{}")).length; } catch(e){ return 0; } }
+function showLock(){
+  const v = readVault(), first = !v, old = first ? legacyCount() : 0;
+  document.body.classList.add("locked");
+  const L = $("lockView"); L.classList.remove("hidden");
+  L.innerHTML = !hasCrypto() ? `<div class="lock-box"><div class="lock-ico">⚠️</div><h2>이 주소에서는 암호화 기능을 쓸 수 없습니다</h2><p>https:// 주소로 열거나, 파일을 내려받아 직접 열어 주세요.</p></div>`
+  : first ? `<form class="lock-box" onsubmit="event.preventDefault();setupVault()">
+      <div class="lock-ico">🔐</div><h2>새로운 접근 비밀번호를 설정하세요</h2>
+      <p>공고 자료는 <b>이 PC에만</b>, 이 비밀번호로 <b>암호화</b>해서 저장합니다.<br>프로그램을 열 때마다 이 비밀번호를 물어봅니다.</p>
+      <input type="password" id="lockPw1" placeholder="새 비밀번호 (8자 이상)" autocomplete="new-password" autofocus>
+      <input type="password" id="lockPw2" placeholder="한 번 더 입력" autocomplete="new-password">
+      ${old ? `<label class="lock-chk"><input type="checkbox" id="lockKeepOld" checked> 이 PC에 저장돼 있던 공고 ${old}건을 암호화해서 계속 보관 <span>(체크를 풀면 지웁니다. 다른 사람이 쓴 공고가 섞여 있으면 푸세요.)</span></label>` : ""}
+      <div class="lock-msg" id="lockMsg"></div>
+      <button class="primary" type="submit">비밀번호 설정하고 시작</button>
+      <p class="lock-warn">⚠️ 비밀번호를 잊으면 <b>누구도 자료를 되살릴 수 없습니다.</b> 꼭 기억해 두세요.</p></form>`
+  : `<form class="lock-box" onsubmit="event.preventDefault();unlockVault()">
+      <div class="lock-ico">🔒</div><h2>잠겨 있습니다</h2><p>접근 비밀번호를 입력하세요.</p>
+      <input type="password" id="lockPw1" placeholder="비밀번호" autocomplete="current-password" autofocus>
+      <div class="lock-msg" id="lockMsg"></div>
+      <button class="primary" type="submit" id="lockBtn">🔓 잠금 해제</button>
+      <p class="lock-warn"><a href="#" onclick="event.preventDefault();wipeVault()">비밀번호를 잊었어요 (저장된 공고를 모두 지우고 새로 시작)</a></p></form>`;
+  setTimeout(() => $("lockPw1")?.focus(), 50);
+}
+const lockMsg = t => { const m = $("lockMsg"); if (m) m.textContent = t; };
+async function setupVault(){
+  const a = $("lockPw1").value, b = $("lockPw2").value;
+  if (a.length < 8) return lockMsg("비밀번호는 8자 이상으로 정해 주세요.");
+  if (a !== b) return lockMsg("두 비밀번호가 서로 다릅니다.");
+  lockMsg("암호화 준비 중…");
+  let old = {}; if ($("lockKeepOld")?.checked) { try { old = cleanProjects(JSON.parse(localStorage.getItem(LS_DATA) || "{}")); } catch(e){} }
+  vaultSalt = crypto.getRandomValues(new Uint8Array(16)); vaultKey = await deriveKey(a, vaultSalt, KDF_ITER);
+  projects = old; unlocked = true; await saveVault();
+  if (!readVault()) { unlocked = false; return lockMsg("저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요."); }
+  localStorage.removeItem(LS_DATA);   // 암호화되지 않은 예전 자료 삭제
+  enterApp();
+}
+let lockFails = 0;
+async function unlockVault(){
+  const v = readVault(), pw = $("lockPw1").value; if (!v || !pw) return;
+  const btn = $("lockBtn"); if (btn) btn.disabled = true; lockMsg("확인 중…");
+  try {
+    const salt = unb64(v.salt), key = await deriveKey(pw, salt, v.iter || KDF_ITER);
+    const plain = await crypto.subtle.decrypt({ name:"AES-GCM", iv: unb64(v.iv) }, key, unb64(v.ct));
+    projects = cleanProjects(JSON.parse(new TextDecoder().decode(plain)));
+    vaultKey = key; vaultSalt = salt; unlocked = true; lockFails = 0;
+    localStorage.removeItem(LS_DATA);
+    enterApp();
+  } catch(e) {
+    lockFails++; await new Promise(r => setTimeout(r, Math.min(lockFails, 5) * 600));   // 틀릴수록 조금씩 기다리게 함
+    lockMsg("비밀번호가 일치하지 않습니다."); $("lockPw1").value = ""; $("lockPw1").focus();
+  }
+  if (btn) btn.disabled = false;
+}
+function wipeVault(){
+  if (!confirm("저장된 공고를 모두 지우고 새 비밀번호로 시작합니다.\n지운 자료는 되살릴 수 없습니다. 계속할까요?")) return;
+  if (prompt('정말 지우려면 "삭제"라고 입력하세요.') !== "삭제") return;
+  localStorage.removeItem(LS_VAULT); localStorage.removeItem(LS_DATA); showLock();
+}
+function enterApp(){
+  $("lockView").classList.add("hidden"); $("lockView").innerHTML = ""; document.body.classList.remove("locked");
+  $("saveState").textContent = "🔐 이 PC에만 암호화 저장";
+  renderList(); armAutoLock();
+}
+// 🔒 화면 잠금: 저장 → 메모리의 자료·열쇠를 지우고(새로고침) 잠금 화면으로
+async function lockNow(){
+  try { const p = cur(); if (p && (p.name || "").trim()) { p.updatedAt = new Date().toISOString(); projects[p.id] = p; } await saveVault(); } catch(e){}
+  projects = {}; curId = null; vaultKey = null; vaultSalt = null; unlocked = false;
+  document.body.classList.add("locked"); $("noticePaper").innerHTML = "";
+  location.reload();
+}
+let idleT = null;
+function armAutoLock(){
+  const reset = () => { clearTimeout(idleT); if (unlocked) idleT = setTimeout(lockNow, AUTO_LOCK_MIN * 60000); };
+  ["mousedown","keydown","touchstart","wheel"].forEach(ev => document.addEventListener(ev, reset, { passive:true, capture:true }));
+  reset();
+}
+async function changeVaultPw(){
+  if (!unlocked) return;
+  const cur0 = prompt("지금 쓰는 비밀번호를 입력하세요."); if (cur0 === null) return;
+  const v = readVault();
+  try { const k = await deriveKey(cur0, unb64(v.salt), v.iter || KDF_ITER); await crypto.subtle.decrypt({ name:"AES-GCM", iv: unb64(v.iv) }, k, unb64(v.ct)); }
+  catch(e){ return alert("비밀번호가 일치하지 않습니다."); }
+  const a = prompt("새 비밀번호 (8자 이상)"); if (a === null) return; if (a.length < 8) return alert("8자 이상으로 정해 주세요.");
+  if (prompt("새 비밀번호를 한 번 더 입력하세요.") !== a) return alert("두 비밀번호가 서로 다릅니다.");
+  vaultSalt = crypto.getRandomValues(new Uint8Array(16)); vaultKey = await deriveKey(a, vaultSalt, KDF_ITER); await saveVault();
+  toast("비밀번호를 바꿨습니다");
+}
 async function initStore(){
-  projects = cleanProjects(JSON.parse(localStorage.getItem(LS_DATA) || "{}"));
-  const own = parseFbConfig(settings.fb), cfg = own || BUILTIN_FB_CONFIG;
-  usingHubDb = !own || own.projectId === BUILTIN_FB_CONFIG.projectId;
-  if (cfg && window.firebase) {
-    try {
-      // 허브와 같은 저장소를 쓰면 허브의 기본 연결을 함께 씀 → 관리자로 로그인한 상태가 그대로 적용됨(삭제 권한)
-      const app = usingHubDb ? HUB.app() : (firebase.apps.find(a=>a.name==="facility") || firebase.initializeApp(cfg, "facility"));
-      db = app.firestore();
-      $("saveState").textContent = "☁️ Firebase 연동 완료";
-      const MIGRATED = "facility_migrated_v1";
-      let firstSnap = true;
-      db.collection("facility_notices").onSnapshot(snap => {
-        let fresh = {}; snap.forEach(d => fresh[d.id] = d.data());
-        fresh = cleanProjects(fresh);   // 받은 자료 정리 (보안)
-        // 처음 연결될 때 한 번만: 이 컴퓨터에만 저장돼 있던 공고를 Firebase로 올려 사라지지 않게 함
-        if (firstSnap && !localStorage.getItem(MIGRATED)) {
-          Object.values(projects).forEach(p => { if (p && p.id && !fresh[p.id]) { fresh[p.id] = p; db.collection("facility_notices").doc(p.id).set(JSON.parse(JSON.stringify(p))).catch(()=>{}); } });
-          localStorage.setItem(MIGRATED, "1");
-        }
-        firstSnap = false;
-        if (curId && projects[curId]) fresh[curId] = projects[curId];
-        projects = fresh; localStorage.setItem(LS_DATA, JSON.stringify(projects));
-        if (!curId) renderList();
-      }, err => { db = null; $("saveState").textContent = "⚠️ Firebase 오류 → 이 컴퓨터에만 저장"; });
-    } catch(e) { db = null; $("saveState").textContent = "⚠️ Firebase 설정 오류 → 이 컴퓨터에만 저장"; }
-  } else { $("saveState").textContent = "💻 브라우저 로컬 저장 중"; }
-  renderList();
+  projects = {}; db = null;
+  try { if (window.firebase && window.HUB && HUB.app) db = HUB.app().firestore(); } catch(e){ db = null; }   // 접속자 수 표시에만 사용(공고 자료는 보내지 않음)
+  $("saveState").textContent = "🔒 잠김";
+  showLock();
   initVisitCounter();
 }
 /* ── 일일·누적 접속자 수 ──
@@ -1073,18 +1174,14 @@ async function initVisitCounter(){
   } catch(e) { console.warn("접속자 수: Firebase 권한 확인 필요(facility_stats)", e); showLocal(RULE_MSG); }
 }
 async function persist(p){
-  p.updatedAt = new Date().toISOString(); projects[p.id] = p; localStorage.setItem(LS_DATA, JSON.stringify(projects));
-  if (db) { try { await db.collection("facility_notices").doc(p.id).set(JSON.parse(JSON.stringify(p))); } catch(e){} }
+  if (!unlocked) return;
+  p.updatedAt = new Date().toISOString(); projects[p.id] = p; await saveVault();
 }
 async function removeStore(id){
-  if (db) {
-    try { await db.collection("facility_notices").doc(id).delete(); }
-    catch(e){ alert("공고 삭제는 관리자만 할 수 있습니다.\n홈에서 관리자로 로그인한 뒤 다시 해 주세요."); return false; }
-  }
-  delete projects[id]; localStorage.setItem(LS_DATA, JSON.stringify(projects));
+  if (!unlocked) return false;
+  delete projects[id]; await saveVault();
   return true;
 }
-
 function openSettings(){ $("setOrg").value=settings.org; $("setHead").value=settings.head||""; $("setDept").value=settings.dept||""; $("setTel").value=settings.tel||""; $("setRegion").value=settings.region||"종전 전라남도"; $("setAddr").value=settings.address||""; $("setCDept").value=settings.contractDept||""; $("setCTel").value=settings.contractTel||""; $("setFb").value=settings.fb; $("setHoli").value=settings.extraHolidays||""; $("setFont").value=settings.hwpxFont||"맑은 고딕"; $("setQDays").value=settings.quoteDays||3; $("settingsModal").classList.remove("hidden"); }
 function closeSettings(){ $("settingsModal").classList.add("hidden"); }
 function saveSettings(){
@@ -1097,7 +1194,7 @@ function saveSettings(){
   if (fbChanged) { toast("연동 설정이 변경되어 새로 불러옵니다"); setTimeout(()=>location.reload(), 800); }
   else { toast("설정을 저장했습니다"); renderList(); if (cur()) { autoFill(cur(), "autoSched"); renderNotice(false); } }
 }
-function backupJSON(){ download(`공고문_백업_${today()}.json`, JSON.stringify(projects, null, 2), "application/json"); }
+function backupJSON(){ if (!confirm("백업 파일은 암호화되지 않은 상태로 내려받습니다.\n다른 사람이 볼 수 없는 곳에 보관하세요. 계속할까요?")) return; download(`공고문_백업_${today()}.json`, JSON.stringify(projects, null, 2), "application/json"); }
 function restoreJSON(input){
   const f = input.files[0]; if(!f) return; const r = new FileReader();
   r.onload = async () => { try { const data = JSON.parse(r.result); for (const p of Object.values(data)) await persist(p); toast("불러오기 완료"); renderList(); } catch(e){ alert("백업 파일을 읽지 못했습니다."); } input.value = ""; };
@@ -2604,7 +2701,9 @@ function saveHwpx(){
   } catch (e) { console.error(e); alert("한글 파일을 만들지 못했습니다. [📋 복사]로 한글에 붙여 넣어 주세요.\n\n오류: " + e.message); }
 }
 
-window.addEventListener("beforeunload", () => { if (cur() && cur().name.trim()) { projects[curId].updatedAt=new Date().toISOString(); localStorage.setItem(LS_DATA, JSON.stringify(projects)); } });
+// 창을 닫거나 다른 창으로 갈 때: 암호화 저장을 바로 시작 (평문으로는 절대 저장하지 않음)
+const flushSave = () => { if (unlocked && cur() && (cur().name || "").trim()) { clearTimeout(saveTimer); projects[curId].updatedAt = new Date().toISOString(); saveVault(); } };
+window.addEventListener("beforeunload", flushSave); window.addEventListener("pagehide", flushSave); document.addEventListener("visibilitychange", () => { if (document.hidden) flushSave(); });
 injectHints(); document.querySelectorAll(".rec-why").forEach(w => w.parentNode.appendChild(w)); $("guideAutoChk").checked = guideAuto; $("flowList").innerHTML = FLOW.map(([t,d]) => `<li><b>${esc(t)}</b> — ${esc(d)}</li>`).join(""); initStore();
 </script>
 <!-- 방문 기록은 common.js가 자동으로 남깁니다 -->
