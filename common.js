@@ -260,6 +260,53 @@
     // 다른 탭에서 로그인·로그아웃하면 이 탭에도 반영
     w.addEventListener("storage", e => { if (e.key === USER_KEY || e.key === null) notify(HUB.getUser()); });
 
+    // ── 아이디·닉네임 찾기표 (보안) ──
+    //  회원 정보(users)는 본인과 관리자만 읽을 수 있게 잠그고,
+    //  로그인 전에 꼭 필요한 것만 따로 둠 (목록으로 한꺼번에 볼 수는 없고, 정확한 아이디·닉네임으로만 찾을 수 있음)
+    //   - logins/{아이디}  : { uid, mailLock, mailLockOld }  ← 아이디로 로그인할 때 필요
+    //   - nicknames/{닉네임}: { uid }                         ← 닉네임이 겹치는지 확인
+    HUB.idx = {
+        okNick(n) { return typeof n === "string" && n.length > 0 && n.length <= 40 && n.indexOf("/") < 0 && n !== "." && n !== ".."; },
+        async login(db, loginId) {
+            try { const s = await db.collection("logins").doc(loginId).get(); return s.exists ? s.data() : null; } catch (e) { return null; }
+        },
+        async nickTaken(db, nick, exceptUid) {
+            if (!HUB.idx.okNick(nick)) return true;
+            const s = await db.collection("nicknames").doc(nick).get();
+            return s.exists && s.data().uid !== exceptUid;
+        },
+        // 닉네임 바꾸기: 새 이름 등록 → 예전 이름 풀어 줌
+        async moveNick(db, uid, newNick, oldNick) {
+            if (HUB.idx.okNick(newNick)) await db.collection("nicknames").doc(newNick).set({ uid: uid });
+            if (oldNick && oldNick !== newNick && HUB.idx.okNick(oldNick)) {
+                try { const s = await db.collection("nicknames").doc(oldNick).get(); if (s.exists && s.data().uid === uid) await db.collection("nicknames").doc(oldNick).delete(); } catch (e) {}
+            }
+        },
+        // 로그인용 잠금 값 저장
+        async saveLock(db, uid, loginId, fields) {
+            if (!loginId) return;
+            await db.collection("logins").doc(loginId).set(Object.assign({ uid: uid }, fields), { merge: true });
+        },
+        // 찾기표에 빠진 것이 있으면 채움 (예전에 가입한 회원)
+        async ensure(db, uid, prof) {
+            try {
+                if (prof.loginId) {
+                    const s = await db.collection("logins").doc(prof.loginId).get();
+                    if (!s.exists) {
+                        const f = { uid: uid };
+                        if (prof.mailLock) f.mailLock = prof.mailLock;
+                        if (prof.mailLockOld) f.mailLockOld = prof.mailLockOld;
+                        await db.collection("logins").doc(prof.loginId).set(f);
+                    }
+                }
+                if (HUB.idx.okNick(prof.name)) {
+                    const n = await db.collection("nicknames").doc(prof.name).get();
+                    if (!n.exists) await db.collection("nicknames").doc(prof.name).set({ uid: uid });
+                }
+            } catch (e) { console.log("아이디·닉네임 찾기표 정리 실패", e); }
+        }
+    };
+
     // 회원 정보(users 문서) → 이 브라우저 로그인 정보
     HUB.profileToUser = function (uid, prof) {
         return { phone: prof.ownerKey || ("uid:" + uid), name: prof.name, uid: uid, loginId: prof.loginId, avatar: prof.avatar || null };
