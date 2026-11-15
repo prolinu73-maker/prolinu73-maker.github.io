@@ -116,7 +116,10 @@
   .color-row button { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1.5px var(--line); cursor: pointer; padding: 0; }
   .color-row button.on { box-shadow: 0 0 0 3px var(--ink); }
   .photo-pick { display: flex; flex-direction: column; gap: 8px; }
-  .photo-pick label.btn { display: inline-block; padding: 10px 14px; border: 1.5px dashed var(--board-light); border-radius: 8px; color: var(--board-light); font-weight: 800; text-align: center; cursor: pointer; }
+  .vh { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }   /* 안 보이지만 눌리는 파일 선택칸 */
+  .photo-msg { min-height: 1.2em; font-size: 13px; font-weight: 700; color: #dc2626; }
+  .photo-msg.ok { color: #1A9C7B; }
+  .photo-pick .btn { font-family: inherit; font-size: 15px; background: #fff; width: 100%; display: inline-block; padding: 10px 14px; border: 1.5px dashed var(--board-light); border-radius: 8px; color: var(--board-light); font-weight: 800; text-align: center; cursor: pointer; }
   .msg { min-height: 1.2em; font-size: 13px; font-weight: 700; color: #dc2626; margin: 4px 0 10px; }
   .msg.ok { color: #1A9C7B; }
   .btn-save { width: 100%; padding: 13px; border: none; border-radius: 10px; background: var(--marker); color: #2A2109; font-family: inherit; font-size: 15px; font-weight: 800; cursor: pointer; }
@@ -176,15 +179,16 @@
   <div class="modal-content">
     <h3 id="editTitle">프로필 편집</h3>
     <div class="av-edit"><div id="avPreview"></div><div class="hint">프로필 그림은 그림·색을 고르거나<br>사진을 올려서 정할 수 있어요.</div></div>
-    <div class="av-tabs"><button id="avTabEmoji" class="on" onclick="avTab('emoji')">그림 고르기</button><button id="avTabPhoto" onclick="avTab('photo')">사진 올리기</button></div>
+    <div class="av-tabs"><button id="avTabEmoji" class="on" onclick="avTab('emoji')">그림 고르기</button><button id="avTabPhoto" onclick="avTab('photo'); openPicker()">사진 올리기</button></div>
     <div id="avEmojiBox">
       <div class="emoji-grid" id="emojiGrid"></div>
       <div class="color-row" id="colorRow"></div>
     </div>
     <div id="avPhotoBox" class="photo-pick" hidden>
-      <label class="btn" for="photoIn">📷 사진 고르기</label>
-      <input type="file" id="photoIn" accept="image/*" hidden onchange="pickPhoto(event)">
-      <span class="hint">얼굴이 가운데 오도록 정사각형으로 잘라서 올려요. (최대 5MB)</span>
+      <button type="button" class="btn" onclick="openPicker()">📷 사진 고르기</button>
+      <input type="file" id="photoIn" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp" class="vh" onchange="pickPhoto(event)">
+      <span class="photo-msg" id="photoMsg" aria-live="polite"></span>
+      <span class="hint">얼굴이 가운데 오도록 정사각형으로 잘라서 올려요. (JPG·PNG, 최대 5MB)</span>
     </div>
     <hr style="border:none;border-top:1px solid var(--line);margin:16px 0;">
     <div class="field"><label for="eNick">닉네임</label><input id="eNick" maxlength="12" autocomplete="nickname"><span class="hint">한글·영문·숫자 2~12자 · 앞으로 쓰는 글에 표시돼요</span></div>
@@ -397,8 +401,9 @@
   // (Firebase 무료 요금제는 Storage를 쓸 수 없어서 Storage에 올리지 않음)
   let draftPhotoData = null;
   function pickPhoto(ev) {
-    const f = ev.target.files[0]; ev.target.value = '';
+    const f = ev.target.files && ev.target.files[0];
     if (!f) return;
+    msg('사진을 읽는 중입니다...', true);
     if (!/^image\//.test(f.type)) return msg('그림 파일만 올릴 수 있어요.');
     if (f.size > 5 * 1024 * 1024) return msg('5MB 이하 사진만 올릴 수 있어요.');
     const img = new Image();
@@ -411,11 +416,17 @@
       draftPhotoData = c.toDataURL('image/jpeg', 0.8);   // 보통 10KB 안팎
       c.toBlob(b => { draftPhotoBlob = b; drawPreview(); msg('저장하기를 누르면 사진이 저장돼요.', true); }, 'image/jpeg', 0.8);
       URL.revokeObjectURL(img.src);
+      ev.target.value = '';   // 같은 사진을 다시 골라도 동작하게
     };
-    img.onerror = () => msg('사진을 읽지 못했어요. 다른 사진을 골라 주세요.');
+    img.onerror = () => { ev.target.value = ''; msg('사진을 읽지 못했어요. (아이폰 HEIC 사진은 JPG로 바꿔서 올려 주세요)'); };
     img.src = URL.createObjectURL(f);
   }
-  function msg(t, ok) { $('eMsg').textContent = t || ''; $('eMsg').classList.toggle('ok', !!ok); }
+  function msg(t, ok) {
+    $('eMsg').textContent = t || ''; $('eMsg').classList.toggle('ok', !!ok);
+    $('photoMsg').textContent = t || ''; $('photoMsg').classList.toggle('ok', !!ok);   // 사진 버튼 바로 아래에도 표시
+  }
+  // 사진 고르는 창 열기
+  function openPicker() { msg(''); try { $('photoIn').click(); } catch (e) { msg('사진 고르는 창을 열지 못했어요. 다른 브라우저(크롬·엣지)로 해 보세요.'); } }
 
   async function saveProfile() {
     const nick = $('eNick').value.trim().replace(/\s+/g, ' ');
