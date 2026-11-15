@@ -22,7 +22,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.1.0';
+    HUB.VERSION = '1.1.1';
 
     /* =================================================================
        1. 기본 설정
@@ -100,6 +100,9 @@
         return p;
     };
     HUB.currentPage = function () { return HUB.normalizePage(location.pathname); };
+    // 오늘 날짜 'YYYY-MM-DD' — 항상 한국 시간 기준
+    //  (방문자 컴퓨터의 시간대와 상관없이 같은 날짜. 해외 시간대 컴퓨터가 '어제' 날짜로 기록하는 문제 방지)
+    HUB.todayKey = function () { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); };
     HUB.loadScript = function (src) {
         return new Promise((resolve, reject) => {
             const s = d.createElement("script");
@@ -423,8 +426,7 @@
             if (HUB.isAdminDevice()) return;           // 기다리는 사이 관리자로 로그인했어도 기록하지 않음
             const docId = newId();
             getRegion().then(region => {
-                const now = new Date();
-                const dateKey = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+                const dateKey = HUB.todayKey();            // 한국 시간 기준 날짜
                 const body = { writes: [{
                     update: { name: DOC_BASE + "/stats/" + docId, fields: {
                         kind: { stringValue: "visit" }, page: { stringValue: HUB.currentPage() },

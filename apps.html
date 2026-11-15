@@ -500,11 +500,8 @@
         // 방문자 카운트 로직
         async function updateVisitorCount() {
             const statRef = db.collection("stats").doc("visitors");
-            const d = new Date();
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
-            const todayFmt = `${yyyy}-${mm}-${dd}`;
+            // 오늘 날짜는 한국 시간 기준 (해외 시간대 컴퓨터가 접속해도 '어제'로 바뀌지 않음)
+            const todayFmt = HUB.todayKey ? HUB.todayKey() : new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
             
             try {
                 const docSnap = await statRef.get();
@@ -519,7 +516,9 @@
                 // 관리자(또는 이 브라우저에서 관리자로 로그인한 적이 있으면)는 세지 않고 숫자만 보여 줌
                 if (HUB.isAdminDevice()) isNewVisit = false;
 
-                if (data.todayDate !== todayFmt) {
+                // 날짜가 앞으로 넘어갈 때만 오늘 수를 0으로 (날짜가 틀린 컴퓨터가 들어와도 뒤로 가지 않음)
+                const newDay = !data.todayDate || todayFmt > data.todayDate;
+                if (newDay) {
                     data.todayDate = todayFmt;
                     data.todayCount = 0;
                 }
@@ -527,8 +526,10 @@
                 if (isNewVisit) {
                     data.total = (data.total || 0) + 1;
                     data.todayCount = (data.todayCount || 0) + 1;
-                    await statRef.set(data, { merge: true });
-                    try { sessionStorage.setItem("countedVisitDate", todayFmt); } catch (e) {}   // 나중에 관리자로 로그인하면 홈에서 되돌림
+                    // 서버에서 1을 더함 → 여러 명이 동시에 들어와도 빠지지 않음
+                    const inc = firebase.firestore.FieldValue.increment(1);
+                    await statRef.set(newDay ? { total: inc, todayCount: 1, todayDate: todayFmt } : { total: inc, todayCount: inc }, { merge: true });
+                    try { sessionStorage.setItem("countedVisitDate", data.todayDate); } catch (e) {}   // 나중에 관리자로 로그인하면 홈에서 되돌림
                 }
 
                 // 방문자 수 표시는 홈(index.html)으로 옮김. 여기서는 세기만 함 (표시 칸이 있을 때만 표시)
