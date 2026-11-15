@@ -30,6 +30,8 @@
         .auth-btn { background: #1e293b; color: #fff; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: 'Pretendard', sans-serif; transition: filter .15s; }
         .auth-btn:hover { filter: brightness(.9); }
         #userInfoArea { display: flex; align-items: center; }
+        /* 이 페이지 상단바: '홈으로' 버튼만 보이기 (업무 메뉴줄·로그인 칸은 숨김. 로그인 기능 자체는 그대로 동작) */
+        #hubHeader .nav-wrap, #hubHeader .hub-right { display: none !important; }
         @media (max-width: 860px) {
             .header-right { flex-wrap: wrap; justify-content: flex-end; }
         }
