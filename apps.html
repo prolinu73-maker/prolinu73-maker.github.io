@@ -132,6 +132,10 @@
         .board-form input:focus, .board-form textarea:focus { border-color: var(--board-light); outline: none; }
         .board-form textarea.title-input { flex: 1 1 100%; height: 90px; resize: vertical; line-height: 1.5; }
         #postFileLinkGroup { flex: 1 1 100%; }
+        /* 회원 전용 안내 (손님에게만 보임) */
+        .member-note { margin: 8px 0 12px; padding: 9px 12px; border-radius: 8px; background: #FFF8E1; border: 1px solid #F2D27A; color: #5B4A12; font-size: 13px; line-height: 1.5; flex: 1 1 100%; }
+        .member-note a { color: var(--board-light); font-weight: 800; }
+        body.is-guest .member-only { display: none !important; }
         #postFileLink { background: #F4F8F6; font-weight: 600; width: 100%; }
 
         .file-upload-wrapper { display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap; background: var(--paper); padding: 14px; border-radius: 8px; border: 1px dashed var(--line); }
@@ -269,9 +273,10 @@
             <div class="site-form" style="margin-bottom: 25px;">
                 <input type="text" id="siteTitle" placeholder="사이트명 (예: 업무포털)" autocomplete="off">
                 <input type="text" id="siteUrl" placeholder="접속 주소 (URL)" autocomplete="off">
-                <input type="password" id="siteGuestPw" placeholder="🔒 비번 (삭제용)" autocomplete="new-password">
+                <input type="password" id="siteGuestPw" placeholder="🔒 비번 (삭제용)" autocomplete="new-password" style="display:none">
                 <button onclick="addSite()">+ 사이트 추가</button>
             </div>
+            <p class="member-note" hidden>🔒 사이트 추가는 <b>회원</b>만 할 수 있어요. <a href="index.html#signup">30초 만에 회원가입</a> · <a href="index.html#login">로그인</a></p>
             
             <div class="site-list" id="siteListWrapper">
                 <span style="color: #94a3b8; font-size: 14px;">로딩 중...</span>
@@ -306,11 +311,12 @@
                 
                 <div class="tool-form-row" style="margin-bottom: 0;">
                     <input type="text" id="toolDesc" style="flex: 1 1 100%;" placeholder="도구에 대한 상세 설명을 입력하세요" autocomplete="off">
-                    <input type="password" id="toolGuestPw" style="flex: 0 0 160px;" placeholder="🔒 비번(삭제 시 필요)" autocomplete="new-password">
+                    <input type="password" id="toolGuestPw" style="flex: 0 0 160px; display:none;" placeholder="🔒 비번(삭제 시 필요)" autocomplete="new-password">
                     <button class="btn-submit" onclick="addTool()" style="flex: 0 0 130px;">✨ 등록하기</button>
                 </div>
             </div>
             
+            <p class="member-note" hidden>🔒 업무도구 등록은 <b>회원</b>만 할 수 있어요. 둘러보기와 내려받기는 누구나 할 수 있습니다. <a href="index.html#signup">30초 만에 회원가입</a> · <a href="index.html#login">로그인</a></p>
             <div class="grid" id="cardGrid"></div>
 
             <div class="section-header" style="margin-top: 20px; margin-bottom: 10px; border-bottom: none;">
@@ -331,6 +337,7 @@
                         <input type="text" id="postFileLink" placeholder="🔗 외부 공유 링크 (구글드라이브 등) - 직접 파일 첨부를 원하시면 아래 버튼을 누르세요" autocomplete="off">
                     </div>
                     
+                    <p class="member-note" hidden>✏️ 글쓰기는 누구나 할 수 있어요. 🔒 <b>파일 첨부·외부 링크</b>는 회원만 올릴 수 있어요. <a href="index.html#signup">30초 만에 회원가입</a> · <a href="index.html#login">로그인</a></p>
                     <div class="file-upload-wrapper">
                         <span class="file-upload-label">📎 내 컴퓨터에서 파일 및 이미지 직접 첨부하기</span>
                         <input type="file" id="actualFileInput" class="custom-file-input" multiple onchange="handleFileSelect(event)">
@@ -405,6 +412,7 @@
     <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <!-- 방문 기록은 common.js가 자동으로 남깁니다 -->
     <script>
         const ADMIN_PHONE = HUB.ADMIN_PHONE;   // (예전 이름, 쓰지 않음) 관리자 확인은 HUB.isAdmin()
@@ -624,17 +632,32 @@
                 toolGuestPw.style.display = 'none';
                 postGuestPw.style.display = 'none';
                 siteGuestPw.style.display = 'none';
+                setGuestMode(false);
             } else {
                 uiArea.innerHTML = `<a class="auth-btn" href="index.html#signup" style="text-decoration:none; background:#fff; color:#1B5442; border:1.5px solid #1B5442; margin-right:6px;" title="회원가입은 홈 화면에서 합니다">회원가입</a><a class="auth-btn" href="index.html#login" style="text-decoration:none;" title="로그인은 홈 화면에서 합니다">로그인</a>`;
                 postAuthor.value = "게스트";
                 postAuthor.readOnly = false;
                 postAuthor.style.background = "white";
                 
-                toolGuestPw.style.display = 'inline-block';
+                toolGuestPw.style.display = 'none';      // 업무도구·사이트 등록은 회원만 (비밀번호 칸 필요 없음)
                 postGuestPw.style.display = 'inline-block';
-                siteGuestPw.style.display = 'inline-block';
+                siteGuestPw.style.display = 'none';
                 toolGuestPw.value = ""; postGuestPw.value = ""; siteGuestPw.value = "";
+                setGuestMode(true);
             }
+        }
+        /* ── 회원 전용: 파일·링크 올리기, 업무도구·사이트 등록 ──
+           손님은 글·댓글만 쓸 수 있고, 위 기능을 누르면 가입 안내가 나옴 */
+        function setGuestMode(guest) {
+            document.body.classList.toggle('is-guest', guest);
+            document.querySelectorAll('.member-note').forEach(n => { n.hidden = !guest; });
+            ['postFileLinkGroup'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('member-only'); });
+            document.querySelectorAll('.file-upload-wrapper').forEach(el => el.classList.add('member-only'));
+        }
+        function memberOnly(what) {
+            if (currentUser && currentUser.uid) return false;
+            if (confirm(`🔒 ${what} 회원만 할 수 있어요.\n회원가입은 30초면 끝나요. 지금 가입하러 갈까요?\n(이미 회원이면 '확인'을 누른 뒤 로그인해 주세요)`)) location.href = 'index.html#signup';
+            return true;
         }
 
         async function loadSites() {
@@ -684,6 +707,7 @@
         }
 
         async function addSite() {
+            if (memberOnly('유용한 사이트 추가는')) return;
             const titleInput = document.getElementById("siteTitle");
             const urlInput = document.getElementById("siteUrl");
             const guestPwInput = document.getElementById("siteGuestPw");
@@ -789,6 +813,7 @@
         }
 
         async function addTool() {
+            if (memberOnly('업무도구 등록은')) return;
             const categorySelect = document.getElementById("toolCategory");
             const titleInput = document.getElementById("toolTitle");
             const linkInput = document.getElementById("toolLink");
@@ -872,6 +897,7 @@
         }
 
         function handleFileSelect(event) {
+            if (memberOnly('파일 첨부는')) { event.target.value = ''; return; }
             const files = event.target.files;
             if (!files.length) return;
             
@@ -953,6 +979,7 @@
             
             if (!titleInput.value.trim()) return alert("내용을 입력해주세요!");
             if (!currentUser && !guestPwInput.value.trim()) return alert("게스트 작성 시 삭제용 비밀번호를 입력해주세요.");
+            if ((fileLinkInput.value.trim() || pendingUploadFiles.length) && memberOnly('파일 첨부·외부 링크는')) return;
             
             submitBtn.disabled = true;
             submitBtn.style.background = "#94a3b8";
@@ -1160,18 +1187,20 @@
         let editing = null;   // { type, col, id, data, removed:Set, newFiles:[] }
 
         async function editPost(docId) {
-            if (!(await canTouch(ROWS[currentTab + '/' + docId], "글"))) return;
+            const right = await canTouch(ROWS[currentTab + '/' + docId], "글");
+            if (!right) return;
             const snap = await db.collection(currentTab).doc(docId).get();
             if (!snap.exists) return alert("글을 찾을 수 없습니다. 이미 지워졌을 수 있어요.");
-            openEditModal({ type: 'post', col: currentTab, id: docId, data: snap.data() });
+            openEditModal({ type: 'post', col: currentTab, id: docId, data: snap.data(), right });
         }
         async function editTool(event, docId) {
             event.preventDefault();
             event.stopPropagation();
-            if (!(await canTouch(ROWS['smartTools/' + docId], "업무 도구"))) return;
+            const right = await canTouch(ROWS['smartTools/' + docId], "업무 도구");
+            if (!right) return;
             const snap = await db.collection("smartTools").doc(docId).get();
             if (!snap.exists) return alert("업무 도구를 찾을 수 없습니다. 이미 지워졌을 수 있어요.");
-            openEditModal({ type: 'tool', col: 'smartTools', id: docId, data: snap.data() });
+            openEditModal({ type: 'tool', col: 'smartTools', id: docId, data: snap.data(), right });
         }
         function openEditModal(e) {
             editing = Object.assign(e, { removed: new Set(), newFiles: [] });
@@ -1185,7 +1214,7 @@
             } else {
                 $('ePostText').value = d.title || '';
                 $('ePostLink').value = d.fileLink || '';
-                $('ePostLinkWrap').hidden = !(e.col === 'dataBoard' || d.fileLink);
+                $('ePostLinkWrap').hidden = !(e.col === 'dataBoard' || d.fileLink) || e.right === 'guest';   // 손님은 링크를 고칠 수 없음(회원 전용)
                 $('eFileIn').value = '';
                 renderEditFiles();
             }
@@ -1207,6 +1236,7 @@
         function toggleEditFile(i) { editing.removed.has(i) ? editing.removed.delete(i) : editing.removed.add(i); renderEditFiles(); }
         function dropNewFile(i) { editing.newFiles.splice(i, 1); renderEditFiles(); }
         function pickEditFiles(ev) {
+            if (editing && editing.right === 'guest') { ev.target.value = ''; return alert('파일 첨부는 회원만 할 수 있어요.'); }
             for (const f of ev.target.files) {
                 if (f.size > 10 * 1024 * 1024) { alert(`${f.name}의 용량이 10MB를 넘습니다.`); continue; }
                 editing.newFiles.push(f);
@@ -1224,9 +1254,12 @@
                 if (e.type === 'tool') {
                     const title = $('eToolTitle').value.trim(), link = safeUrl($('eToolLink').value);
                     if (!title || !link) return msg('도구 이름과 링크 주소를 모두 입력해 주세요.');
+                    if (e.right === 'guest' && link !== safeUrl(e.data.link)) return msg('링크 주소는 회원만 바꿀 수 있어요. 이름·설명만 고쳐 주세요.');
                     btn.disabled = true; msg('저장하는 중입니다...');
                     const cat = $('eCat').value;
-                    await db.collection("smartTools").doc(e.id).update({ category: cat, badgeText: TOOL_BADGES[cat], title, link, desc: $('eToolDesc').value.trim() || "설명이 없습니다." });
+                    const tupd = { category: cat, badgeText: TOOL_BADGES[cat], title, desc: $('eToolDesc').value.trim() || "설명이 없습니다." };
+                    if (e.right !== 'guest') tupd.link = link;
+                    await db.collection("smartTools").doc(e.id).update(tupd);
                     closeEdit(); loadTools();
                 } else {
                     const text = $('ePostText').value.trim();
@@ -1234,6 +1267,7 @@
                     btn.disabled = true; msg('저장하는 중입니다...');
                     const upd = { title: text };
                     if (!$('ePostLinkWrap').hidden) upd.fileLink = safeUrl($('ePostLink').value);
+                    if (e.right === 'guest' && (e.newFiles.length || e.removed.size)) return msg('첨부파일 추가·빼기는 회원만 할 수 있어요. 내용만 고쳐 주세요.');
                     const old = e.data.attachments || [];
                     const kept = old.filter((a, i) => !e.removed.has(i));
                     const added = [];
@@ -1243,7 +1277,7 @@
                         const task = await ref.put(f);
                         added.push({ url: await task.ref.getDownloadURL(), name: f.name, type: f.type.startsWith('image/') ? 'image' : 'file' });
                     }
-                    upd.attachments = kept.concat(added);
+                    if (e.right !== 'guest') upd.attachments = kept.concat(added);
                     await db.collection(e.col).doc(e.id).update(upd);
                     for (const i of e.removed) {   // 뺀 파일은 저장소에서도 지움 (실패해도 괜찮음)
                         try { await storage.refFromURL(old[i].url).delete(); } catch (err) { console.log("파일 삭제 건너뜀", err); }
