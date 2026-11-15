@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>교육공무직원 노무관리 정보마당</title>
 <!-- 화면 디자인(외부 인터넷 연결 없이 작동하도록 파일 안에 포함) -->
-<link rel="stylesheet" href="common.css?v=3">
-<script src="common.js?v=3"></script>
+<link rel="stylesheet" href="common.css?v=4">
+<script src="common.js?v=4"></script>
 <script>
 /* 비상용: common.js를 서버에서 찾지 못해도 페이지가 멈추지 않도록 최소 기능만 대신 채움
    (common.js가 정상적으로 불러와지면 이 부분은 쓰이지 않습니다) */
@@ -416,7 +416,7 @@ async function hashPw(pw) {
   } catch (e) { let h = 0; for (const c of 'labor::' + pw) h = (h * 31 + c.charCodeAt(0)) | 0; return 'x' + h; }
 }
 function nl2br(s) { return esc(s).replace(/\n/g, '<br>'); }
-function linkify(html) { return html.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" class="text-blue-600 underline break-all">$1</a>'); }
+function linkify(html) { return html.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline break-all">$1</a>'); }
 
 /* =========================================================
    저장소 (Firebase 또는 이 브라우저)
@@ -434,7 +434,7 @@ const DB = {
   async list(col) {
     if (this.mode === 'firebase') {
       const snap = await this.fs.collection(col).orderBy('createdAt', 'desc').get();
-      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      return snap.docs.filter(d => HUB.okId(d.id)).map(d => ({ id: d.id, ...d.data() }));   // 비정상 글 번호 제외 (보안)
     }
     return Object.entries(this._l(col)).map(([id, v]) => ({ id, ...v })).sort((a, b) => b.createdAt - a.createdAt);
   },
@@ -737,7 +737,7 @@ function fileExt(name) { const m = String(name || '').toLowerCase().match(/\.([a
 function fileAllowed(name) { return CONFIG.allowedExt.includes(fileExt(name)); }
 function readFileB64(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); }); }
 async function saveBoard(id) {
-  const d = { category: $('bCat').value, title: $('bTitle').value.trim(), content: $('bContent').value.trim(), link: $('bLink').value.trim() };
+  const d = { category: $('bCat').value, title: $('bTitle').value.trim(), content: $('bContent').value.trim(), link: HUB.safeUrl($('bLink').value) };   // http(s) 주소만 저장 (보안)
   if ($('bPin')) d.pinned = $('bPin').checked;
   if (!d.title) return toast('제목을 입력하세요');
   let pwHash = null;
@@ -807,8 +807,8 @@ function openBoard(id) {
       <div class="mt-4 text-sm leading-relaxed min-h-[80px]">${linkify(nl2br(b.content)) || '<span class="text-slate-400">내용 없음</span>'}</div>
       <div class="mt-5 flex flex-wrap gap-2">
         ${likeButton('board', b)}
-        ${b.link ? `<a href="${esc(b.link)}" target="_blank" class="text-sm px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200">🔗 관련 링크 열기</a>` : ''}
-        ${b.fileId ? `<button onclick="downloadFile('${b.fileId}')" class="text-sm px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">📎 ${esc(b.fileName)} <span class="opacity-75">(${Math.ceil((b.fileSize || 0) / 1024)}KB)</span></button>` : ''}
+        ${HUB.safeUrl(b.link) ? `<a href="${esc(HUB.safeUrl(b.link))}" target="_blank" rel="noopener noreferrer" class="text-sm px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200">🔗 관련 링크 열기</a>` : ''}
+        ${HUB.okId(b.fileId) ? `<button onclick="downloadFile('${b.fileId}')" class="text-sm px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">📎 ${esc(b.fileName)} <span class="opacity-75">(${Math.ceil((b.fileSize || 0) / 1024)}KB)</span></button>` : ''}
       </div>
       ${(isAdmin || b.pwHash) ? `<div class="flex justify-end gap-3 mt-6 border-t pt-4"><button onclick="editBoard('${id}')" class="text-sm text-blue-600 hover:underline">수정</button><button onclick="deleteBoard('${id}')" class="text-sm text-rose-600 hover:underline">삭제</button></div>` : ''}
     </div>`);

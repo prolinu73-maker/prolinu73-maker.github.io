@@ -6,8 +6,8 @@
 <title>출장 여비 계산기</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="common.css?v=3">
-<script src="common.js?v=3"></script>
+<link rel="stylesheet" href="common.css?v=4">
+<script src="common.js?v=4"></script>
 <style>
 /* 레이아웃: 위에서 아래로 1→2→3 순서로 입력(왼쪽), 결과는 오른쪽에 항상 고정. 좁은 화면에서는 한 줄로 쌓임. */
 :root{
@@ -498,9 +498,21 @@ footer{color:var(--muted);font-size:13.5px}
     setLive('공공데이터포털에서 '+o+' ↔ '+d+' 요금을 조회하는 중입니다…');
     timer=setTimeout(runLive,700);
   }
+  // 같은 구간·날짜는 6시간 동안 이 브라우저에 기억해 두고 다시 묻지 않음 (공공데이터포털 하루 조회 한도 아끼기)
+  var ASK_TTL=6*3600*1000,ASK_KEY='yeobi-ask-cache-v1';
+  function askCache(){try{return JSON.parse(localStorage.getItem(ASK_KEY)||'{}')}catch(e){return {}}}
   function ask(from,to,date){
+    var key=from+'|'+to+'|'+date,c=askCache(),hit=c[key];
+    if(hit&&Date.now()-hit.t<ASK_TTL)return Promise.resolve(hit.j);
     var url=relay+(relay.indexOf('?')<0?'?':'&')+'from='+encodeURIComponent(from)+'&to='+encodeURIComponent(to)+'&date='+date;
-    return fetch(url).then(function(r){return r.json()}).catch(function(){return null});
+    return fetch(url).then(function(r){return r.json()}).then(function(j){
+      if(j&&j.ok!==false&&!j.limited){
+        var now=Date.now(),n=askCache();n[key]={t:now,j:j};
+        Object.keys(n).forEach(function(k){if(now-n[k].t>ASK_TTL)delete n[k]});   // 오래된 기억은 지움
+        try{localStorage.setItem(ASK_KEY,JSON.stringify(n))}catch(e){}
+      }
+      return j;
+    }).catch(function(){return null});
   }
   // 갈 때(출발지→도착지, 출발일)와 올 때(도착지→출발지, 도착일)를 따로 물어봄
   function runLive(){
@@ -517,6 +529,7 @@ footer{color:var(--muted);font-size:13.5px}
       var notes=[],found=0;
       res.forEach(function(j,i){
         var k=LEGS[i];
+        if(j&&j.limited){notes.push(j.message||'오늘 요금 조회 한도를 모두 썼습니다. 예비 요금표 값으로 계산합니다.');return}
         if(!j||j.ok===false){notes.push(LEG_KO[k]+' 조회 오류'+(j&&j.errors?': '+j.errors.join(' / '):'')+'.');return}
         found+=applyLive(k,j);
         if(j.errors&&j.errors.length)notes.push(LEG_KO[k]+' 일부 오류: '+j.errors.slice(0,2).join(' / ')+'.');

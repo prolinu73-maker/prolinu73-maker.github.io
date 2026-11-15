@@ -22,7 +22,18 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.1.1';
+    HUB.VERSION = '1.2.0';
+
+    // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
+    //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
+    if (w.top !== w.self) {
+        let sameSite = false;
+        try { sameSite = w.top.location.origin === w.location.origin; } catch (e) { sameSite = false; }
+        if (!sameSite) {
+            d.documentElement.style.visibility = "hidden";
+            try { w.top.location = w.location.href; } catch (e) {}
+        }
+    }
 
     /* =================================================================
        1. 기본 설정
@@ -100,6 +111,17 @@
         return p;
     };
     HUB.currentPage = function () { return HUB.normalizePage(location.pathname); };
+    // ── 보안 도구 ──
+    // 글 번호(문서 ID)가 정상인지 확인: 영문·숫자·_·- 만 허용
+    //  (따옴표 등이 섞인 번호로 글을 만들어 화면의 버튼 코드를 바꾸는 공격을 막음)
+    HUB.okId = function (id) { return typeof id === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(id); };
+    // 링크 주소는 http:// 또는 https:// 만 허용 ('javascript:' 같은 위험한 주소는 빈 값으로)
+    HUB.safeUrl = function (u) {
+        u = String(u == null ? "" : u).trim();
+        if (!u) return "";
+        if (!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = "https://" + u.replace(/^\/+/, "");
+        try { const x = new URL(u); return (x.protocol === "http:" || x.protocol === "https:") ? x.href : ""; } catch (e) { return ""; }
+    };
     // 오늘 날짜 'YYYY-MM-DD' — 항상 한국 시간 기준
     //  (방문자 컴퓨터의 시간대와 상관없이 같은 날짜. 해외 시간대 컴퓨터가 '어제' 날짜로 기록하는 문제 방지)
     HUB.todayKey = function () { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); };
@@ -325,7 +347,7 @@
     HUB.avatarHTML = function (u, size) {
         const a = (u && u.avatar) || {};
         const cls = "av" + (size ? " " + size : "");
-        if (a.type === "photo" && /^https:\/\//.test(a.url || "")) return `<span class="${cls}"><img src="${HUB.esc(a.url)}" alt="" onerror="this.remove()"></span>`;
+        if (a.type === "photo" && /^https:\/\/firebasestorage\.googleapis\.com\//.test(a.url || "")) return `<span class="${cls}"><img src="${HUB.esc(a.url)}" alt="" onerror="this.remove()"></span>`;
         const color = HUB.AV_COLORS.includes(a.color) ? a.color : "#1B5442";
         const face = HUB.AV_EMOJIS.includes(a.emoji) ? a.emoji : HUB.esc(String((u && u.name) || "?").slice(0, 1));
         return `<span class="${cls}" style="background:${color}" aria-hidden="true">${face}</span>`;
@@ -429,8 +451,8 @@
                 const dateKey = HUB.todayKey();            // 한국 시간 기준 날짜
                 const body = { writes: [{
                     update: { name: DOC_BASE + "/stats/" + docId, fields: {
-                        kind: { stringValue: "visit" }, page: { stringValue: HUB.currentPage() },
-                        title: { stringValue: d.title || "" }, region: { stringValue: region }, dateKey: { stringValue: dateKey } } },
+                        kind: { stringValue: "visit" }, page: { stringValue: HUB.currentPage().slice(0, 60) },
+                        title: { stringValue: (d.title || "").slice(0, 80) }, region: { stringValue: region }, dateKey: { stringValue: dateKey } } },
                     updateTransforms: [{ fieldPath: "visitedAt", setToServerValue: "REQUEST_TIME" }],
                     currentDocument: { exists: false } }] };
                 return fetch(COMMIT_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })

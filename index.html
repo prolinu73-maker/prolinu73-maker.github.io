@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="common.css?v=3">
-<script src="common.js?v=3"></script>
+<link rel="stylesheet" href="common.css?v=4">
+<script src="common.js?v=4"></script>
 <style>
   /* 색(칠판 테마)은 common.css에 있음 */
   * { box-sizing: border-box; }
@@ -999,7 +999,7 @@
                     return;
                 }
                 const rows = [];
-                snapshot.forEach(doc => rows.push({ id: doc.id, ...doc.data() }));
+                snapshot.forEach(doc => { if (HUB.okId(doc.id)) rows.push({ id: doc.id, ...doc.data() }); });   // 비정상 번호 제외 (보안)
                 rows.sort((a, b) => (a.loginId ? 0 : 1) - (b.loginId ? 0 : 1) || String(a.name || '').localeCompare(String(b.name || ''), 'ko'));
                 const fragment = document.createDocumentFragment();
                 rows.forEach(u => {

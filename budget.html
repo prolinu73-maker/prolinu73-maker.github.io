@@ -7,8 +7,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-    <link rel="stylesheet" href="common.css?v=3">
-<script src="common.js?v=3"></script>
+    <link rel="stylesheet" href="common.css?v=4">
+<script src="common.js?v=4"></script>
 <style>
         :root {
             --primary: #0f172a;
@@ -314,12 +314,32 @@
     }
 
     // HTML 파싱 지연 없는 동적 엑셀 라이브러리 스크립트 로드
-    window.addEventListener('DOMContentLoaded', () => {
+    // 엑셀 프로그램(SheetJS) 불러오기
+    //  ① 약점을 고친 새 버전(0.20.3, 공식 배포처)을 먼저 시도
+    //  ② 업무망 등에서 막히면 예전 버전(0.18.5)으로 대신 씀 → 이때는 에듀파인에서 직접 받은 파일만 여세요
+    const XLSX_SOURCES = [
+        { src: "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js", safe: true },
+        { src: "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js", safe: false }
+    ];
+    let xlsxSafe = false;
+    function loadXlsx(i) {
+        if (i >= XLSX_SOURCES.length) { document.getElementById('errorBanner').style.display = 'block'; return; }
         const script = document.createElement('script');
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-        script.onload = () => console.log("Excel module loaded.");
-        script.onerror = () => document.getElementById('errorBanner').style.display = 'block';
+        script.src = XLSX_SOURCES[i].src;
+        script.onload = () => {
+            xlsxSafe = XLSX_SOURCES[i].safe;
+            console.log("Excel module loaded:", XLSX_SOURCES[i].src);
+            if (!xlsxSafe) {
+                const b = document.getElementById('errorBanner');
+                b.textContent = "ℹ️ 보안망에서 최신 엑셀 프로그램이 막혀 예전 버전으로 작동합니다. 에듀파인에서 직접 내려받은 엑셀 파일만 불러오세요.";
+                b.style.cssText += "display:block; background:#fffbeb; color:#92400e; border-color:#fcd34d;";
+            }
+        };
+        script.onerror = () => { script.remove(); loadXlsx(i + 1); };
         document.body.appendChild(script);
+    }
+    window.addEventListener('DOMContentLoaded', () => {
+        loadXlsx(0);
         initApp();
         updateVisitorCount();
         setupDragAndDrop();

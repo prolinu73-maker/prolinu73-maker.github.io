@@ -6,8 +6,8 @@
 <title>내 페이지 - 조효식 허브 PRO</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css">
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="common.css?v=3">
-<script src="common.js?v=3"></script>
+<link rel="stylesheet" href="common.css?v=4">
+<script src="common.js?v=4"></script>
 <style>
   /* 칠판 테마 색은 common.css에 있음 */
   * { box-sizing: border-box; }
@@ -277,7 +277,7 @@
       try {
         const snap = await db.collection(s.col).where(s.field, "==", key).get();
         const arr = [];
-        snap.forEach(doc => arr.push({ id: doc.id, ...doc.data() }));
+        snap.forEach(doc => { if (HUB.okId(doc.id)) arr.push({ id: doc.id, ...doc.data() }); });   // 비정상 번호 제외 (보안)
         arr.sort((a, b) => (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0));
         results[s.key] = arr;
       } catch (e) {
@@ -309,7 +309,8 @@
     document.querySelectorAll('.tab').forEach(t => { const on = t.dataset.k === k; t.classList.toggle('active', on); t.setAttribute('aria-selected', String(on)); });
     const box = $('list');
     if (k === "fav") {
-      const favs = ((profile && profile.favorites) || []).slice().sort((a, b) => (b.at || 0) - (a.at || 0));
+      // 즐겨찾기 번호가 정상인 것만 (따옴표 등이 섞인 번호는 버튼 코드를 바꿀 수 있어 제외)
+      const favs = ((profile && profile.favorites) || []).filter(f => f && /^[A-Za-z_]{1,40}\/[A-Za-z0-9_-]{1,128}$/.test(f.key || '')).sort((a, b) => (b.at || 0) - (a.at || 0));
       if (!favs.length) { box.innerHTML = `<div class="empty-box">아직 즐겨찾기한 글이 없어요.<br><a href="apps.html">스마트 업무도구</a>에서 글이나 도구의 ☆ 표시를 누르면 여기에 모여요.</div>`; return; }
       box.innerHTML = favs.map((f, i) => `
         <a class="item" style="--tab:#9A6B00" href="${esc(safeLink(f.link) || 'apps.html')}" ${/^https?:/.test(f.link || '') && !String(f.link).includes('github.io') ? 'target="_blank" rel="noopener"' : ''}>
