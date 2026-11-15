@@ -23,6 +23,8 @@
   .home-btn { background: #1E3A8A; }              /* 홈으로: 초록 → 첫 화면 머리말과 같은 남색 */
   .home-btn:hover { background: var(--accent); }
   .um-menu .here { background: var(--accent-soft); color: var(--accent); }   /* 메뉴의 '내 페이지' 표시: 초록 → 파랑 */
+  /* 내 페이지 상단에는 '홈으로' 버튼만 보이게: 메뉴바(다른 페이지 이동)와 닉네임·로그인 메뉴는 숨김 */
+  header.hub-top .nav-wrap, header.hub-top .hub-right { display: none !important; }
 
   /* ───── 닉네임 펼침 메뉴 ───── */
   .um-btn .caret { font-size: 11px; color: var(--sub); }
