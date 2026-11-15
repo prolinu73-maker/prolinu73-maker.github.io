@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css?v=5">
-<script src="common.js?v=5"></script>
+<script src="common.js?v=8"></script>
 <style>
 /* 레이아웃: 위에서 아래로 1→2→3 순서로 입력(왼쪽), 결과는 오른쪽에 항상 고정. 좁은 화면에서는 한 줄로 쌓임. */
 :root{
@@ -811,6 +811,7 @@ footer{color:var(--muted);font-size:13.5px}
         var art=document.createElement('article');art.className='post';
         art.innerHTML='<div class="meta"><b></b><span></span><span class="del"></span></div><div class="body"></div>';
         art.querySelector('b').textContent=(p.author||'게스트')+(p.byAdmin?' 👑':'');
+        if(window.HUB&&HUB.msg)art.querySelector('b').insertAdjacentHTML('afterend',HUB.msg.button(p.authorPhone,p.author));   // 회원 글이면 '✉️ 쪽지' 버튼
         art.querySelector('.meta span').textContent=p.date||'';
         art.querySelector('.body').textContent=p.text||'';   // 글 내용은 글자로만 보여 줌(코드 실행 방지)
         var del=art.querySelector('.del');

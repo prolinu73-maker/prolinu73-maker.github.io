@@ -23,7 +23,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.3.0';
+    HUB.VERSION = '1.3.1';
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
@@ -540,8 +540,8 @@
             st.textContent = `
 .hub-badge{display:inline-block;min-width:18px;padding:0 6px;border-radius:999px;background:#dc2626;color:#fff;font-size:11.5px;font-weight:800;line-height:18px;text-align:center;margin-left:4px;vertical-align:1px}
 .hub-badge[hidden]{display:none}
-.hub-msg-to{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:0 7px;margin-left:4px;font-size:12px;line-height:20px;cursor:pointer;color:#1B5442;font-weight:700}
-.hub-msg-to:hover{border-color:#1B5442;background:#E3EEE8}
+.hub-msg-to{display:inline-flex;align-items:center;gap:3px;border:1px solid #BFD3FF;background:#EEF4FF;border-radius:999px;padding:0 9px;margin-left:6px;font-family:inherit;font-size:12px;line-height:22px;cursor:pointer;color:#1D4ED8;font-weight:800;vertical-align:1px;white-space:nowrap}
+.hub-msg-to:hover{border-color:#2563EB;background:#2563EB;color:#fff}
 .hub-mc-back{position:fixed;inset:0;z-index:2000;background:rgba(14,50,39,.55);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}
 .hub-mc{background:#fff;border-radius:14px;width:440px;max-width:100%;padding:24px;box-shadow:0 24px 48px rgba(0,0,0,.25);border-top:6px solid #1B5442;font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;color:#17231D}
 .hub-mc h3{margin:0 0 14px;font-size:19px;text-align:center}
@@ -566,7 +566,8 @@
             const m = /^uid:([A-Za-z0-9_-]{1,128})$/.exec(String(ownerKey || ""));
             if (!m) return "";
             const u = me(); if (u && u.uid === m[1]) return "";
-            return `<button type="button" class="hub-msg-to" title="${HUB.esc(name || "")}님에게 쪽지 보내기" data-uid="${m[1]}" data-name="${HUB.esc(name || "")}" onclick="event.stopPropagation(); event.preventDefault(); HUB.msg.compose(this.dataset.uid, this.dataset.name)">✉️</button>`;
+            const nm = String(name || "").replace(/\s*👑\s*$/, "").trim() || "글쓴이";
+            return `<button type="button" class="hub-msg-to" title="${HUB.esc(nm)}님에게 쪽지 보내기" data-uid="${m[1]}" data-name="${HUB.esc(nm)}" onclick="event.stopPropagation(); event.preventDefault(); HUB.msg.compose(this.dataset.uid, this.dataset.name)">✉️ 쪽지</button>`;
         }
         // 쪽지 쓰기 창 (uid가 있으면 받는 사람 고정, 없으면 닉네임 입력)
         function compose(toUid, toName, opt) {
