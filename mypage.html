@@ -7,7 +7,7 @@
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css">
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css?v=5">
-<script src="common.js?v=5"></script>
+<script src="common.js?v=6"></script>
 <style>
   /* 칠판 테마 색은 common.css에 있음 */
   * { box-sizing: border-box; }
@@ -384,8 +384,8 @@
     $('avEmojiBox').hidden = t !== 'emoji'; $('avPhotoBox').hidden = t !== 'photo';
     if (t === 'emoji' && draftAvatar.type === 'photo' && !draftPhotoBlob) { /* 사진을 쓰던 사람은 그림을 눌러야 바뀜 */ }
   }
-  function pickEmoji(e) { draftAvatar = { type: 'emoji', emoji: e, color: draftAvatar.color || '#1B5442' }; draftPhotoBlob = null; drawPreview(); }
-  function pickColor(c) { draftAvatar = { type: 'emoji', emoji: draftAvatar.type === 'emoji' ? draftAvatar.emoji : '', color: c }; draftPhotoBlob = null; drawPreview(); }
+  function pickEmoji(e) { draftAvatar = { type: 'emoji', emoji: e, color: draftAvatar.color || '#1B5442' }; draftPhotoBlob = null; draftPhotoData = null; drawPreview(); }
+  function pickColor(c) { draftAvatar = { type: 'emoji', emoji: draftAvatar.type === 'emoji' ? draftAvatar.emoji : '', color: c }; draftPhotoBlob = null; draftPhotoData = null; drawPreview(); }
   function drawPreview() {
     const name = $('eNick').value.trim() || profile.name;
     if (draftPhotoBlob) $('avPreview').innerHTML = `<span class="av md"><img src="${URL.createObjectURL(draftPhotoBlob)}" alt="새 사진 미리보기"></span>`;

@@ -22,7 +22,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.2.0';
+    HUB.VERSION = '1.2.1';
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
@@ -394,7 +394,12 @@
     HUB.avatarHTML = function (u, size) {
         const a = (u && u.avatar) || {};
         const cls = "av" + (size ? " " + size : "");
-        if (a.type === "photo" && /^https:\/\/firebasestorage\.googleapis\.com\//.test(a.url || "")) return `<span class="${cls}"><img src="${HUB.esc(a.url)}" alt="" onerror="this.remove()"></span>`;
+        //  사진 주소는 두 가지만 허용 (보안):
+        //   ① Firebase Storage 주소 (예전 방식)
+        //   ② 회원 정보에 바로 저장한 사진 'data:image/jpeg;base64,...' (무료 요금제용 새 방식, 300KB 이하)
+        const okPhoto = /^https:\/\/firebasestorage\.googleapis\.com\//.test(a.url || "")
+            || (/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/]+=*$/.test(a.url || "") && a.url.length <= 300000);
+        if (a.type === "photo" && okPhoto) return `<span class="${cls}"><img src="${HUB.esc(a.url)}" alt="" onerror="this.remove()"></span>`;
         const color = HUB.AV_COLORS.includes(a.color) ? a.color : "#1B5442";
         const face = HUB.AV_EMOJIS.includes(a.emoji) ? a.emoji : HUB.esc(String((u && u.name) || "?").slice(0, 1));
         return `<span class="${cls}" style="background:${color}" aria-hidden="true">${face}</span>`;
