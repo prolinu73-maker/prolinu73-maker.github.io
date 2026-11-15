@@ -188,7 +188,7 @@
       <button type="button" class="btn" onclick="openPicker()">📷 사진 고르기</button>
       <input type="file" id="photoIn" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp" class="vh" onchange="pickPhoto(event)">
       <span class="photo-msg" id="photoMsg" aria-live="polite"></span>
-      <span class="hint">얼굴이 가운데 오도록 정사각형으로 잘라서 올려요. (JPG·PNG, 최대 5MB)</span>
+      <span class="hint">사진을 고르면 바로 저장돼요. 얼굴이 가운데 오도록 정사각형으로 잘라서 올려요. (JPG·PNG, 최대 5MB)</span>
     </div>
     <hr style="border:none;border-top:1px solid var(--line);margin:16px 0;">
     <div class="field"><label for="eNick">닉네임</label><input id="eNick" maxlength="12" autocomplete="nickname"><span class="hint">한글·영문·숫자 2~12자 · 앞으로 쓰는 글에 표시돼요</span></div>
@@ -414,12 +414,31 @@
       g.fillStyle = '#fff'; g.fillRect(0, 0, 160, 160);   // 투명한 PNG도 바탕을 흰색으로
       g.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, 160, 160);
       draftPhotoData = c.toDataURL('image/jpeg', 0.8);   // 보통 10KB 안팎
-      c.toBlob(b => { draftPhotoBlob = b; drawPreview(); msg('저장하기를 누르면 사진이 저장돼요.', true); }, 'image/jpeg', 0.8);
+      c.toBlob(b => { draftPhotoBlob = b; drawPreview(); savePhotoNow(); }, 'image/jpeg', 0.8);   // 고르자마자 바로 저장
       URL.revokeObjectURL(img.src);
       ev.target.value = '';   // 같은 사진을 다시 골라도 동작하게
     };
     img.onerror = () => { ev.target.value = ''; msg('사진을 읽지 못했어요. (아이폰 HEIC 사진은 JPG로 바꿔서 올려 주세요)'); };
     img.src = URL.createObjectURL(f);
+  }
+  // 사진을 고르면 바로 회원 정보에 저장 (저장하기 버튼을 따로 누르지 않아도 됨)
+  async function savePhotoNow() {
+    if (!draftPhotoData) return;
+    if (draftPhotoData.length > 200000) return msg('사진이 너무 커요. 다른 사진을 골라 주세요.');
+    const btn = $('eSave'); btn.disabled = true;
+    msg('사진을 저장하는 중입니다...', true);
+    const avatar = { type: 'photo', url: draftPhotoData };
+    try {
+      await db.collection("users").doc(currentUser.uid).update({ avatar: avatar });
+      profile.avatar = avatar;
+      draftAvatar = avatar; draftPhotoBlob = null; draftPhotoData = null;
+      HUB.setUser(Object.assign({}, currentUser, { avatar: avatar }));   // 상단 메뉴 사진도 바로 바뀜
+      renderProfile(); drawPreview();
+      msg('✔ 사진이 저장됐어요.', true);
+    } catch (e) {
+      console.error(e);
+      msg('사진을 저장하지 못했습니다. (' + (e.code || e.message) + ')');
+    } finally { btn.disabled = false; }
   }
   function msg(t, ok) {
     $('eMsg').textContent = t || ''; $('eMsg').classList.toggle('ok', !!ok);
