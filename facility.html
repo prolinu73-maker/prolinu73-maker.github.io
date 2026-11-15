@@ -198,7 +198,7 @@
   <span class="visit-box" id="visitBox" title="접속자 수: 같은 브라우저는 하루 1번만 셉니다">👥 오늘 <b id="visitToday">-</b> · 누적 <b id="visitTotal">-</b></span>
   <button onclick="openGlossary()">📖 용어 사전</button>
   <button onclick="openSettings()">⚙️ 설정·백업</button>
-  <button id="lockTopBtn" onclick="lockNow()" title="자리를 비울 때 누르세요. 저장한 뒤 바로 잠급니다.">🔒 화면 잠금</button>
+  <button id="lockTopBtn" class="hidden" onclick="lockNow()" title="자리를 비울 때 누르세요. 저장한 뒤 바로 잠급니다.">🔒 화면 잠금</button>
 </header>
 <div id="lockView" class="lock-view"></div>
 
@@ -216,7 +216,9 @@
         <input id="q" placeholder="공사명 검색" oninput="renderList()">
         <select id="yearFilter" onchange="renderList()"></select>
         <span style="flex:1"></span>
+        <button id="adminAllBtn" class="hidden" onclick="toggleAdminAll()" title="관리자만 보입니다. 모든 회원이 저장한 공고를 봅니다(보기 전용).">👀 전체 회원 공고 보기</button>
       </div>
+      <p id="storeNote" class="help" style="margin:6px 0 10px"></p>
       <div style="overflow-x:auto">
         <table>
           <thead><tr>
@@ -511,7 +513,7 @@
       <select id="setFont"><option>맑은 고딕</option><option>함초롬바탕</option><option>함초롬돋움</option><option>휴먼명조</option><option>바탕</option></select>
       <div class="help">한글 파일(.hwpx)로 저장할 때 쓰는 글꼴입니다. 컴퓨터에 없는 글꼴이면 한글이 비슷한 글꼴로 바꿔 보여 줍니다.</div>
     </div>
-    <div class="f" style="margin-top:10px"><label>🔐 보안</label><div>
+    <div class="f hidden" style="margin-top:10px"><label>🔐 보안</label><div>
       <label class="chk" style="display:inline-flex;gap:6px;align-items:center;margin:0 10px 0 0"><input type="checkbox" id="lockModeChk" onchange="toggleLockMode(this.checked)"> <b>잠금 사용 (비밀번호)</b></label>
       <button type="button" id="lockPwBtn" onclick="changeVaultPw()">🔑 접근 비밀번호 바꾸기</button>
       <div class="help" id="lockModeTip" style="margin-top:4px"></div></div></div>
@@ -1064,7 +1066,7 @@ function showLock(){
       <button type="button" class="lock-skip" onclick="useWithoutLock()">비밀번호 없이 사용하기 (나만 쓰는 PC)</button>
       <p class="lock-skip-note">나중에 ⚙️ 설정·백업에서 언제든 잠금을 켤 수 있습니다.</p></form>`
   : `<form class="lock-box" onsubmit="event.preventDefault();unlockVault()">
-      <div class="lock-ico">🔒</div><h2>잠겨 있습니다</h2><p>접근 비밀번호를 입력하세요.</p>
+      <div class="lock-ico">🔒</div><h2>예전에 잠가 둔 공고가 있습니다</h2><p>이번 한 번만 예전 접근 비밀번호를 입력하세요.<br>다음부터는 비밀번호 없이 열립니다.<br>(로그인하면 내 계정으로 옮겨 어느 PC에서나 볼 수 있어요)</p>
       <input type="password" id="lockPw1" placeholder="비밀번호" autocomplete="current-password" autofocus>
       <div class="lock-msg" id="lockMsg"></div>
       <button class="primary" type="submit" id="lockBtn">🔓 잠금 해제</button>
@@ -1098,8 +1100,9 @@ async function unlockVault(){
     const salt = unb64(v.salt), key = await deriveKey(pw, salt, v.iter || KDF_ITER);
     const plain = await crypto.subtle.decrypt({ name:"AES-GCM", iv: unb64(v.iv) }, key, unb64(v.ct));
     projects = cleanProjects(JSON.parse(new TextDecoder().decode(plain)));
-    vaultKey = key; vaultSalt = salt; unlocked = true; lockFails = 0;
-    localStorage.removeItem(LS_DATA);
+    vaultKey = null; vaultSalt = null; unlocked = true; lockFails = 0;
+    // 이제 비밀번호 없이 사용: 이 PC에 그대로 저장하고 잠금 자료는 지움
+    localStorage.setItem(LS_LOCKMODE, "off"); await saveVault(); localStorage.removeItem(LS_VAULT);
     enterApp();
   } catch(e) {
     lockFails++; await new Promise(r => setTimeout(r, Math.min(lockFails, 5) * 600));   // 틀릴수록 조금씩 기다리게 함
@@ -1114,8 +1117,13 @@ function wipeVault(){
 }
 function enterApp(){
   $("lockView").classList.add("hidden"); $("lockView").innerHTML = ""; document.body.classList.remove("locked");
-  $("saveState").textContent = lockOn() ? "🔐 이 PC에만 암호화 저장" : "💻 이 PC에만 저장";
-  updateLockUI(); renderList(); if (lockOn()) armAutoLock();
+  $("saveState").textContent = isCloud() ? "☁️ 내 계정에 저장" : "💻 이 PC에만 저장";
+  const note = $("storeNote");
+  if (note) note.innerHTML = isCloud()
+    ? "☁️ 공고는 <b>내 계정</b>에 저장되어 어느 PC에서나 이어서 작업할 수 있습니다. 나와 관리자만 볼 수 있습니다."
+    : "💻 로그인하지 않아 공고가 <b>이 PC에만</b> 저장됩니다. <a href=\"index.html#login\">로그인</a>하면 내 계정에 저장되어 어느 PC에서나 이어서 작업할 수 있어요. (<a href=\"index.html#signup\">30초 회원가입</a>)";
+  const ab = $("adminAllBtn"); if (ab) ab.classList.toggle("hidden", !(isCloud() && HUB.isAdmin()));
+  updateLockUI(); renderList();
 }
 // 🔒 화면 잠금: 저장 → 메모리의 자료·열쇠를 지우고(새로고침) 잠금 화면으로
 async function lockNow(){
@@ -1170,14 +1178,67 @@ async function changeVaultPw(){
   vaultSalt = crypto.getRandomValues(new Uint8Array(16)); vaultKey = await deriveKey(a, vaultSalt, KDF_ITER); await saveVault();
   toast("비밀번호를 바꿨습니다");
 }
+/* ═══════════ 💾 공고 저장 위치 ═══════════
+   - 로그인한 회원: Firebase의 '내 공고함'(facility_users/{내 UID}/notices)에 저장
+       → 집·사무실 어느 PC에서나 이어서 작업. 본인과 관리자만 볼 수 있음 (보안 규칙으로 막음)
+   - 로그인하지 않은 손님: 이 PC(브라우저)에만 저장
+   - 비밀번호는 묻지 않음 (예전에 비밀번호로 잠가 둔 자료가 있을 때만, 꺼내 올 때 한 번 물어봄) */
+let myUid = null;          // 로그인한 회원의 UID (없으면 손님)
+let adminAll = false;      // 관리자: 전체 회원 공고 보기 중
+const isCloud = () => !!(db && myUid);
+const myBox = () => db.collection("facility_users").doc(myUid).collection("notices");
+// Firestore에는 공고 전체를 글자(JSON)로 저장 (빈 값·겹친 표 등 어떤 모양이든 그대로 보관)
+function toDoc(p){ const c = Object.assign({}, p); delete c._owner; delete c._ownerName;
+  return { id: p.id, name: String(p.name || "").slice(0, 200), year: Number(p.year) || 0, updatedAt: p.updatedAt || new Date().toISOString(), json: JSON.stringify(c) }; }
+function fromDoc(d){ try { const p = JSON.parse(d.json || "{}"); p.id = d.id || p.id; return p; } catch(e){ return null; } }
+function waitAuth(ms){ return new Promise(res => { let done = false; const fin = () => { if (!done) { done = true; res(); } };
+  if (window.HUB && HUB.whenAuthChecked) HUB.whenAuthChecked(fin); setTimeout(fin, ms || 8000); }); }
+
 async function initStore(){
-  projects = {}; db = null;
-  try { if (window.firebase && window.HUB && HUB.app) db = HUB.app().firestore(); } catch(e){ db = null; }   // 접속자 수 표시에만 사용(공고 자료는 보내지 않음)
-  if (localStorage.getItem(LS_LOCKMODE) === "off") {   // 잠금을 끈 PC: 비밀번호 없이 바로 열기
+  projects = {}; db = null; myUid = null;
+  try { if (window.firebase && window.HUB && HUB.app) db = HUB.app().firestore(); } catch(e){ db = null; }
+  $("saveState").textContent = "저장 위치 확인 중…";
+  initVisitCounter();
+  if (db) {
+    await waitAuth(8000);
+    try { const u = firebase.auth && firebase.auth().currentUser; if (u) myUid = u.uid; } catch(e){}
+  }
+  localStorage.setItem(LS_LOCKMODE, "off");   // 비밀번호 잠금은 더 쓰지 않음
+  if (isCloud()) {
+    try {
+      const snap = await myBox().get();
+      const got = {}; snap.forEach(d => { const p = fromDoc(d.data()); if (p) got[d.id] = p; });
+      projects = cleanProjects(got);
+    } catch(e) { console.error(e); alert("내 공고를 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 새로고침해 주세요.\n(보안 규칙에 facility_users 줄이 있는지도 확인)"); projects = {}; }
+    unlocked = true; enterApp();
+    await offerMoveLocal();
+  } else if (readVault()) {
+    showLock();   // 예전에 비밀번호로 잠가 둔 자료: 한 번만 열면 다음부터 비밀번호 없이 씀
+  } else {
     try { projects = cleanProjects(JSON.parse(localStorage.getItem(LS_DATA) || "{}")); } catch(e){ projects = {}; }
     unlocked = true; enterApp();
-  } else { $("saveState").textContent = "🔒 잠김"; showLock(); }
-  initVisitCounter();
+  }
+}
+// 로그인한 회원: 이 PC에 남아 있던 공고를 내 공고함으로 옮기기
+async function offerMoveLocal(){
+  let local = {}; try { local = cleanProjects(JSON.parse(localStorage.getItem(LS_DATA) || "{}")); } catch(e){}
+  const ids = Object.keys(local).filter(id => (local[id].name || "").trim());
+  if (ids.length && confirm(`이 PC에 저장돼 있던 공고 ${ids.length}건이 있습니다.\n내 계정(어느 PC에서나 보이는 내 공고함)으로 옮길까요?\n\n※ 다른 사람이 이 PC에서 쓴 공고가 섞여 있으면 '취소'를 누르세요.`)) {
+    let ok = 0, fail = 0;
+    for (const id of ids) { if (projects[id]) { ok++; continue; } try { const p = local[id]; p.updatedAt = p.updatedAt || new Date().toISOString(); await myBox().doc(id).set(toDoc(p)); projects[id] = p; ok++; } catch(e){ console.error(e); fail++; } }
+    if (!fail) localStorage.removeItem(LS_DATA);   // 모두 옮겨졌을 때만 이 PC의 사본을 지움
+    toast(fail ? `${ok}건은 옮겼고 ${fail}건은 옮기지 못했습니다. 다음에 다시 시도합니다.` : `공고 ${ok}건을 내 계정으로 옮겼습니다`, 5000); renderList();
+  }
+  if (readVault() && confirm("이 PC에 비밀번호로 잠가 둔 예전 공고가 있습니다.\n지금 비밀번호를 넣어 내 계정으로 옮길까요?")) {
+    const pw = prompt("예전 접근 비밀번호를 입력하세요."); if (!pw) return;
+    try {
+      const v = readVault(), key = await deriveKey(pw, unb64(v.salt), v.iter || KDF_ITER);
+      const plain = await crypto.subtle.decrypt({ name:"AES-GCM", iv: unb64(v.iv) }, key, unb64(v.ct));
+      const old = cleanProjects(JSON.parse(new TextDecoder().decode(plain)));
+      let ok = 0; for (const [id, p] of Object.entries(old)) { if (projects[id] || !(p.name || "").trim()) continue; await myBox().doc(id).set(toDoc(p)); projects[id] = p; ok++; }
+      localStorage.removeItem(LS_VAULT); toast(`잠가 두었던 공고 ${ok}건을 내 계정으로 옮겼습니다`, 4000); renderList();
+    } catch(e) { alert("비밀번호가 맞지 않거나 옮기지 못했습니다. 다음에 다시 열면 또 물어봅니다."); }
+  }
 }
 /* ── 일일·누적 접속자 수 ──
    같은 브라우저는 하루 1번만 셉니다(새로고침해도 늘지 않음).
@@ -1223,13 +1284,46 @@ async function initVisitCounter(){
   } catch(e) { console.warn("접속자 수: Firebase 권한 확인 필요(facility_stats)", e); showLocal(RULE_MSG); }
 }
 async function persist(p){
-  if (!unlocked) return;
-  p.updatedAt = new Date().toISOString(); projects[p.id] = p; await saveVault();
+  if (!unlocked || !p) return;
+  if (p._owner && p._owner !== myUid) return;   // 다른 회원 공고(관리자 보기)는 저장하지 않음
+  p.updatedAt = new Date().toISOString(); projects[p.id] = p;
+  if (isCloud()) {
+    try { await myBox().doc(p.id).set(toDoc(p)); }
+    catch(e){ console.error(e); toast("⚠️ 저장하지 못했습니다. 인터넷 연결을 확인해 주세요.", 5000); }
+  } else await saveVault();
 }
 async function removeStore(id){
   if (!unlocked) return false;
-  delete projects[id]; await saveVault();
+  const p = projects[id];
+  if (p && p._owner && p._owner !== myUid) { alert("다른 회원의 공고는 지울 수 없습니다 (보기 전용)."); return false; }
+  if (isCloud()) {
+    try { await myBox().doc(id).delete(); } catch(e){ console.error(e); alert("지우지 못했습니다. 인터넷 연결을 확인해 주세요."); return false; }
+    delete projects[id];
+  } else { delete projects[id]; await saveVault(); }
   return true;
+}
+// 관리자: 모든 회원이 저장한 공고 보기 (보기 전용)
+async function toggleAdminAll(){
+  if (!HUB.isAdmin()) return;
+  adminAll = !adminAll;
+  Object.keys(projects).forEach(id => { if (projects[id]._owner && projects[id]._owner !== myUid) delete projects[id]; });
+  if (adminAll) {
+    try {
+      const names = {}; (await db.collection("users").get()).forEach(d => names[d.id] = d.data().name || "");
+      const snap = await db.collectionGroup("notices").get();
+      const got = {};
+      snap.forEach(d => { const owner = d.ref.parent.parent ? d.ref.parent.parent.id : ""; if (owner === myUid) return;
+        const p = fromDoc(d.data()); if (!p) return; got[d.id] = p; got[d.id].__o = owner; });
+      const clean = cleanProjects(got);
+      Object.entries(clean).forEach(([id, p]) => { const o = got[id].__o; delete p.__o; p._owner = o; p._ownerName = names[o] || "탈퇴 회원"; if (!projects[id]) projects[id] = p; });
+      // 예전에 모두가 함께 쓰던 저장 공간의 자료도 함께 (보기 전용)
+      try { const old = await db.collection("facility_notices").get(); const og = {}; old.forEach(d => og[d.id] = d.data());
+        Object.entries(cleanProjects(og)).forEach(([id, p]) => { if (!projects[id]) { p._owner = "legacy"; p._ownerName = "예전 공용"; projects[id] = p; } }); } catch(e){}
+      toast("전체 회원 공고를 불러왔습니다 (보기 전용)", 3000);
+    } catch(e) { console.error(e); adminAll = false; alert("전체 공고를 불러오지 못했습니다. (보안 규칙의 facility_users 줄을 확인해 주세요)"); }
+  }
+  $("adminAllBtn").textContent = adminAll ? "↩ 내 공고만 보기" : "👀 전체 회원 공고 보기";
+  renderList();
 }
 function openSettings(){ updateLockUI(); $("setOrg").value=settings.org; $("setHead").value=settings.head||""; $("setDept").value=settings.dept||""; $("setTel").value=settings.tel||""; $("setRegion").value=settings.region||"종전 전라남도"; $("setAddr").value=settings.address||""; $("setCDept").value=settings.contractDept||""; $("setCTel").value=settings.contractTel||""; $("setFb").value=settings.fb; $("setHoli").value=settings.extraHolidays||""; $("setFont").value=settings.hwpxFont||"맑은 고딕"; $("setQDays").value=settings.quoteDays||3; $("settingsModal").classList.remove("hidden"); }
 function closeSettings(){ $("settingsModal").classList.add("hidden"); }
@@ -1243,7 +1337,7 @@ function saveSettings(){
   if (fbChanged) { toast("연동 설정이 변경되어 새로 불러옵니다"); setTimeout(()=>location.reload(), 800); }
   else { toast("설정을 저장했습니다"); renderList(); if (cur()) { autoFill(cur(), "autoSched"); renderNotice(false); } }
 }
-function backupJSON(){ if (!confirm("백업 파일은 암호화되지 않은 상태로 내려받습니다.\n다른 사람이 볼 수 없는 곳에 보관하세요. 계속할까요?")) return; download(`공고문_백업_${today()}.json`, JSON.stringify(projects, null, 2), "application/json"); }
+function backupJSON(){ if (!confirm("백업 파일을 내려받습니다.\n다른 사람이 볼 수 없는 곳에 보관하세요. 계속할까요?")) return; download(`공고문_백업_${today()}.json`, JSON.stringify(projects, null, 2), "application/json"); }
 function restoreJSON(input){
   const f = input.files[0]; if(!f) return; const r = new FileReader();
   r.onload = async () => { try { const data = JSON.parse(r.result); for (const p of Object.values(data)) await persist(p); toast("불러오기 완료"); renderList(); } catch(e){ alert("백업 파일을 읽지 못했습니다."); } input.value = ""; };
@@ -1297,7 +1391,7 @@ function renderList(){
   
   $("listBody").innerHTML = list.length ? list.map(p => {
     return `<tr class="click" onclick="openProject('${p.id}')">
-      <td>${esc(p.year)}</td><td><b>${esc(p.name)||"(제목 없음)"}</b></td><td>${esc(p.method)}</td>
+      <td>${esc(p.year)}</td><td><b>${esc(p.name)||"(제목 없음)"}</b>${p._owner ? ` <span class="badge" style="background:#FEF3C7;color:#92400E">👤 ${esc(p._ownerName)}</span>` : ""}</td><td>${esc(p.method)}</td>
       <td>${esc(industryInfo(p).name)}</td><td class="num">${num(p.estPrice)?won(p.estPrice):"-"}</td>
       <td>${esc(p.notice.date)||"-"}</td></tr>`;
   }).join("") : `<tr><td colspan="6" style="text-align:center;color:#888;padding:30px">작성된 공고가 없습니다. 새 공고를 등록해주세요.</td></tr>`;
@@ -1336,7 +1430,7 @@ function askSettings(){
       <button type="button" class="primary" onclick="this.closest('.set-ask').remove();openSettings();setTimeout(()=>$('setOrg').focus(),50)">⚙️ 지금 설정하기</button></div></div>`;
   document.body.appendChild(d); d.querySelector(".primary").focus();
 }
-function openProject(id){ curId = id; showDetail(); }
+function openProject(id){ curId = id; showDetail(); const p = cur(); if (p && p._owner && p._owner !== myUid) toast(`👤 ${p._ownerName || "다른 회원"}의 공고입니다. 보기 전용이라 고쳐도 저장되지 않습니다.`, 5000); }
 function backToList(){ if (cur() && !cur().name) { if(!confirm("공사명이 비어 있습니다. 저장하지 않고 나갈까요?")) return; delete projects[curId]; } else if (cur()) saveCurrent(false); curId = null; $("detailView").classList.add("hidden"); $("listView").classList.remove("hidden"); renderList(); window.scrollTo(0,0); }
 async function deleteProject(){ if (!confirm(`'${cur().name||"이 문서"}'를 삭제할까요?`)) return; if (!(await removeStore(curId))) return; curId=null; $("detailView").classList.add("hidden"); $("listView").classList.remove("hidden"); renderList(); }
 // 메인 허브(index.html)로 이동 — 작성 중인 공고를 먼저 저장
@@ -2750,8 +2844,8 @@ function saveHwpx(){
   } catch (e) { console.error(e); alert("한글 파일을 만들지 못했습니다. [📋 복사]로 한글에 붙여 넣어 주세요.\n\n오류: " + e.message); }
 }
 
-// 창을 닫거나 다른 창으로 갈 때: 암호화 저장을 바로 시작 (평문으로는 절대 저장하지 않음)
-const flushSave = () => { if (unlocked && cur() && (cur().name || "").trim()) { clearTimeout(saveTimer); projects[curId].updatedAt = new Date().toISOString(); saveVault(); } };
+// 창을 닫거나 다른 창으로 갈 때: 작성 중인 공고를 바로 저장
+const flushSave = () => { if (unlocked && cur() && (cur().name || "").trim()) { clearTimeout(saveTimer); persist(cur()); } };
 window.addEventListener("beforeunload", flushSave); window.addEventListener("pagehide", flushSave); document.addEventListener("visibilitychange", () => { if (document.hidden) flushSave(); });
 injectHints(); document.querySelectorAll(".rec-why").forEach(w => w.parentNode.appendChild(w)); $("guideAutoChk").checked = guideAuto; $("flowList").innerHTML = FLOW.map(([t,d]) => `<li><b>${esc(t)}</b> — ${esc(d)}</li>`).join(""); initStore();
 </script>
