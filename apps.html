@@ -6,8 +6,8 @@
     <title>스마트 업무도구 - 조효식 허브</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="common.css?v=5">
-    <script src="common.js?v=5"></script>
+    <link rel="stylesheet" href="common.css?v=7">
+    <script src="common.js?v=7"></script>
     <style>
         /* ===== 조효식 허브 PRO · 칠판 테마 (index.html과 같은 색) ===== */
         :root {
@@ -622,7 +622,7 @@
                 const badge = isAdmin ? `<span class="admin-badge">ADMIN</span>` : "";
                 // 로그인·로그아웃·회원관리·방문기록은 홈(index.html)에서 함. 여기서는 이름만 표시
                 uiArea.innerHTML = currentUser.uid
-                    ? `<a class="me-link" href="mypage.html" title="내 페이지로 이동">${avatarHTML(currentUser)}<span>${escText(currentUser.name)}</span> ${badge}</a>`
+                    ? `<a class="me-link" href="mypage.html" title="내 페이지로 이동">${avatarHTML(currentUser)}<span>${escText(currentUser.name)}</span> ${badge}</a> <a href="mypage.html#msg" title="쪽지함" style="text-decoration:none;font-size:18px;margin-left:6px">✉️<span class="hub-badge" data-hub-msgcnt hidden></span></a>`
                     : `<span style="font-weight:700; color:#1e293b;">😊 ${escText(currentUser.name)}님 ${badge}</span>`;
                 
                 postAuthor.value = currentUser.name;
@@ -1078,7 +1078,7 @@
                     <div style="padding: 12px; background: #ffffff; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
                         <div style="display: flex; justify-content: space-between; align-items: baseline;">
                             <div>
-                                <strong style="font-size: 13px; color: #334155;">${E(c.author)}</strong> ${badge}
+                                <strong style="font-size: 13px; color: #334155;">${E(c.author)}</strong>${HUB.msg.button(c.authorPhone, c.author)} ${badge}
                                 <span style="font-size: 11px; color: #94a3b8; margin-left: 8px;">${E(c.date)}</span>
                             </div>
                             <div>${delBtn}</div>
@@ -1372,7 +1372,7 @@
                 tr.innerHTML = `
                     <td class="center">${index--}</td>
                     <td style="font-weight: 700; color: #1e293b; line-height: 1.5; font-size: 13px;">${titlePrefix}${multiline(post.title)} ${fileBadgeHTML}</td>
-                    <td class="center" style="font-weight: 600; font-size: 12px;">${E(post.author)} ${badge}</td>
+                    <td class="center" style="font-weight: 600; font-size: 12px;">${E(post.author)}${HUB.msg.button(post.authorPhone, post.author)} ${badge}</td>
                     <td class="center" style="font-size: 11px; color: #64748b;">${E(post.date)}</td>
                     <td class="center">
                         <div class="btn-micro-group">

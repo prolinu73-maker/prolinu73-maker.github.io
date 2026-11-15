@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>교육공무직원 노무관리 정보마당</title>
 <!-- 화면 디자인(외부 인터넷 연결 없이 작동하도록 파일 안에 포함) -->
-<link rel="stylesheet" href="common.css?v=5">
-<script src="common.js?v=5"></script>
+<link rel="stylesheet" href="common.css?v=7">
+<script src="common.js?v=7"></script>
 <script>
 /* 비상용: common.js를 서버에서 찾지 못해도 페이지가 멈추지 않도록 최소 기능만 대신 채움
    (common.js가 정상적으로 불러와지면 이 부분은 쓰이지 않습니다) */
@@ -400,7 +400,7 @@ function closeModal() { $('modal').classList.add('hidden'); $('modal').classList
 /* 글 비밀번호 보호 (2단계)
    - 새 글: 글마다 다른 '소금값'을 섞고 10만 번 반복 암호화(PBKDF2) → 짧은 비밀번호도 대입으로 풀기 어렵게
    - 예전 글: 예전 방식 값도 그대로 확인되도록 함 */
-const QNA_PW_RULE = /^[0-9]{4}$/;   // 질문·답변 비밀번호: 숫자 4자리
+const PW_MIN = 6;   // 새 글 비밀번호 최소 글자 수 (질문·답변)
 const BOARD_PW_RULE = /^[0-9]{4}$/;   // 정보·자료실 비밀번호: 숫자 4자리
 const b64 = (u8) => btoa(String.fromCharCode(...u8));
 async function makePwHash(pw) {
@@ -611,7 +611,7 @@ function openQnaWrite(editId) {
         <input id="qTitle" placeholder="제목" class="w-full border border-slate-300 rounded-lg px-3 py-2">
         <textarea id="qContent" rows="7" placeholder="질문 내용을 자세히 적어 주세요. (근무형태, 입사일, 주 근로시간 등을 적어 주시면 더 정확히 답변할 수 있습니다)" class="w-full border border-slate-300 rounded-lg px-3 py-2"></textarea>
         <div class="grid grid-cols-2 gap-3 items-center">
-          <input id="qPw" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password" placeholder="비밀번호 숫자 4자리 (삭제·비밀글 확인용)" class="border border-slate-300 rounded-lg px-3 py-2${old ? ' hidden' : ''}">
+          <input id="qPw" type="password" placeholder="비밀번호 6자리 이상 (삭제·비밀글 확인용)" class="border border-slate-300 rounded-lg px-3 py-2${old ? ' hidden' : ''}">
           <label class="flex items-center gap-2 text-sm"><input id="qSecret" type="checkbox" class="w-4 h-4"> 🔒 비밀글로 작성</label>
         </div>
         <p class="text-xs p-2 rounded bg-amber-50 text-amber-800 leading-relaxed">⚠️ <b>이름·연락처·주민등록번호·건강 정보 등 개인정보는 적지 마세요.</b><br>🔒 비밀글은 목록에서 내용이 가려지지만, 완전한 비공개 저장소는 아닙니다. 개인 사정이 담긴 상담은 담당자에게 직접 연락해 주세요.</p>
@@ -655,7 +655,7 @@ async function saveQna(editId) {
     catch (e) { console.error(e); toast('수정에 실패했습니다'); $('qSave').disabled = false; }
     return;
   }
-  if (!QNA_PW_RULE.test(pw)) return toast('비밀번호는 숫자 4자리로 입력하세요');
+  if (pw.length < PW_MIN) return toast(`비밀번호를 ${PW_MIN}자리 이상 입력하세요`);
   $('qSave').disabled = true;
   try {
     d.pwHash = await makePwHash(pw); d.createdAt = Date.now(); d.views = 0; d.answer = null;
@@ -684,7 +684,7 @@ async function openQna(id) {
           <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${ans ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${ans ? '답변완료' : '답변대기'}</span>
           <span class="text-xs text-slate-500 ml-1">${esc(q.category)}</span>
           <h3 class="text-xl font-bold mt-2">${q.secret ? '🔒 ' : ''}${esc(q.title)}</h3>
-          <p class="text-xs text-slate-400 mt-1">${esc(q.author)} · ${fmtDate(q.createdAt, true)} · 조회 ${q.views}</p>
+          <p class="text-xs text-slate-400 mt-1">${esc(q.author)}${HUB.msg.button(q.authorKey, q.author)} · ${fmtDate(q.createdAt, true)} · 조회 ${q.views}</p>
         </div>
         <button onclick="closeModal()" class="text-2xl text-slate-400 hover:text-slate-700 leading-none">×</button>
       </div>
@@ -871,7 +871,7 @@ function openBoard(id) {
         <div>
           <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${CAT_COLOR[b.category] || CAT_COLOR['기타']}">${esc(b.category)}</span>
           <h3 class="text-xl font-bold mt-2">${b.pinned ? '📌 ' : ''}${esc(b.title)}</h3>
-          <p class="text-xs text-slate-400 mt-1">${esc(b.author || '관리자')} · ${fmtDate(b.createdAt, true)} · 조회 ${b.views}</p>
+          <p class="text-xs text-slate-400 mt-1">${esc(b.author || '관리자')}${HUB.msg.button(b.authorKey, b.author)} · ${fmtDate(b.createdAt, true)} · 조회 ${b.views}</p>
         </div>
         <button onclick="closeModal()" class="text-2xl text-slate-400 hover:text-slate-700 leading-none">×</button>
       </div>

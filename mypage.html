@@ -7,7 +7,7 @@
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css">
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css?v=5">
-<script src="common.js?v=6"></script>
+<script src="common.js?v=7"></script>
 <style>
   /* 칠판 테마 색은 common.css에 있음 */
   * { box-sizing: border-box; }
@@ -126,6 +126,29 @@
   .msg.ok { color: #1A9C7B; }
   .btn-save { width: 100%; padding: 13px; border: none; border-radius: 10px; background: var(--marker); color: #2A2109; font-family: inherit; font-size: 15px; font-weight: 800; cursor: pointer; }
   .btn-save:disabled { opacity: .6; cursor: wait; }
+  /* ───── 쪽지함 ───── */
+  .msgbox { grid-column: 1 / -1; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  .msub { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .msub button { padding: 8px 14px; border: 1.5px solid var(--line); background: #fff; border-radius: 999px; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; color: var(--ink); }
+  .msub button.on { border-color: var(--board-light); background: #E3EEE8; color: var(--board-light); }
+  .msub .write { margin-left: auto; background: var(--marker); border-color: var(--marker); color: #2A2109; }
+  .mrow { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 10px; border: none; border-bottom: 1px solid #EEF2F0; background: none; font-family: inherit; font-size: 14.5px; text-align: left; cursor: pointer; color: var(--ink); }
+  .mrow:hover { background: var(--paper); }
+  .mrow .who { flex: 0 0 120px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mrow .pv { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #3E4C45; }
+  .mrow .dt { flex: 0 0 auto; font-size: 12.5px; color: var(--muted); }
+  .mrow.unread .who, .mrow.unread .pv { font-weight: 800; color: var(--ink); }
+  .mrow .dot { width: 8px; height: 8px; border-radius: 50%; background: #dc2626; flex: 0 0 8px; }
+  .mrow .dot.off { background: transparent; }
+  .mview { border: 1.5px solid var(--board-light); border-radius: 12px; padding: 14px 16px; margin: 6px 0 14px; background: #FBFDFC; }
+  .mview .mh { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .mview .mh b { color: var(--ink); }
+  .mview .mt { white-space: pre-wrap; word-break: break-word; font-size: 15px; line-height: 1.7; }
+  .mview .ma { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .mview .ma button { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--line); background: #fff; font-family: inherit; font-weight: 700; cursor: pointer; }
+  .mview .ma .pri { background: var(--board-light); border-color: var(--board-light); color: #fff; }
+  .mview .ma .warn { color: #b91c1c; border-color: #fca5a5; }
+  .mnote { font-size: 12.5px; color: var(--muted); margin: 10px 2px 0; }
   .btn-close { width: 100%; margin-top: 10px; padding: 10px; border: none; border-radius: 8px; background: #e2e8f0; font-family: inherit; font-weight: 800; cursor: pointer; }
 </style>
 </head>
@@ -209,6 +232,7 @@
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script>
   // 관리자 확인은 HUB.isAdmin() / HUB.ADMIN_UIDS (휴대폰 번호는 쓰지 않음)
   const NICK_RULE = /^[가-힣ㄱ-ㅎa-zA-Z0-9_\- ]{2,12}$/;
@@ -241,11 +265,13 @@
         <button role="menuitem" onclick="closeUserMenu(); openEdit()">⚙️ 프로필 편집</button>
         <a href="index.html#mypw" role="menuitem">🔑 이메일·비밀번호 변경</a>
         <a href="mypage.html#fav" role="menuitem" onclick="closeUserMenu(); setTimeout(()=>showTab('fav'),0)">⭐ 즐겨찾기</a>
+        <a href="mypage.html#msg" role="menuitem" onclick="closeUserMenu(); setTimeout(()=>showTab('msg'),0)">✉️ 쪽지함 <span class="hub-badge" data-hub-msgcnt hidden></span></a>
         ${admin ? `<div class="um-sec">관리자</div>
         <a href="index.html#members" role="menuitem">👥 회원관리</a>
         <a href="index.html#visits" role="menuitem">📈 방문기록</a>` : ''}
         <a href="index.html#logout" class="logout" role="menuitem">로그아웃</a>
       </div>`;
+    HUB.msg.refreshBadge();
   }
   const toggleUserMenu = HUB.toggleUserMenu, closeUserMenu = HUB.closeUserMenu;   // 메뉴 열고 닫기 (common.js)
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEdit(); });   // 메뉴 닫기는 common.js가 함
@@ -304,19 +330,22 @@
     $('sPosts').textContent = posts; $('sLikes').textContent = likes; $('sDown').textContent = downs;
     $('sScore').textContent = (posts * 10 + likes * 2 + downs).toLocaleString('ko-KR');
     renderTabs();
-    showTab(location.hash === "#fav" ? "fav" : (SOURCES.find(s => (results[s.key] || []).length) || SOURCES[0]).key);
+    showTab(location.hash === "#msg" ? "msg" : location.hash === "#fav" ? "fav" : (SOURCES.find(s => (results[s.key] || []).length) || SOURCES[0]).key);
   }
 
   function renderTabs() {
     const favs = (profile && profile.favorites) || [];
     $('tabs').innerHTML = SOURCES.map(s => `<button class="tab" role="tab" data-k="${s.key}" onclick="showTab('${s.key}')">${s.label} <span class="cnt">${(results[s.key] || []).length}</span></button>`).join("")
-      + `<button class="tab" role="tab" data-k="fav" onclick="showTab('fav')">⭐ 즐겨찾기 <span class="cnt">${favs.length}</span></button>`;
+      + `<button class="tab" role="tab" data-k="fav" onclick="showTab('fav')">⭐ 즐겨찾기 <span class="cnt">${favs.length}</span></button>`
+      + `<button class="tab" role="tab" data-k="msg" onclick="showTab('msg')">✉️ 쪽지함 <span class="hub-badge" data-hub-msgcnt hidden></span></button>`;
+    HUB.msg.refreshBadge();
   }
 
   function showTab(k) {
     activeTab = k;
     document.querySelectorAll('.tab').forEach(t => { const on = t.dataset.k === k; t.classList.toggle('active', on); t.setAttribute('aria-selected', String(on)); });
     const box = $('list');
+    if (k === "msg") { renderMsgBox(); if (!MSG.loaded) loadMsgs(); return; }
     if (k === "fav") {
       // 즐겨찾기 번호가 정상인 것만 (따옴표 등이 섞인 번호는 버튼 코드를 바꿀 수 있어 제외)
       const favs = ((profile && profile.favorites) || []).filter(f => f && /^[A-Za-z_]{1,40}\/[A-Za-z0-9_-]{1,128}$/.test(f.key || '')).sort((a, b) => (b.at || 0) - (a.at || 0));
@@ -503,6 +532,99 @@
     } finally { btn.disabled = false; }
   }
   $('eNick') && $('eNick').addEventListener('input', () => { if (!draftPhotoBlob) drawPreview(); });
+
+  /* ───── ✉️ 쪽지함 ─────
+     받은 쪽지 / 보낸 쪽지 / 쪽지 쓰기 (+ 관리자: 신고된 쪽지)
+     - 쪽지는 보낸 사람·받는 사람만 볼 수 있음. 관리자는 '신고'된 쪽지만 볼 수 있음
+     - 1년이 지난 쪽지는 쪽지함을 열 때 자동으로 지움 */
+  const MSG = { sub: "in", inbox: [], outbox: [], reports: [], open: null, loaded: false, busy: false };
+  const msgTime = m => !m.createdAt ? null : typeof m.createdAt.toDate === "function" ? m.createdAt.toDate() : typeof m.createdAt === "number" ? new Date(m.createdAt) : null;
+  function msgDate(m) { const t = msgTime(m); if (!t) return ""; const n = new Date();
+    return t.toDateString() === n.toDateString() ? `${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}` : fmt(t); }
+  async function loadMsgs() {
+    if (MSG.busy || !db || !currentUser) return; MSG.busy = true;
+    await new Promise(r => HUB.whenAuthChecked(r));
+    const uid = currentUser.uid, YEAR = 365 * 24 * 3600 * 1000, now = Date.now();
+    const get = async (field) => { const out = [];
+      const snap = await db.collection("messages").where(field, "==", uid).get();
+      snap.forEach(d => { if (!HUB.okId(d.id)) return; const m = { id: d.id, ...d.data() }; const t = msgTime(m);
+        if (t && now - t.getTime() > YEAR) { try { db.collection("messages").doc(d.id).delete().catch(() => {}); } catch (e) {} return; }   // 1년 지난 쪽지 정리
+        out.push(m); });
+      return out.sort((a, b) => (msgTime(b) || 0) - (msgTime(a) || 0)); };
+    try {
+      MSG.inbox = (await get("to")).filter(m => !m.delTo);
+      MSG.outbox = (await get("from")).filter(m => !m.delFrom);
+      if (HUB.isAdmin(currentUser)) {
+        const r = await db.collection("messages").where("reported", "==", true).get(); MSG.reports = [];
+        r.forEach(d => { if (HUB.okId(d.id)) MSG.reports.push({ id: d.id, ...d.data() }); });
+        MSG.reports.sort((a, b) => (msgTime(b) || 0) - (msgTime(a) || 0));
+      }
+      MSG.loaded = true;
+    } catch (e) { console.error(e); MSG.error = "쪽지를 불러오지 못했어요. 새로고침해 주세요."; }
+    MSG.busy = false;
+    if (activeTab === "msg") renderMsgBox();
+    HUB.msg.refreshBadge(true);
+  }
+  function msgList() { return MSG.sub === "out" ? MSG.outbox : MSG.sub === "rep" ? MSG.reports : MSG.inbox; }
+  function renderMsgBox() {
+    const box = $('list'), admin = HUB.isAdmin(currentUser);
+    const unread = MSG.inbox.filter(m => !m.read).length;
+    const subs = [["in", `📥 받은 쪽지${unread ? ` (${unread})` : ""}`], ["out", "📤 보낸 쪽지"]];
+    if (admin) subs.push(["rep", `🚨 신고된 쪽지${MSG.reports.length ? ` (${MSG.reports.length})` : ""}`]);
+    const list = msgList();
+    let body;
+    if (!MSG.loaded) body = `<p class="mnote">${MSG.error ? esc(MSG.error) : "불러오는 중..."}</p>`;
+    else if (!list.length) body = `<div class="empty-box" style="margin-top:6px">${MSG.sub === "in" ? "받은 쪽지가 없어요." : MSG.sub === "out" ? "보낸 쪽지가 없어요." : "신고된 쪽지가 없어요."}</div>`;
+    else body = list.map(m => {
+      const isIn = MSG.sub === "in", who = MSG.sub === "rep" ? `${m.fromName || "?"} → ${m.toName || "?"}` : isIn ? (m.fromName || "(알 수 없음)") : `→ ${m.toName || "(알 수 없음)"}`;
+      const row = `<button class="mrow${isIn && !m.read ? " unread" : ""}" onclick="openMsg('${m.id}')"><span class="dot${isIn && !m.read ? "" : " off"}"></span><span class="who">${esc(who)}</span><span class="pv">${esc(String(m.text || "").replace(/\s+/g, " ").slice(0, 60))}</span><span class="dt">${esc(msgDate(m))}</span></button>`;
+      if (MSG.open !== m.id) return row;
+      const acts = MSG.sub === "rep"
+        ? `<button class="warn" onclick="adminDelMsg('${m.id}')">🗑 쪽지 삭제</button><button onclick="adminClearReport('${m.id}')">문제없음 (신고 풀기)</button>`
+        : `${isIn ? `<button class="pri" onclick="replyMsg('${m.id}')">↩ 답장</button>` : ""}<button onclick="delMsg('${m.id}')">🗑 삭제</button>${isIn ? (m.reported ? `<span class="mnote">🚨 신고한 쪽지입니다</span>` : `<button class="warn" onclick="reportMsg('${m.id}')">🚨 신고</button>`) : ""}`;
+      return row + `<div class="mview"><div class="mh">${MSG.sub === "rep" ? `보낸 사람 <b>${esc(m.fromName || "")}</b> · 받는 사람 <b>${esc(m.toName || "")}</b>` : isIn ? `보낸 사람 <b>${esc(m.fromName || "")}</b>` : `받는 사람 <b>${esc(m.toName || "")}</b>`} · ${esc(msgTime(m) ? msgTime(m).toLocaleString("ko-KR") : "")}</div>
+        <div class="mt">${esc(m.text || "")}</div><div class="ma">${acts}<button onclick="openMsg(null)">닫기</button></div></div>`;
+    }).join("");
+    box.innerHTML = `<div class="msgbox"><div class="msub">${subs.map(([k, t]) => `<button class="${MSG.sub === k ? "on" : ""}" onclick="msgSub('${k}')">${t}</button>`).join("")}
+      <button class="write" onclick="HUB.msg.compose(null, '', { onSent: () => { MSG.loaded = false; loadMsgs(); } })">✏️ 쪽지 쓰기</button></div>${body}
+      <p class="mnote">🔒 쪽지는 보낸 사람과 받는 사람만 볼 수 있어요. 관리자도 볼 수 없고, '신고'한 쪽지만 관리자가 확인합니다. 1년이 지난 쪽지는 자동으로 지워져요.</p></div>`;
+  }
+  function msgSub(k) { MSG.sub = k; MSG.open = null; renderMsgBox(); }
+  const findMsg = id => msgList().find(m => m.id === id);
+  async function openMsg(id) {
+    MSG.open = MSG.open === id ? null : id; renderMsgBox();
+    const m = id && findMsg(id);
+    if (m && MSG.sub === "in" && !m.read) {
+      try { await db.collection("messages").doc(id).update({ read: true }); m.read = true; renderMsgBox(); HUB.msg.refreshBadge(true); } catch (e) { console.log(e); }
+    }
+  }
+  function replyMsg(id) { const m = findMsg(id); if (m) HUB.msg.compose(m.from, m.fromName, { quote: m.text, onSent: () => { MSG.loaded = false; loadMsgs(); } }); }
+  async function delMsg(id) {
+    const m = findMsg(id); if (!m || !confirm("이 쪽지를 내 쪽지함에서 지울까요?")) return;
+    const isIn = MSG.sub === "in", ref = db.collection("messages").doc(id);
+    try {
+      // 상대방도 이미 지웠으면 완전히 삭제, 아니면 내 쪽에서만 숨김
+      if (isIn ? m.delFrom : m.delTo) await ref.delete();
+      else await ref.update(isIn ? { delTo: true } : { delFrom: true });
+      if (isIn) MSG.inbox = MSG.inbox.filter(x => x.id !== id); else MSG.outbox = MSG.outbox.filter(x => x.id !== id);
+      MSG.open = null; renderMsgBox(); HUB.msg.refreshBadge(true);
+    } catch (e) { console.error(e); alert("지우지 못했어요. 새로고침한 뒤 다시 해 주세요."); }
+  }
+  async function reportMsg(id) {
+    if (!confirm("이 쪽지를 관리자에게 신고할까요?\n신고하면 관리자가 이 쪽지 내용을 볼 수 있게 됩니다.")) return;
+    try { await db.collection("messages").doc(id).update({ reported: true, reportedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      const m = findMsg(id); if (m) m.reported = true; renderMsgBox(); alert("신고했어요. 관리자가 확인합니다."); }
+    catch (e) { console.error(e); alert("신고하지 못했어요."); }
+  }
+  async function adminDelMsg(id) {
+    if (!confirm("신고된 쪽지를 완전히 삭제할까요? (보낸 사람·받는 사람 쪽지함에서도 사라집니다)")) return;
+    try { await db.collection("messages").doc(id).delete(); MSG.reports = MSG.reports.filter(x => x.id !== id); MSG.open = null; renderMsgBox(); }
+    catch (e) { console.error(e); alert("삭제하지 못했어요."); }
+  }
+  async function adminClearReport(id) {
+    try { await db.collection("messages").doc(id).update({ reported: false }); MSG.reports = MSG.reports.filter(x => x.id !== id); MSG.open = null; renderMsgBox(); }
+    catch (e) { console.error(e); alert("처리하지 못했어요."); }
+  }
 
   /* ───── 시작 ───── */
   async function start() {

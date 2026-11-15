@@ -14,6 +14,7 @@
      5. 화면 조각       HUB.renderHeader(), HUB.mountHomeButton(), HUB.avatarHTML(),
                         HUB.userMenuHTML(), HUB.toggleUserMenu(), HUB.closeUserMenu()
      6. 방문 기록       페이지를 열면 자동으로 기록 (관리자 브라우저는 제외)
+     7. 쪽지           HUB.msg.compose(), HUB.msg.button(), HUB.msg.refreshBadge()
 
    ※ 상단 메뉴를 추가·변경할 때는 아래 HUB.MENU만 고치면 모든 페이지에 반영됩니다.
    ===================================================================== */
@@ -22,7 +23,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.2.1';
+    HUB.VERSION = '1.3.0';
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
@@ -422,6 +423,7 @@
                       <a href="mypage.html#edit" role="menuitem">⚙️ 프로필 편집</a>
                       ${item("🔑 이메일·비밀번호 변경", act.myInfo, "index.html#mypw")}
                       <a href="mypage.html#fav" role="menuitem">⭐ 즐겨찾기</a>
+                      <a href="mypage.html#msg" role="menuitem">✉️ 쪽지함 <span class="hub-badge" data-hub-msgcnt hidden></span></a>
                       ${admin ? `<div class="um-sec">관리자</div>
                       ${item("👥 회원관리", act.members, "index.html#members")}
                       ${item("📈 방문기록", act.visits, "index.html#visits")}` : ''}
@@ -524,9 +526,149 @@
     })();
 
     /* =================================================================
+       7. 쪽지 (회원끼리 주고받기)
+          - Firebase 'messages' 보관함에 1통 = 문서 1개
+          - 보낸 사람과 받는 사람만 읽을 수 있음 (관리자도 못 봄, '신고'된 쪽지만 관리자가 확인)
+          - 1년이 지난 쪽지는 쪽지함을 열 때 자동으로 지움
+       ================================================================= */
+    HUB.msg = (function () {
+        const MAX = 1000;
+        let cssDone = false;
+        function css() {
+            if (cssDone) return; cssDone = true;
+            const st = d.createElement("style");
+            st.textContent = `
+.hub-badge{display:inline-block;min-width:18px;padding:0 6px;border-radius:999px;background:#dc2626;color:#fff;font-size:11.5px;font-weight:800;line-height:18px;text-align:center;margin-left:4px;vertical-align:1px}
+.hub-badge[hidden]{display:none}
+.hub-msg-to{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:0 7px;margin-left:4px;font-size:12px;line-height:20px;cursor:pointer;color:#1B5442;font-weight:700}
+.hub-msg-to:hover{border-color:#1B5442;background:#E3EEE8}
+.hub-mc-back{position:fixed;inset:0;z-index:2000;background:rgba(14,50,39,.55);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)}
+.hub-mc{background:#fff;border-radius:14px;width:440px;max-width:100%;padding:24px;box-shadow:0 24px 48px rgba(0,0,0,.25);border-top:6px solid #1B5442;font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;color:#17231D}
+.hub-mc h3{margin:0 0 14px;font-size:19px;text-align:center}
+.hub-mc label{display:block;font-size:13px;font-weight:700;color:#3E4C45;margin:0 0 4px}
+.hub-mc input,.hub-mc textarea{width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #D5DFD9;border-radius:8px;font:inherit;font-size:15px;margin:0 0 10px}
+.hub-mc textarea{min-height:150px;resize:vertical}
+.hub-mc input:focus,.hub-mc textarea:focus{border-color:#1B5442;outline:none}
+.hub-mc input[readonly]{background:#F2F5F3}
+.hub-mc .mc-cnt{font-size:12px;color:#5B6B63;text-align:right;margin:-6px 0 8px}
+.hub-mc .mc-msg{min-height:1.2em;font-size:13px;font-weight:700;color:#dc2626;margin:0 0 8px}
+.hub-mc .mc-msg.ok{color:#1A9C7B}
+.hub-mc .mc-row{display:flex;gap:8px}
+.hub-mc .mc-row button{flex:1;padding:12px;border:none;border-radius:10px;font:inherit;font-size:15px;font-weight:800;cursor:pointer}
+.hub-mc .mc-send{background:#F4C430;color:#2A2109}.hub-mc .mc-send:disabled{opacity:.6;cursor:wait}
+.hub-mc .mc-close{background:#e2e8f0;color:#17231D}`;
+            d.head.appendChild(st);
+        }
+        const me = () => { const u = HUB.getUser(); return u && u.uid ? u : null; };
+        // 받는 사람 이름 옆에 붙는 '✉️' 버튼 (회원 글에만: 글 주인 표시값이 'uid:고유번호'일 때)
+        function button(ownerKey, name) {
+            css();
+            const m = /^uid:([A-Za-z0-9_-]{1,128})$/.exec(String(ownerKey || ""));
+            if (!m) return "";
+            const u = me(); if (u && u.uid === m[1]) return "";
+            return `<button type="button" class="hub-msg-to" title="${HUB.esc(name || "")}님에게 쪽지 보내기" data-uid="${m[1]}" data-name="${HUB.esc(name || "")}" onclick="event.stopPropagation(); event.preventDefault(); HUB.msg.compose(this.dataset.uid, this.dataset.name)">✉️</button>`;
+        }
+        // 쪽지 쓰기 창 (uid가 있으면 받는 사람 고정, 없으면 닉네임 입력)
+        function compose(toUid, toName, opt) {
+            css();
+            const u = me();
+            if (!u) {
+                if (confirm("쪽지는 회원만 보낼 수 있어요.\n로그인(또는 30초 회원가입)하러 갈까요?")) location.href = "index.html#login";
+                return;
+            }
+            const old = d.getElementById("hubMc"); if (old) old.remove();
+            const back = d.createElement("div"); back.className = "hub-mc-back"; back.id = "hubMc";
+            back.innerHTML = `<div class="hub-mc" role="dialog" aria-modal="true" aria-labelledby="hubMcT">
+              <h3 id="hubMcT">✉️ 쪽지 보내기</h3>
+              <label for="hubMcTo">받는 사람 (닉네임)</label><input id="hubMcTo" maxlength="40" autocomplete="off">
+              <label for="hubMcText">내용</label><textarea id="hubMcText" maxlength="${MAX}" placeholder="보낼 내용을 적어 주세요 (${MAX}자 이내)"></textarea>
+              <div class="mc-cnt"><span id="hubMcCnt">0</span> / ${MAX}</div>
+              <p class="mc-msg" id="hubMcMsg" role="alert"></p>
+              <div class="mc-row"><button type="button" class="mc-send" id="hubMcSend">보내기</button><button type="button" class="mc-close" id="hubMcClose">닫기</button></div></div>`;
+            d.body.appendChild(back);
+            const $ = id => d.getElementById(id);
+            const toIn = $("hubMcTo"), tx = $("hubMcText"), msg = (t, ok) => { $("hubMcMsg").textContent = t || ""; $("hubMcMsg").classList.toggle("ok", !!ok); };
+            if (toName) toIn.value = toName;
+            if (toUid) toIn.readOnly = true;
+            if (opt && opt.quote) tx.value = "\n\n──── 받은 쪽지 ────\n" + String(opt.quote).slice(0, 400);
+            const close = () => back.remove();
+            $("hubMcClose").onclick = close;
+            back.addEventListener("click", e => { if (e.target === back) close(); });
+            back.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+            tx.addEventListener("input", () => { $("hubMcCnt").textContent = tx.value.length; });
+            $("hubMcCnt").textContent = tx.value.length;
+            setTimeout(() => (toUid ? tx : toIn).focus(), 30);
+            $("hubMcSend").onclick = async () => {
+                const text = tx.value.trim();
+                if (!text) return msg("내용을 적어 주세요.");
+                if (text.length > MAX) return msg(MAX + "자 이내로 줄여 주세요.");
+                const db = HUB.db(); if (!db) return msg("서버에 연결하지 못했어요. 새로고침해 주세요.");
+                const btn = $("hubMcSend"); btn.disabled = true; msg("보내는 중입니다...", true);
+                try {
+                    let uid = toUid, name = toIn.value.trim();
+                    if (!uid) {   // 닉네임으로 받는 사람 찾기 (닉네임 찾기표)
+                        if (!HUB.idx.okNick(name)) { btn.disabled = false; return msg("받는 사람 닉네임을 정확히 적어 주세요."); }
+                        const s = await db.collection("nicknames").doc(name).get();
+                        if (!s.exists) { btn.disabled = false; return msg("그 닉네임의 회원이 없어요. 띄어쓰기까지 정확히 적어 주세요."); }
+                        uid = s.data().uid;
+                    }
+                    if (!HUB.okId(uid)) { btn.disabled = false; return msg("받는 사람을 찾지 못했어요."); }
+                    if (uid === u.uid) { btn.disabled = false; return msg("나에게는 쪽지를 보낼 수 없어요."); }
+                    await db.collection("messages").add({
+                        from: u.uid, fromName: u.name || "", to: uid, toName: name.slice(0, 40),
+                        text: text, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        read: false, delFrom: false, delTo: false, reported: false
+                    });
+                    msg("✔ 쪽지를 보냈어요.", true);
+                    setTimeout(close, 900);
+                    if (opt && typeof opt.onSent === "function") opt.onSent();
+                } catch (e) {
+                    console.error(e); btn.disabled = false;
+                    msg(/permission/i.test(String(e.code || e.message)) ? "보내지 못했어요. 탈퇴한 회원이거나, 내 닉네임 정보가 바뀌었을 수 있어요. 새로고침 후 다시 해 주세요." : "보내지 못했어요. (" + (e.code || e.message) + ")");
+                }
+            };
+        }
+        // 안 읽은 쪽지 수 → 화면의 [data-hub-msgcnt] 자리에 빨간 숫자로 표시
+        let badgeTimer = null, last = { uid: null, n: 0, at: 0 };
+        const paint = n => d.querySelectorAll("[data-hub-msgcnt]").forEach(x => { x.textContent = n > 99 ? "99+" : String(n); x.hidden = !n; });
+        // force=true 이면 바로 서버에 다시 물어봄 (아니면 20초 안에는 지난 숫자를 그대로 사용)
+        async function refreshBadge(force) {
+            css();
+            const u = me(), db = HUB.db();
+            const spots = d.querySelectorAll("[data-hub-msgcnt]");
+            if (!u || !db || !spots.length) { spots.forEach(x => x.hidden = true); return 0; }
+            if (!force && last.uid === u.uid && Date.now() - last.at < 20000) { paint(last.n); return last.n; }
+            try {
+                const snap = await db.collection("messages").where("to", "==", u.uid).where("read", "==", false).get();
+                let n = 0; snap.forEach(x => { if (!x.data().delTo) n++; });
+                last = { uid: u.uid, n, at: Date.now() };
+                paint(n); return n;
+            } catch (e) { return 0; }
+        }
+        // 로그인 확인이 끝나면 숫자를 보여 주고, 화면을 보고 있는 동안 3분마다 다시 확인
+        function autoBadge() {
+            // 페이지가 메뉴를 새로 그려 숫자 자리가 생기면 자동으로 채움
+            try {
+                let q = null;
+                new MutationObserver(() => { if (q) return; q = setTimeout(() => { q = null;
+                    if ([...d.querySelectorAll("[data-hub-msgcnt]")].some(x => !x.dataset.hubDone)) {
+                        d.querySelectorAll("[data-hub-msgcnt]").forEach(x => x.dataset.hubDone = "1"); refreshBadge(); } }, 80); })
+                    .observe(d.body, { childList: true, subtree: true });
+            } catch (e) {}
+            HUB.onUserChange(() => setTimeout(refreshBadge, 50));   // 메뉴를 다시 그리면 숫자도 다시
+            HUB.whenAuthChecked(() => {
+                refreshBadge();
+                clearInterval(badgeTimer);
+                badgeTimer = setInterval(() => { if (!d.hidden) refreshBadge(true); }, 180000);
+            });
+        }
+        return { MAX, button, compose, refreshBadge, autoBadge };
+    })();
+
+    /* =================================================================
        시작: Firebase 프로그램을 불러온 페이지는 로그인 상태를 자동으로 맞춤
        ================================================================= */
     d.addEventListener("DOMContentLoaded", () => {
-        if (d.querySelector('script[src*="firebase-app-compat"]')) HUB.startAuthSync();
+        if (d.querySelector('script[src*="firebase-app-compat"]')) { HUB.startAuthSync(); HUB.msg.autoBadge(); }
     });
 })(window, document);
