@@ -1113,7 +1113,7 @@ const COUNTER_NAMESPACE = 'jnsecc-mulpum-system';
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 async function counterCall(action, key){
-  const ctl = new AbortController(); const t = setTimeout(()=>ctl.abort(), 5000);
+  const ctl = new AbortController(); const t = setTimeout(()=>ctl.abort(), 20000);   // 응답을 20초까지 기다림
   try{
     const r = await fetch(`${COUNTER_URL}/${action}/${COUNTER_NAMESPACE}/${key}`, {signal:ctl.signal, cache:'no-store'});
     if (r.status===404) return 0;                       // 아직 아무도 방문하지 않은 날
@@ -1121,7 +1121,7 @@ async function counterCall(action, key){
     return (await r.json()).value;
   } finally { clearTimeout(t); }
 }
-async function updateVisitors(){
+async function updateVisitors(attempt){
   const day = ymd(TODAY).replace(/-/g,'');
   const dayKey = 'day-'+day;
   // 관리자(또는 이 브라우저에서 관리자로 로그인한 적이 있으면)는 접속자 수를 세지 않고 숫자만 읽어 옴
@@ -1144,8 +1144,9 @@ async function updateVisitors(){
     $('vMode').textContent = '';
     $('visitBox').title = '전체 사용자 기준 접속자 수입니다 (같은 PC는 하루 1명으로 계산' + (hubAdminSkip ? ' · 이 브라우저는 관리자용이라 세지 않음' : '') + ')';
   } else {
-    // 집계 서비스에 전혀 연결이 안 될 때: 이 PC 기준으로 셈
     console.log('접속자 수 집계 서비스 연결 실패:', rt.reason);
+    if (!attempt){ setTimeout(()=>updateVisitors(1), 3000); return; }   // 한 번 더 시도
+    // 두 번 모두 연결이 안 될 때: 이 PC 기준으로 셈
     let t = +(lsGet('mulpum_local_total')||0), d = lsGet('mulpum_local_day')===day ? +(lsGet('mulpum_local_today')||0) : 0;
     if (!hubAdminSkip && lsGet('mulpum_local_visited')!==day){ t++; d++; lsSet('mulpum_local_visited',day); }
     lsSet('mulpum_local_total',t); lsSet('mulpum_local_day',day); lsSet('mulpum_local_today',d);
@@ -1155,7 +1156,6 @@ async function updateVisitors(){
     $('visitBox').title = '인터넷 집계 서비스에 연결할 수 없어 이 PC에서 접속한 횟수만 표시합니다';
   }
 }
-updateVisitors();
 
 /* =====================================================================
    [고급 기능] 통계표 · 교체 전망 · 불용 후보 · 재물조사 · 변동 비교 · 자료 점검
@@ -1579,7 +1579,7 @@ auLoad();
 // 처음 열었을 때: 파일이 없어도 모든 화면 요소를 보여 줍니다.
 initFilters();
 resetAll();
-restoreSaved();
+restoreSaved().finally(()=>setTimeout(()=>updateVisitors(0), 300));   // 자료를 다 펼친 뒤 접속자 수 집계
 </script>
 
 <!-- =====================================================================
