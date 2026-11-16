@@ -277,7 +277,8 @@
                 <button class="btn-import btn-toolbar" onclick="document.getElementById('fileUpload').click();">📥 불러오기</button>
                 <button id="btnExport" class="btn-export btn-toolbar" onclick="handleExcelExport()">📤 다운로드</button>
                 <button id="btnPivotToggle" class="btn-pivot btn-toolbar" onclick="togglePivotView()">📊 피벗 테이블</button>
-                <select id="yearFilter" class="year-select"><option value="all">전체 연도</option></select>
+                <!-- '전체 연도' 콤보는 화면에서 숨김 (항상 전체 연도로 동작. 다시 보이게 하려면 style="display: none;" 만 지우면 됩니다) -->
+                <select id="yearFilter" class="year-select" style="display: none;"><option value="all">전체 연도</option></select>
                 <!-- 세목 구분: 업무추진비·여비만 골라 보기 (목록은 아래 스크립트의 EXPORT_CATS에서 자동으로 채워짐) -->
                 <select id="catFilter" class="cat-select" title="업무추진비·여비 내역만 골라 봅니다"><option value="">세목 구분: 전체</option></select>
                 <button id="btnInit" class="btn-init btn-toolbar" onclick="clearData()">전체 초기화</button>
@@ -1514,7 +1515,8 @@
     function exportPivotExcel(wb, dateStr) {
         if (!pvModel) return alert('내보낼 피벗 표가 없습니다.');
         const y = document.getElementById('yearFilter').value;
-        const conds = [`연도: ${y === 'all' ? '전체' : y}`, `세목 구분: ${catMode || '전체'}`];
+        const conds = [`세목 구분: ${catMode || '전체'}`];
+        if (y !== 'all') conds.unshift(`연도: ${y}`);
         Object.keys(pv.excl).forEach(f => conds.push(`${f}: ${pv.excl[f].length}개 항목 제외`));
         const aoa = [['피벗 테이블' + (catMode ? ' · ' + catMode : '')], ['조건 → ' + conds.join('  |  ')], []];
         const merges = [], fmts = [], occ = {};
