@@ -120,6 +120,13 @@
         .stat-total { color: #4f46e5; font-weight: 900; }
         .stat-divider { color: #cbd5e1; }
 
+        /* 세목 구분(업무추진비·여비) 보기 */
+        .cat-select { padding: 5px 8px; font-size: 0.8rem; height: 28px; font-weight: bold; color: #7c2d12; background: #fff7ed; border: 2px solid #fb923c; }
+        .cat-select.on { background: #ea580c; color: #fff; border-color: #c2410c; }
+        #catTable tfoot td { position: sticky; bottom: 0; background: #f2f2f2; font-weight: 800; border-top: 2px solid var(--border); }
+        #catTable td.center { text-align: center; }
+        .cat-note { font-size: 0.78rem; color: var(--text-muted); margin: -6px 0 10px; }
+
         #errorBanner { display: none; background-color: #fef2f2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #f87171; font-weight: bold; }
     </style>
 </head>
@@ -211,8 +218,11 @@
                 <button id="btnExport" class="btn-export btn-toolbar" onclick="handleExcelExport()">📤 다운로드</button>
                 <button id="btnPivotToggle" class="btn-pivot btn-toolbar" onclick="togglePivotView()">📊 분석기 켜기</button>
                 <select id="yearFilter" class="year-select"><option value="all">전체 연도</option></select>
+                <!-- 세목 구분: 업무추진비·여비만 골라 보기 (목록은 아래 스크립트의 EXPORT_CATS에서 자동으로 채워짐) -->
+                <select id="catFilter" class="cat-select" title="업무추진비·여비 내역만 골라 봅니다"><option value="">🧾 세목 구분: 전체</option></select>
                 <button id="btnInit" class="btn-init btn-toolbar" onclick="clearData()">전체 초기화</button>
             </div>
+            <div id="catNote" class="cat-note" style="display: none;"></div>
 
             <!-- 피벗(통계) 컨트롤 -->
             <div id="pivotOptions" class="pivot-controls" style="display: none;">
@@ -251,6 +261,15 @@
                 <table id="dataTable">
                     <thead id="tableHead"></thead>
                     <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- 세목 구분(업무추진비·여비) 테이블 컨테이너 -->
+            <div id="catTableContainer" class="table-responsive" style="display: none;">
+                <table id="catTable">
+                    <thead id="catHead"></thead>
+                    <tbody id="catBody"></tbody>
+                    <tfoot id="catFoot"></tfoot>
                 </table>
             </div>
 
@@ -362,7 +381,28 @@
     let colFilters = {};
     let currentHeaderState = ""; 
     let isSimpleView = false; 
-    let isPivotMode = false; 
+    let isPivotMode = false;
+
+    // ==========================================================================
+    // 세목 구분(업무추진비·여비) 보기  ← Access 프로그램의 T_내보내기항목 표와 같은 내용
+    //  - 구분을 늘리고 싶으면 아래에 한 줄만 추가하면 됩니다.  예) '직책급': ['25002'],
+    //  - 숫자는 '세출세목코드'입니다. (220-01처럼 '-'가 들어 있어도 자동으로 인식)
+    // ==========================================================================
+    const EXPORT_CATS = {
+        '업무추진비': ['23001', '23002', '23003', '21015'],   // 기관운영·사업추진·정원가산 업무추진비 + 기타일반수용비(부서운영경비)
+        '여비':       ['22001', '22002', '22003', '22004', '22005']
+    };
+    let catMode = '';   // '' = 전체, '업무추진비', '여비' …
+
+    // 열 이름으로 찾고, 없으면 에듀파인 102-B 양식의 열 순서로 찾기
+    const colKey = (name, idx) => savedHeaders.includes(name) ? name : (savedHeaders[idx] || name);
+    const toNum = (v) => { const n = parseFloat(String(v === undefined || v === null ? '' : v).replace(/,/g, '')); return isNaN(n) ? 0 : n; };
+    const normCode = (v) => String(v === undefined || v === null ? '' : v).replace(/-/g, '').trim();
+    function matchCategory(row) {
+        if (!catMode) return true;
+        const codes = EXPORT_CATS[catMode] || [];
+        return codes.includes(normCode(row[colKey('세출세목코드', 33)]));
+    }
 
     function initApp() {
         try {
@@ -376,6 +416,19 @@
         }
         
         document.getElementById('yearFilter').addEventListener('change', () => { renderApp(); renderPivot(); });
+
+        // 세목 구분 콤보 채우기 + 고르면 바로 화면 바꾸기
+        const catSel = document.getElementById('catFilter');
+        Object.keys(EXPORT_CATS).forEach(name => {
+            const o = document.createElement('option');
+            o.value = name; o.textContent = '🧾 ' + name + '만 보기';
+            catSel.appendChild(o);
+        });
+        catSel.addEventListener('change', () => {
+            catMode = catSel.value;
+            catSel.classList.toggle('on', !!catMode);
+            renderApp(); renderPivot();
+        });
         // '데이터 저장' 버튼 연결 (빠져 있어서 누르면 화면만 새로고침되고 저장되지 않던 문제)
         document.getElementById('budgetForm').addEventListener('submit', handleFormSubmit);
         if (!document.getElementById('f_year').value) document.getElementById('f_year').value = new Date().getFullYear();
@@ -463,6 +516,8 @@
             toolbarDivider.style.display = 'none';
             
             detailTableContainer.style.display = 'none';
+            document.getElementById('catTableContainer').style.display = 'none';
+            document.getElementById('catNote').style.display = 'none';
             pivotOptions.style.display = 'flex';
             pivotTableContainer.style.display = 'block';
             
@@ -512,9 +567,20 @@
             if (uniqueYears.includes(parseInt(currentVal))) filterYear.value = currentVal;
         }
 
+        // 세목 구분(업무추진비·여비)을 골랐으면 전용 표로 보여 주고 여기서 끝
+        applyCatLayout();
+        if (catMode) {
+            renderCategory();
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(budgetData));
+                localStorage.setItem(STORAGE_KEY + '_hd', JSON.stringify(savedHeaders));
+            } catch(e) {}
+            return;
+        }
+
         const selYear = document.getElementById('yearFilter').value;
         const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
-        
+
         let filtered = budgetData.filter(item => {
             const matchYear = (selYear === 'all') || (item[savedHeaders[0]] == selYear);
             const matchSearch = Object.values(item).some(val => String(val).toLowerCase().includes(searchKeyword));
@@ -656,6 +722,163 @@
         } catch(e) {}
     }
 
+    // --- 1-2. 세목 구분(업무추진비·여비) 전용 보기 ---
+    //  Access 프로그램의 [엑셀] 내보내기(M_엑셀내보내기)와 같은 기준입니다.
+    //   · 대상 : 세출세목코드가 EXPORT_CATS에 등록된 줄만
+    //   · 열   : 단위업무부서, 세부사업, 사업항목명1~3, 세출세목코드, 예산액, 원인행위금액, 지출금액, 불용액, 집행율
+    //   · 집행율 = 원인행위금액 ÷ 예산액 × 100 (소수 둘째 자리)
+    //   · 정렬 : 세출세목코드 → 세부사업 → 사업항목명1 → 2 → 3
+    const CAT_TEXT_COLS = [['단위업무부서', 11], ['세부사업', 21], ['사업항목명1', 23], ['사업항목명2', 24], ['사업항목명3', 25], ['세출세목코드', 33], ['세출세목', 34]];
+    const CAT_MONEY_COLS = [['예산액', 43], ['원인행위금액', 60], ['지출금액', 62], ['불용액', 66]];
+    const calcRate = (cause, budget) => budget === 0 ? 0 : Math.round(cause / budget * 10000) / 100;
+
+    // 화면 배치 바꾸기 (상세 원장 ↔ 세목 구분 표)
+    function applyCatLayout() {
+        const on = !!catMode;
+        document.getElementById('detailTableContainer').style.display = on ? 'none' : 'block';
+        document.getElementById('catTableContainer').style.display = on ? 'block' : 'none';
+        document.getElementById('btnSimpleView').style.display = on ? 'none' : 'inline-flex';
+        document.getElementById('tableTitle').innerText = on ? (catMode + ' 집행 현황') : '원장 상세 데이터';
+        const note = document.getElementById('catNote');
+        note.style.display = on ? 'block' : 'none';
+        if (on) note.textContent = `※ ${catMode} = 세출세목코드 ${(EXPORT_CATS[catMode] || []).join(', ')} 에 해당하는 내역만 표시합니다.  (집행율 = 원인행위금액 ÷ 예산액)`;
+    }
+
+    // 조건(연도·검색어·세목 구분)에 맞는 줄을 골라 정렬해서 돌려줌
+    function getCategoryRows() {
+        const selYear = document.getElementById('yearFilter').value;
+        const kw = document.getElementById('searchInput').value.toLowerCase();
+        const rows = budgetData.filter(item =>
+            matchCategory(item) &&
+            ((selYear === 'all') || (item[savedHeaders[0]] == selYear)) &&
+            (!kw || Object.values(item).some(val => String(val).toLowerCase().includes(kw)))
+        ).map(item => {
+            const r = {};
+            CAT_TEXT_COLS.forEach(([n, i]) => r[n] = String(item[colKey(n, i)] === undefined || item[colKey(n, i)] === null ? '' : item[colKey(n, i)]).trim());
+            CAT_MONEY_COLS.forEach(([n, i]) => r[n] = toNum(item[colKey(n, i)]));
+            r['예산현액'] = toNum(item[colKey('예산현액', 59)]);
+            r['집행율'] = calcRate(r['원인행위금액'], r['예산액']);
+            return r;
+        });
+        const order = ['세출세목코드', '세부사업', '사업항목명1', '사업항목명2', '사업항목명3'];
+        rows.sort((a, b) => {
+            for (const k of order) {
+                const c = a[k].localeCompare(b[k], 'ko');
+                if (c !== 0) return c;
+            }
+            return 0;
+        });
+        return rows;
+    }
+
+    function sumCategory(rows) {
+        const t = { '예산액': 0, '원인행위금액': 0, '지출금액': 0, '불용액': 0, '예산현액': 0 };
+        rows.forEach(r => Object.keys(t).forEach(k => t[k] += r[k]));
+        t['집행율'] = calcRate(t['원인행위금액'], t['예산액']);
+        return t;
+    }
+
+    function renderCategory() {
+        const rows = getCategoryRows();
+        const t = sumCategory(rows);
+        const textNames = CAT_TEXT_COLS.map(c => c[0]);
+        const moneyNames = CAT_MONEY_COLS.map(c => c[0]);
+
+        let h = '<tr><th>번호</th>';
+        textNames.forEach(n => h += `<th>${E(n)}</th>`);
+        moneyNames.forEach(n => h += `<th class="number">${E(n)}</th>`);
+        h += '<th style="min-width:110px;">집행율(%)</th></tr>';
+        document.getElementById('catHead').innerHTML = h;
+
+        let b = '';
+        rows.forEach((r, i) => {
+            b += `<tr><td class="center">${i + 1}</td>`;
+            textNames.forEach(n => b += `<td${n === '세출세목코드' ? ' class="center"' : ''}>${E(r[n])}</td>`);
+            moneyNames.forEach(n => b += `<td class="number"${n === '불용액' ? ' style="color: var(--danger);"' : ''}>${fmt(r[n])}</td>`);
+            b += `<td class="number">${r['집행율'].toFixed(2)}
+                    <div class="progress-bg"><div class="progress-bar" style="width: ${Math.max(0, Math.min(r['집행율'], 100))}%; background-color: ${getRateColor(r['집행율'])};"></div></div></td></tr>`;
+        });
+        if (rows.length === 0) {
+            const msg = budgetData.length === 0 ? '먼저 에듀파인 엑셀 파일을 불러와 주세요.' : `조건에 맞는 ${E(catMode)} 내역이 없습니다.`;
+            b = `<tr><td colspan="${textNames.length + moneyNames.length + 2}" style="text-align:center; padding: 24px;">${msg}</td></tr>`;
+        }
+        document.getElementById('catBody').innerHTML = b;
+
+        let f = '';
+        if (rows.length > 0) {
+            f = `<tr><td colspan="${textNames.length + 1}" style="text-align:center;">합   계 (${rows.length}건)</td>`;
+            moneyNames.forEach(n => f += `<td class="number">${fmt(t[n])}</td>`);
+            f += `<td class="number">${t['집행율'].toFixed(2)}</td></tr>`;
+        }
+        document.getElementById('catFoot').innerHTML = f;
+
+        // 위쪽 요약 카드도 고른 구분의 합계로 바꿔 줌
+        document.getElementById('sumBudget').innerText = fmt(t['예산액']);
+        document.getElementById('sumCurrentBudget').innerText = fmt(t['예산현액']);
+        document.getElementById('sumCause').innerText = fmt(t['원인행위금액']);
+        document.getElementById('sumExpenditure').innerText = fmt(t['지출금액']);
+        document.getElementById('sumBalance').innerText = fmt(t['예산현액'] - t['원인행위금액']);
+        document.getElementById('avgRate').innerText = (t['예산현액'] === 0 ? 0 : (t['원인행위금액'] / t['예산현액']) * 100).toFixed(2) + '%';
+    }
+
+    // 세목 구분 엑셀 내려받기 (제목·기준일자·머리글·합계 줄 포함 — Access 내보내기와 같은 모양)
+    function exportCategoryExcel() {
+        const rows = getCategoryRows();
+        if (rows.length === 0) return alert(`내보낼 ${catMode} 자료가 없습니다.`);
+
+        const cols = [...CAT_TEXT_COLS.map(c => c[0]), ...CAT_MONEY_COLS.map(c => c[0]), '집행율'];
+        const nText = CAT_TEXT_COLS.length, nCol = cols.length;
+        const p2 = (n) => String(n).padStart(2, '0');
+        const d = new Date();
+        const today = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+        let baseDate = today;
+        try { baseDate = localStorage.getItem(STORAGE_KEY + '_date') || today; } catch(e) {}
+
+        const aoa = [[catMode + ' 집행 현황'], [`기준일자: ${baseDate}   (단위: 원, %)`], cols];
+        rows.forEach(r => aoa.push(cols.map(c => r[c])));
+        const firstRow = 4, lastRow = 3 + rows.length, totRow = lastRow + 1;   // 엑셀 줄 번호
+        const t = sumCategory(rows);
+        const totLine = cols.map(() => '');
+        totLine[0] = '합   계';
+        aoa.push(totLine);
+
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        const A = (r, c) => XLSX.utils.encode_cell({ r: r - 1, c: c });
+        // 합계 줄: 엑셀 수식으로 넣기
+        let budgetCol = -1, causeCol = -1;
+        cols.forEach((c, ci) => {
+            if (c === '예산액') budgetCol = ci;
+            if (c === '원인행위금액') causeCol = ci;
+            if (ci >= nText && c !== '집행율') {
+                ws[A(totRow, ci)] = { t: 'n', v: t[c], f: `SUM(${A(firstRow, ci)}:${A(lastRow, ci)})`, z: '#,##0' };
+                for (let r = firstRow; r <= lastRow; r++) if (ws[A(r, ci)]) ws[A(r, ci)].z = '#,##0';
+            }
+            if (c === '집행율') {
+                for (let r = firstRow; r <= lastRow; r++) if (ws[A(r, ci)]) ws[A(r, ci)].z = '0.00';
+                ws[A(totRow, ci)] = { t: 'n', v: t['집행율'], z: '0.00',
+                    f: `IF(${A(totRow, budgetCol)}=0,0,ROUND(${A(totRow, causeCol)}/${A(totRow, budgetCol)}*100,2))` };
+            }
+        });
+        ws['!merges'] = [
+            { s: { r: 0, c: 0 }, e: { r: 0, c: nCol - 1 } },
+            { s: { r: 1, c: 0 }, e: { r: 1, c: nCol - 1 } },
+            { s: { r: totRow - 1, c: 0 }, e: { r: totRow - 1, c: nText - 1 } }
+        ];
+        // 열 너비: 내용 길이에 맞춤 (한글은 2칸으로 계산)
+        const width = (s) => String(s).split('').reduce((a, ch) => a + (ch.charCodeAt(0) > 255 ? 2 : 1), 0);
+        ws['!cols'] = cols.map((c, ci) => {
+            let w = width(c);
+            rows.forEach(r => { w = Math.max(w, width(ci >= nText ? fmt(r[c]) : r[c])); });
+            return { wch: Math.min(w + 3, 50) };
+        });
+        ws['!rows'] = [{ hpt: 30 }, {}, { hpt: 22 }];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, catMode.substring(0, 31));
+        const stamp = `${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}_${p2(d.getHours())}${p2(d.getMinutes())}${p2(d.getSeconds())}`;
+        XLSX.writeFile(wb, `${catMode}_${stamp}.xlsx`);
+    }
+
     // --- 2. 엑셀 불러오기 및 매핑 엔진 ---
     function processExcelFile(file) {
         if (typeof XLSX === 'undefined') return alert("엑셀 모듈이 없습니다. 인터넷 연결 및 보안망을 확인해주세요.");
@@ -710,7 +933,12 @@
                 }
 
                 if (newRecords.length > 0) {
-                    budgetData = newRecords; 
+                    budgetData = newRecords;
+                    // 불러온 날짜를 '기준일자'로 기억 (업무추진비·여비 엑셀 머리말에 표시)
+                    try {
+                        const _n = new Date();
+                        localStorage.setItem(STORAGE_KEY + '_date', `${_n.getFullYear()}-${String(_n.getMonth() + 1).padStart(2, '0')}-${String(_n.getDate()).padStart(2, '0')}`);
+                    } catch(e) {}
                     document.getElementById('yearFilter').value = 'all'; 
                     clearSearch(); // 업로드 시 필터 전체 초기화 및 렌더링
                     alert(`${newRecords.length}건 데이터 로드 완료\n(원가통계비목 빈 행 100% 삭제 완료)`);
@@ -752,8 +980,11 @@
 
         const filterYear = document.getElementById('yearFilter').value;
         let filtered = (filterYear === 'all') ? budgetData : budgetData.filter(item => item[savedHeaders[0]] == filterYear);
+        // 세목 구분(업무추진비·여비)을 골랐으면 통계도 그 내역만으로 계산
+        filtered = filtered.filter(matchCategory);
+        document.getElementById('tableTitle').innerText = "통계(피벗) 데이터" + (catMode ? ` · ${catMode}` : '');
 
-        let colValues = ['Total']; 
+        let colValues = ['Total'];
         if (colField !== 'none') {
             const uniqueCols = [...new Set(filtered.map(r => r[colField] || '미분류'))].sort();
             colValues = [...uniqueCols, 'Total'];
@@ -887,7 +1118,9 @@
             const tableEle = document.getElementById('pivotTable');
             const ws = XLSX.utils.table_to_sheet(tableEle);
             XLSX.utils.book_append_sheet(wb, ws, "피벗통계분석");
-            XLSX.writeFile(wb, `피벗예산분석_${dateStr}.xlsx`);
+            XLSX.writeFile(wb, `피벗예산분석${catMode ? '_' + catMode : ''}_${dateStr}.xlsx`);
+        } else if (catMode) {
+            exportCategoryExcel();   // 업무추진비·여비 전용 서식으로 내려받기
         } else {
             if (budgetData.length === 0) return alert('다운로드할 데이터가 없습니다.');
             const filterYear = document.getElementById('yearFilter').value;
@@ -981,6 +1214,7 @@
         if(confirm('데이터를 완전히 삭제하시겠습니까?')) {
             localStorage.removeItem(STORAGE_KEY);
             localStorage.removeItem(STORAGE_KEY + '_hd');
+            localStorage.removeItem(STORAGE_KEY + '_date');
             budgetData = [];
             savedHeaders = DEFAULT_HEADERS;
             document.getElementById('yearFilter').innerHTML = '<option value="all">전체 연도</option>';
