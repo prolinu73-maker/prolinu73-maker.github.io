@@ -121,8 +121,10 @@
         .stat-divider { color: #cbd5e1; }
 
         /* 세목 구분(업무추진비·여비) 보기 */
-        .cat-select { padding: 5px 8px; font-size: 0.8rem; height: 28px; font-weight: bold; color: #7c2d12; background: #fff7ed; border: 2px solid #fb923c; }
-        .cat-select.on { background: #ea580c; color: #fff; border-color: #c2410c; }
+        .cat-select { padding: 0 8px; font-size: 0.85rem; height: 32px; line-height: 1.4; min-width: 170px; font-weight: bold; color: #7c2d12; background-color: #fff7ed; border: 2px solid #fb923c; }
+        .cat-select.on { background-color: #ea580c; color: #fff; border-color: #c2410c; }
+        /* 펼친 목록의 글자: 항상 흰 바탕에 검은 글씨로 또렷하게 (콤보 색을 물려받아 안 보이는 문제 방지) */
+        .cat-select option { color: #0f172a; background-color: #fff; font-weight: normal; font-size: 0.9rem; }
         #catTable tfoot td { position: sticky; bottom: 0; background: #f2f2f2; font-weight: 800; border-top: 2px solid var(--border); }
         #catTable td.center { text-align: center; }
         .cat-note { font-size: 0.78rem; color: var(--text-muted); margin: -6px 0 10px; }
@@ -219,7 +221,7 @@
                 <button id="btnPivotToggle" class="btn-pivot btn-toolbar" onclick="togglePivotView()">📊 분석기 켜기</button>
                 <select id="yearFilter" class="year-select"><option value="all">전체 연도</option></select>
                 <!-- 세목 구분: 업무추진비·여비만 골라 보기 (목록은 아래 스크립트의 EXPORT_CATS에서 자동으로 채워짐) -->
-                <select id="catFilter" class="cat-select" title="업무추진비·여비 내역만 골라 봅니다"><option value="">🧾 세목 구분: 전체</option></select>
+                <select id="catFilter" class="cat-select" title="업무추진비·여비 내역만 골라 봅니다"><option value="">세목 구분: 전체</option></select>
                 <button id="btnInit" class="btn-init btn-toolbar" onclick="clearData()">전체 초기화</button>
             </div>
             <div id="catNote" class="cat-note" style="display: none;"></div>
@@ -421,7 +423,7 @@
         const catSel = document.getElementById('catFilter');
         Object.keys(EXPORT_CATS).forEach(name => {
             const o = document.createElement('option');
-            o.value = name; o.textContent = '🧾 ' + name + '만 보기';
+            o.value = name; o.textContent = name + '만 보기';
             catSel.appendChild(o);
         });
         catSel.addEventListener('change', () => {
