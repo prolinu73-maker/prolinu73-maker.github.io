@@ -84,7 +84,7 @@
         .card p { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px; }
         
         /* 메인 레이아웃 */
-        .content-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
+        .content-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }   /* 왼쪽 '신규 사업 등록' 칸을 없애 표를 화면 전체 폭으로 사용 */
         .panel { background: var(--surface); padding: 20px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid var(--border); }
         .panel h2.form-title { font-size: 1.05rem; margin-bottom: 15px; border-bottom: 2px solid var(--border); padding-bottom: 10px;}
         
@@ -130,7 +130,7 @@
         .cat-note { font-size: 0.78rem; color: var(--text-muted); margin: -6px 0 10px; }
 
         /* ===== 피벗 테이블 ===== */
-        .content-grid.pv-wide { grid-template-columns: 1fr; }
+        .content-grid.pv-wide { grid-template-columns: minmax(0, 1fr); }
         .content-grid.pv-wide > .panel:first-child { display: none; }
         .pivot-controls select { padding: 4px 8px; font-size: 0.8rem; height: 30px; }
         .pivot-controls .pv-ck { color: var(--text-main); font-weight: 600; cursor: pointer; }
@@ -241,8 +241,8 @@
     </div>
 
     <div class="content-grid">
-        <!-- 2. 수동 데이터 입력 패널 -->
-        <div class="panel">
+        <!-- 2. 수동 데이터 입력 패널 ('신규 사업 등록') : 쓰지 않아 화면에서 숨김. 다시 쓰려면 아래 줄의 style="display: none;" 을 지우고, 위 .content-grid 의 칸 나눔을 280px 1fr 로 되돌리면 됩니다 -->
+        <div class="panel" style="display: none;">
             <h2 id="formTitle" class="form-title">신규 사업 등록</h2>
             <form id="budgetForm">
                 <input type="hidden" id="f_id">
