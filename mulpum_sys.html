@@ -1124,19 +1124,28 @@ async function counterCall(action, key){
 async function updateVisitors(){
   const day = ymd(TODAY).replace(/-/g,'');
   const dayKey = 'day-'+day;
-  // 관리자(또는 이 브라우저에서 관리자로 로그인한 적이 있으면)는 접속자 수를 세지 않음
+  // 관리자(또는 이 브라우저에서 관리자로 로그인한 적이 있으면)는 접속자 수를 세지 않고 숫자만 읽어 옴
   const hubAdminSkip = HUB.isAdminDevice();
-  const firstToday = lsGet('mulpum_visited')!==day && !hubAdminSkip;      // 이 브라우저에서 오늘 처음 접속?
-  try{
-    const act = firstToday ? 'hit' : 'get';
-    const [today, total] = await Promise.all([counterCall(act, dayKey), counterCall(act, 'total')]);
-    lsSet('mulpum_visited', day);
-    $('vToday').textContent = Number(today).toLocaleString();
-    $('vTotal').textContent = Number(total).toLocaleString();
+  const done = k => lsGet('mulpum_visited')===day || lsGet('mulpum_visited_'+k)===day;   // 오늘 이미 셌는지
+  // '오늘'과 '누적'을 따로따로 처리: 한쪽이 실패해도 다른 쪽 숫자는 그대로 보여 줌
+  //  (오늘 첫 방문자가 아직 없으면 '오늘' 숫자 자리가 서비스에 없어 읽기가 실패할 수 있음 → 0명으로 봄)
+  const one = async (k, key) => {
+    const act = (!hubAdminSkip && !done(k)) ? 'hit' : 'get';
+    const v = await counterCall(act, key);
+    if (act==='hit') lsSet('mulpum_visited_'+k, day);
+    return Number(v)||0;
+  };
+  const [rd, rt] = await Promise.allSettled([one('day', dayKey), one('total', 'total')]);
+  if (rt.status==='fulfilled'){
+    // 누적을 읽어 왔으면 서비스 연결은 정상
+    const today = rd.status==='fulfilled' ? rd.value : 0;
+    $('vToday').textContent = today.toLocaleString();
+    $('vTotal').textContent = Math.max(rt.value, today).toLocaleString();
     $('vMode').textContent = '';
-    $('visitBox').title = '전체 사용자 기준 접속자 수입니다 (같은 PC는 하루 1명으로 계산)';
-  }catch(err){
-    // 인터넷 연결이 안 될 때: 이 PC 기준으로 셈
+    $('visitBox').title = '전체 사용자 기준 접속자 수입니다 (같은 PC는 하루 1명으로 계산' + (hubAdminSkip ? ' · 이 브라우저는 관리자용이라 세지 않음' : '') + ')';
+  } else {
+    // 집계 서비스에 전혀 연결이 안 될 때: 이 PC 기준으로 셈
+    console.log('접속자 수 집계 서비스 연결 실패:', rt.reason);
     let t = +(lsGet('mulpum_local_total')||0), d = lsGet('mulpum_local_day')===day ? +(lsGet('mulpum_local_today')||0) : 0;
     if (!hubAdminSkip && lsGet('mulpum_local_visited')!==day){ t++; d++; lsSet('mulpum_local_visited',day); }
     lsSet('mulpum_local_total',t); lsSet('mulpum_local_day',day); lsSet('mulpum_local_today',d);
