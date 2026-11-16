@@ -129,6 +129,64 @@
         #catTable td.center { text-align: center; }
         .cat-note { font-size: 0.78rem; color: var(--text-muted); margin: -6px 0 10px; }
 
+        /* ===== 피벗 테이블 ===== */
+        .content-grid.pv-wide { grid-template-columns: 1fr; }
+        .content-grid.pv-wide > .panel:first-child { display: none; }
+        .pivot-controls select { padding: 4px 8px; font-size: 0.8rem; height: 30px; }
+        .pivot-controls .pv-ck { color: var(--text-main); font-weight: 600; cursor: pointer; }
+        #pvInfo { margin-left: auto; color: var(--text-muted); font-size: 0.78rem; }
+        .pv-wrap { display: flex; gap: 12px; align-items: flex-start; }
+        .pv-wrap .pv-table-box { flex: 1; min-width: 0; }
+        #pivotTable thead { position: sticky; top: 0; z-index: 10; }
+        #pivotTable th { position: static; text-align: center; }
+        #pivotTable th.pv-vh { background: #f1f5f9; font-size: 0.75rem; }
+        #pivotTable th.pv-ch { background: #475569; color: #fff; }
+        #pivotTable th.pv-corner { background: var(--primary); color: #fff; }
+        #pivotTable th.pv-csub { background: #64748b; color: #fff; }
+        #pivotTable th.pv-cgrand { background: var(--purple); color: #fff; }
+        #pivotTable .pv-rl { position: sticky; left: 0; z-index: 5; box-shadow: 1px 0 0 var(--border); }
+        #pivotTable td.pv-rl { background: #fff; }
+        #pivotTable tr.pv-sub td { background: #f1f5f9; font-weight: 700; }
+        #pivotTable tr.pv-grand td { background: #fffbeb; font-weight: 900; border-top: 2px solid var(--warning); }
+        #pivotTable td.pv-csub { background: #f8fafc; font-weight: 700; }
+        #pivotTable td.pv-cgrand { background: #f5f3ff; font-weight: 700; }
+        #pivotTable td.pv-neg { color: var(--danger); }
+        #pivotTable td[data-c] { cursor: cell; }
+        #pivotTable td.pv-msg { text-align: center; padding: 30px; white-space: normal; }
+        .pv-tg { display: inline-block; width: 16px; height: 16px; line-height: 14px; margin-right: 6px; text-align: center; border: 1px solid #94a3b8; border-radius: 3px; background: #fff; color: #334155; font-size: 12px; font-weight: 700; cursor: pointer; user-select: none; }
+        .pv-tg:hover { background: #e0e7ff; }
+        .pv-panel { width: 310px; flex: none; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: #f8fafc; }
+        .pv-ptitle { font-weight: 800; font-size: 0.95rem; margin-bottom: 8px; }
+        .pv-panel input[type=text] { width: 100%; padding: 6px 8px; font-size: 0.8rem; }
+        .pv-flist { height: 210px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; background: #fff; margin-top: 6px; padding: 4px; }
+        .pv-fi { display: flex; align-items: center; gap: 6px; padding: 3px 6px; border-radius: 4px; cursor: grab; font-size: 0.8rem; }
+        .pv-fi:hover { background: #eef2ff; }
+        .pv-fi.used { font-weight: 700; }
+        .pv-fi .pv-num { margin-left: auto; color: var(--purple); font-size: 0.7rem; }
+        .pv-hint { font-size: 0.74rem; color: var(--text-muted); margin: 8px 0 6px; line-height: 1.4; }
+        .pv-zones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .pv-zt { font-weight: 800; font-size: 0.78rem; margin-bottom: 3px; color: var(--primary); }
+        .pv-drop { min-height: 96px; max-height: 170px; overflow-y: auto; border: 1px dashed #94a3b8; border-radius: 6px; background: #fff; padding: 4px; }
+        .pv-drop.over, .pv-flist.over { border-color: var(--accent); background: #dbeafe; }
+        .pv-chip { display: flex; align-items: center; gap: 3px; background: #e0e7ff; border: 1px solid #a5b4fc; border-radius: 4px; padding: 3px 5px; margin-bottom: 3px; font-size: 0.74rem; cursor: grab; }
+        .pv-chip .pv-cn { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pv-chip span.pv-cf, .pv-chip span.pv-cx { cursor: pointer; padding: 0 4px; border-radius: 3px; color: #475569; }
+        .pv-chip span.pv-cf:hover, .pv-chip span.pv-cx:hover { background: #fff; }
+        .pv-chip span.pv-cf.on { background: var(--danger); color: #fff; }
+        .pv-chip .pv-fs { color: var(--text-muted); font-size: 0.68rem; }
+        #pvPop { display: none; position: fixed; z-index: 1000; width: 270px; background: #fff; border: 1px solid #64748b; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.25); padding: 10px; }
+        #pvPop .pv-pt { font-weight: 800; margin-bottom: 8px; }
+        #pvPop input[type=text], #pvPop select { width: 100%; padding: 6px 8px; font-size: 0.8rem; margin-bottom: 6px; }
+        #pvPop .pv-fl { max-height: 240px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 4px; margin-bottom: 8px; }
+        #pvPop label { display: flex; gap: 6px; align-items: center; padding: 2px 4px; font-size: 0.8rem; cursor: pointer; }
+        #pvPop .pv-lb { display: block; font-weight: 700; font-size: 0.76rem; padding: 0; margin-bottom: 2px; cursor: default; }
+        #pvPop .pv-pb { display: flex; gap: 6px; justify-content: flex-end; }
+        #pvModal { display: none; position: fixed; inset: 0; z-index: 900; background: rgba(15,23,42,0.5); align-items: center; justify-content: center; }
+        #pvModal .pv-mbox { background: #fff; border-radius: 10px; padding: 16px; width: min(1300px, 94vw); max-height: 88vh; display: flex; flex-direction: column; }
+        #pvModal .pv-mhead { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        #pvModal .pv-mtitle { font-weight: 800; font-size: 1rem; flex: 1; white-space: normal; }
+        #pvModal .table-responsive { max-height: 68vh; }
+
         #errorBanner { display: none; background-color: #fef2f2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #f87171; font-weight: bold; }
     </style>
 </head>
@@ -218,7 +276,7 @@
                 <input type="file" id="fileUpload" accept=".xlsx, .xls, .csv" style="display: none;">
                 <button class="btn-import btn-toolbar" onclick="document.getElementById('fileUpload').click();">📥 불러오기</button>
                 <button id="btnExport" class="btn-export btn-toolbar" onclick="handleExcelExport()">📤 다운로드</button>
-                <button id="btnPivotToggle" class="btn-pivot btn-toolbar" onclick="togglePivotView()">📊 분석기 켜기</button>
+                <button id="btnPivotToggle" class="btn-pivot btn-toolbar" onclick="togglePivotView()">📊 피벗 테이블</button>
                 <select id="yearFilter" class="year-select"><option value="all">전체 연도</option></select>
                 <!-- 세목 구분: 업무추진비·여비만 골라 보기 (목록은 아래 스크립트의 EXPORT_CATS에서 자동으로 채워짐) -->
                 <select id="catFilter" class="cat-select" title="업무추진비·여비 내역만 골라 봅니다"><option value="">세목 구분: 전체</option></select>
@@ -226,36 +284,28 @@
             </div>
             <div id="catNote" class="cat-note" style="display: none;"></div>
 
-            <!-- 피벗(통계) 컨트롤 -->
+            <!-- 피벗 테이블 옵션 줄 -->
             <div id="pivotOptions" class="pivot-controls" style="display: none;">
-                <label>▶ 행(Row) 분류 :</label>
-                <select id="p_row1" onchange="renderPivot()">
-                    <option value="none">- 1차 기준 -</option>
-                    <option value="17" selected>정책사업</option>
-                    <option value="19">단위사업</option>
-                    <option value="21">세부사업</option>
-                    <option value="3">예산소관부서명</option>
-                    <option value="36">원가통계비목</option>
+                <label>보고서 형식</label>
+                <select id="pvLayout">
+                    <option value="compact">압축 형식 (들여쓰기)</option>
+                    <option value="tabular">테이블 형식 (열 나눔)</option>
                 </select>
-                <select id="p_row2" onchange="renderPivot()">
-                    <option value="none">- 2차 기준 -</option>
-                    <option value="17">정책사업</option>
-                    <option value="19">단위사업</option>
-                    <option value="21" selected>세부사업</option>
-                    <option value="36">원가통계비목</option>
+                <label>행 정렬</label>
+                <select id="pvSort">
+                    <option value="labelAsc">이름 오름차순</option>
+                    <option value="labelDesc">이름 내림차순</option>
+                    <option value="valDesc">값 큰 순서</option>
+                    <option value="valAsc">값 작은 순서</option>
                 </select>
-                <select id="p_row3" onchange="renderPivot()">
-                    <option value="none">- 3차 기준 -</option>
-                    <option value="21">세부사업</option>
-                    <option value="36">원가통계비목</option>
-                </select>
-                <span style="color:var(--border);">|</span>
-                <label>▶ 열(Column) 분할 :</label>
-                <select id="p_col" onchange="renderPivot()">
-                    <option value="none">선택 안 함 (단일 표)</option>
-                    <option value="0">회계연도별</option>
-                    <option value="3">부서별</option>
-                </select>
+                <label class="pv-ck"><input type="checkbox" id="pvSub"> 부분합</label>
+                <label class="pv-ck"><input type="checkbox" id="pvGrandRow"> 총합계 행(맨 아래)</label>
+                <label class="pv-ck"><input type="checkbox" id="pvGrandCol"> 총합계 열(맨 오른쪽)</label>
+                <button type="button" class="btn-clear btn-toolbar" onclick="pvExpandAll(true)">＋ 모두 펼치기</button>
+                <button type="button" class="btn-clear btn-toolbar" onclick="pvExpandAll(false)">－ 모두 접기</button>
+                <button type="button" class="btn-toggle btn-toolbar" onclick="pvReset()">↺ 기본 배치</button>
+                <button type="button" id="pvPanelBtn" class="btn-home btn-toolbar" onclick="pvTogglePanel()">필드 목록 숨기기</button>
+                <span id="pvInfo"></span>
             </div>
             
             <!-- 상세 데이터 테이블 컨테이너 -->
@@ -275,14 +325,42 @@
                 </table>
             </div>
 
-            <!-- 피벗 데이터 테이블 컨테이너 -->
-            <div id="pivotTableContainer" class="table-responsive" style="display: none;">
-                <table id="pivotTable">
-                    <thead id="pivotHead"></thead>
-                    <tbody id="pivotBody"></tbody>
-                </table>
+            <!-- 피벗 테이블 컨테이너 (왼쪽: 표, 오른쪽: 필드 목록) -->
+            <div id="pivotTableContainer" class="pv-wrap" style="display: none;">
+                <div class="table-responsive pv-table-box">
+                    <table id="pivotTable">
+                        <thead id="pivotHead"></thead>
+                        <tbody id="pivotBody"></tbody>
+                    </table>
+                </div>
+                <aside id="pvPanel" class="pv-panel">
+                    <div class="pv-ptitle">📌 피벗 테이블 필드</div>
+                    <input type="text" id="pvFieldSearch" placeholder="🔍 필드 이름 검색...">
+                    <div id="pvFieldList" class="pv-flist" data-area="list"></div>
+                    <div class="pv-hint">필드를 아래 네 영역으로 <b>끌어다 놓으세요.</b> (체크만 해도 자동 배치: 금액은 '값', 나머지는 '행')<br>표의 숫자를 <b>두 번 누르면</b> 그 숫자를 이루는 원본 내역이 나옵니다.</div>
+                    <div class="pv-zones">
+                        <div><div class="pv-zt">▼ 필터</div><div class="pv-drop" data-area="filters"></div></div>
+                        <div><div class="pv-zt">▥ 열</div><div class="pv-drop" data-area="cols"></div></div>
+                        <div><div class="pv-zt">▤ 행</div><div class="pv-drop" data-area="rows"></div></div>
+                        <div><div class="pv-zt">Σ 값</div><div class="pv-drop" data-area="vals"></div></div>
+                    </div>
+                </aside>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- 피벗 테이블: 작은 설정 창(필터·값 설정) -->
+<div id="pvPop"></div>
+<!-- 피벗 테이블: 원본 내역 보기 창 -->
+<div id="pvModal">
+    <div class="pv-mbox">
+        <div class="pv-mhead">
+            <div id="pvModalTitle" class="pv-mtitle"></div>
+            <button type="button" class="btn-export btn-toolbar" onclick="pvDrillExport()">📤 이 내역 엑셀 저장</button>
+            <button type="button" class="btn-clear btn-toolbar" onclick="pvCloseModal()">✖ 닫기</button>
+        </div>
+        <div class="table-responsive"><table><thead id="pvModalHead"></thead><tbody id="pvModalBody"></tbody></table></div>
     </div>
 </div>
 
@@ -447,6 +525,7 @@
             e.target.value = '';
         });
         
+        pvInit();   // 피벗 테이블 마우스 동작 연결
         renderApp();
     }
 
@@ -496,6 +575,8 @@
     // 뷰 전환
     window.togglePivotView = function() {
         isPivotMode = !isPivotMode;
+        // 피벗 테이블을 넓게 쓰도록 왼쪽 '신규 사업 등록' 칸을 잠시 숨김
+        document.querySelector('.content-grid').classList.toggle('pv-wide', isPivotMode);
         
         const btnPivot = document.getElementById('btnPivotToggle');
         const tableTitle = document.getElementById('tableTitle');
@@ -510,7 +591,7 @@
         if(isPivotMode) {
             btnPivot.innerHTML = '📋 상세 원장 복귀';
             btnPivot.style.backgroundColor = 'var(--text-main)';
-            tableTitle.innerText = "통계(피벗) 데이터";
+            tableTitle.innerText = "피벗 테이블";
             
             searchInput.style.display = 'none';
             btnClearSearch.style.display = 'none';
@@ -521,11 +602,11 @@
             document.getElementById('catTableContainer').style.display = 'none';
             document.getElementById('catNote').style.display = 'none';
             pivotOptions.style.display = 'flex';
-            pivotTableContainer.style.display = 'block';
+            pivotTableContainer.style.display = 'flex';
             
             renderPivot();
         } else {
-            btnPivot.innerHTML = '📊 분석기 켜기';
+            btnPivot.innerHTML = '📊 피벗 테이블';
             btnPivot.style.backgroundColor = 'var(--purple)';
             tableTitle.innerText = "원장 상세 데이터";
             
@@ -954,159 +1035,613 @@
         reader.readAsArrayBuffer(file);
     }
 
-    // --- 3. 피벗 통계 분석기 ---
-    window.renderPivot = function() {
-        if(!isPivotMode) return;
+    // ==========================================================================
+    // --- 3. 피벗 테이블 (엑셀 피벗 테이블 방식) ---
+    //  · 필드를 [필터 / 열 / 행 / 값] 네 영역에 끌어다 놓아 표를 만듭니다.
+    //  · 값: 합계·개수·평균·최대·최소 + 비율(%) 표시,  행: 부분합·펼치기/접기·정렬
+    //  · 위쪽의 '연도'와 '세목 구분(업무추진비·여비)' 선택도 그대로 함께 적용됩니다.
+    //  · 배치는 이 브라우저에 자동 저장되어 다음에 열어도 그대로입니다.
+    // ==========================================================================
+    const PV_KEY = STORAGE_KEY + '_pivot';
+    const PV_BAL = '[계산] 예산잔액';        // 예산현액 − 원인행위금액
+    const PV_RATE = '[계산] 집행률(%)';      // 원인행위금액 합계 ÷ 예산현액 합계 × 100
+    const PV_EMPTY = '(비어 있음)';
+    const PV_AGG = { sum: '합계', count: '개수', avg: '평균', max: '최대값', min: '최소값' };
+    const PV_SHOW = { none: '값 그대로', pctGrand: '총합계 비율(%)', pctCol: '열 합계 비율(%)', pctRow: '행 합계 비율(%)' };
+    const PV_AXES = ['rows', 'cols', 'filters'];
+    const PV_SEP = '\u0000', PV_SEP2 = '\u0001';
+    const PV_CALC_IDX = { 43: '예산액_calc', 59: '예산현액_calc', 60: '원인행위액_calc', 62: '지출액_calc' };
+    let pv = null, pvModel = null, pvDrag = null, pvPopState = null, pvDrillRows = null, pvDrillCols = null;
 
-        const getHeaderByIndex = (idxStr) => {
-            if (idxStr === 'none') return 'none';
-            return savedHeaders[parseInt(idxStr)] || '미분류';
+    function pvDefault() {
+        const h = (i) => savedHeaders[i];
+        return {
+            rows: [h(17), h(21)].filter(Boolean), cols: [], filters: [],
+            vals: [43, 59, 60, 62].map(h).filter(Boolean).map(f => ({ f: f, agg: 'sum', show: 'none' }))
+                    .concat([{ f: PV_BAL, agg: 'sum', show: 'none' }, { f: PV_RATE, agg: 'ratio', show: 'none' }]),
+            excl: {}, collapsed: [], layout: 'compact', sub: true, grandRow: true, grandCol: true, sort: 'labelAsc', panel: true
         };
-
-        const rowFields = [
-            getHeaderByIndex(document.getElementById('p_row1').value),
-            getHeaderByIndex(document.getElementById('p_row2').value),
-            getHeaderByIndex(document.getElementById('p_row3').value)
-        ].filter(v => v !== 'none');
-
-        const colField = getHeaderByIndex(document.getElementById('p_col').value);
-        
-        const tbody = document.getElementById('pivotBody');
-        const thead = document.getElementById('pivotHead');
-
-        if (rowFields.length === 0) {
-            thead.innerHTML = '';
-            tbody.innerHTML = '<tr><td style="text-align:center; padding: 20px;">행(Row) 분류 기준을 1개 이상 선택해 주세요.</td></tr>';
-            return;
-        }
-
-        const filterYear = document.getElementById('yearFilter').value;
-        let filtered = (filterYear === 'all') ? budgetData : budgetData.filter(item => item[savedHeaders[0]] == filterYear);
-        // 세목 구분(업무추진비·여비)을 골랐으면 통계도 그 내역만으로 계산
-        filtered = filtered.filter(matchCategory);
-        document.getElementById('tableTitle').innerText = "통계(피벗) 데이터" + (catMode ? ` · ${catMode}` : '');
-
-        let colValues = ['Total'];
-        if (colField !== 'none') {
-            const uniqueCols = [...new Set(filtered.map(r => r[colField] || '미분류'))].sort();
-            colValues = [...uniqueCols, 'Total'];
-        }
-
-        let pivotMap = {};
-        filtered.forEach(row => {
-            const rKey = JSON.stringify(rowFields.map(f => row[f] || '미분류'));
-            const cKey = colField !== 'none' ? (row[colField] || '미분류') : 'Total';
-
-            if (!pivotMap[rKey]) {
-                pivotMap[rKey] = {};
-                colValues.forEach(c => pivotMap[rKey][c] = { b:0, cb:0, c:0, e:0 });
-            }
-
-            const b = parseInt(row['예산액_calc']) || 0;
-            const cb = parseInt(row['예산현액_calc']) || 0;
-            const c = parseInt(row['원인행위액_calc']) || 0;
-            const e = parseInt(row['지출액_calc']) || 0;
-
-            pivotMap[rKey][cKey].b += b;
-            pivotMap[rKey][cKey].cb += cb;
-            pivotMap[rKey][cKey].c += c;
-            pivotMap[rKey][cKey].e += e;
-
-            if (colField !== 'none') {
-                pivotMap[rKey]['Total'].b += b;
-                pivotMap[rKey]['Total'].cb += cb;
-                pivotMap[rKey]['Total'].c += c;
-                pivotMap[rKey]['Total'].e += e;
-            }
+    }
+    function pvFields() { return [...savedHeaders, PV_BAL, PV_RATE]; }
+    function pvIsNum(f) { return f === PV_BAL || f === PV_RATE || savedHeaders.indexOf(f) >= 37; }
+    function pvNewVal(f) { return { f: f, agg: f === PV_RATE ? 'ratio' : (pvIsNum(f) ? 'sum' : 'count'), show: 'none' }; }
+    function pvValName(v) {
+        if (v.agg === 'ratio') return v.f;
+        return PV_AGG[v.agg] + ' : ' + v.f + (v.show !== 'none' ? ' [' + PV_SHOW[v.show] + ']' : '');
+    }
+    function pvLoad() {
+        pv = pvDefault();
+        try {
+            const s = JSON.parse(localStorage.getItem(PV_KEY) || 'null');
+            if (s && typeof s === 'object') pv = Object.assign(pv, s);
+        } catch (e) {}
+    }
+    function pvSave() { try { localStorage.setItem(PV_KEY, JSON.stringify(pv)); } catch (e) {} }
+    // 저장된 배치에 지금은 없는 필드가 있으면 빼고, 값이 이상하면 기본값으로
+    function pvSanitize() {
+        const has = new Set(pvFields());
+        const seen = new Set();
+        PV_AXES.forEach(a => {
+            pv[a] = (Array.isArray(pv[a]) ? pv[a] : []).filter(f => has.has(f) && f !== PV_RATE && !seen.has(f) && seen.add(f));
         });
-
-        let pivotArr = Object.keys(pivotMap).map(k => ({ rowVals: JSON.parse(k), data: pivotMap[k] }));
-        pivotArr.sort((a, b) => {
-            for(let i=0; i<rowFields.length; i++) {
-                if (a.rowVals[i] < b.rowVals[i]) return -1;
-                if (a.rowVals[i] > b.rowVals[i]) return 1;
-            }
-            return 0;
+        pv.vals = (Array.isArray(pv.vals) ? pv.vals : []).filter(v => v && has.has(v.f)).map(v => {
+            if (v.f === PV_RATE) return { f: v.f, agg: 'ratio', show: 'none' };
+            const agg = PV_AGG[v.agg] ? v.agg : (pvIsNum(v.f) ? 'sum' : 'count');
+            return { f: v.f, agg: pvIsNum(v.f) ? agg : 'count', show: PV_SHOW[v.show] ? v.show : 'none' };
         });
+        if (!pv.excl || typeof pv.excl !== 'object') pv.excl = {};
+        Object.keys(pv.excl).forEach(f => { if (!seen.has(f) || !Array.isArray(pv.excl[f]) || !pv.excl[f].length) delete pv.excl[f]; });
+        if (!Array.isArray(pv.collapsed)) pv.collapsed = [];
+        if (pv.layout !== 'tabular') pv.layout = 'compact';
+        if (!['labelAsc', 'labelDesc', 'valDesc', 'valAsc'].includes(pv.sort)) pv.sort = 'labelAsc';
+    }
 
-        let trTop = '<tr>', trBottom = '<tr>';
-        rowFields.forEach(f => {
-            trTop += `<th rowspan="2" style="background-color: var(--primary); color: white;">${E(f)}</th>`;
-        });
+    // ---- 자료 읽기 ----
+    function pvNum(row, f) {
+        if (f === PV_BAL) return pvNum(row, savedHeaders[59]) - pvNum(row, savedHeaders[60]);
+        const ck = PV_CALC_IDX[savedHeaders.indexOf(f)];
+        if (ck && row[ck] !== undefined) return toNum(row[ck]);
+        return toNum(row[f]);
+    }
+    function pvRaw(row, f) {
+        if (f === PV_BAL) return pvNum(row, f);
+        const v = row[f];
+        return (v === undefined || v === null) ? '' : v;
+    }
+    function pvLabel(row, f) { const s = String(pvRaw(row, f)).trim(); return s === '' ? PV_EMPTY : s; }
+    // 위쪽 '연도'·'세목 구분'까지만 적용한 자료
+    function pvBaseData() {
+        const y = document.getElementById('yearFilter').value;
+        return budgetData.filter(r => (y === 'all' || r[savedHeaders[0]] == y) && matchCategory(r));
+    }
+    // 피벗 필드의 필터(항목 체크 해제)까지 적용한 자료
+    function pvFiltered() {
+        const sets = [...pv.rows, ...pv.cols, ...pv.filters].filter(f => pv.excl[f] && pv.excl[f].length).map(f => [f, new Set(pv.excl[f])]);
+        const base = pvBaseData();
+        return sets.length ? base.filter(r => sets.every(([f, s]) => !s.has(pvLabel(r, f)))) : base;
+    }
 
-        colValues.forEach(cVal => {
-            let title = cVal === 'Total' ? '총합계' : cVal;
-            let bg = cVal === 'Total' ? 'var(--purple)' : 'var(--text-muted)';
-            trTop += `<th colspan="5" style="text-align: center; background-color: ${bg}; color: white; border-bottom: 1px solid rgba(255,255,255,0.2);">${E(title)}</th>`;
-            
-            trBottom += `
-                <th class="number" style="background: #f1f5f9;">예산액</th>
-                <th class="number" style="background: #f1f5f9;">예산현액</th>
-                <th class="number" style="background: #f1f5f9;">원인행위액</th>
-                <th class="number" style="background: #f1f5f9;">지출액</th>
-                <th class="number" style="background: #f1f5f9;">예산잔액</th>`;
-        });
-        
-        trTop += '</tr>'; trBottom += '</tr>';
-        thead.innerHTML = trTop + trBottom;
-
-        tbody.innerHTML = '';
-        let lastRowVals = Array(rowFields.length).fill(null); 
-        let grandTotal = {};
-        colValues.forEach(c => grandTotal[c] = { b:0, cb:0, c:0, e:0 });
-
-        pivotArr.forEach(row => {
-            let trHTML = '<tr>';
-            rowFields.forEach((f, idx) => {
-                let cellVal = row.rowVals[idx];
-                let isSameAsAbove = true;
-                for(let k=0; k<=idx; k++) { if(row.rowVals[k] !== lastRowVals[k]) isSameAsAbove = false; }
-                
-                if (isSameAsAbove) trHTML += `<td style="border-top: none; color: transparent;">-</td>`;
-                else trHTML += `<td style="font-weight: bold; border-top: 1px solid var(--border);">${E(cellVal)}</td>`;
+    // ---- 계산 ----
+    function pvBuild() {
+        const R = pv.rows.length, C = pv.cols.length;
+        const data = pvFiltered();
+        const cells = new Map(), rowTree = { ch: new Map() }, colTree = { ch: new Map() }, groupKeys = new Set();
+        const numeric = pv.vals.map(v => pvIsNum(v.f));
+        const fH = savedHeaders[59], fC = savedHeaders[60];
+        data.forEach(r => {
+            const rp = pv.rows.map(f => pvLabel(r, f)), cp = pv.cols.map(f => pvLabel(r, f));
+            let n = rowTree;
+            rp.forEach(l => { if (!n.ch.has(l)) n.ch.set(l, { ch: new Map() }); n = n.ch.get(l); });
+            n = colTree;
+            cp.forEach(l => { if (!n.ch.has(l)) n.ch.set(l, { ch: new Map() }); n = n.ch.get(l); });
+            const rks = [], cks = [];
+            for (let i = 0; i <= R; i++) { rks.push(rp.slice(0, i).join(PV_SEP)); if (i > 0 && i < R) groupKeys.add(rks[i]); }
+            for (let j = 0; j <= C; j++) cks.push(cp.slice(0, j).join(PV_SEP));
+            const vals = pv.vals.map((v, vi) => {
+                if (v.agg === 'ratio') return { n: pvNum(r, fC), d: pvNum(r, fH) };
+                const x = numeric[vi] ? pvNum(r, v.f) : 0;
+                return { x: x, has: String(pvRaw(r, v.f)).trim() !== '' || x !== 0 };
             });
-            lastRowVals = [...row.rowVals];
-
-            colValues.forEach(cVal => {
-                let vals = row.data[cVal];
-                let bal = vals.cb - vals.c; 
-                let rate = vals.cb === 0 ? 0 : (vals.c / vals.cb) * 100;
-                let isZero = vals.b === 0 && vals.cb === 0 && vals.c === 0 && vals.e === 0;
-                let cStyle = isZero ? "color: #cbd5e1;" : "";
-
-                grandTotal[cVal].b += vals.b;
-                grandTotal[cVal].cb += vals.cb;
-                grandTotal[cVal].c += vals.c;
-                grandTotal[cVal].e += vals.e;
-
-                trHTML += `
-                    <td class="number" style="${cStyle}">${fmt(vals.b)}</td>
-                    <td class="number" style="${cStyle}">${fmt(vals.cb)}</td>
-                    <td class="number" style="${cStyle}">${fmt(vals.c)}</td>
-                    <td class="number" style="${cStyle}">${fmt(vals.e)}</td>
-                    <td class="number" style="font-weight:bold; color: var(--danger);"><div style="display:flex; justify-content:space-between;"><span>${rate.toFixed(2)}%</span><span>${fmt(bal)}</span></div></td>
-                `;
+            rks.forEach(rk => cks.forEach(ck => {
+                const key = rk + PV_SEP2 + ck;
+                let a = cells.get(key);
+                if (!a) { a = pv.vals.map(() => ({ s: 0, c: 0, mn: Infinity, mx: -Infinity, n: 0, d: 0 })); cells.set(key, a); }
+                vals.forEach((o, vi) => {
+                    const acc = a[vi];
+                    if (o.d !== undefined) { acc.n += o.n; acc.d += o.d; acc.c++; }
+                    else if (o.has) { acc.c++; acc.s += o.x; if (o.x < acc.mn) acc.mn = o.x; if (o.x > acc.mx) acc.mx = o.x; }
+                });
+            }));
+        });
+        return { cells, rowTree, colTree, groupKeys: [...groupKeys], count: data.length };
+    }
+    function pvVal(m, rk, ck, vi) {
+        const a = m.cells.get(rk + PV_SEP2 + ck);
+        if (!a) return null;
+        const acc = a[vi];
+        switch (pv.vals[vi].agg) {
+            case 'ratio': return acc.d === 0 ? 0 : acc.n / acc.d * 100;
+            case 'count': return acc.c;
+            case 'avg':   return acc.c ? acc.s / acc.c : null;
+            case 'max':   return acc.c ? acc.mx : null;
+            case 'min':   return acc.c ? acc.mn : null;
+            default:      return acc.s;
+        }
+    }
+    // '비율(%)로 표시'까지 반영한 값
+    function pvShown(m, rk, ck, vi) {
+        const x = pvVal(m, rk, ck, vi), v = pv.vals[vi];
+        if (x === null || v.agg === 'ratio' || v.show === 'none') return x;
+        const base = v.show === 'pctGrand' ? pvVal(m, '', '', vi) : v.show === 'pctCol' ? pvVal(m, '', ck, vi) : pvVal(m, rk, '', vi);
+        return base ? x / base * 100 : null;
+    }
+    const pvIsPct = (v) => v.agg === 'ratio' || v.show !== 'none';
+    function pvFmt(x, v) {
+        if (x === null || x === undefined) return '';
+        if (pvIsPct(v)) return x.toFixed(2) + '%';
+        if (v.agg === 'avg') return x.toLocaleString('ko-KR', { maximumFractionDigits: 1 });
+        return Math.round(x).toLocaleString('ko-KR');
+    }
+    function pvSorted(node, prefix, m, isRow) {
+        const ks = [...node.ch.keys()].sort((a, b) => a.localeCompare(b, 'ko', { numeric: true }));
+        if (isRow) {
+            if (pv.sort === 'labelDesc') ks.reverse();
+            else if ((pv.sort === 'valDesc' || pv.sort === 'valAsc') && pv.vals.length) {
+                const g = (k) => pvVal(m, (prefix ? prefix + PV_SEP : '') + k, '', 0) || 0;
+                ks.sort((a, b) => pv.sort === 'valDesc' ? g(b) - g(a) : g(a) - g(b));
+            }
+        }
+        return ks;
+    }
+    // 화면에 나올 열 순서 (열 부분합·총합계 포함)
+    function pvFlatCols(m) {
+        const C = pv.cols.length;
+        if (!C) return [{ path: [], kind: 'only' }];
+        const out = [];
+        (function walk(node, path) {
+            pvSorted(node, '', m, false).forEach(k => {
+                const p = [...path, k];
+                if (p.length === C) out.push({ path: p, kind: 'leaf' });
+                else { walk(node.ch.get(k), p); if (pv.sub) out.push({ path: p, kind: 'sub' }); }
             });
-            trHTML += '</tr>';
-            tbody.insertAdjacentHTML('beforeend', trHTML);
+        })(m.colTree, []);
+        if (pv.grandCol || !out.length) out.push({ path: [], kind: 'grand' });
+        return out;
+    }
+    // 화면에 나올 행 순서 (부분합·접힌 그룹·총합계 포함)
+    function pvFlatRows(m) {
+        const R = pv.rows.length, out = [], col = new Set(pv.collapsed);
+        if (!R) return [{ path: [], kind: 'only' }];
+        (function walk(node, path) {
+            pvSorted(node, path.join(PV_SEP), m, true).forEach(k => {
+                const p = [...path, k], leaf = p.length === R, isCol = !leaf && col.has(p.join(PV_SEP));
+                if (pv.layout === 'compact') {
+                    out.push({ path: p, kind: leaf ? 'leaf' : 'group', collapsed: isCol });
+                    if (!leaf && !isCol) walk(node.ch.get(k), p);
+                } else if (leaf || isCol) {
+                    out.push({ path: p, kind: leaf ? 'leaf' : 'group', collapsed: isCol });
+                } else {
+                    walk(node.ch.get(k), p);
+                    if (pv.sub) out.push({ path: p, kind: 'sub' });
+                }
+            });
+        })(m.rowTree, []);
+        if (pv.grandRow || !out.length) out.push({ path: [], kind: 'grand' });
+        return out;
+    }
+
+    // ---- 화면 그리기 ----
+    window.renderPivot = function() {
+        if (!isPivotMode) return;
+        if (!pv) pvLoad();
+        pvSanitize();
+        document.getElementById('tableTitle').innerText = '피벗 테이블' + (catMode ? ` · ${catMode}` : '');
+        document.getElementById('pvLayout').value = pv.layout;
+        document.getElementById('pvSort').value = pv.sort;
+        document.getElementById('pvSub').checked = !!pv.sub;
+        document.getElementById('pvGrandRow').checked = !!pv.grandRow;
+        document.getElementById('pvGrandCol').checked = !!pv.grandCol;
+        document.getElementById('pvPanel').style.display = pv.panel === false ? 'none' : 'block';
+        document.getElementById('pvPanelBtn').innerText = pv.panel === false ? '필드 목록 보이기' : '필드 목록 숨기기';
+        pvRenderPanel();
+        pvRenderTable();
+        pvSave();
+    };
+
+    function pvRenderPanel() {
+        const fields = pvFields();
+        const used = new Set([...pv.rows, ...pv.cols, ...pv.filters, ...pv.vals.map(v => v.f)]);
+        const kw = document.getElementById('pvFieldSearch').value.trim().toLowerCase();
+        let h = '';
+        fields.forEach((f, i) => {
+            if (kw && !f.toLowerCase().includes(kw)) return;
+            h += `<label class="pv-fi${used.has(f) ? ' used' : ''}" draggable="true" data-area="list" data-f="${i}">
+                    <input type="checkbox" data-f="${i}"${used.has(f) ? ' checked' : ''}><span>${E(f)}</span>${pvIsNum(f) ? '<span class="pv-num">Σ</span>' : ''}</label>`;
+        });
+        document.getElementById('pvFieldList').innerHTML = h || '<div style="padding:8px; color:#94a3b8;">찾는 필드가 없습니다.</div>';
+
+        document.querySelectorAll('#pvPanel .pv-drop').forEach(zone => {
+            const area = zone.dataset.area;
+            let z = '';
+            pv[area].forEach((item, i) => {
+                if (area === 'vals') {
+                    z += `<div class="pv-chip" draggable="true" data-area="vals" data-i="${i}" title="${E(pvValName(item))}">
+                            <span class="pv-cn">${E(pvValName(item))}</span><span class="pv-cf" data-act="val" title="계산 방법 바꾸기">⚙</span><span class="pv-cx" data-act="del" title="빼기">×</span></div>`;
+                } else {
+                    const n = (pv.excl[item] || []).length;
+                    z += `<div class="pv-chip" draggable="true" data-area="${area}" data-i="${i}" title="${E(item)}">
+                            <span class="pv-cn">${E(item)}${n ? ` <span class="pv-fs">(${n}개 제외)</span>` : ''}</span><span class="pv-cf${n ? ' on' : ''}" data-act="filter" title="보일 항목 고르기">▼</span><span class="pv-cx" data-act="del" title="빼기">×</span></div>`;
+                }
+            });
+            zone.innerHTML = z;
+        });
+    }
+
+    function pvRenderTable() {
+        const head = document.getElementById('pivotHead'), body = document.getElementById('pivotBody'), info = document.getElementById('pvInfo');
+        const R = pv.rows.length, C = pv.cols.length, V = pv.vals.length;
+        const msg = (t) => { head.innerHTML = ''; body.innerHTML = `<tr><td class="pv-msg">${t}</td></tr>`; pvModel = null; };
+        if (budgetData.length === 0) { info.innerText = ''; return msg('먼저 에듀파인 엑셀 파일을 불러와 주세요.'); }
+        if (V === 0) { info.innerText = ''; return msg("오른쪽 <b>'Σ 값'</b> 영역에 필드를 하나 이상 넣어 주세요. (예: 예산액, 지출금액)"); }
+
+        const m = pvBuild();
+        const fcols = pvFlatCols(m), frows = pvFlatRows(m);
+        info.innerText = `대상 자료 ${m.count.toLocaleString('ko-KR')}건` + (catMode ? ` · ${catMode}` : '');
+        if (fcols.length * V > 3000) return msg("열이 너무 많아 표를 그릴 수 없습니다. '열' 영역의 필드를 줄이거나 ▼ 필터로 항목을 줄여 주세요.");
+
+        const compact = pv.layout === 'compact' || R === 0;
+        const H = C + 1, L = compact ? 1 : R;
+
+        // 머리글
+        const headRows = [];
+        for (let i = 0; i < H; i++) headRows.push([]);
+        if (compact) headRows[0].push({ t: R ? pv.rows.join(' ▸ ') : '구분', rs: H, cls: 'pv-corner pv-rl' });
+        else pv.rows.forEach((f, i) => headRows[0].push({ t: f, rs: H, cls: 'pv-corner' + (i === 0 ? ' pv-rl' : '') }));
+        for (let l = 0; l < C; l++) {
+            let prev = null;
+            fcols.forEach(fc => {
+                const k = fc.path.length;
+                let id, t, rs = 1, cls = 'pv-ch';
+                if (fc.kind === 'leaf' || (fc.kind === 'sub' && l < k - 1)) { id = 'p' + JSON.stringify(fc.path.slice(0, l + 1)); t = fc.path[l]; }
+                else if (fc.kind === 'sub' && l === k - 1) { id = 's' + JSON.stringify(fc.path); t = fc.path[k - 1] + ' 요약'; rs = C - k + 1; cls = 'pv-csub'; }
+                else if (fc.kind === 'grand' && l === 0) { id = 'g'; t = '총합계'; rs = C; cls = 'pv-cgrand'; }
+                else { prev = null; return; }
+                if (prev && prev.id === id) prev.cell.cs += V;
+                else { const cell = { t: t, cs: V, rs: rs, cls: cls }; headRows[l].push(cell); prev = { id: id, cell: cell }; }
+            });
+        }
+        fcols.forEach(() => pv.vals.forEach(v => headRows[H - 1].push({ t: pvValName(v), cls: 'pv-vh' })));
+
+        // 본문
+        const keys = [], bodyRows = [];
+        let last = [];
+        frows.forEach(fr => {
+            const p = fr.path, rk = p.join(PV_SEP), cells = [];
+            let rcls = '';
+            if (fr.kind === 'grand') { cells.push({ t: '총합계', cs: L, cls: 'pv-rl' }); rcls = 'pv-grand'; }
+            else if (fr.kind === 'only') { cells.push({ t: '합계', cs: L, cls: 'pv-rl' }); }
+            else if (compact) {
+                const c = { t: p[p.length - 1], indent: p.length - 1, cls: 'pv-rl' };
+                if (fr.kind === 'group') { c.tg = keys.length; c.col = fr.collapsed; keys.push(rk); rcls = 'pv-sub'; }
+                cells.push(c);
+            } else {
+                for (let l = 0; l < R; l++) {
+                    const c = { t: '', cls: l === 0 ? 'pv-rl' : '' };
+                    if (fr.kind === 'sub') { if (l === p.length - 1) c.t = p[l] + ' 요약'; }
+                    else if (l < p.length && p.slice(0, l + 1).join(PV_SEP) !== last.slice(0, l + 1).join(PV_SEP)) {
+                        c.t = p[l];
+                        if (l < R - 1) { c.tg = keys.length; keys.push(p.slice(0, l + 1).join(PV_SEP)); c.col = (fr.kind === 'group' && l === p.length - 1); }
+                    }
+                    cells.push(c);
+                }
+                if (fr.kind === 'sub' || fr.kind === 'group') rcls = 'pv-sub';
+                if (fr.kind !== 'sub') last = p;
+            }
+            const blank = compact && fr.kind === 'group' && !fr.collapsed && !pv.sub;
+            fcols.forEach((fc, ci) => {
+                const ck = fc.path.join(PV_SEP);
+                pv.vals.forEach((v, vi) => {
+                    const x = blank ? null : pvShown(m, rk, ck, vi), pct = pvIsPct(v);
+                    cells.push({ num: true, t: pvFmt(x, v), v: x === null ? null : (pct ? x / 100 : x), z: pct ? '0.00%' : (v.agg === 'avg' ? '#,##0.0' : '#,##0'),
+                                 ci: ci, cls: (fc.kind === 'sub' ? 'pv-csub' : fc.kind === 'grand' ? 'pv-cgrand' : '') + (x !== null && x < 0 ? ' pv-neg' : '') });
+                });
+            });
+            bodyRows.push({ cells: cells, cls: rcls });
         });
 
-        let trTotal = `<tr style="background-color: #fffbeb;">`;
-        trTotal += `<td colspan="${rowFields.length}" style="text-align: center; font-weight: 800; color: var(--warning);">전체 총합계</td>`;
-        
-        colValues.forEach(cVal => {
-            let t = grandTotal[cVal];
-            let tRate = t.cb === 0 ? 0 : (t.c / t.cb) * 100;
-            trTotal += `
-                <td class="number" style="font-weight: 900;">${fmt(t.b)}</td>
-                <td class="number" style="font-weight: 900;">${fmt(t.cb)}</td>
-                <td class="number" style="font-weight: 900;">${fmt(t.c)}</td>
-                <td class="number" style="font-weight: 900;">${fmt(t.e)}</td>
-                <td class="number" style="font-weight: 900; color: var(--danger);"><div style="display:flex; justify-content:space-between;"><span>${tRate.toFixed(2)}%</span><span>${fmt(t.cb - t.c)}</span></div></td>
-            `;
+        const span = (c) => (c.cs > 1 ? ` colspan="${c.cs}"` : '') + (c.rs > 1 ? ` rowspan="${c.rs}"` : '');
+        head.innerHTML = headRows.map(r => '<tr>' + r.map(c => `<th class="${c.cls || ''}"${span(c)}>${E(c.t)}</th>`).join('') + '</tr>').join('');
+        body.innerHTML = bodyRows.map((r, ri) => `<tr class="${r.cls}" data-r="${ri}">` + r.cells.map(c => {
+            if (c.num) return `<td class="number ${c.cls}" data-c="${c.ci}">${c.t}</td>`;
+            const tg = c.tg !== undefined ? `<span class="pv-tg" data-k="${c.tg}" title="${c.col ? '펼치기' : '접기'}">${c.col ? '+' : '−'}</span>` : '';
+            return `<td class="${c.cls || ''}"${span(c)} style="padding-left:${12 + (c.indent || 0) * 20}px">${tg}${E(c.t)}</td>`;
+        }).join('') + '</tr>').join('');
+
+        pvModel = { m: m, fcols: fcols, frows: frows, keys: keys, head: headRows, body: bodyRows.map(r => r.cells) };
+    }
+
+    // ---- 배치 바꾸기 ----
+    function pvChanged(keepCollapse) {
+        if (!keepCollapse) pv.collapsed = [];
+        renderPivot();
+    }
+    // 필드를 끌어다 놓았을 때: src = {area, i, f},  dst = 놓은 영역,  idx = 끼워 넣을 자리(없으면 맨 끝)
+    function pvMove(src, dst, idx) {
+        const item = src.area === 'list' ? { f: src.f } : src.area === 'vals' ? pv.vals[src.i] : { f: pv[src.area][src.i] };
+        if (!item || !item.f) return;
+        if (idx === undefined) idx = null;
+        if (dst === 'list') {
+            if (src.area === 'list') return;
+            pv[src.area].splice(src.i, 1);
+        } else if (dst === 'vals') {
+            const def = src.area === 'vals' ? item : pvNewVal(item.f);
+            if (src.area === 'vals') { pv.vals.splice(src.i, 1); if (idx !== null && idx > src.i) idx--; }
+            else if (src.area !== 'list') pv[src.area].splice(src.i, 1);
+            pv.vals.splice(idx === null ? pv.vals.length : idx, 0, def);
+        } else {
+            if (item.f === PV_RATE) return alert("집행률은 계산으로 구하는 값이라 'Σ 값' 영역에만 넣을 수 있습니다.");
+            if (src.area === 'vals') pv.vals.splice(src.i, 1);
+            PV_AXES.forEach(a => {
+                const k = pv[a].indexOf(item.f);
+                if (k >= 0) { pv[a].splice(k, 1); if (a === dst && idx !== null && idx > k) idx--; }
+            });
+            pv[dst].splice(idx === null ? pv[dst].length : idx, 0, item.f);
+        }
+        pvChanged();
+    }
+    window.pvExpandAll = function(open) {
+        if (!pv) return;
+        pv.collapsed = open ? [] : (pvModel ? [...pvModel.m.groupKeys] : []);
+        pvChanged(true);
+    };
+    window.pvReset = function() {
+        if (!confirm('피벗 테이블 배치를 처음 상태(정책사업 ▸ 세부사업)로 되돌릴까요?')) return;
+        pv = pvDefault();
+        renderPivot();
+    };
+    window.pvTogglePanel = function() { pv.panel = (pv.panel === false); renderPivot(); };
+
+    // ---- 작은 설정 창 (필터 / 값 설정) ----
+    function pvShowPop(anchor, html) {
+        const pop = document.getElementById('pvPop');
+        pop.innerHTML = html;
+        pop.style.display = 'block';
+        pvPlacePop(anchor.getBoundingClientRect());
+    }
+    // 설정 창이 화면 밖으로 나가지 않게 자리 잡기
+    function pvPlacePop(r) {
+        const pop = document.getElementById('pvPop');
+        if (r) pop._anchor = r; else r = pop._anchor;
+        if (!r) return;
+        pop.style.left = Math.max(8, Math.min(r.left - 200, window.innerWidth - pop.offsetWidth - 8)) + 'px';
+        pop.style.top = Math.max(8, Math.min(r.bottom + 4, window.innerHeight - pop.offsetHeight - 8)) + 'px';
+    }
+    window.pvClosePop = function() { document.getElementById('pvPop').style.display = 'none'; pvPopState = null; };
+
+    function pvOpenFilter(f, anchor) {
+        const ex = new Set(pv.excl[f] || []);
+        const all = [...new Set([...pvBaseData().map(r => pvLabel(r, f)), ...ex])].sort((a, b) => a.localeCompare(b, 'ko', { numeric: true }));
+        pvPopState = { type: 'filter', f: f, all: all, ex: ex };
+        pvShowPop(anchor, `<div class="pv-pt">▼ ${E(f)} — 보일 항목 고르기</div>
+            <input type="text" id="pvFs" placeholder="🔍 항목 검색...">
+            <label><input type="checkbox" id="pvFall"> <b>(보이는 항목 모두 선택)</b></label>
+            <div id="pvFl" class="pv-fl"></div>
+            <div class="pv-pb"><button type="button" class="btn-clear btn-toolbar" onclick="pvClosePop()">취소</button>
+            <button type="button" class="btn-export btn-toolbar" onclick="pvApplyFilter()">확인</button></div>`);
+        pvFilterList();
+        pvPlacePop();
+    }
+    function pvFilterVisible() {
+        const kw = (document.getElementById('pvFs').value || '').trim().toLowerCase();
+        const idx = [];
+        pvPopState.all.forEach((l, j) => { if (!kw || l.toLowerCase().includes(kw)) idx.push(j); });
+        return idx;
+    }
+    function pvFilterList() {
+        const s = pvPopState, vis = pvFilterVisible();
+        document.getElementById('pvFl').innerHTML = vis.slice(0, 1000).map(j =>
+            `<label><input type="checkbox" data-j="${j}"${s.ex.has(s.all[j]) ? '' : ' checked'}> ${E(s.all[j])}</label>`).join('')
+            + (vis.length > 1000 ? '<div style="padding:4px; color:#94a3b8;">… 항목이 많습니다. 검색으로 좁혀 주세요.</div>' : '')
+            || '<div style="padding:6px; color:#94a3b8;">항목이 없습니다.</div>';
+        document.getElementById('pvFall').checked = vis.length > 0 && vis.every(j => !s.ex.has(s.all[j]));
+    }
+    window.pvApplyFilter = function() {
+        const s = pvPopState;
+        if (!s) return;
+        if (s.ex.size >= s.all.length && s.all.length) return alert('항목을 하나 이상 선택해 주세요.');
+        if (s.ex.size) pv.excl[s.f] = [...s.ex]; else delete pv.excl[s.f];
+        pvClosePop();
+        pvChanged(true);
+    };
+
+    function pvOpenVal(i, anchor) {
+        const v = pv.vals[i];
+        pvPopState = { type: 'val', i: i };
+        if (v.agg === 'ratio') {
+            return pvShowPop(anchor, `<div class="pv-pt">⚙ ${E(v.f)}</div>
+                <div style="font-size:0.8rem; line-height:1.5; margin-bottom:8px;">원인행위금액 합계 ÷ 예산현액 합계 × 100 으로 자동 계산되는 값입니다. (부분합·총합계도 같은 방식으로 다시 계산)</div>
+                <div class="pv-pb"><button type="button" class="btn-clear btn-toolbar" onclick="pvClosePop()">닫기</button></div>`);
+        }
+        const aggs = pvIsNum(v.f) ? Object.keys(PV_AGG) : ['count'];
+        pvShowPop(anchor, `<div class="pv-pt">⚙ ${E(v.f)}</div>
+            <label class="pv-lb">계산 방법</label>
+            <select id="pvVa">${aggs.map(a => `<option value="${a}"${a === v.agg ? ' selected' : ''}>${PV_AGG[a]}</option>`).join('')}</select>
+            <label class="pv-lb">값 표시 형식</label>
+            <select id="pvVs">${Object.keys(PV_SHOW).map(a => `<option value="${a}"${a === v.show ? ' selected' : ''}>${PV_SHOW[a]}</option>`).join('')}</select>
+            <div class="pv-pb"><button type="button" class="btn-clear btn-toolbar" onclick="pvClosePop()">취소</button>
+            <button type="button" class="btn-export btn-toolbar" onclick="pvApplyVal()">확인</button></div>`);
+    }
+    window.pvApplyVal = function() {
+        const s = pvPopState;
+        if (!s || !pv.vals[s.i]) return;
+        pv.vals[s.i].agg = document.getElementById('pvVa').value;
+        pv.vals[s.i].show = document.getElementById('pvVs').value;
+        pvClosePop();
+        pvChanged(true);
+    };
+
+    // ---- 숫자 두 번 누르기: 그 숫자를 이루는 원본 내역 보기 ----
+    function pvDrill(ri, ci) {
+        if (!pvModel) return;
+        const fr = pvModel.frows[ri], fc = pvModel.fcols[ci];
+        if (!fr || !fc) return;
+        const recs = pvFiltered().filter(r => fr.path.every((l, i) => pvLabel(r, pv.rows[i]) === l) && fc.path.every((l, i) => pvLabel(r, pv.cols[i]) === l));
+        const want = ['회계연도', '단위업무부서', '정책사업', '단위사업', '세부사업', '사업항목명1', '사업항목명2', '사업항목명3', '세출세목', '원가통계비목', '예산액', '예산현액', '원인행위금액', '지출금액'];
+        let cols = [...new Set([...want.filter(f => savedHeaders.includes(f)), ...pv.rows, ...pv.cols])];
+        if (!cols.length) cols = savedHeaders.slice(0, 12);
+        cols.sort((a, b) => (pvIsNum(a) ? 1 : 0) - (pvIsNum(b) ? 1 : 0));
+        pvDrillCols = cols;
+        pvDrillRows = recs.map(r => cols.map(f => pvIsNum(f) ? pvNum(r, f) : String(pvRaw(r, f))));
+        const where = [...fr.path.map((l, i) => `${pv.rows[i]} = ${l}`), ...fc.path.map((l, i) => `${pv.cols[i]} = ${l}`)].join('  /  ') || '전체';
+        document.getElementById('pvModalTitle').innerText = `원본 내역 ${recs.length.toLocaleString('ko-KR')}건  —  ${where}`;
+        document.getElementById('pvModalHead').innerHTML = '<tr><th>번호</th>' + cols.map(f => `<th>${E(f)}</th>`).join('') + '</tr>';
+        document.getElementById('pvModalBody').innerHTML = pvDrillRows.slice(0, 1000).map((r, i) => `<tr><td style="text-align:center;">${i + 1}</td>` +
+            r.map((x, j) => pvIsNum(cols[j]) ? `<td class="number">${fmt(x)}</td>` : `<td>${E(x)}</td>`).join('') + '</tr>').join('')
+            + (pvDrillRows.length > 1000 ? `<tr><td colspan="${cols.length + 1}" style="text-align:center;">… 화면에는 1,000건까지만 보입니다. 전체는 엑셀로 저장해 확인하세요.</td></tr>` : '');
+        document.getElementById('pvModal').style.display = 'flex';
+    }
+    window.pvCloseModal = function() { document.getElementById('pvModal').style.display = 'none'; };
+    window.pvDrillExport = function() {
+        if (typeof XLSX === 'undefined' || !pvDrillRows) return alert("엑셀 다운로드 모듈을 사용할 수 없습니다.");
+        const ws = XLSX.utils.aoa_to_sheet([pvDrillCols, ...pvDrillRows]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, '원본내역');
+        const d = new Date();
+        XLSX.writeFile(wb, `피벗_원본내역_${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}.xlsx`);
+    };
+
+    // ---- 피벗 표를 엑셀로 (셀 병합·숫자 서식 유지) ----
+    function exportPivotExcel(wb, dateStr) {
+        if (!pvModel) return alert('내보낼 피벗 표가 없습니다.');
+        const y = document.getElementById('yearFilter').value;
+        const conds = [`연도: ${y === 'all' ? '전체' : y}`, `세목 구분: ${catMode || '전체'}`];
+        Object.keys(pv.excl).forEach(f => conds.push(`${f}: ${pv.excl[f].length}개 항목 제외`));
+        const aoa = [['피벗 테이블' + (catMode ? ' · ' + catMode : '')], ['조건 → ' + conds.join('  |  ')], []];
+        const merges = [], fmts = [], occ = {};
+        const place = (rows, base) => rows.forEach((cells, ri) => {
+            const r = base + ri;
+            let c = 0;
+            aoa[r] = aoa[r] || [];
+            cells.forEach(cell => {
+                while (occ[r + ',' + c]) c++;
+                const cs = cell.cs || 1, rs = cell.rs || 1;
+                if (cell.num) { if (cell.v !== null && cell.v !== undefined) { aoa[r][c] = cell.v; fmts.push([r, c, cell.z]); } }
+                else aoa[r][c] = '   '.repeat(cell.indent || 0) + (cell.t || '');
+                for (let dr = 0; dr < rs; dr++) for (let dc = 0; dc < cs; dc++) occ[(r + dr) + ',' + (c + dc)] = 1;
+                if (cs > 1 || rs > 1) merges.push({ s: { r: r, c: c }, e: { r: r + rs - 1, c: c + cs - 1 } });
+                c += cs;
+            });
         });
-        trTotal += '</tr>';
-        tbody.insertAdjacentHTML('beforeend', trTotal);
+        const base = aoa.length;
+        place(pvModel.head, base);
+        place(pvModel.body, base + pvModel.head.length);
+        for (let i = 0; i < aoa.length; i++) if (!aoa[i]) aoa[i] = [];
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        fmts.forEach(([r, c, z]) => { const cell = ws[XLSX.utils.encode_cell({ r: r, c: c })]; if (cell) cell.z = z; });
+        ws['!merges'] = merges;
+        const L = (pv.layout === 'compact' || !pv.rows.length) ? 1 : pv.rows.length;
+        const nCol = aoa.reduce((a, r) => Math.max(a, r.length), 0);
+        ws['!cols'] = Array.from({ length: nCol }, (_, i) => ({ wch: i < L ? 34 : 18 }));
+        XLSX.utils.book_append_sheet(wb, ws, '피벗테이블');
+        XLSX.writeFile(wb, `피벗테이블${catMode ? '_' + catMode : ''}_${dateStr}.xlsx`);
+    }
+
+    // ---- 마우스 동작 연결 (한 번만) ----
+    function pvInit() {
+        const panel = document.getElementById('pvPanel'), pop = document.getElementById('pvPop');
+        const zoneOf = (el) => el.closest ? el.closest('.pv-drop, .pv-flist') : null;
+
+        document.getElementById('pvLayout').addEventListener('change', e => { pv.layout = e.target.value; pvChanged(); });
+        document.getElementById('pvSort').addEventListener('change', e => { pv.sort = e.target.value; pvChanged(true); });
+        document.getElementById('pvSub').addEventListener('change', e => { pv.sub = e.target.checked; pvChanged(true); });
+        document.getElementById('pvGrandRow').addEventListener('change', e => { pv.grandRow = e.target.checked; pvChanged(true); });
+        document.getElementById('pvGrandCol').addEventListener('change', e => { pv.grandCol = e.target.checked; pvChanged(true); });
+        document.getElementById('pvFieldSearch').addEventListener('input', () => { if (pv) pvRenderPanel(); });
+
+        // 끌어다 놓기
+        panel.addEventListener('dragstart', e => {
+            const el = e.target.closest ? e.target.closest('[draggable="true"]') : null;
+            if (!el) return;
+            pvDrag = el.dataset.area === 'list' ? { area: 'list', f: pvFields()[+el.dataset.f] } : { area: el.dataset.area, i: +el.dataset.i };
+            e.dataTransfer.effectAllowed = 'move';
+            try { e.dataTransfer.setData('text/plain', 'pv'); } catch (x) {}
+        });
+        panel.addEventListener('dragover', e => {
+            const z = zoneOf(e.target);
+            if (!z || !pvDrag) return;
+            e.preventDefault();
+            panel.querySelectorAll('.over').forEach(o => { if (o !== z) o.classList.remove('over'); });
+            z.classList.add('over');
+        });
+        panel.addEventListener('dragend', () => { pvDrag = null; panel.querySelectorAll('.over').forEach(o => o.classList.remove('over')); });
+        panel.addEventListener('drop', e => {
+            const z = zoneOf(e.target);
+            if (!z || !pvDrag) return;
+            e.preventDefault();
+            panel.querySelectorAll('.over').forEach(o => o.classList.remove('over'));
+            const chip = e.target.closest('.pv-chip');
+            const src = pvDrag;
+            pvDrag = null;
+            pvMove(src, z.dataset.area, chip ? +chip.dataset.i : null);
+        });
+
+        // 필드 체크 / 칩 단추
+        panel.addEventListener('change', e => {
+            if (!e.target.matches('.pv-fi input[type=checkbox]')) return;
+            const f = pvFields()[+e.target.dataset.f];
+            if (e.target.checked) {
+                if (pvIsNum(f)) pv.vals.push(pvNewVal(f)); else pv.rows.push(f);
+            } else {
+                PV_AXES.forEach(a => { pv[a] = pv[a].filter(x => x !== f); });
+                pv.vals = pv.vals.filter(v => v.f !== f);
+            }
+            pvChanged();
+        });
+        panel.addEventListener('click', e => {
+            const act = e.target.dataset ? e.target.dataset.act : null;
+            if (!act) return;
+            const chip = e.target.closest('.pv-chip'), area = chip.dataset.area, i = +chip.dataset.i;
+            if (act === 'del') { pv[area].splice(i, 1); pvChanged(); }
+            else if (act === 'filter') pvOpenFilter(pv[area][i], e.target);
+            else if (act === 'val') pvOpenVal(i, e.target);
+            e.stopPropagation();
+        });
+
+        // 작은 설정 창 안에서의 동작
+        pop.addEventListener('input', e => { if (e.target.id === 'pvFs') pvFilterList(); });
+        pop.addEventListener('change', e => {
+            const s = pvPopState;
+            if (!s || s.type !== 'filter') return;
+            if (e.target.id === 'pvFall') {
+                pvFilterVisible().forEach(j => { if (e.target.checked) s.ex.delete(s.all[j]); else s.ex.add(s.all[j]); });
+                pvFilterList();
+            } else if (e.target.dataset.j !== undefined) {
+                const l = s.all[+e.target.dataset.j];
+                if (e.target.checked) s.ex.delete(l); else s.ex.add(l);
+                document.getElementById('pvFall').checked = pvFilterVisible().every(j => !s.ex.has(s.all[j]));
+            }
+        });
+        document.addEventListener('mousedown', e => {
+            if (pop.style.display === 'block' && !pop.contains(e.target) && !(e.target.dataset && (e.target.dataset.act === 'filter' || e.target.dataset.act === 'val'))) pvClosePop();
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { pvClosePop(); pvCloseModal(); } });
+        document.getElementById('pvModal').addEventListener('mousedown', e => { if (e.target.id === 'pvModal') pvCloseModal(); });
+
+        // 표: 펼치기/접기, 숫자 두 번 누르기
+        const body = document.getElementById('pivotBody');
+        body.addEventListener('click', e => {
+            if (!e.target.classList.contains('pv-tg') || !pvModel) return;
+            const key = pvModel.keys[+e.target.dataset.k];
+            const k = pv.collapsed.indexOf(key);
+            if (k >= 0) pv.collapsed.splice(k, 1); else pv.collapsed.push(key);
+            pvRenderTable();
+            pvSave();
+        });
+        body.addEventListener('dblclick', e => {
+            const td = e.target.closest('td[data-c]');
+            if (!td) return;
+            pvDrill(+td.parentNode.dataset.r, +td.dataset.c);
+        });
     }
 
     // --- 엑셀 내보내기 ---
@@ -1117,10 +1652,7 @@
         const _d = new Date(), dateStr = `${_d.getFullYear()}${String(_d.getMonth() + 1).padStart(2, '0')}${String(_d.getDate()).padStart(2, '0')}`;
 
         if (isPivotMode) {
-            const tableEle = document.getElementById('pivotTable');
-            const ws = XLSX.utils.table_to_sheet(tableEle);
-            XLSX.utils.book_append_sheet(wb, ws, "피벗통계분석");
-            XLSX.writeFile(wb, `피벗예산분석${catMode ? '_' + catMode : ''}_${dateStr}.xlsx`);
+            exportPivotExcel(wb, dateStr);   // 피벗 표를 병합·서식 그대로 내려받기
         } else if (catMode) {
             exportCategoryExcel();   // 업무추진비·여비 전용 서식으로 내려받기
         } else {
