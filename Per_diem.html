@@ -75,7 +75,7 @@ input[type=checkbox],input[type=radio]{width:20px;height:20px;padding:0;accent-c
 .basis summary{cursor:pointer;font-weight:700}
 .basis ul{margin:8px 0 10px;padding-left:20px;font-size:14px;line-height:1.65}
 .basis li{margin:3px 0}
-.effchk{font-size:13px;white-space:nowrap}.effchk.ok{color:var(--ok)}.effchk.chk{color:var(--warn)}
+.effchk{font-size:13px;line-height:1.5}.effchk .ok{color:var(--ok)}.effchk .chk{color:var(--warn)}
 .note{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:10px 14px;font-size:14px;margin:0}
 .pill{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
 .pill.warn{background:var(--warn-bg);color:var(--warn)}
@@ -325,7 +325,9 @@ footer{color:var(--muted);font-size:13.5px}
           <label class="f">왕복 거리(km) <input id="cKm" type="number" min="0" step="1" placeholder="예: 120"></label>
           <label class="f">차종·유종 <select id="cFuel">
             <option value="gas">휘발유</option><option value="diesel">경유</option><option value="lpg">LPG</option>
-            <option value="hybrid">하이브리드</option><option value="ev">전기차</option></select></label>
+            <option value="hybrid">하이브리드</option>
+            <option value="phev">플러그인 하이브리드 – 연료 모드</option><option value="phevE">플러그인 하이브리드 – 전기 모드</option>
+            <option value="ev">전기차</option><option value="h2">수소차</option></select></label>
         </div>
         <div class="row">
           <label class="f"><span id="cEffLabel">기준 연비(km/L)</span> <input id="cEff" type="number" min="0.1" step="0.01"></label>
@@ -394,12 +396,13 @@ footer{color:var(--muted);font-size:13.5px}
           <li>예: 산간벽지 등 대중교통이 없는 곳, 심야 출장, 출장 경로가 복잡한 경우, 무거운 물품 운반, 그 밖에 소속 기관장이 인정한 사유</li>
         </ul></div></details>
         <details><summary>기준 연비표</summary><div>
-          <div class="scroll"><table><thead><tr><th>유종</th><th class="num">기준 연비</th><th class="num">기본 유가(예시)</th></tr></thead><tbody id="gEffRows"></tbody></table></div>
-          <p class="fieldnote">이 값은 "지급 기준" 탭에서 고칠 수 있습니다. 최신 「공무원보수 등의 업무지침」 별표와 맞는지 확인하세요.</p>
+          <div class="scroll"><table><thead><tr><th>구분</th><th>유종·동력원</th><th class="num">기준 연비(전비)</th><th>비고</th></tr></thead><tbody id="gEffRows"></tbody></table></div>
+          <p class="fieldnote">근거: 「공무원보수 등의 업무지침(공무원여비업무 처리기준)」 승용차 유종별 연비(전비) 기준표. 지침이 바뀌면 "지급 기준" 탭에서 고칠 수 있습니다.</p>
         </div></details>
         <details><summary>유가 적용 기준</summary><div><ul>
-          <li>출장 <b>시작일</b> 기준 한국석유공사 오피넷(www.opinet.co.kr)의 평균 판매가격을 적용합니다.</li>
-          <li>연료비 = 왕복 거리(km) × 유가 ÷ 기준 연비 (원 단위 미만 버림)</li>
+          <li><b>휘발유·경유·LPG</b>(하이브리드·플러그인 연료 모드 포함): 출장 <b>시작일</b> 기준 한국석유공사 유가정보서비스(오피넷, www.opinet.co.kr) 고시 유가</li>
+          <li><b>전기</b>: 기후에너지환경부 무공해차 통합 누리집 충전요금 · <b>수소</b>: 기후에너지환경부 수소유통정보시스템 등 고시 가격</li>
+          <li>연료비 = 여행거리(km) × 유가 ÷ 연비(전비) (원 단위 미만 버림)</li>
         </ul></div></details>
         <details><summary>일비·식비</summary><div><ul>
           <li>자가용 이용 시 일비는 감액하지 않습니다. (공용차량을 이용하면 일비의 1/2)</li>
@@ -460,8 +463,8 @@ footer{color:var(--muted);font-size:13.5px}
     </div>
     <p class="hint">식사를 제공받으면 1식마다 식비의 1/3을 뺍니다. 숙박비 상한은 도착지 이름으로 자동 구분합니다(서울 / 부산·대구·인천·광주·대전·울산 / 그 밖).</p>
     <h2>자가용 연비·기본 유가</h2>
-    <div class="scroll"><table><thead><tr><th>유종</th><th>기준 연비</th><th>기본 유가</th><th>연비 근거 확인</th></tr></thead><tbody id="effRows"></tbody></table></div>
-    <p class="hint">기본 유가는 자가용 계산 화면에 처음 들어가는 값입니다. 출장 시작일의 오피넷 평균가로 고쳐 쓰세요.</p>
+    <div class="scroll"><table><thead><tr><th>유종</th><th>기준 연비(전비)</th><th>기본 가격</th><th>비고</th></tr></thead><tbody id="effRows"></tbody></table></div>
+    <p class="hint">기준 연비(전비)는 업무지침 표의 값입니다. 기본 가격은 자가용 계산 화면에 처음 들어가는 값이며, 휘발유·경유·LPG는 오피넷 유가를 불러오면 그 값으로 바뀝니다.</p>
     <details class="basis" open>
       <summary>📘 기준 연비 근거 보기</summary>
       <ul>
@@ -469,10 +472,11 @@ footer{color:var(--muted);font-size:13.5px}
         <li><b>지침 위치</b> — 「공무원보수 등의 업무지침」(인사혁신처 예규) 제9장 공무원여비업무 처리기준 › Ⅳ. 근무지외 국내출장시의 여비 › 2. 운임 › 라. 국내자동차운임 지급기준 › 2) 자가용 승용차 이용</li>
         <li><b>계산식</b> — 연료비 = 여행거리(km) × 유가 ÷ 연비</li>
         <li><b>연비</b> — 지침의 <b>「승용차 유종별 연비(전비)」 표</b>에 정한 고정값을 씁니다. 출장자 차량의 실제·공인 연비가 아니며, 같은 유종이면 차종과 관계없이 같은 값을 적용합니다.</li>
-        <li><b>유가</b> — 출장 시작일 기준, 한국석유공사 유가정보서비스(오피넷)에 고시된 유가. 전기는 환경부 무공해차 통합 누리집 충전요금, 수소는 산업통상자원부 수소유통정보시스템을 적용합니다.</li>
+        <li><b>유가</b> — 출장 시작일 기준, 한국석유공사 유가정보서비스(오피넷)에 고시된 유가. 전기는 기후에너지환경부 무공해차 통합 누리집 충전요금, 수소는 기후에너지환경부 수소유통정보시스템 등 고시 가격을 적용합니다.</li>
+        <li><b>하이브리드·플러그인 하이브리드</b> — 하이브리드(휘발유·경유 하이브리드) 15.37km/L. 플러그인 하이브리드는 연료 모드 주행 시 10.61km/L, 전기 모드 주행 시 2.84km/kWh를 적용합니다.</li>
         <li><b>거리·증빙</b> — 출발지~출장지 거리(경유지 포함, 소속기관장이 정한 기준). 고속도로 통행영수증, 주유 카드전표, 주차영수증 등으로 자가용 이용을 입증합니다.</li>
       </ul>
-      <p class="note">⚠️ 위 표의 휘발유 11.97km/L는 지침 예시와 일치합니다. 나머지 유종 값은 지침 표에 있는 숫자이지만 유종별 대응을 원문으로 확인하지 못했습니다. 매년 개정되는 최신 지침(2026.10.1. 개정)의 표와 대조해 다르면 위 칸을 고치세요. 전기차 기본 충전 단가(347원/kWh)는 임시값이므로 무공해차 통합 누리집 요금으로 바꾸세요. 지침 표에는 수소차 등 이 계산기에 없는 유종도 있습니다.</p>
+      <p class="note">⚠️ 연비(전비)는 「공무원보수 등의 업무지침(공무원여비업무 처리기준)」의 승용차 유종별 연비(전비) 기준표 값입니다. 지침이 개정되면 위 칸을 고치세요. 전기 충전 단가(347원/kWh)와 수소 가격(10,000원/kg)은 <b>임시값</b>이므로 출장 시작일 기준 고시 요금으로 바꿔 쓰세요.</p>
     </details>
     <div class="actions"><button class="btn ghost" id="resetRates">기본값으로 되돌리기</button></div>
   </section>
@@ -512,11 +516,18 @@ footer{color:var(--muted);font-size:13.5px}
   var VIEWS=['calc','car','guide','board','fares','rates'];
 
   // 자가용 기준 연비와 기본 유가(예시): 지급 기준 탭에서 고칠 수 있음
-  var FUELS=[['gas','휘발유','km/L','원/L'],['diesel','경유','km/L','원/L'],['lpg','LPG','km/L','원/L'],['hybrid','하이브리드','km/L','원/L'],['ev','전기차','km/kWh','원/kWh']];
-  var EFF_OK={gas:true};   // 업무지침 원문으로 유종 대응이 확인된 연비
+  // 「공무원보수 등의 업무지침」 승용차 유종별 연비(전비) 표 [코드, 이름, 연비 단위, 가격 단위, 구분, 비고]
+  var FUELS=[['gas','휘발유','km/L','원/L','내연기관',''],['diesel','경유','km/L','원/L','내연기관',''],['lpg','LPG','km/L','원/L','내연기관',''],
+    ['hybrid','하이브리드','km/L','원/L','하이브리드','휘발유·경유 하이브리드'],
+    ['phev','플러그인 하이브리드(엔진)','km/L','원/L','플러그인 하이브리드','연료 모드 주행 시'],
+    ['phevE','플러그인 하이브리드(전기)','km/kWh','원/kWh','플러그인 하이브리드','전기 모드 주행 시'],
+    ['ev','전기차','km/kWh','원/kWh','친환경차','전비 기준'],
+    ['h2','수소차','km/kg','원/kg','친환경차','수소 기준']];
+  var NO_OPINET={phevE:1,ev:1,h2:1};   // 오피넷에 가격이 없는 동력원(전기·수소)
   var DEF_RATES={ilbi:25000,sikbi:25000,capSeoul:100000,capMetro:80000,capEtc:70000,
     eff_gas:11.97,eff_diesel:12.52,eff_lpg:8.83,eff_hybrid:15.37,eff_ev:5.22,
-    price_gas:1858,price_diesel:1843,price_lpg:1140,price_hybrid:1858,price_ev:347};
+    price_gas:1858,price_diesel:1843,price_lpg:1140,price_hybrid:1858,price_ev:347,
+    eff_phev:10.61,eff_phevE:2.84,eff_h2:94.9,price_phev:1858,price_phevE:347,price_h2:10000};   // 전기·수소 가격은 임시값
   // 예비 요금표의 예시 값(확인 필요). 요금 0 = 해당 교통수단 노선 없음.
   var DEF_FARES=[
     {a:'여수',b:'서울',busN:'고속버스',bus:33000,trainN:'KTX',train:47000,airN:'여수–김포',air:80000,ok:false},
@@ -864,17 +875,17 @@ footer{color:var(--muted);font-size:13.5px}
     if(!tb.children.length){
       FUELS.forEach(function(f){
         var tr=document.createElement('tr');
-        tr.innerHTML='<td>'+f[1]+'</td><td><input data-rate="eff_'+f[0]+'" type="number" step="0.01" min="0.1" aria-label="'+f[1]+' 기준 연비('+f[2]+')"></td>'
+        tr.innerHTML='<td>'+f[1]+'<br><small class="hint">'+f[4]+' · '+f[2]+'</small></td><td><input data-rate="eff_'+f[0]+'" type="number" step="0.01" min="0.1" aria-label="'+f[1]+' 기준 연비('+f[2]+')"></td>'
           +'<td><input data-rate="price_'+f[0]+'" type="number" step="1" min="0" aria-label="'+f[1]+' 기본 유가('+f[3]+')"></td>'
-          +'<td class="effchk '+(EFF_OK[f[0]]?'ok':'chk')+'">'+(EFF_OK[f[0]]?'✅ 지침 예시와 일치':'⚠️ 원문 표와 대조 필요')+'</td>';
+          +'<td class="effchk">'+(f[5]?f[5]+'<br>':'')+(NO_OPINET[f[0]]?'<span class="chk">가격 직접 입력('+f[3]+')</span>':'<span class="ok">오피넷 유가'+(f[0]==='hybrid'||f[0]==='phev'?'(휘발유)':'')+'</span>')+'</td>';
         tb.appendChild(tr);
       });
       tb.querySelectorAll('[data-rate]').forEach(bindRate);
     }
     document.querySelectorAll('[data-rate]').forEach(function(x){x.value=rates[x.dataset.rate]});
     var g=$('gEffRows');g.innerHTML='';
-    FUELS.forEach(function(f){var tr=document.createElement('tr');tr.innerHTML='<td></td><td class="num"></td><td class="num"></td>';
-      tr.children[0].textContent=f[1];tr.children[1].textContent=rates['eff_'+f[0]]+' '+f[2];tr.children[2].textContent=Number(rates['price_'+f[0]]).toLocaleString('ko-KR')+' '+f[3];g.appendChild(tr)});
+    FUELS.forEach(function(f){var tr=document.createElement('tr');tr.innerHTML='<td></td><td></td><td class="num"></td><td></td>';
+      tr.children[0].textContent=f[4];tr.children[1].textContent=f[1];tr.children[2].textContent=rates['eff_'+f[0]]+' '+f[2];tr.children[3].textContent=f[5]||'-';g.appendChild(tr)});
   }
   function bindRate(x){x.addEventListener('change',function(){var v=parseFloat(x.value);rates[x.dataset.rate]=isFinite(v)&&v>0?v:DEF_RATES[x.dataset.rate];save('yeobi-rates-v2',rates);renderRates();calc();if(carShown)carCalc(false)})}
   document.querySelectorAll('#view-rates .row [data-rate]').forEach(bindRate);
@@ -886,8 +897,9 @@ footer{color:var(--muted);font-size:13.5px}
   function fuelInfo(){var k=$('cFuel').value;for(var i=0;i<FUELS.length;i++)if(FUELS[i][0]===k)return FUELS[i];return FUELS[0]}
   function setFuel(){
     var f=fuelInfo();
-    $('cEffLabel').textContent=(f[0]==='ev'?'기준 전비(':'기준 연비(')+f[2]+')';
-    $('cPriceLabel').textContent=(f[0]==='ev'?'충전 단가(':'기준 유가(')+f[3]+')';
+    var kwh=f[2]==='km/kWh',kg=f[2]==='km/kg';
+    $('cEffLabel').textContent=(kwh?'기준 전비(':'기준 연비(')+f[2]+')';
+    $('cPriceLabel').textContent=(kwh?'충전 단가(':kg?'수소 가격(':'기준 유가(')+f[3]+')';
     $('cEff').value=rates['eff_'+f[0]];
     var p=fuelData?opPrice(f[0]):null;          // 오피넷 유가를 불러왔으면 그 값을, 아니면 기본값
     $('cPrice').value=p!=null?p:rates['price_'+f[0]];
@@ -897,10 +909,13 @@ footer{color:var(--muted);font-size:13.5px}
 
   /* ---------- 오피넷 유가 불러오기 (중계 서버가 매일 쌓아 둔 기록에서 기준일 값을 꺼냄) ---------- */
   var fuelData=null,fuelSrc='',fuelDateTouched=false,fuelCache={};
-  var OP_KEY={gas:'gas',hybrid:'gas',diesel:'diesel',lpg:'lpg'};   // 하이브리드는 휘발유 가격
+  var OP_KEY={gas:'gas',hybrid:'gas',phev:'gas',diesel:'diesel',lpg:'lpg'};   // 하이브리드·플러그인(연료 모드)은 휘발유 가격
   function opPrice(k){var x=OP_KEY[k];return x&&fuelData&&fuelData[x]?fuelData[x]:null}
   function ymd(v){return String(v).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3')}
   function fuelLabel(){return '오피넷 '+(fuelData.area==='전국'?'전국':fuelData.area)+' 평균('+ymd(fuelData.date)+')'}
+  function noOpMsg(){return $('cFuel').value==='h2'
+      ?'수소 가격은 오피넷에 없습니다. 기후에너지환경부 수소유통정보시스템 고시 가격을 "수소 가격" 칸에 넣으세요.'
+      :'전기 충전요금은 오피넷에 없습니다. 기후에너지환경부 무공해차 통합 누리집 충전요금을 "충전 단가" 칸에 넣으세요.'}
   function fuelMsg(text,kind){var m=$('cFuelMsg');m.textContent=text;m.className='fuelmsg'+(kind?' '+kind:'')}
   function markFuelGrid(){
     var k=$('cFuel').value;
@@ -923,7 +938,7 @@ footer{color:var(--muted);font-size:13.5px}
     var date=$('cFuelDate').value,area=$('cFuelArea').value;
     if(!date){fuelMsg('유가 기준일을 고르세요.','bad');return}
     if(!relay){fuelMsg('중계 서버가 연결되지 않았습니다. 오피넷에서 확인해 직접 넣으세요.','bad');return}
-    if($('cFuel').value==='ev')fuelMsg('전기차 충전 단가는 오피넷에 없습니다. 휘발유·경유·LPG 값만 불러옵니다…');
+    if(NO_OPINET[$('cFuel').value])fuelMsg(noOpMsg()+' 휘발유·경유·LPG 값만 불러옵니다…');
     else fuelMsg('오피넷 유가를 불러오는 중입니다…');
     var key=date+'|'+area,btn=$('cFuelBtn');btn.disabled=true;
     var job=fuelCache[key]?Promise.resolve(fuelCache[key])
@@ -945,8 +960,8 @@ footer{color:var(--muted);font-size:13.5px}
       markFuelGrid();
       var head=(j.area==='전국'?'전국':j.area)+' 평균 · '+ymd(j.date)+' 기준';
       var note=j.exact?'':' (고른 날 '+ymd(j.asked)+'의 기록이 없어 가장 가까운 이전 날 값입니다)';
-      fuelMsg(head+note+'. '+(p!=null?f[1]+(f[0]==='hybrid'?'(휘발유 가격)':'')+' '+p.toLocaleString('ko-KR',{maximumFractionDigits:2})+'원을 "기준 유가" 칸에 넣었습니다.'
-        :(f[0]==='ev'?'전기차 충전 단가는 직접 넣으세요.':'이 유종의 값이 없습니다. 직접 넣으세요.')),j.exact?'ok':'');
+      fuelMsg(head+note+'. '+(p!=null?f[1]+(f[0]==='hybrid'||f[0]==='phev'?'(휘발유 가격)':'')+' '+p.toLocaleString('ko-KR',{maximumFractionDigits:2})+'원을 "기준 유가" 칸에 넣었습니다.'
+        :(NO_OPINET[f[0]]?noOpMsg():'이 유종의 값이 없습니다. 직접 넣으세요.')),j.exact?'ok':'');
       if(carShown)carCalc(false);
     }).catch(function(){
       btn.disabled=false;fuelData=null;fuelSrc='';$('cFuelGrid').hidden=true;
@@ -958,7 +973,7 @@ footer{color:var(--muted);font-size:13.5px}
   var fuelTimer=null,fuelFirst=true;
   function autoFuel(){
     clearTimeout(fuelTimer);
-    if($('cFuel').value==='ev'||radioVal('cRole')==='rider')return;
+    if(NO_OPINET[$('cFuel').value]||radioVal('cRole')==='rider')return;
     fuelTimer=setTimeout(loadFuel,300);
   }
   $('cFuelArea').addEventListener('change',autoFuel);
@@ -1045,7 +1060,7 @@ footer{color:var(--muted);font-size:13.5px}
   document.querySelectorAll('input[name="cTrip"],input[name="cRole"]').forEach(function(r){r.addEventListener('change',function(){carUi();if(carShown)carCalc(false)})});
   $('cFuel').addEventListener('change',function(){
     setFuel();if(carShown)carCalc(false);
-    if($('cFuel').value==='ev')fuelMsg('전기차 충전 단가는 오피넷에 없습니다. "충전 단가" 칸에 직접 넣으세요.');
+    if(NO_OPINET[$('cFuel').value])fuelMsg(noOpMsg());
     else if(!fuelData||fuelData.asked!==$('cFuelDate').value.replace(/-/g,'')||fuelData.area!==$('cFuelArea').value)autoFuel();
   });
   ['cNights','cRegion','cLodge','cKm','cEff','cPrice','cToll','cPark','cMeals','cWho','cDate'].forEach(function(id){$(id).addEventListener('input',function(){if(carShown)carCalc(false)})});
