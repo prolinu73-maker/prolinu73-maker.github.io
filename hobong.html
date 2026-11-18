@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>교원·계약제교원 호봉획정 계산기</title>
 <link rel="stylesheet" href="common.css?v=5">
-<script src="common.js?v=5"></script>
+<script src="common.js?v=1.4.1"></script>
 <style>
 :root{--navy:#1f3a68;--blue:#0b63b6;--bg:#f2f4f8;--line:#d3dae6;--ink:#1c2430;--sub:#5b6676;--warn:#b45309;--ok:#0f766e}
 *{box-sizing:border-box}
@@ -640,7 +640,7 @@ fillTop();renderRows();update();memShow();
     return ((window.firebase&&firebase.firestore)?Promise.resolve()
       :addScript(SDK+'firebase-app-compat.js').then(function(){return addScript(SDK+'firebase-firestore-compat.js')}))
       .then(function(){
-        if(window.HUB&&HUB.db)return HUB.db();
+        if(window.HUB&&HUB.db){try{HUB.startAuthSync&&HUB.startAuthSync()}catch(e){}return HUB.db()}   // 허브 로그인 상태도 맞춤(여비관리와 같음)
         if(!firebase.apps.length)firebase.initializeApp(CONFIG);
         return firebase.firestore();
       });
@@ -648,7 +648,7 @@ fillTop();renderRows();update();memShow();
   var adminPC=false;try{adminPC=!!(window.HUB&&HUB.isAdminDevice&&HUB.isAdminDevice())}catch(e){}
   getDb().then(function(db){
     var ref=db.collection('stats').doc(PAGE_DOC);
-    var d=new Date(),todayFmt=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    var d=new Date(),todayFmt=(window.HUB&&HUB.todayKey)?HUB.todayKey():d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);   // 한국 시간 기준 날짜(허브와 같음)
     var isNew=false;
     try{if(!sessionStorage.getItem(SESSION_KEY)){sessionStorage.setItem(SESSION_KEY,'true');isNew=true}}catch(e){isNew=true}
     if(adminPC)isNew=false;

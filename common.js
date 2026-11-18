@@ -23,7 +23,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.4.0';
+    HUB.VERSION = '1.4.1';
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
@@ -395,7 +395,7 @@
         if (ddCssDone) return; ddCssDone = true;
         const st = d.createElement("style");
         st.textContent = `
-.nav-group{border:none;background:none;font-family:inherit;cursor:pointer}
+.nav-group{border:1px solid transparent;background:none;font-family:inherit;cursor:pointer}   /* 테두리 자리를 남겨 다른 메뉴와 높이·선택 표시를 같게 */
 .nav-group .nav-caret{font-size:11px;margin-left:4px;opacity:.75;transition:transform .2s}
 .nav-group[aria-expanded="true"] .nav-caret{transform:rotate(180deg)}
 .hub-dd{position:fixed;z-index:3000;min-width:200px;background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:6px;box-shadow:0 14px 34px rgba(15,23,42,.16);font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;opacity:0;transform:translateY(-4px);transition:opacity .15s,transform .15s;pointer-events:none}
