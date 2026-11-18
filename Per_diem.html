@@ -151,6 +151,49 @@ footer{color:var(--muted);font-size:13.5px}
 .post .del{margin-left:auto;display:flex;gap:6px;align-items:center}
 .post .del input{height:34px;width:120px;font-size:14px;padding:4px 8px}
 .empty{color:var(--muted);font-size:14.5px;padding:18px 2px}
+/* 자가용 여비 */
+.callout{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;background:var(--soft);border-radius:10px;padding:12px 14px;font-size:14.5px}
+.callout b{color:var(--accent)}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg label{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:9px 14px;font-size:15px;color:var(--ink);cursor:pointer;background:var(--surface)}
+.seg label:has(input:checked){border-color:var(--accent);background:var(--soft);font-weight:700}
+.fieldnote{font-size:13px;color:var(--muted);margin:2px 0 0}
+.fuelbox{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:6px 0 10px;background:var(--soft)}
+.fuelhead{font-weight:700;margin-bottom:6px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.fuelmsg{font-size:13.5px;margin:6px 0 0;color:var(--muted)}
+.fuelmsg.ok{color:var(--ok)}.fuelmsg.bad{color:var(--warn)}
+.fuelgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
+.fuelgrid button{border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:8px;padding:6px 8px;font:inherit;font-size:13.5px;cursor:pointer;text-align:left}
+.fuelgrid button b{display:block;font-size:15px}
+.fuelgrid button.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.fuelgrid button:disabled{opacity:.5;cursor:default}
+.formula{font-family:Consolas,"D2Coding",monospace;font-size:13.5px;background:var(--soft);border-radius:6px;padding:2px 6px}
+#carResult.pop{animation:pop .35s ease}
+@keyframes pop{from{opacity:.2;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#carResult.pop{animation:none}}
+.subtotal td{font-weight:700;background:var(--soft)}
+.guide details{border:1px solid var(--line);border-radius:10px;padding:0 16px;background:var(--surface)}
+.guide details+details{margin-top:10px}
+.guide summary{cursor:pointer;font:600 16px var(--display);padding:14px 0;list-style-position:outside}
+.guide details[open] summary{border-bottom:1px solid var(--line);margin-bottom:10px}
+.guide details>div{padding:0 0 14px;font-size:15px}
+.guide ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.checks{display:flex;flex-direction:column;gap:8px}
+.checks label{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;font-size:15px;background:var(--surface)}
+.checks label:has(input:checked){background:var(--ok-bg);border-color:var(--ok)}
+.checks label:has(input:checked) .ct{text-decoration:line-through;color:var(--muted)}
+.checks small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.prog{height:8px;border-radius:99px;background:var(--soft);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ok);width:0;transition:width .25s}
+@media print{
+  body{background:#fff}
+  .wrap>*:not(#view-car){display:none!important}
+  #view-car>.col{display:none!important}
+  #view-car{display:block!important}
+  #carResult{border:0;position:static}
+  #carResult .actions,#carResult .noprint{display:none!important}
+}
+
 </style>
 <style>
 .post .del .like.on{background:#1A9C7B;border-color:#1A9C7B;color:#fff}
@@ -162,20 +205,23 @@ footer{color:var(--muted);font-size:13.5px}
     <div class="hub-home-wrap"><span data-hub-home></span><script>HUB.mountHomeButton()</script><h1>출장 여비 계산기</h1></div>
     <div class="headright">
       <span class="visits" id="visits" hidden>오늘 <b id="vToday">0</b>명 · 누적 <b id="vTotal">0</b>명</span>
-      <button class="conn off" id="conn" type="button" title="자동 조회 연결 상태 보기">자동 조회 미연결</button>
+      <span class="conn plain" id="conn" title="대중교통 요금 자동 조회 상태">요금 조회 대기</span>
     </div>
   </header>
   <div class="tabs" role="tablist">
-    <button role="tab" id="tab-calc" aria-selected="true" data-view="calc">여비 계산</button>
-    <button role="tab" id="tab-api" aria-selected="false" data-view="api">자동 조회 연결</button>
+    <button role="tab" id="tab-calc" aria-selected="true" data-view="calc">🚌 대중교통 여비</button>
+    <button role="tab" id="tab-car" aria-selected="false" data-view="car">🚗 자가용 여비</button>
+    <button role="tab" id="tab-guide" aria-selected="false" data-view="guide">📋 규정·증빙 가이드</button>
+    <button role="tab" id="tab-board" aria-selected="false" data-view="board">💬 자유게시판</button>
     <button role="tab" id="tab-fares" aria-selected="false" data-view="fares">예비 요금표</button>
     <button role="tab" id="tab-rates" aria-selected="false" data-view="rates">지급 기준</button>
-    <button role="tab" id="tab-board" aria-selected="false" data-view="board">자유게시판</button>
   </div>
 
   <!-- ① 계산 화면 -->
   <section id="view-calc" class="grid">
     <div class="col">
+      <p class="callout">원칙은 <b>대중교통 요금</b> 지급입니다. 노선이 없거나 공무상 부득이하게 자가용을 탔다면
+        <button class="btn small ghost" type="button" data-go="car">🚗 자가용 여비 계산으로</button></p>
 
       <div class="panel">
         <div class="stephead"><span class="no">1</span><h2>어디로, 언제 가나요?</h2></div>
@@ -236,30 +282,139 @@ footer{color:var(--muted);font-size:13.5px}
     </div>
   </section>
 
-  <!-- ② 자동 조회 연결 -->
-  <section id="view-api" class="panel" hidden>
-    <h2>자동 조회 연결</h2>
-    <p class="hint">요금은 공공데이터포털(국토교통부 TAGO)에서 가져옵니다. 웹 화면이 포털에 직접 물어볼 수 없어서, 중간에서 대신 물어봐 주는 "중계 서버"를 한 번 만들어 연결합니다.</p>
-    <div class="row">
-      <label class="f">중계 서버 주소(웹 앱 URL) <input id="relay" type="url" placeholder="https://script.google.com/macros/s/…/exec"></label>
+  <!-- ⑥ 자가용 여비 -->
+  <section id="view-car" class="grid" hidden>
+    <div class="col">
+      <p class="callout">자가용 실비(연료비·통행료·주차료)는 <b>대중교통이 없거나 이용이 현저히 곤란한 경우</b>에만 지급합니다.
+        <button class="btn small ghost" type="button" data-go="guide">자가용 이용 가능 사유 보기</button></p>
+
+      <div class="panel">
+        <div class="stephead"><span class="no">1</span><h2>출장 구분</h2></div>
+        <div class="seg" role="radiogroup" aria-label="출장 구분">
+          <label><input type="radio" name="cTrip" value="day" checked> 당일 출장</label>
+          <label><input type="radio" name="cTrip" value="stay"> 숙박 출장</label>
+        </div>
+        <div class="row" id="cStayRow" hidden>
+          <label class="f">숙박 일수(박) <input id="cNights" type="number" min="1" step="1" value="1"></label>
+          <label class="f">숙박 지역 <select id="cRegion"><option value="seoul">서울</option><option value="metro">광역시</option><option value="etc" selected>그 밖</option></select></label>
+          <label class="f">실제 숙박비 합계(원) <input id="cLodge" type="number" min="0" step="1000" value="0"></label>
+        </div>
+        <div class="row">
+          <label class="f">출장자 이름 <input id="cWho" type="text" placeholder="홍길동"></label>
+          <label class="f">출장 시작일 <input id="cDate" type="date"></label>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="stephead"><span class="no">2</span><h2>운전자인가요?</h2></div>
+        <div class="seg" role="radiogroup" aria-label="운전자 구분">
+          <label><input type="radio" name="cRole" value="driver" checked> 운전자 (차량 소유자)</label>
+          <label><input type="radio" name="cRole" value="rider"> 동승자</label>
+        </div>
+        <p class="note" id="cRiderNote" hidden>동승자는 운임(연료비·통행료·주차료)을 받지 않고 <b>일비·식비만</b> 받습니다. 운임은 운전자 1명에게만 지급합니다.</p>
+      </div>
+
+      <div class="panel" id="cFarePanel">
+        <div class="stephead"><span class="no">3</span><h2>거리와 연료</h2></div>
+        <div class="row">
+          <label class="f">왕복 거리(km) <input id="cKm" type="number" min="0" step="1" placeholder="예: 120"></label>
+          <label class="f">차종·유종 <select id="cFuel">
+            <option value="gas">휘발유</option><option value="diesel">경유</option><option value="lpg">LPG</option>
+            <option value="hybrid">하이브리드</option><option value="ev">전기차</option></select></label>
+        </div>
+        <div class="row">
+          <label class="f"><span id="cEffLabel">기준 연비(km/L)</span> <input id="cEff" type="number" min="0.1" step="0.01"></label>
+          <label class="f"><span id="cPriceLabel">기준 유가(원/L)</span> <input id="cPrice" type="number" min="0" step="0.01"></label>
+        </div>
+        <div class="fuelbox">
+          <div class="fuelhead">⛽ 오피넷 유가 불러오기 <span class="hint">기준일의 주유소 평균 판매가격</span></div>
+          <div class="row">
+            <label class="f">유가 기준일 <input id="cFuelDate" type="date"></label>
+            <label class="f">지역 <select id="cFuelArea">
+              <option value="전국">전국 평균</option><option value="전남" selected>전남</option>
+              <option>광주</option><option>서울</option><option>부산</option><option>대구</option><option>인천</option><option>대전</option><option>울산</option><option>세종</option>
+              <option>경기</option><option>강원</option><option>충북</option><option>충남</option><option>전북</option><option>경북</option><option>경남</option><option>제주</option>
+            </select></label>
+          </div>
+          <div class="actions"><button class="btn ghost" id="cFuelBtn" type="button">다시 불러오기</button></div>
+          <p class="fuelmsg" id="cFuelMsg" aria-live="polite">차종·유종, 기준일, 지역을 고르면 그 조건의 오피넷 평균 유가가 "기준 유가" 칸에 자동으로 들어갑니다. 기준일은 출장 시작일을 따라갑니다.</p>
+          <div class="fuelgrid" id="cFuelGrid" hidden></div>
+        </div>
+        <p class="fieldnote">불러오지 못하면 <a href="https://www.opinet.co.kr" target="_blank" rel="noopener">오피넷</a>에서 확인해 "기준 유가" 칸에 직접 넣으세요. 지역 기준(전국·시도)은 기관 지침을 따르세요.</p>
+        <div class="row">
+          <label class="f">통행료 합계(원, 실비) <input id="cToll" type="number" min="0" step="100" value="0"></label>
+          <label class="f">주차료 합계(원, 실비) <input id="cPark" type="number" min="0" step="100" value="0"></label>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="stephead"><span class="no">4</span><h2>일비와 식비</h2></div>
+        <div class="row">
+          <label class="f">제공받은 식사 횟수 <input id="cMeals" type="number" min="0" step="1" value="0"></label>
+        </div>
+        <label class="toggle"><input type="checkbox" disabled> 공용차량 이용 (자가용이므로 해당 없음 · 일비 감액 없음)</label>
+        <p class="fieldnote">일비·식비는 "지급 기준" 탭 금액(기본 1일 각 25,000원)을 씁니다. 식사를 제공받으면 1식마다 식비의 1/3을 뺍니다.</p>
+        <div class="actions"><button class="btn" id="cCalc" type="button">계산하기</button><span class="hint" id="cErr" aria-live="polite" style="color:var(--warn)"></span></div>
+      </div>
     </div>
-    <div class="actions">
-      <button class="btn" id="saveRelay">저장하고 시험 조회</button>
-      <button class="btn ghost" id="clearRelay">연결 해제</button>
-      <span class="hint" id="relayMsg" aria-live="polite"></span>
+
+    <div class="panel result" id="carResult">
+      <h2>자가용 여비 정산 내역</h2>
+      <p class="sum" id="cSum">왼쪽 내용을 넣고 "계산하기"를 누르세요.</p>
+      <div class="total"><span>최종 지급 여비</span><strong id="cTotal">0원</strong></div>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>항목</th><th>계산 근거</th><th class="num">금액</th></tr></thead>
+          <tbody id="cLines"></tbody>
+        </table>
+      </div>
+      <p class="note" id="cWarn" hidden></p>
+      <div class="actions">
+        <button class="btn" id="cCopy" type="button">결과 복사하기</button>
+        <button class="btn ghost" id="cPrint" type="button">인쇄 / PDF 저장</button>
+        <span class="hint" id="cCopyMsg" aria-live="polite"></span>
+      </div>
+      <p class="hint noprint">연료비는 원 단위 미만을 버립니다. 인쇄 창에서 "PDF로 저장"을 고르면 파일로 남길 수 있습니다.</p>
     </div>
-    <p class="note">이 탭은 관리자 모드(메인 허브에서 관리자로 로그인한 뒤 주소 끝에 #admin)에서만 보입니다. 위 칸에 저장한 주소는 이 브라우저에만 남습니다. 모든 접속자가 자동 조회를 쓰게 하려면, 이 HTML 파일을 메모장으로 열어 <code>RELAY_URL=''</code> 의 따옴표 안에 주소를 넣고 저장한 뒤 그 파일을 올리세요.</p>
-    <h2>처음 연결하는 순서</h2>
-    <ol class="steps">
-      <li><b>인증키 받기.</b> 공공데이터포털(data.go.kr)에서 아래 4개에 각각 <b>활용신청</b>을 하고, 마이페이지에서 인증키를 복사합니다.<br>
-        국토교통부_(TAGO)_고속버스정보 · 시외버스정보 · 열차정보 · 국내항공운항정보</li>
-      <li><b>중계 서버 만들기.</b> script.google.com 에서 <b>새 프로젝트</b>를 만들고, 편집 칸을 비운 뒤 <code>Code.gs.txt</code> 내용을 전부 붙여 넣습니다.</li>
-      <li><b>인증키 넣기.</b> <code>SERVICE_KEY</code> 줄의 따옴표 안에 인증키를 붙여 넣고 저장합니다.</li>
-      <li><b>시험하기.</b> 함수 선택 칸에서 <code>test</code>를 고르고 <b>실행</b>합니다. 실행 로그에 요금이 나오면 성공입니다.</li>
-      <li><b>배포하기.</b> <b>배포 → 새 배포 → 웹 앱</b>, 액세스 권한 <b>모든 사용자</b>로 배포하고 웹 앱 URL을 복사합니다.</li>
-      <li><b>연결하기.</b> 그 URL을 위 칸에 붙여 넣고 저장합니다.</li>
-    </ol>
-    <p class="note">시외버스는 포털이 당일 배차 정보만 제공하므로 오늘 날짜 기준 요금이 나옵니다. "※요금 확인 필요"가 붙은 기차 요금은 코레일 요금과 비교해 주세요. 올 때 요금은 도착일 기준으로 반대 방향을 따로 조회합니다. 조회 결과가 없는 교통수단은 예비 요금표 값을 대신 씁니다.</p>
+  </section>
+
+  <!-- ⑦ 규정·증빙 가이드 -->
+  <section id="view-guide" class="grid" hidden>
+    <div class="col guide">
+      <div class="panel">
+        <h2>규정 요약</h2>
+        <details open><summary>자가용을 이용할 수 있는 경우</summary><div><ul>
+          <li>원칙은 근무지와 출장지 사이의 <b>대중교통 요금</b> 지급입니다.</li>
+          <li>대중교통 노선이 없거나 이용이 현저히 곤란한 경우 등 <b>공무상 부득이한 사유</b>가 있을 때 연료비·통행료·주차료를 지급할 수 있습니다.</li>
+          <li>예: 산간벽지 등 대중교통이 없는 곳, 심야 출장, 출장 경로가 복잡한 경우, 무거운 물품 운반, 그 밖에 소속 기관장이 인정한 사유</li>
+        </ul></div></details>
+        <details><summary>기준 연비표</summary><div>
+          <div class="scroll"><table><thead><tr><th>유종</th><th class="num">기준 연비</th><th class="num">기본 유가(예시)</th></tr></thead><tbody id="gEffRows"></tbody></table></div>
+          <p class="fieldnote">이 값은 "지급 기준" 탭에서 고칠 수 있습니다. 최신 「공무원보수 등의 업무지침」 별표와 맞는지 확인하세요.</p>
+        </div></details>
+        <details><summary>유가 적용 기준</summary><div><ul>
+          <li>출장 <b>시작일</b> 기준 한국석유공사 오피넷(www.opinet.co.kr)의 평균 판매가격을 적용합니다.</li>
+          <li>연료비 = 왕복 거리(km) × 유가 ÷ 기준 연비 (원 단위 미만 버림)</li>
+        </ul></div></details>
+        <details><summary>일비·식비</summary><div><ul>
+          <li>자가용 이용 시 일비는 감액하지 않습니다. (공용차량을 이용하면 일비의 1/2)</li>
+          <li>식사를 제공받으면 1식마다 식비의 1/3을 뺍니다.</li>
+        </ul></div></details>
+        <details><summary>동승자 처리 원칙</summary><div><ul>
+          <li>운임(연료비·통행료·주차료)은 <b>운전자 1명</b>에게만 지급합니다.</li>
+          <li>동승자는 운임을 받지 않고 일비·식비만 받습니다.</li>
+        </ul></div></details>
+      </div>
+    </div>
+
+    <div class="panel result">
+      <h2>NEIS 정산 증빙 체크리스트</h2>
+      <p class="hint">준비한 항목을 누르세요. 이 브라우저에 기억됩니다.</p>
+      <div class="prog" aria-hidden="true"><i id="ckBar"></i></div>
+      <p class="sum" id="ckSum"></p>
+      <div class="checks" id="ckList"></div>
+      <div class="actions"><button class="btn small ghost" id="ckReset" type="button">체크 모두 지우기</button></div>
+    </div>
   </section>
 
   <!-- ③ 예비 요금표 -->
@@ -299,6 +454,9 @@ footer{color:var(--muted);font-size:13.5px}
       <label class="f">숙박비 상한 – 그 밖(1박) <input data-rate="capEtc" type="number" step="1000"></label>
     </div>
     <p class="hint">식사를 제공받으면 1식마다 식비의 1/3을 뺍니다. 숙박비 상한은 도착지 이름으로 자동 구분합니다(서울 / 부산·대구·인천·광주·대전·울산 / 그 밖).</p>
+    <h2>자가용 연비·기본 유가</h2>
+    <div class="scroll"><table><thead><tr><th>유종</th><th>기준 연비</th><th>기본 유가</th></tr></thead><tbody id="effRows"></tbody></table></div>
+    <p class="hint">기본 유가는 자가용 계산 화면에 처음 들어가는 값입니다. 출장 시작일의 오피넷 평균가로 고쳐 쓰세요.</p>
     <div class="actions"><button class="btn ghost" id="resetRates">기본값으로 되돌리기</button></div>
   </section>
 
@@ -319,7 +477,7 @@ footer{color:var(--muted);font-size:13.5px}
     <div class="posts" id="bList"><p class="empty">게시판을 열면 글을 불러옵니다.</p></div>
   </section>
 
-  <footer>계산 결과는 참고용이며, 실제 지급 전 소속 기관 여비 지침으로 확인하세요.</footer>
+  <footer>근거: 「공무원 여비 규정」, 「공무원보수 등의 업무지침」(인사혁신처 예규). 이 계산기는 참고용이며, 최종 정산 금액은 소속 기관의 지출 증빙과 여비 담당자의 검토에 따라 확정됩니다.</footer>
 </div>
 
 <script>
@@ -334,9 +492,13 @@ footer{color:var(--muted);font-size:13.5px}
   var num=function(id){var v=parseFloat($(id).value);return isFinite(v)&&v>0?v:0};
   var MODES=['bus','train','air'],MODE_KO={bus:'버스',train:'기차',air:'항공기'};
   var LEGS=['go','back'],LEG_KO={go:'갈 때',back:'올 때'};
-  var VIEWS=['calc','api','fares','rates','board'];
+  var VIEWS=['calc','car','guide','board','fares','rates'];
 
-  var DEF_RATES={ilbi:25000,sikbi:25000,capSeoul:100000,capMetro:80000,capEtc:70000};
+  // 자가용 기준 연비와 기본 유가(예시): 지급 기준 탭에서 고칠 수 있음
+  var FUELS=[['gas','휘발유','km/L','원/L'],['diesel','경유','km/L','원/L'],['lpg','LPG','km/L','원/L'],['hybrid','하이브리드','km/L','원/L'],['ev','전기차','km/kWh','원/kWh']];
+  var DEF_RATES={ilbi:25000,sikbi:25000,capSeoul:100000,capMetro:80000,capEtc:70000,
+    eff_gas:11.97,eff_diesel:12.52,eff_lpg:8.83,eff_hybrid:15.37,eff_ev:5.22,
+    price_gas:1858,price_diesel:1843,price_lpg:1140,price_hybrid:1858,price_ev:347};
   // 예비 요금표의 예시 값(확인 필요). 요금 0 = 해당 교통수단 노선 없음.
   var DEF_FARES=[
     {a:'여수',b:'서울',busN:'고속버스',bus:33000,trainN:'KTX',train:47000,airN:'여수–김포',air:80000,ok:false},
@@ -354,9 +516,9 @@ footer{color:var(--muted);font-size:13.5px}
   function load(key,def){try{var s=localStorage.getItem(key);if(s)return JSON.parse(s)}catch(e){}return JSON.parse(JSON.stringify(def))}
   function save(key,val){try{localStorage.setItem(key,JSON.stringify(val))}catch(e){}}
 
-  var rates=load('yeobi-rates-v2',DEF_RATES);
+  var rates=Object.assign({},DEF_RATES,load('yeobi-rates-v2',{}));   // 예전에 저장한 값이 있어도 새 항목은 기본값으로 채움
   var fares=load('yeobi-routes-v2',DEF_FARES);
-  var relay=load('yeobi-relay','')||RELAY_URL;   // 이 브라우저에 저장한 주소가 있으면 그것을, 없으면 파일에 적힌 주소를 씀
+  var relay=RELAY_URL;   // 중계 서버 주소는 이 파일 맨 위 RELAY_URL 한곳에서만 관리
   var route=null,lastText='';
   var opts={go:{},back:{}};       // 공공데이터포털에서 받은 선택지 (갈 때·올 때 따로)
   var picked={go:{},back:{}};     // 그중 지금 고른 것 {label,fare}
@@ -371,22 +533,16 @@ footer{color:var(--muted);font-size:13.5px}
   function show(view){
     document.querySelectorAll('.tabs button').forEach(function(x){x.setAttribute('aria-selected',x.dataset.view===view?'true':'false')});
     VIEWS.forEach(function(v){$('view-'+v).hidden=(v!==view)});
+    $('conn').hidden=(view!=='calc');   // 요금 조회 상태는 대중교통 화면에서만 보여 줌
   }
-  document.querySelectorAll('.tabs button').forEach(function(b){b.addEventListener('click',function(){show(b.dataset.view);if(b.dataset.view==='board')loadPosts()})});
-  $('conn').addEventListener('click',function(){if(isAdmin())show('api')});
+  function go(view){show(view);if(view==='board')loadPosts();if(view==='car'&&fuelFirst){fuelFirst=false;autoFuel()}try{history.replaceState(null,'',location.pathname+location.search+(isAdminHash()?'#'+ADMIN_WORD:''))}catch(e){}window.scrollTo(0,0)}
+  function isAdminHash(){return location.hash.replace('#','')===ADMIN_WORD}
+  document.querySelectorAll('.tabs button').forEach(function(b){b.addEventListener('click',function(){go(b.dataset.view)})});
+  document.querySelectorAll('[data-go]').forEach(function(b){b.addEventListener('click',function(){go(b.dataset.go)})});
 
-  /* ---------- 관리자 모드: 주소 끝에 #admin 이 있을 때만 "자동 조회 연결" 탭을 보여 줌 ---------- */
-  // 관리자 모드: 메인 허브에서 관리자로 로그인한 상태에서 주소 끝에 #admin 을 붙여 열 때만
+  // 관리자 모드: 메인 허브에서 관리자로 로그인한 상태에서 주소 끝에 #admin 을 붙여 열 때
   function isAdmin(){return HUB.isAdmin()&&!!ADMIN_WORD&&location.hash.replace('#','')===ADMIN_WORD}
-  function applyAdmin(){
-    var a=isAdmin();
-    $('tab-api').hidden=!a;
-    $('conn').classList.toggle('plain',!a);
-    $('conn').title=a?'자동 조회 연결 화면 열기':'자동 조회 연결 상태';
-    if(!a&&!$('view-api').hidden)show('calc');
-  }
-  window.addEventListener('hashchange',function(){applyAdmin();startLive()});
-  function setConn(kind,text){$('conn').className='conn '+kind+(isAdmin()?'':' plain');$('conn').textContent=text}
+  function setConn(kind,text){$('conn').className='conn plain '+kind;$('conn').textContent=text}
 
   /* ---------- 교통수단 카드 만들기 (갈 때 3장, 올 때 3장) ---------- */
   LEGS.forEach(function(k){
@@ -492,8 +648,7 @@ footer{color:var(--muted);font-size:13.5px}
     if(!relay)setConn('off','자동 조회 미연결');
     if(!o||!d){setLive('출발지와 도착지를 입력하세요.',true);return}
     if(o===d){setLive('출발지와 도착지가 같습니다.',true);return}
-    if(!relay){setLive(isAdmin()?'자동 조회가 연결되지 않아 예비 요금표 값으로 계산합니다. "자동 조회 연결" 탭에서 연결하세요.'
-      :'자동 조회가 연결되지 않아 예비 요금표 값으로 계산합니다. 요금을 확인해 직접 고치거나 관리자에게 문의하세요.',true);return}
+    if(!relay){setLive('자동 조회가 연결되지 않아 예비 요금표 값으로 계산합니다. 요금을 확인해 직접 고치거나 관리자에게 문의하세요.',true);return}
     setConn('','요금 조회 중…');
     setLive('공공데이터포털에서 '+o+' ↔ '+d+' 요금을 조회하는 중입니다…');
     timer=setTimeout(runLive,700);
@@ -647,15 +802,6 @@ footer{color:var(--muted);font-size:13.5px}
   }
 
   /* ---------- 자동 조회 연결 ---------- */
-  $('relay').value=relay;
-  $('saveRelay').addEventListener('click',function(){
-    relay=$('relay').value.trim();save('yeobi-relay',relay);
-    $('relayMsg').textContent=relay?'저장했습니다. 여비 계산 화면에서 조회 결과를 확인하세요.':'주소가 비어 있습니다.';
-    if(relay){show('calc');lookup()}
-  });
-  $('clearRelay').addEventListener('click',function(){
-    save('yeobi-relay','');relay=RELAY_URL;$('relay').value=relay;$('relayMsg').textContent=relay?'이 브라우저에 저장한 주소를 지웠습니다. 파일에 적힌 주소를 씁니다.':'연결을 해제했습니다.';lookup();
-  });
 
   /* ---------- 예비 요금표 편집 ---------- */
   var COLS=[['a','text','w-s','출발지'],['b','text','w-s','도착지'],
@@ -695,11 +841,227 @@ footer{color:var(--muted);font-size:13.5px}
   $('resetFare').addEventListener('click',function(){fares=JSON.parse(JSON.stringify(DEF_FARES));faresChanged(true)});
 
   /* ---------- 지급 기준 편집 ---------- */
-  function renderRates(){document.querySelectorAll('[data-rate]').forEach(function(x){x.value=rates[x.dataset.rate]})}
-  document.querySelectorAll('[data-rate]').forEach(function(x){
-    x.addEventListener('change',function(){rates[x.dataset.rate]=parseFloat(x.value)||0;save('yeobi-rates-v2',rates);calc()});
+  function renderRates(){
+    var tb=$('effRows');
+    if(!tb.children.length){
+      FUELS.forEach(function(f){
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td>'+f[1]+'</td><td><input data-rate="eff_'+f[0]+'" type="number" step="0.01" min="0.1" aria-label="'+f[1]+' 기준 연비('+f[2]+')"></td>'
+          +'<td><input data-rate="price_'+f[0]+'" type="number" step="1" min="0" aria-label="'+f[1]+' 기본 유가('+f[3]+')"></td>';
+        tb.appendChild(tr);
+      });
+      tb.querySelectorAll('[data-rate]').forEach(bindRate);
+    }
+    document.querySelectorAll('[data-rate]').forEach(function(x){x.value=rates[x.dataset.rate]});
+    var g=$('gEffRows');g.innerHTML='';
+    FUELS.forEach(function(f){var tr=document.createElement('tr');tr.innerHTML='<td></td><td class="num"></td><td class="num"></td>';
+      tr.children[0].textContent=f[1];tr.children[1].textContent=rates['eff_'+f[0]]+' '+f[2];tr.children[2].textContent=Number(rates['price_'+f[0]]).toLocaleString('ko-KR')+' '+f[3];g.appendChild(tr)});
+  }
+  function bindRate(x){x.addEventListener('change',function(){var v=parseFloat(x.value);rates[x.dataset.rate]=isFinite(v)&&v>0?v:DEF_RATES[x.dataset.rate];save('yeobi-rates-v2',rates);renderRates();calc();if(carShown)carCalc(false)})}
+  document.querySelectorAll('#view-rates .row [data-rate]').forEach(bindRate);
+  $('resetRates').addEventListener('click',function(){rates=JSON.parse(JSON.stringify(DEF_RATES));save('yeobi-rates-v2',rates);renderRates();calc();setFuel();if(carShown)carCalc(false)});
+
+  /* ---------- 자가용 여비 계산 ---------- */
+  var carShown=false,carText='';
+  function radioVal(n){var r=document.querySelector('input[name="'+n+'"]:checked');return r?r.value:''}
+  function fuelInfo(){var k=$('cFuel').value;for(var i=0;i<FUELS.length;i++)if(FUELS[i][0]===k)return FUELS[i];return FUELS[0]}
+  function setFuel(){
+    var f=fuelInfo();
+    $('cEffLabel').textContent=(f[0]==='ev'?'기준 전비(':'기준 연비(')+f[2]+')';
+    $('cPriceLabel').textContent=(f[0]==='ev'?'충전 단가(':'기준 유가(')+f[3]+')';
+    $('cEff').value=rates['eff_'+f[0]];
+    var p=fuelData?opPrice(f[0]):null;          // 오피넷 유가를 불러왔으면 그 값을, 아니면 기본값
+    $('cPrice').value=p!=null?p:rates['price_'+f[0]];
+    fuelSrc=p!=null?fuelLabel():'';
+    markFuelGrid();
+  }
+
+  /* ---------- 오피넷 유가 불러오기 (중계 서버가 매일 쌓아 둔 기록에서 기준일 값을 꺼냄) ---------- */
+  var fuelData=null,fuelSrc='',fuelDateTouched=false,fuelCache={};
+  var OP_KEY={gas:'gas',hybrid:'gas',diesel:'diesel',lpg:'lpg'};   // 하이브리드는 휘발유 가격
+  function opPrice(k){var x=OP_KEY[k];return x&&fuelData&&fuelData[x]?fuelData[x]:null}
+  function ymd(v){return String(v).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3')}
+  function fuelLabel(){return '오피넷 '+(fuelData.area==='전국'?'전국':fuelData.area)+' 평균('+ymd(fuelData.date)+')'}
+  function fuelMsg(text,kind){var m=$('cFuelMsg');m.textContent=text;m.className='fuelmsg'+(kind?' '+kind:'')}
+  function markFuelGrid(){
+    var k=$('cFuel').value;
+    document.querySelectorAll('#cFuelGrid button').forEach(function(b){b.classList.toggle('on',OP_KEY[k]===b.dataset.k&&!!fuelSrc)});
+  }
+  function showFuelGrid(){
+    var g=$('cFuelGrid'),items=[['gas','휘발유'],['diesel','경유'],['lpg','LPG']];g.innerHTML='';
+    items.forEach(function(it){
+      var b=document.createElement('button');b.type='button';b.dataset.k=it[0];
+      var v=fuelData[it[0]];b.disabled=!v;
+      b.innerHTML='<span></span><b></b>';b.firstChild.textContent=it[1];
+      b.lastChild.textContent=v?v.toLocaleString('ko-KR',{maximumFractionDigits:2})+'원':'자료 없음';
+      b.title=it[1]+' 가격을 기준 유가로 쓰기';
+      b.addEventListener('click',function(){$('cFuel').value=it[0];setFuel();if(carShown)carCalc(false)});
+      g.appendChild(b);
+    });
+    g.hidden=false;
+  }
+  function loadFuel(){
+    var date=$('cFuelDate').value,area=$('cFuelArea').value;
+    if(!date){fuelMsg('유가 기준일을 고르세요.','bad');return}
+    if(!relay){fuelMsg('중계 서버가 연결되지 않았습니다. 오피넷에서 확인해 직접 넣으세요.','bad');return}
+    if($('cFuel').value==='ev')fuelMsg('전기차 충전 단가는 오피넷에 없습니다. 휘발유·경유·LPG 값만 불러옵니다…');
+    else fuelMsg('오피넷 유가를 불러오는 중입니다…');
+    var key=date+'|'+area,btn=$('cFuelBtn');btn.disabled=true;
+    var job=fuelCache[key]?Promise.resolve(fuelCache[key])
+      :fetch(relay+(relay.indexOf('?')<0?'?':'&')+'action=fuel&date='+date.replace(/-/g,'')+'&area='+encodeURIComponent(area))
+        .then(function(r){return r.json()});
+    job.then(function(j){
+      btn.disabled=false;
+      if(!j||j.ok!==true||!j.date){
+        fuelData=null;fuelSrc='';$('cFuelGrid').hidden=true;markFuelGrid();
+        var fuelReply=j&&(j.notFound||/유가|오피넷|OPINET|기준일|날짜/.test((j.errors||[]).join(' ')));
+        var e=fuelReply?j.errors.join(' '):'중계 서버에 유가 기능이 아직 설치되지 않았습니다(관리자 확인 필요).';
+        fuelMsg(e+' 오피넷에서 확인해 "기준 유가" 칸에 직접 넣으세요.','bad');
+        return;
+      }
+      fuelCache[key]=j;fuelData=j;
+      showFuelGrid();
+      var f=fuelInfo(),p=opPrice(f[0]);
+      if(p!=null){$('cPrice').value=p;fuelSrc=fuelLabel()}else fuelSrc='';
+      markFuelGrid();
+      var head=(j.area==='전국'?'전국':j.area)+' 평균 · '+ymd(j.date)+' 기준';
+      var note=j.exact?'':' (고른 날 '+ymd(j.asked)+'의 기록이 없어 가장 가까운 이전 날 값입니다)';
+      fuelMsg(head+note+'. '+(p!=null?f[1]+(f[0]==='hybrid'?'(휘발유 가격)':'')+' '+p.toLocaleString('ko-KR',{maximumFractionDigits:2})+'원을 "기준 유가" 칸에 넣었습니다.'
+        :(f[0]==='ev'?'전기차 충전 단가는 직접 넣으세요.':'이 유종의 값이 없습니다. 직접 넣으세요.')),j.exact?'ok':'');
+      if(carShown)carCalc(false);
+    }).catch(function(){
+      btn.disabled=false;fuelData=null;fuelSrc='';$('cFuelGrid').hidden=true;
+      fuelMsg('유가를 불러오지 못했습니다(인터넷 연결 또는 중계 서버 확인). 오피넷에서 확인해 직접 넣으세요.','bad');
+    });
+  }
+  $('cFuelBtn').addEventListener('click',loadFuel);
+  // 유종·기준일·지역이 바뀌면 그 조건의 유가를 자동으로 다시 불러옴 (전기차는 오피넷 자료가 없어 건너뜀)
+  var fuelTimer=null,fuelFirst=true;
+  function autoFuel(){
+    clearTimeout(fuelTimer);
+    if($('cFuel').value==='ev'||radioVal('cRole')==='rider')return;
+    fuelTimer=setTimeout(loadFuel,300);
+  }
+  $('cFuelArea').addEventListener('change',autoFuel);
+  $('cFuelDate').addEventListener('change',function(){fuelDateTouched=true;autoFuel()});
+  $('cDate').addEventListener('change',function(){if(!fuelDateTouched){$('cFuelDate').value=$('cDate').value;autoFuel()}});
+  $('cPrice').addEventListener('input',function(){fuelSrc='';markFuelGrid()});   // 직접 고치면 출처 표시를 뗌
+  function carUi(){
+    var stay=radioVal('cTrip')==='stay',rider=radioVal('cRole')==='rider';
+    $('cStayRow').hidden=!stay;
+    $('cRiderNote').hidden=!rider;
+    $('cFarePanel').style.opacity=rider?'.55':'';
+    ['cKm','cFuel','cEff','cPrice','cToll','cPark'].forEach(function(id){$(id).disabled=rider});
+  }
+  // 입력값 읽기: 빈 값·음수·숫자가 아닌 값 확인
+  function val(id,label,errs,opt){
+    var raw=$(id).value.trim();
+    if(raw===''){if(opt&&opt.required)errs.push('['+label+'] 칸을 채워 주세요.');return 0}
+    var v=Number(raw);
+    if(!isFinite(v)){errs.push('['+label+'] 칸에는 숫자만 넣으세요.');return 0}
+    if(v<0){errs.push('['+label+'] 칸에 마이너스 값은 넣을 수 없습니다.');return 0}
+    if(opt&&opt.positive&&v<=0){errs.push('['+label+'] 칸은 0보다 커야 합니다.');return 0}
+    if(opt&&opt.int&&Math.floor(v)!==v){errs.push('['+label+'] 칸은 소수점 없이 넣으세요.');return 0}
+    return v;
+  }
+  function carCalc(animate){
+    var errs=[],rider=radioVal('cRole')==='rider',stay=radioVal('cTrip')==='stay';
+    var nights=stay?val('cNights','숙박 일수',errs,{required:true,positive:true,int:true}):0;
+    var d=nights+1;
+    var meals=val('cMeals','식사 횟수',errs,{int:true});
+    var km=0,eff=0,price=0,toll=0,park=0,lodge=0;
+    if(!rider){
+      km=val('cKm','왕복 거리',errs,{required:true,positive:true});
+      eff=val('cEff','기준 연비',errs,{required:true,positive:true});
+      price=val('cPrice','유가',errs,{required:true,positive:true});
+      toll=val('cToll','통행료',errs);park=val('cPark','주차료',errs);
+    }
+    if(stay)lodge=val('cLodge','숙박비',errs);
+    if(meals>d*3)errs.push('식사 횟수가 출장 일수('+d+'일 × 3식)보다 많습니다.');
+    $('cErr').textContent=errs.join(' ');
+    if(errs.length)return false;
+
+    var f=fuelInfo(),lines=[],warn=[];
+    var fuelCost=rider?0:Math.floor(km*price/eff);   // 원 단위 미만 버림
+    if(rider){
+      lines.push(['운임','동승자 — 운임은 운전자에게만 지급',0]);
+    }else{
+      var pTxt=price.toLocaleString('ko-KR',{maximumFractionDigits:2})+'원';
+      lines.push(['연료비',km.toLocaleString('ko-KR')+'km × '+pTxt+' ÷ '+eff+f[2]+' ('+f[1]+(fuelSrc?' · 유가 '+fuelSrc:'')+')',fuelCost]);
+      lines.push(['통행료','실비',toll]);
+      lines.push(['주차료','실비',park]);
+    }
+    var fareSum=fuelCost+toll+park;
+    lines.push(['운임 합계',rider?'동승자':'연료비 + 통행료 + 주차료',fareSum,true]);
+    lines.push(['일비',won(rates.ilbi)+' × '+d+'일 (자가용은 감액 없음)',rates.ilbi*d]);
+    var cut=Math.floor(rates.sikbi/3)*meals;
+    lines.push(['식비',won(rates.sikbi)+' × '+d+'일'+(meals?' − 제공 '+meals+'식':''),Math.max(0,rates.sikbi*d-cut)]);
+    if(stay){
+      var reg=$('cRegion').value,cap=(reg==='seoul'?rates.capSeoul:reg==='metro'?rates.capMetro:rates.capEtc)*nights;
+      lines.push(['숙박비','실비 '+won(lodge)+' / 상한 '+won(cap)+' ('+REGION[reg]+' '+nights+'박)',Math.min(lodge,cap)]);
+      if(lodge>cap)warn.push('숙박비가 상한액을 넘어 상한액까지만 넣었습니다.');
+      if(lodge===0)warn.push('숙박비는 실비 정산입니다. 실제 숙박비를 넣으세요.');
+    }
+    if(!rider)warn.push('자가용 실비는 대중교통이 없거나 공무상 부득이한 사유가 있을 때만 지급합니다. 사유와 증빙을 갖추세요.');
+
+    var total=0,tb=$('cLines');tb.innerHTML='';
+    lines.forEach(function(l){
+      if(l[0]!=='운임 합계')total+=l[2];
+      var tr=document.createElement('tr');if(l[3])tr.className='subtotal';
+      tr.innerHTML='<td></td><td><small></small></td><td class="num"></td>';
+      tr.children[0].textContent=l[0];tr.children[1].firstChild.textContent=l[1];tr.children[2].textContent=won(l[2]);
+      tb.appendChild(tr);
+    });
+    $('cTotal').textContent=won(total);
+    $('cWarn').hidden=!warn.length;$('cWarn').textContent=warn.join(' ');
+    $('cSum').textContent=($('cWho').value.trim()?'출장자 '+$('cWho').value.trim()+' · ':'')+(stay?nights+'박 '+d+'일':'당일')+' · '+(rider?'동승자':'운전자 · '+f[1]+' · 왕복 '+km.toLocaleString('ko-KR')+'km')+($('cDate').value?' · 출장 시작 '+$('cDate').value:'');
+    if(animate){var r=$('carResult');r.classList.remove('pop');void r.offsetWidth;r.classList.add('pop');if(window.innerWidth<=920)r.scrollIntoView({behavior:'smooth',block:'start'})}
+    carShown=true;
+    carText='[관외출장 자가용 여비 정산 내역]\n'
+      +'구분: '+$('cSum').textContent+'\n'
+      +lines.map(function(l){return '- '+l[0]+': '+won(l[2])+' ('+l[1]+')'}).join('\n')
+      +'\n최종 지급 여비: '+won(total);
+    return true;
+  }
+  document.querySelectorAll('input[name="cTrip"],input[name="cRole"]').forEach(function(r){r.addEventListener('change',function(){carUi();if(carShown)carCalc(false)})});
+  $('cFuel').addEventListener('change',function(){
+    setFuel();if(carShown)carCalc(false);
+    if($('cFuel').value==='ev')fuelMsg('전기차 충전 단가는 오피넷에 없습니다. "충전 단가" 칸에 직접 넣으세요.');
+    else if(!fuelData||fuelData.asked!==$('cFuelDate').value.replace(/-/g,'')||fuelData.area!==$('cFuelArea').value)autoFuel();
   });
-  $('resetRates').addEventListener('click',function(){rates=JSON.parse(JSON.stringify(DEF_RATES));save('yeobi-rates-v2',rates);renderRates();calc()});
+  ['cNights','cRegion','cLodge','cKm','cEff','cPrice','cToll','cPark','cMeals','cWho','cDate'].forEach(function(id){$(id).addEventListener('input',function(){if(carShown)carCalc(false)})});
+  $('cCalc').addEventListener('click',function(){carCalc(true)});
+  $('cCopy').addEventListener('click',function(){
+    var done=function(ok){$('cCopyMsg').textContent=ok?'복사했습니다.':'복사하지 못했습니다. 표를 직접 드래그해서 복사하세요.'};
+    if(!carShown&&!carCalc(true)){$('cCopyMsg').textContent='먼저 "계산하기"를 눌러 주세요.';return}
+    try{navigator.clipboard.writeText(carText).then(function(){done(true)},function(){done(false)})}catch(e){done(false)}
+  });
+  $('cPrint').addEventListener('click',function(){
+    if(!carShown&&!carCalc(true)){$('cCopyMsg').textContent='먼저 "계산하기"를 눌러 주세요.';return}
+    try{window.print()}catch(e){$('cCopyMsg').textContent='이 화면에서는 인쇄할 수 없습니다. 내려받은 파일을 열어 주세요.'}
+  });
+
+  /* ---------- NEIS 정산 증빙 체크리스트 ---------- */
+  var CHECKS=[
+    ['노선','대중교통 노선 부재 증빙','포털 지도 길찾기 화면 캡처 등'],
+    ['주유','출장지(또는 경유지) 주유 영수증','출발지에서 넣은 주유 영수증은 인정되지 않습니다'],
+    ['통행','고속도로 통행료 영수증','하이패스 결제 내역도 됩니다'],
+    ['주차','공영·유료 주차장 영수증','주차료를 청구할 때'],
+    ['사진','출장지 현장 사진','영수증을 갖출 수 없을 때']
+  ];
+  function renderChecks(){
+    var st={};try{st=JSON.parse(localStorage.getItem('yeobi-checks')||'{}')}catch(e){}
+    var box=$('ckList');box.innerHTML='';var done=0;
+    CHECKS.forEach(function(c){
+      var lb=document.createElement('label'),cb=document.createElement('input');cb.type='checkbox';cb.checked=!!st[c[0]];if(cb.checked)done++;
+      var t=document.createElement('span');t.innerHTML='<span class="ct"></span><small></small>';t.firstChild.textContent=c[1];t.lastChild.textContent=c[2];
+      cb.addEventListener('change',function(){st[c[0]]=cb.checked;try{localStorage.setItem('yeobi-checks',JSON.stringify(st))}catch(e){}renderChecks()});
+      lb.appendChild(cb);lb.appendChild(t);box.appendChild(lb);
+    });
+    $('ckSum').textContent=CHECKS.length+'개 중 '+done+'개 준비'+(done===CHECKS.length?' — 모두 갖췄습니다':'');
+    $('ckBar').style.width=(done/CHECKS.length*100)+'%';
+  }
+  $('ckReset').addEventListener('click',function(){try{localStorage.removeItem('yeobi-checks')}catch(e){}renderChecks()});
 
   /* ---------- 복사 ---------- */
   $('copy').addEventListener('click',function(){
@@ -722,7 +1084,8 @@ footer{color:var(--muted);font-size:13.5px}
   $('d2').addEventListener('change',function(){syncNights();startLive()});
   $('round').addEventListener('change',function(){calc();startLive()});
   ['meals','nights','lodge','who'].forEach(function(id){$(id).addEventListener('input',calc)});
-  applyAdmin();renderRates();renderFares();fillCities();
+  renderRates();renderFares();fillCities();
+  $('cDate').value=iso(today);$('cFuelDate').value=iso(today);$('cFuelDate').max=iso(today);setFuel();carUi();renderChecks();
 
   /* ---------- Firebase 연결 (메인 허브와 같은 프로젝트) ---------- */
   /* 연결값은 common.js(HUB.FIREBASE_CONFIG) 한곳에서 관리 */
