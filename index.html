@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css?v=10">
-<script src="common.js?v=12"></script>
+<script src="common.js?v=13"></script>
 <style>
   /* 색(칠판 테마)은 common.css에 있음 */
   * { box-sizing: border-box; }
@@ -245,8 +245,8 @@
     <aside class="board-corner" aria-label="오늘">
       <div class="corner-greet"><div class="hello" id="greetText">안녕하세요!</div><div class="clock" id="liveClock"></div></div>
       <div class="corner-visits">
-        <div><span class="v-label">오늘 방문</span><span class="v-num" id="todayCount">-</span></div>
-        <div><span class="v-label">누적 방문</span><span class="v-num" id="totalCount">-</span></div>
+        <div title="사이트 모든 페이지 기준 · 한 사람(브라우저)은 하루 1번만 셉니다"><span class="v-label">오늘 접속자</span><span class="v-num" id="todayCount">-</span></div>
+        <div title="사이트 모든 페이지 기준 · 한 사람(브라우저)은 하루 1번만 셉니다"><span class="v-label">누적 접속자</span><span class="v-num" id="totalCount">-</span></div>
       </div>
       <div class="corner-block">
         <div class="corner-label"><span>이번 달 남은 근무일</span><b id="cWork">-일</b></div>
@@ -410,7 +410,8 @@
   /* ── 동적 텍스트 3: 숫자가 0부터 올라가며 나타남 ── */
   function countUp(el, target, suffix) {
     suffix = suffix || '';
-    if (reduceMotion) { el.textContent = target.toLocaleString('ko-KR') + suffix; return; }
+    // 움직임 끄기 설정이거나 창이 뒤에 숨어 있으면(애니메이션이 멈춤) 바로 숫자를 보여 줌
+    if (reduceMotion || document.hidden) { el.textContent = target.toLocaleString('ko-KR') + suffix; return; }
     const start = performance.now(), dur = 1200;
     (function step(t) {
       const p = Math.min(1, (t - start) / dur), eased = 1 - Math.pow(1 - p, 3);
@@ -472,36 +473,21 @@
   function kstToday() { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }
   window.hubKstToday = kstToday;
 
-  function initVisitors() {
-    if (typeof firebase === 'undefined' || !firebase.firestore) return;
-    try {
-      const ref = hubDb().collection("stats").doc("visitors");
-      const todayFmt = kstToday();
-      let isNew = false;
-      try { if (!sessionStorage.getItem("visited")) { sessionStorage.setItem("visited", "true"); isNew = true; } } catch (e) {}
-      if (HUB.isAdminDevice()) isNew = false;   // 관리자 브라우저는 세지 않음
-      ref.get().then(snap => {
-        const data = snap.exists ? snap.data() : { total: 0, todayCount: 0, todayDate: todayFmt };
-        const newDay = !data.todayDate || todayFmt > data.todayDate;   // 날짜가 앞으로 넘어갈 때만 오늘 수를 0으로 (뒤로 가지 않음)
-        if (newDay) { data.todayDate = todayFmt; data.todayCount = 0; }
-        if (isNew) {
-          data.total = (data.total || 0) + 1;
-          data.todayCount = (data.todayCount || 0) + 1;
-          // '읽은 값 + 1'을 덮어쓰지 않고 서버에서 1을 더함 → 여러 명이 동시에 들어와도 빠지지 않음
-          const inc = firebase.firestore.FieldValue.increment(1);
-          const upd = newDay ? { total: inc, todayCount: 1, todayDate: todayFmt } : { total: inc, todayCount: inc };
-          ref.set(upd, { merge: true }).catch(err => console.log("방문자 수 저장 실패", err));
-          try { sessionStorage.setItem("countedVisitDate", data.todayDate); } catch (e) {}   // 나중에 관리자로 로그인하면 되돌리기 위해 기억
-        }
-        countUp($('todayCount'), data.todayCount || 0);
-        countUp($('totalCount'), data.total || 0);
-      }).catch(err => console.log("방문자 수 불러오기 실패", err));
-    } catch (err) { console.log("방문자 수 오류", err); }
+  // 사이트 전체 접속자 수 (오늘 · 누적)
+  //  - 세는 일은 common.js가 모든 페이지에서 함 (한 브라우저 하루 1번)
+  //  - 여기서는 이 페이지의 세기가 끝난 뒤 숫자를 읽어 보여 주기만 함
+  //  - 화면을 켜 둔 동안 1분마다 새 숫자로 바꿈
+  function showVisitors() {
+    return HUB.visitors.read().then(v => {
+      countUp($('todayCount'), v.todayCount || 0);
+      countUp($('totalCount'), v.total || 0);
+    }).catch(err => console.log("접속자 수 불러오기 실패", err));
   }
-  document.addEventListener('DOMContentLoaded', () => {
-    const t = setInterval(() => { if (typeof firebase !== 'undefined') { clearInterval(t); initVisitors(); } }, 50);
-    setTimeout(() => clearInterval(t), 10000);
-  });
+  HUB.visitors.ready.then(showVisitors);
+  setInterval(() => { if (!document.hidden) HUB.visitors.read().then(v => {
+    $('todayCount').textContent = (v.todayCount || 0).toLocaleString('ko-KR');
+    $('totalCount').textContent = (v.total || 0).toLocaleString('ko-KR');
+  }).catch(() => {}); }, 60000);
 })();
 </script>
     <!-- 모달창: 로그인 / 회원가입 / 예전 회원 옮기기 / 비밀번호 찾기 -->
@@ -1065,9 +1051,10 @@
             }
             try { localStorage.removeItem("myVisitIds"); } catch (e) {}
             try {
-                const counted = sessionStorage.getItem("countedVisitDate");
+                let counted = null;
+                try { counted = localStorage.getItem("countedVisitDate") || sessionStorage.getItem("countedVisitDate"); } catch (e) {}
                 if (counted) {
-                    sessionStorage.removeItem("countedVisitDate");
+                    try { localStorage.removeItem("countedVisitDate"); sessionStorage.removeItem("countedVisitDate"); } catch (e) {}
                     const ref = d.collection("stats").doc("visitors");
                     const snap = await ref.get();
                     if (snap.exists) {
