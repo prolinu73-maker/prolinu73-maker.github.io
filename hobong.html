@@ -4,11 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>교원·계약제교원 호봉획정 계산기</title>
+<link rel="stylesheet" href="common.css?v=5">
+<script src="common.js?v=5"></script>
 <style>
 :root{--navy:#1f3a68;--blue:#0b63b6;--bg:#f2f4f8;--line:#d3dae6;--ink:#1c2430;--sub:#5b6676;--warn:#b45309;--ok:#0f766e}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",sans-serif;font-size:15px;line-height:1.55}
-header{background:var(--navy);color:#fff;padding:18px 20px;border-bottom:4px solid #c9a227}
+header{background:var(--navy);color:#fff;padding:14px 20px;border-bottom:4px solid #c9a227;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+.hdr-left{display:flex;align-items:center;gap:16px;min-width:0}
+.headright{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.visits{font-size:14px;color:#dbe4f1;padding:6px 12px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:rgba(255,255,255,.08);white-space:nowrap}
+.visits b{color:#fff;font-variant-numeric:tabular-nums}
+/* 홈으로 버튼: common.css(허브 공통)와 같은 모양 — common.css가 없는 곳(내려받은 파일 등)에서도 같게 보이도록 같은 값을 둠 */
+#hubHomeBtn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:999px;background:#1B5442;color:#fff;font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;font-weight:800;font-size:14px;line-height:1.2;text-decoration:none;white-space:nowrap;border:1.5px solid rgba(255,255,255,.25);flex-shrink:0;transition:background .2s;cursor:pointer}
+#hubHomeBtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+#hubHomeBtn:hover{background:#123D30}
+#hubHomeBtn:focus-visible{outline:3px solid #F4C430;outline-offset:2px}
 header h1{margin:0;font-size:21px;letter-spacing:-.3px}
 header p{margin:4px 0 0;font-size:13px;opacity:.85}
 .wrap{max-width:1240px;margin:0 auto;padding:18px 14px 60px;display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start}
@@ -87,8 +98,26 @@ td.l{text-align:left}
 </head>
 <body>
 <header class="no-print">
-  <h1>교원·계약제교원 호봉획정 계산기</h1>
-  <p>「공무원보수규정」 별표 22·23·25 및 「교육공무원 호봉획정시 경력환산율표의 적용 등에 관한 예규」 기준 · 초임호봉 = 기산호봉 + (학령 − 16) + 가산연수 + 환산경력연수</p>
+  <div class="hdr-left">
+    <span data-hub-home></span>
+    <script>
+    /* '홈으로' 버튼 — 허브 공통(common.js)으로 그림. common.js가 없으면 같은 모양으로 직접 그림 */
+    (function(){
+      if(window.HUB&&HUB.mountHomeButton){HUB.mountHomeButton({title:'홈(index.html)으로 이동합니다'});return}
+      var s=document.querySelector('[data-hub-home]');if(!s)return;
+      var a=document.createElement('a');a.id='hubHomeBtn';a.href='index.html';a.title='홈(index.html)으로 이동합니다';
+      a.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>홈으로';
+      s.replaceWith(a);
+    })();
+    </script>
+    <div>
+      <h1>교원·계약제교원 호봉획정 계산기</h1>
+      <p>「공무원보수규정」 별표 22·23·25 및 「교육공무원 호봉획정시 경력환산율표의 적용 등에 관한 예규」 기준 · 초임호봉 = 기산호봉 + (학령 − 16) + 가산연수 + 환산경력연수</p>
+    </div>
+  </div>
+  <div class="headright">
+    <span class="visits" id="visits" hidden>오늘 <b id="vToday">0</b>명 · 누적 <b id="vTotal">0</b>명</span>
+  </div>
 </header>
 
 <div class="wrap">
@@ -589,6 +618,53 @@ $('copyBtn').onclick=function(){
  try{if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({'text/html':new Blob(['<meta charset="utf-8">'+html],{type:'text/html'}),'text/plain':new Blob([text],{type:'text/plain'})})]).then(function(){say('표를 복사했습니다. 엑셀이나 한글에 붙여넣기(Ctrl+V) 하세요.')},fallback)}else fallback()}catch(e){fallback()}
 };
 fillTop();renderRows();update();memShow();
+
+/* ---------- 접속자 수 (오늘 / 누적) — Firestore  stats / page_hobong ----------
+   허브의 다른 페이지(여비관리·복무 통계 등)와 같은 방식
+   - 브라우저 창(세션)마다 처음 열 때 1번만 셈 · 날짜가 바뀌면 오늘 숫자는 0부터
+   - 관리자(이 브라우저에서 관리자로 로그인한 적이 있으면)는 세지 않음
+   - 연결값은 common.js(HUB.FIREBASE_CONFIG)를 쓰고, common.js가 없으면 같은 값을 씀 */
+(function(){
+  var PAGE_DOC='page_hobong',SESSION_KEY='visited_hobong';
+  var CONFIG=(window.HUB&&HUB.FIREBASE_CONFIG)||{
+    apiKey:"AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw",authDomain:"prolinu73-6c409.firebaseapp.com",projectId:"prolinu73-6c409",
+    storageBucket:"prolinu73-6c409.firebasestorage.app",messagingSenderId:"399358344473",appId:"1:399358344473:web:491d5e74448b4f0f029988"};
+  var SDK='https://www.gstatic.com/firebasejs/10.7.1/';
+  function addScript(src){return new Promise(function(ok,no){var t=document.createElement('script');t.src=src;t.onload=ok;t.onerror=no;document.head.appendChild(t)})}
+  function showCount(today,total){
+    $('vToday').textContent=Number(today||0).toLocaleString('ko-KR');
+    $('vTotal').textContent=Number(total||0).toLocaleString('ko-KR');
+    $('visits').hidden=false;
+  }
+  function getDb(){
+    return ((window.firebase&&firebase.firestore)?Promise.resolve()
+      :addScript(SDK+'firebase-app-compat.js').then(function(){return addScript(SDK+'firebase-firestore-compat.js')}))
+      .then(function(){
+        if(window.HUB&&HUB.db)return HUB.db();
+        if(!firebase.apps.length)firebase.initializeApp(CONFIG);
+        return firebase.firestore();
+      });
+  }
+  var adminPC=false;try{adminPC=!!(window.HUB&&HUB.isAdminDevice&&HUB.isAdminDevice())}catch(e){}
+  getDb().then(function(db){
+    var ref=db.collection('stats').doc(PAGE_DOC);
+    var d=new Date(),todayFmt=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    var isNew=false;
+    try{if(!sessionStorage.getItem(SESSION_KEY)){sessionStorage.setItem(SESSION_KEY,'true');isNew=true}}catch(e){isNew=true}
+    if(adminPC)isNew=false;
+    return db.runTransaction(function(tx){
+      return tx.get(ref).then(function(snap){
+        var data=snap.exists?snap.data():{total:0,todayCount:0,todayDate:todayFmt};
+        if(data.todayDate!==todayFmt){data.todayDate=todayFmt;data.todayCount=0}
+        if(isNew){data.total=(data.total||0)+1;data.todayCount=(data.todayCount||0)+1;tx.set(ref,data,{merge:true})}
+        return data;
+      });
+    }).then(function(data){showCount(data.todayCount,data.total)});
+  }).catch(function(err){
+    try{console.log('호봉획정 접속자 수 업데이트 실패',err)}catch(e){}
+    if(adminPC){$('visits').textContent='접속자 수를 불러오지 못했습니다(Firebase 연결 확인)';$('visits').hidden=false}
+  });
+})();
 </script>
 </body>
 </html>
