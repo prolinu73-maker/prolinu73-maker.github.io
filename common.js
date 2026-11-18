@@ -23,7 +23,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.3.1';
+    HUB.VERSION = '1.4.0';
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
@@ -67,8 +67,15 @@
           icon: '<path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v2H3z"/><circle cx="7.5" cy="13" r="0.8"/><circle cx="16.5" cy="13" r="0.8"/><path d="M5 11h14"/>' },
         { file: "mulpum_sys.html", label: "물품관리",
           icon: '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/>' },
-        { file: "geunmu_search.html", label: "복무 통계 작성",
-          icon: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>' },
+        // 하위 메뉴가 있는 묶음: children 에 넣으면 마우스를 올렸을 때 아래로 펼쳐집니다
+        { label: "인사ㆍ복무",
+          icon: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 11h5"/><path d="M16 15h5"/><path d="M16 7h5"/>',
+          children: [
+            { file: "hobong.html", label: "교원 호봉획정",
+              icon: '<path d="M4 20V14"/><path d="M9 20V10"/><path d="M14 20V6"/><path d="M19 20V3"/><path d="M2 20h20"/>' },
+            { file: "geunmu_search.html", label: "복무 통계 작성",
+              icon: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>' }
+          ] },
         { file: "facility.html", label: "시설공사 공고문 작성",
           icon: '<path d="M2 20h20"/><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M8 10h8"/>' },
         { file: "apps.html", label: "스마트 업무도구",
@@ -85,6 +92,7 @@
         "budget.html": "예산관리",
         "Per_diem.html": "여비관리",
         "mulpum_sys.html": "물품관리",
+        "hobong.html": "교원 호봉획정",
         "geunmu_search.html": "복무 통계 작성",
         "facility.html": "시설공사 공고문 작성"
     };
@@ -362,7 +370,11 @@
         const h = d.getElementById(opt.target || "hubHeader");
         if (!h) return null;
         h.className = "top hub-top wrap-" + (opt.wrapAt || 1500);
-        const items = HUB.MENU.map(m => {
+        const items = HUB.MENU.map((m, i) => {
+            if (m.children) {   // 하위 메뉴 묶음 → 단추 + 펼침 메뉴
+                const on = m.children.some(c => c.file === opt.active);
+                return `<button type="button" class="nav-item nav-group${on ? " active" : ""}" data-dd="${i}" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24">${m.icon}</svg>${m.label}<span class="nav-caret" aria-hidden="true">▾</span></button>`;
+            }
             const on = m.file === opt.active;
             return `<a href="${m.file}" class="nav-item${on ? " active" : ""}"${on ? ' aria-current="page"' : ""}><svg viewBox="0 0 24 24">${m.icon}</svg>${m.label}</a>`;
         }).join("");
@@ -370,8 +382,79 @@
         const right = opt.right != null
             ? `<div class="hub-right${opt.rightClass ? " " + opt.rightClass : ""}"${opt.rightId ? ` id="${opt.rightId}"` : ""}>${opt.right}</div>` : "";
         h.innerHTML = home + `<nav class="nav-wrap" aria-label="업무 페이지"><div class="nav-pill">${items}</div></nav>` + right;
+        setupDropdowns(h, opt.active);
         return h;
     };
+
+    // ── 상단 메뉴의 펼침(드롭다운) 메뉴 ──
+    //  메뉴판은 화면 맨 위(body)에 따로 띄워서, 상단바 모양(넘침 숨김 등)에 가려지지 않게 함
+    //  - 마우스를 올리면 펼침, 벗어나면 잠시 뒤 닫힘
+    //  - 터치 화면·키보드는 눌러서 열고 닫음 (Esc·바깥 누르기·스크롤 시 닫힘)
+    let ddCssDone = false;
+    function ddCss() {
+        if (ddCssDone) return; ddCssDone = true;
+        const st = d.createElement("style");
+        st.textContent = `
+.nav-group{border:none;background:none;font-family:inherit;cursor:pointer}
+.nav-group .nav-caret{font-size:11px;margin-left:4px;opacity:.75;transition:transform .2s}
+.nav-group[aria-expanded="true"] .nav-caret{transform:rotate(180deg)}
+.hub-dd{position:fixed;z-index:3000;min-width:200px;background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:6px;box-shadow:0 14px 34px rgba(15,23,42,.16);font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;opacity:0;transform:translateY(-4px);transition:opacity .15s,transform .15s;pointer-events:none}
+.hub-dd.open{opacity:1;transform:none;pointer-events:auto}
+.hub-dd a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:#1E293B;text-decoration:none;font-size:14.5px;font-weight:700;white-space:nowrap}
+.hub-dd a:hover,.hub-dd a:focus{background:#EEF4FF;color:#1D4ED8;outline:none}
+.hub-dd a.active{background:#E0EAFF;color:#1D4ED8}
+.hub-dd svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+@media (prefers-reduced-motion: reduce){.hub-dd,.nav-group .nav-caret{transition:none}}`;
+        d.head.appendChild(st);
+    }
+    let ddOpen = null, ddTimer = null;
+    function ddClose() {
+        clearTimeout(ddTimer);
+        if (!ddOpen) return;
+        ddOpen.menu.classList.remove("open");
+        ddOpen.btn.setAttribute("aria-expanded", "false");
+        ddOpen = null;
+    }
+    function ddShow(btn, menu) {
+        clearTimeout(ddTimer);
+        if (ddOpen && ddOpen.menu !== menu) ddClose();
+        const r = btn.getBoundingClientRect();
+        menu.style.top = (r.bottom + 6) + "px";
+        const left = Math.min(r.left, w.innerWidth - menu.offsetWidth - 8);
+        menu.style.left = Math.max(8, left) + "px";
+        menu.classList.add("open");
+        btn.setAttribute("aria-expanded", "true");
+        ddOpen = { btn, menu };
+    }
+    function setupDropdowns(h, active) {
+        ddCss();
+        d.querySelectorAll(".hub-dd").forEach(x => x.remove());   // 다시 그릴 때 예전 메뉴판 정리
+        h.querySelectorAll(".nav-group").forEach(btn => {
+            const m = HUB.MENU[Number(btn.dataset.dd)];
+            if (!m || !m.children) return;
+            const menu = d.createElement("div");
+            menu.className = "hub-dd"; menu.setAttribute("role", "menu");
+            menu.innerHTML = m.children.map(c => {
+                const on = c.file === active;
+                return `<a href="${c.file}" role="menuitem"${on ? ' class="active" aria-current="page"' : ""}><svg viewBox="0 0 24 24">${c.icon}</svg>${HUB.esc(c.label)}</a>`;
+            }).join("");
+            d.body.appendChild(menu);
+            const later = () => { clearTimeout(ddTimer); ddTimer = setTimeout(ddClose, 180); };
+            btn.addEventListener("mouseenter", () => ddShow(btn, menu));
+            btn.addEventListener("mouseleave", later);
+            menu.addEventListener("mouseenter", () => clearTimeout(ddTimer));
+            menu.addEventListener("mouseleave", later);
+            btn.addEventListener("click", e => {   // 터치 화면·키보드용
+                e.preventDefault(); e.stopPropagation();
+                ddShow(btn, menu);   // 누르면 항상 열림 (닫기는 바깥 누르기·Esc·마우스 벗어나기)
+                const f = menu.querySelector("a"); if (e.detail === 0 && f) f.focus();   // 키보드(Enter)로 열면 첫 항목으로
+            });
+        });
+    }
+    d.addEventListener("click", e => { if (ddOpen && !e.target.closest(".hub-dd")) ddClose(); });
+    d.addEventListener("keydown", e => { if (e.key === "Escape" && ddOpen) { const b = ddOpen.btn; ddClose(); b.focus(); } });
+    w.addEventListener("scroll", () => ddClose(), { passive: true });
+    w.addEventListener("resize", () => ddClose());
 
     // '홈으로' 버튼 (labor·budget·Per_diem·mulpum·geunmu·facility 모양)
     // 넣을 자리에 <span data-hub-home></span> 를 두고 바로 뒤에서 HUB.mountHomeButton() 실행

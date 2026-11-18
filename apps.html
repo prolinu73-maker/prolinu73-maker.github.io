@@ -7,7 +7,7 @@
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="common.css?v=7">
-    <script src="common.js?v=7"></script>
+    <script src="common.js?v=9"></script>
     <style>
         /* ===== 조효식 허브 PRO · 밝은 파랑 테마 (index.html과 같은 색·모양) ===== */
         :root {
@@ -81,11 +81,10 @@
         /* ───── 업무 도구 등록 ───── */
         .tool-form { background: #fff; padding: 22px 24px; border-radius: 16px; border: 1px solid var(--line2); margin-bottom: 26px; }
         .tool-form-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; align-items: center; }
-        .tool-form input, .tool-form select, .tool-form textarea { padding: 12px 14px; border: 1.5px solid var(--line2); border-radius: 8px; font-family: 'Pretendard', sans-serif; font-size: 15px; background: #fff; transition: border-color .2s; }
-        .tool-form input:focus, .tool-form select:focus, .tool-form textarea:focus { border-color: var(--accent); outline: none; }
+        .tool-form input, .tool-form select { padding: 12px 14px; border: 1.5px solid var(--line2); border-radius: 8px; font-family: 'Pretendard', sans-serif; font-size: 15px; background: #fff; transition: border-color .2s; }
+        .tool-form input:focus, .tool-form select:focus { border-color: var(--accent); outline: none; }
         .link-input-group { flex: 1 1 220px; position: relative; display: flex; align-items: center; }
         .link-input-label { position: absolute; left: 12px; top: -9px; background: #fff; padding: 0 5px; font-size: 11.5px; font-weight: 800; color: var(--accent); }
-        #toolDesc { min-height: 120px; resize: vertical; line-height: 1.55; }   /* 상세 설명: 여러 줄 입력 (오른쪽 아래를 끌어 크기 조절) */
         #toolLink { width: 100%; padding-left: 38px; background: #F5F8FF; font-weight: 600; }
         .link-icon { position: absolute; left: 13px; font-size: 16px; pointer-events: none; }
 
@@ -304,7 +303,7 @@
                 </div>
                 
                 <div class="tool-form-row" style="margin-bottom: 0;">
-                    <textarea id="toolDesc" rows="5" style="flex: 1 1 100%;" placeholder="도구에 대한 상세 설명을 입력하세요 (Enter로 줄을 바꿀 수 있어요)" autocomplete="off"></textarea>
+                    <input type="text" id="toolDesc" style="flex: 1 1 100%;" placeholder="도구에 대한 상세 설명을 입력하세요" autocomplete="off">
                     <input type="password" id="toolGuestPw" style="flex: 0 0 160px; display:none;" placeholder="🔒 비번(삭제 시 필요)" autocomplete="new-password">
                     <button class="btn-submit" onclick="addTool()" style="flex: 0 0 130px;">✨ 등록하기</button>
                 </div>
@@ -781,38 +780,25 @@
                     ${controlBtns}
                     <div class="badge ${E(tool.category)}">${E(tool.badgeText)}</div>
                     <h4 class="card-title">${E(tool.title)}</h4>
-                    <p class="card-desc">${multiline(tool.desc)}</p>
+                    <p class="card-desc">${E(tool.desc)}</p>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
                         <span style="font-size: 12px; color: #64748b; font-weight: 700;">다운로드 <span class="dl-count" style="font-size: 13px; font-weight: 800; color: #2563EB;">${downloads}회</span></span>
                         <span style="display:flex; gap:6px; align-items:center;">
                             <button class="like-card ${likedPosts['tool:' + doc.id] ? 'on' : ''}" data-like-tool="${doc.id}" title="${likedPosts['tool:' + doc.id] ? '다시 누르면 좋아요 취소' : '좋아요'}" onclick="event.preventDefault(); event.stopPropagation(); likeTool('${doc.id}')">👍 <span>${Math.max(0, tool.likes || 0)}</span></button>
-                            ${favButton('smartTools', doc.id, tool.title, tool.link, 'fav-card')}
+                            ${favButton('smartTools', doc.id, tool.title, tool.link, 'fav-card')}${HUB.msg.button(tool.authorPhone, '도구 올린 회원')}
                         </span>
                     </div>`;
                     
-                /* 다운로드 수 세기 (부풀려지지 않게)
-                   ① 같은 브라우저는 도구 하나당 1번만 셈 (여러 번 눌러도 1회)
-                   ② 등록한 본인과 관리자가 누른 것은 세지 않음
-                   ③ 링크 주소가 없는 도구는 세지 않음
-                   ※ 외부 사이트(구글드라이브 등)에서 실제로 내려받았는지는 브라우저가 알 수 없어,
-                      '내려받으러 간 사람 수'를 셉니다. */
                 card.onclick = (e) => {
-                    if (e.target.closest('.card-controls')) return;
-                    if (!safeUrl(tool.link)) return;
-                    if (isMine(tool) || HUB.isAdmin(currentUser) || HUB.isAdminDevice()) return;
-                    let counted = {};
-                    try { counted = JSON.parse(localStorage.getItem("dlCounted") || "{}"); } catch (err) {}
-                    if (counted[doc.id]) return;                       // 이 브라우저에서 이미 셈
-                    counted[doc.id] = Date.now();
-                    try { localStorage.setItem("dlCounted", JSON.stringify(counted)); } catch (err) {}
-
-                    db.collection("smartTools").doc(doc.id).update({
-                        downloads: firebase.firestore.FieldValue.increment(1)
-                    }).catch(console.error);
-
-                    const dlCountEl = card.querySelector('.dl-count');
-                    if(dlCountEl) {
-                        dlCountEl.innerText = parseInt(dlCountEl.innerText) + 1 + "회";
+                    if (!e.target.closest('.card-controls')) {
+                        db.collection("smartTools").doc(doc.id).update({
+                            downloads: firebase.firestore.FieldValue.increment(1)
+                        }).catch(console.error);
+                        
+                        const dlCountEl = card.querySelector('.dl-count');
+                        if(dlCountEl) {
+                            dlCountEl.innerText = parseInt(dlCountEl.innerText) + 1 + "회";
+                        }
                     }
                 };
                 
