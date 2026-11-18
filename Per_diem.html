@@ -71,6 +71,11 @@ input[type=number]{font-variant-numeric:tabular-nums;text-align:right}
 input:disabled{background:var(--soft);color:var(--muted)}
 input[type=checkbox],input[type=radio]{width:20px;height:20px;padding:0;accent-color:var(--accent);flex:none}
 .hint{font-size:14px;color:var(--muted);margin:0}
+.basis{margin:12px 0;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--soft)}
+.basis summary{cursor:pointer;font-weight:700}
+.basis ul{margin:8px 0 10px;padding-left:20px;font-size:14px;line-height:1.65}
+.basis li{margin:3px 0}
+.effchk{font-size:13px;white-space:nowrap}.effchk.ok{color:var(--ok)}.effchk.chk{color:var(--warn)}
 .note{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:10px 14px;font-size:14px;margin:0}
 .pill{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
 .pill.warn{background:var(--warn-bg);color:var(--warn)}
@@ -455,8 +460,20 @@ footer{color:var(--muted);font-size:13.5px}
     </div>
     <p class="hint">식사를 제공받으면 1식마다 식비의 1/3을 뺍니다. 숙박비 상한은 도착지 이름으로 자동 구분합니다(서울 / 부산·대구·인천·광주·대전·울산 / 그 밖).</p>
     <h2>자가용 연비·기본 유가</h2>
-    <div class="scroll"><table><thead><tr><th>유종</th><th>기준 연비</th><th>기본 유가</th></tr></thead><tbody id="effRows"></tbody></table></div>
+    <div class="scroll"><table><thead><tr><th>유종</th><th>기준 연비</th><th>기본 유가</th><th>연비 근거 확인</th></tr></thead><tbody id="effRows"></tbody></table></div>
     <p class="hint">기본 유가는 자가용 계산 화면에 처음 들어가는 값입니다. 출장 시작일의 오피넷 평균가로 고쳐 쓰세요.</p>
+    <details class="basis" open>
+      <summary>📘 기준 연비 근거 보기</summary>
+      <ul>
+        <li><b>법적 근거</b> — 「공무원 여비 규정」: 자가용 이용 시 운임은 철도·버스 운임이 원칙이며, 공무형편상 부득이한 경우 연료비·통행료 등을 지급할 수 있고 구체적 기준은 「공무원보수 등의 업무지침」에 따릅니다.</li>
+        <li><b>지침 위치</b> — 「공무원보수 등의 업무지침」(인사혁신처 예규) 제9장 공무원여비업무 처리기준 › Ⅳ. 근무지외 국내출장시의 여비 › 2. 운임 › 라. 국내자동차운임 지급기준 › 2) 자가용 승용차 이용</li>
+        <li><b>계산식</b> — 연료비 = 여행거리(km) × 유가 ÷ 연비</li>
+        <li><b>연비</b> — 지침의 <b>「승용차 유종별 연비(전비)」 표</b>에 정한 고정값을 씁니다. 출장자 차량의 실제·공인 연비가 아니며, 같은 유종이면 차종과 관계없이 같은 값을 적용합니다.</li>
+        <li><b>유가</b> — 출장 시작일 기준, 한국석유공사 유가정보서비스(오피넷)에 고시된 유가. 전기는 환경부 무공해차 통합 누리집 충전요금, 수소는 산업통상자원부 수소유통정보시스템을 적용합니다.</li>
+        <li><b>거리·증빙</b> — 출발지~출장지 거리(경유지 포함, 소속기관장이 정한 기준). 고속도로 통행영수증, 주유 카드전표, 주차영수증 등으로 자가용 이용을 입증합니다.</li>
+      </ul>
+      <p class="note">⚠️ 위 표의 휘발유 11.97km/L는 지침 예시와 일치합니다. 나머지 유종 값은 지침 표에 있는 숫자이지만 유종별 대응을 원문으로 확인하지 못했습니다. 매년 개정되는 최신 지침(2026.10.1. 개정)의 표와 대조해 다르면 위 칸을 고치세요. 전기차 기본 충전 단가(347원/kWh)는 임시값이므로 무공해차 통합 누리집 요금으로 바꾸세요. 지침 표에는 수소차 등 이 계산기에 없는 유종도 있습니다.</p>
+    </details>
     <div class="actions"><button class="btn ghost" id="resetRates">기본값으로 되돌리기</button></div>
   </section>
 
@@ -496,6 +513,7 @@ footer{color:var(--muted);font-size:13.5px}
 
   // 자가용 기준 연비와 기본 유가(예시): 지급 기준 탭에서 고칠 수 있음
   var FUELS=[['gas','휘발유','km/L','원/L'],['diesel','경유','km/L','원/L'],['lpg','LPG','km/L','원/L'],['hybrid','하이브리드','km/L','원/L'],['ev','전기차','km/kWh','원/kWh']];
+  var EFF_OK={gas:true};   // 업무지침 원문으로 유종 대응이 확인된 연비
   var DEF_RATES={ilbi:25000,sikbi:25000,capSeoul:100000,capMetro:80000,capEtc:70000,
     eff_gas:11.97,eff_diesel:12.52,eff_lpg:8.83,eff_hybrid:15.37,eff_ev:5.22,
     price_gas:1858,price_diesel:1843,price_lpg:1140,price_hybrid:1858,price_ev:347};
@@ -847,7 +865,8 @@ footer{color:var(--muted);font-size:13.5px}
       FUELS.forEach(function(f){
         var tr=document.createElement('tr');
         tr.innerHTML='<td>'+f[1]+'</td><td><input data-rate="eff_'+f[0]+'" type="number" step="0.01" min="0.1" aria-label="'+f[1]+' 기준 연비('+f[2]+')"></td>'
-          +'<td><input data-rate="price_'+f[0]+'" type="number" step="1" min="0" aria-label="'+f[1]+' 기본 유가('+f[3]+')"></td>';
+          +'<td><input data-rate="price_'+f[0]+'" type="number" step="1" min="0" aria-label="'+f[1]+' 기본 유가('+f[3]+')"></td>'
+          +'<td class="effchk '+(EFF_OK[f[0]]?'ok':'chk')+'">'+(EFF_OK[f[0]]?'✅ 지침 예시와 일치':'⚠️ 원문 표와 대조 필요')+'</td>';
         tb.appendChild(tr);
       });
       tb.querySelectorAll('[data-rate]').forEach(bindRate);
