@@ -120,6 +120,13 @@ input[type=checkbox],input[type=radio]{width:20px;height:20px;padding:0;accent-c
 
 /* 결과 */
 .result{position:sticky;top:12px}
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+#view-car .result{position:static}
+.carhelp h2{margin-top:0}
+.carhelp h2+ol,.carhelp h2+ul{margin-top:0}
+.howto,.cautions{margin:0 0 14px;padding-left:22px;display:flex;flex-direction:column;gap:7px;font-size:14.5px;line-height:1.6}
+.howto li::marker{font-weight:700;color:var(--accent)}
+.cautions li::marker{color:var(--warn)}
 @media (max-width:920px){.result{position:static}}
 .sum{font-size:15px;font-weight:500;color:var(--muted);margin:0}
 .total{background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:18px 20px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
@@ -193,7 +200,7 @@ footer{color:var(--muted);font-size:13.5px}
 @media print{
   body{background:#fff}
   .wrap>*:not(#view-car){display:none!important}
-  #view-car>.col{display:none!important}
+  #view-car>.col,.carhelp{display:none!important}
   #view-car{display:block!important}
   #carResult{border:0;position:static}
   #carResult .actions,#carResult .noprint{display:none!important}
@@ -217,9 +224,9 @@ footer{color:var(--muted);font-size:13.5px}
     <button role="tab" id="tab-calc" aria-selected="true" data-view="calc">🚌 대중교통 여비</button>
     <button role="tab" id="tab-car" aria-selected="false" data-view="car">🚗 자가용 여비</button>
     <button role="tab" id="tab-guide" aria-selected="false" data-view="guide">📋 규정·증빙 가이드</button>
-    <button role="tab" id="tab-board" aria-selected="false" data-view="board">💬 자유게시판</button>
     <button role="tab" id="tab-fares" aria-selected="false" data-view="fares">예비 요금표</button>
     <button role="tab" id="tab-rates" aria-selected="false" data-view="rates">지급 기준</button>
+    <button role="tab" id="tab-board" aria-selected="false" data-view="board">💬 자유게시판</button>
   </div>
 
   <!-- ① 계산 화면 -->
@@ -365,6 +372,7 @@ footer{color:var(--muted);font-size:13.5px}
       </div>
     </div>
 
+    <div class="side">
     <div class="panel result" id="carResult">
       <h2>자가용 여비 정산 내역</h2>
       <p class="sum" id="cSum">왼쪽 내용을 넣고 "계산하기"를 누르세요.</p>
@@ -382,6 +390,31 @@ footer{color:var(--muted);font-size:13.5px}
         <span class="hint" id="cCopyMsg" aria-live="polite"></span>
       </div>
       <p class="hint noprint">연료비는 원 단위 미만을 버립니다. 인쇄 창에서 "PDF로 저장"을 고르면 파일로 남길 수 있습니다.</p>
+    </div>
+
+    <div class="panel carhelp">
+      <h2>📖 사용 방법</h2>
+      <ol class="howto">
+        <li><b>출장 구분</b>과 <b>출장 시작일</b>을 넣습니다. 숙박 출장이면 박수·숙박 지역·실제 숙박비도 넣습니다.</li>
+        <li><b>운전자 / 동승자</b>를 고릅니다. 동승자는 일비·식비만 계산됩니다.</li>
+        <li><b>왕복 거리</b>를 넣고 <b>차종·유종</b>을 고릅니다. 기준 연비는 지침 값이 자동으로, 유가는 출장 시작일의 오피넷 평균가가 자동으로 들어갑니다(지역 기본값: 전남).</li>
+        <li><b>통행료·주차료</b>(영수증 금액)와 <b>제공받은 식사 횟수</b>를 넣습니다.</li>
+        <li><b>계산하기</b>를 누른 뒤 <b>결과 복사하기</b>로 NEIS에 붙이거나 <b>인쇄 / PDF 저장</b>으로 보관합니다.</li>
+      </ol>
+      <h2>⚠️ 유의사항</h2>
+      <ul class="cautions">
+        <li><b>지급 요건</b> — 자가용 연료비·통행료·주차료는 대중교통이 없거나 이용이 현저히 곤란한 등 <b>공무상 부득이한 경우</b>에만 지급합니다. 그 밖에는 대중교통 요금(🚌 대중교통 여비 탭)으로 정산합니다.</li>
+        <li><b>연비</b> — 내 차의 실제 연비가 아니라 「공무원보수 등의 업무지침」에 정한 <b>유종별 고정값</b>입니다. 임의로 바꾸지 마세요.</li>
+        <li><b>유가</b> — <b>출장 시작일</b> 기준 오피넷 고시 유가를 씁니다. "기록이 없습니다" 안내가 나오면 오피넷(www.opinet.co.kr)에서 확인해 "기준 유가" 칸에 직접 넣으세요. 전국·시도 중 어느 평균을 쓸지는 기관 기준을 따르세요.</li>
+        <li><b>전기차·수소차·플러그인(전기 모드)</b> — 오피넷에 가격이 없으므로 무공해차 통합 누리집 충전요금 또는 수소유통정보시스템 고시 가격을 <b>직접 입력</b>합니다.</li>
+        <li><b>거리</b> — 출발지~출장지(경유지 포함)의 왕복 거리입니다. 지도 길찾기 화면 등 거리 근거를 캡처해 두세요.</li>
+        <li><b>운전자 1명만</b> — 운임은 운전자에게만 지급합니다. 함께 탄 직원은 "동승자"로 따로 계산합니다.</li>
+        <li><b>증빙</b> — 통행 영수증(하이패스 내역), 주유 카드전표, 주차 영수증을 갖춥니다. 필요한 서류는 📋 규정·증빙 가이드 탭의 체크리스트를 보세요.</li>
+        <li><b>공용차량</b> — 관용차를 이용했다면 운임을 받지 않으므로 이 화면으로 계산하지 않습니다.</li>
+        <li><b>저장 안 됨</b> — 입력한 내용은 새로 고치면 사라집니다. 결과는 복사하거나 PDF로 남기세요.</li>
+        <li><b>참고용</b> — 최종 지급액은 소속 기관 여비 담당자의 검토로 확정됩니다.</li>
+      </ul>
+    </div>
     </div>
   </section>
 
