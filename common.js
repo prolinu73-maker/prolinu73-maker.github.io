@@ -23,7 +23,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.4.0';
+    HUB.VERSION = '1.4.1';
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움

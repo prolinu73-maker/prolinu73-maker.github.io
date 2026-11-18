@@ -36,6 +36,12 @@ header.hub-top { position: sticky; top: 0; z-index: 100; background: rgba(255,25
 .nav-item:hover { background: #fff; color: #1e293b; }
 .nav-item.active { background: #fff; color: var(--board-light); font-weight: 700; border-color: #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 
+/* 하위 메뉴가 있는 메뉴 (예: 인사ㆍ복무) — 오른쪽에 아래 방향 삼각형(▼), 펼치면 위 방향(▲)
+   펼쳐지는 메뉴판(.hub-dd)의 모양은 common.js가 함께 넣어 줌 */
+.nav-group { background: none; font-family: inherit; cursor: pointer; }
+.nav-group .nav-caret { display: inline-block; width: 0; height: 0; margin: 0 1px 0 8px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 7px solid currentColor; font-size: 0; vertical-align: middle; transition: transform .2s; }
+.nav-group[aria-expanded="true"] .nav-caret { transform: rotate(180deg); }
+
 /* 상단바 왼쪽 '홈으로' (apps·mypage 모양) */
 .home-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 999px; background: var(--board-light); color: #fff; font-weight: 800; font-size: 14px; text-decoration: none; white-space: nowrap; transition: background .2s; }
 .home-btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
