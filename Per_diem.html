@@ -172,7 +172,8 @@ footer{color:var(--muted);font-size:13.5px}
 .fieldnote{font-size:13px;color:var(--muted);margin:2px 0 0}
 .fuelbox{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:6px 0 10px;background:var(--soft)}
 .fuelhead{font-weight:700;margin-bottom:6px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
-.fuelmsg{font-size:13.5px;margin:6px 0 0;color:var(--muted)}
+.fuelact{margin-top:14px}
+.fuelmsg{font-size:13.5px;margin:10px 0 0;color:var(--muted)}
 .fuelmsg.ok{color:var(--ok)}.fuelmsg.bad{color:var(--warn)}
 .fuelgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
 .fuelgrid button{border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:8px;padding:6px 8px;font:inherit;font-size:13.5px;cursor:pointer;text-align:left}
@@ -350,7 +351,7 @@ footer{color:var(--muted);font-size:13.5px}
               <option>경기</option><option>강원</option><option>충북</option><option>충남</option><option>전북</option><option>경북</option><option>경남</option><option>제주</option>
             </select></label>
           </div>
-          <div class="actions"><button class="btn ghost" id="cFuelBtn" type="button">다시 불러오기</button></div>
+          <div class="actions fuelact"><button class="btn ghost" id="cFuelBtn" type="button">다시 불러오기</button></div>
           <p class="fuelmsg" id="cFuelMsg" aria-live="polite">차종·유종, 기준일, 지역을 고르면 그 조건의 오피넷 평균 유가가 "기준 유가" 칸에 자동으로 들어갑니다. 기준일은 출장 시작일을 따라갑니다.</p>
           <div class="fuelgrid" id="cFuelGrid" hidden></div>
         </div>
