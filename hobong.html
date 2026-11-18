@@ -662,7 +662,11 @@ fillTop();renderRows();update();memShow();
     }).then(function(data){showCount(data.todayCount,data.total)});
   }).catch(function(err){
     try{console.log('호봉획정 접속자 수 업데이트 실패',err)}catch(e){}
-    if(adminPC){$('visits').textContent='접속자 수를 불러오지 못했습니다(Firebase 연결 확인)';$('visits').hidden=false}
+    if(adminPC){
+      var denied=/permission/i.test(String((err&&err.code)||'')+String((err&&err.message)||''));
+      $('visits').textContent=denied?'접속자 수: Firebase 보안 규칙에 page_hobong 허용 필요':'접속자 수를 불러오지 못했습니다(인터넷·Firebase 연결 확인)';
+      $('visits').title=denied?'Firestore 규칙의 stats 부분에 page_hobong을 추가해야 합니다 (여비관리 page_perdiem과 같은 방식)':'';
+      $('visits').hidden=false}
   });
 })();
 </script>
