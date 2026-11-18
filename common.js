@@ -14,7 +14,6 @@
      5. 화면 조각       HUB.renderHeader(), HUB.mountHomeButton(), HUB.avatarHTML(),
                         HUB.userMenuHTML(), HUB.toggleUserMenu(), HUB.closeUserMenu()
      6. 방문 기록       페이지를 열면 자동으로 기록 (관리자 브라우저는 제외)
-     6-2. 접속자 수     사이트 전체 오늘·누적 접속자 수 (HUB.visitors.ready, HUB.visitors.read)
      7. 쪽지           HUB.msg.compose(), HUB.msg.button(), HUB.msg.refreshBadge()
 
    ※ 상단 메뉴를 추가·변경할 때는 아래 HUB.MENU만 고치면 모든 페이지에 반영됩니다.
@@ -24,7 +23,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.5.0';
+    HUB.VERSION = '1.4.3';
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
@@ -607,70 +606,6 @@
         }
         const startLater = () => setTimeout(recordVisit, 1500);   // 페이지가 다 뜨고 1.5초 뒤 기록
         if (d.readyState === "complete") startLater(); else w.addEventListener("load", startLater);
-    })();
-
-    /* =================================================================
-       6-2. 접속자 수 (사이트 전체: 오늘 · 누적)
-          - 어느 페이지로 들어오든 한 브라우저는 '하루 1번'만 셈
-            (같은 날 여러 페이지를 돌아다니거나 새로고침해도 1명)
-          - 저장 위치: Firebase stats/visitors { total, todayCount, todayDate }
-          - Firebase 프로그램이 없는 페이지에서도 셀 수 있도록 웹 주소로 직접 저장
-          - 관리자 브라우저는 세지 않음
-          - 첫 화면(index.html)은 HUB.visitors.read()로 숫자를 읽어 보여 줌
-       ================================================================= */
-    HUB.visitors = (function () {
-        const C = HUB.FIREBASE_CONFIG;
-        const DOC = "projects/" + C.projectId + "/databases/(default)/documents/stats/visitors";
-        const API = "https://firestore.googleapis.com/v1/";
-        const DAY_KEY = "hubVisitDay";          // 이 브라우저가 마지막으로 세어진 날(한국 시간)
-        const num = f => f ? Number(f.integerValue != null ? f.integerValue : (f.doubleValue || 0)) : 0;
-        // 지금 저장된 숫자 읽기 → { total, todayCount, todayDate } (오늘 날짜가 아니면 오늘 수는 0)
-        function read() {
-            return fetch(API + DOC + "?key=" + C.apiKey)
-                .then(res => res.status === 404 ? { fields: {} } : (res.ok ? res.json() : Promise.reject(new Error("HTTP " + res.status))))
-                .then(j => {
-                    const f = j.fields || {}, today = HUB.todayKey();
-                    const todayDate = f.todayDate ? f.todayDate.stringValue : "";
-                    return { total: num(f.total), todayCount: todayDate === today ? num(f.todayCount) : 0, todayDate: today };
-                });
-        }
-        // 하루 1번 세기
-        function count() {
-            let today = HUB.todayKey();
-            try { if (HUB.isAdminDevice() || localStorage.getItem(DAY_KEY) === today) return Promise.resolve(false); } catch (e) { return Promise.resolve(false); }
-            try { localStorage.setItem(DAY_KEY, today); } catch (e) {}   // 먼저 표시 → 페이지를 여러 개 동시에 열어도 한 번만
-            return fetch(API + DOC + "?key=" + C.apiKey)
-                .then(res => res.status === 404 ? { fields: {} } : (res.ok ? res.json() : Promise.reject(new Error("HTTP " + res.status))))
-                .then(j => {
-                    const f = j.fields || {};
-                    const saved = f.todayDate ? f.todayDate.stringValue : "";
-                    const newDay = !saved || today > saved;               // 날짜가 넘어갔으면 오늘 수를 1부터 다시
-                    const fields = { todayDate: { stringValue: newDay ? today : saved } };
-                    const mask = ["todayDate"];
-                    const tr = [{ fieldPath: "total", increment: { integerValue: "1" } }];   // 서버에서 1을 더함 (동시 접속에도 안 빠짐)
-                    if (newDay) { fields.todayCount = { integerValue: "1" }; mask.push("todayCount"); }
-                    else tr.push({ fieldPath: "todayCount", increment: { integerValue: "1" } });
-                    const body = { writes: [{ update: { name: DOC, fields: fields }, updateMask: { fieldPaths: mask }, updateTransforms: tr }] };
-                    return fetch(API + "projects/" + C.projectId + "/databases/(default)/documents:commit?key=" + C.apiKey,
-                        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
-                        .then(res => {
-                            if (!res.ok) return res.text().then(t => { throw new Error(res.status + " " + t); });
-                            // 나중에 이 브라우저로 관리자 로그인하면 되돌릴 수 있게 기억
-                            try { localStorage.setItem("countedVisitDate", newDay ? today : saved); } catch (e) {}
-                            return true;
-                        });
-                })
-                .catch(err => {
-                    try { localStorage.removeItem(DAY_KEY); } catch (e) {}   // 실패하면 다음에 다시 세도록
-                    try { console.log("접속자 수 저장 실패:", err); } catch (e) {}
-                    return false;
-                });
-        }
-        const ready = new Promise(resolve => {
-            const go = () => count().then(resolve, () => resolve(false));
-            if (d.readyState === "loading") d.addEventListener("DOMContentLoaded", go); else go();
-        });
-        return { ready, read, count };
     })();
 
     /* =================================================================
