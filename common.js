@@ -24,7 +24,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.5.0';
+    HUB.VERSION = '1.5.1';
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
@@ -69,8 +69,15 @@
             { file: "geunmu_search.html", label: "복무 통계 작성",
               icon: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>' }
           ] },
-        { file: "budget.html", label: "예산관리",
-          icon: '<rect x="2.5" y="6" width="19" height="13" rx="2"/><path d="M2.5 10h19"/><path d="M16 15h2"/>' },
+        { label: "예산관리",
+          icon: '<rect x="2.5" y="6" width="19" height="13" rx="2"/><path d="M2.5 10h19"/><path d="M16 15h2"/>',
+          children: [
+            { file: "budget.html", label: "교특회계",
+              icon: '<path d="M3 21h18"/><path d="M4 10h16"/><path d="M12 3 3 8v2h18V8z"/><path d="M6 10v8"/><path d="M10 10v8"/><path d="M14 10v8"/><path d="M18 10v8"/>' },
+            // soon: true → 아직 페이지가 없는 메뉴 ('준비 중' 표시, 누르면 안내만 함). 페이지를 만들면 file 이름을 넣고 soon 줄을 지우세요
+            { file: "", label: "학교회계", soon: true,
+              icon: '<path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M10 21v-5h4v5"/><path d="M12 5V2h3"/>' }
+          ] },
         { file: "labor.html", label: "노무관리",
           icon: '<path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/>' },
         { file: "Per_diem.html", label: "여비관리",
@@ -90,7 +97,7 @@
         "mypage.html": "내 페이지",
         "apps.html": "스마트 업무도구",
         "labor.html": "노무관리",
-        "budget.html": "예산관리",
+        "budget.html": "예산관리(교특회계)",
         "Per_diem.html": "여비관리",
         "mulpum_sys.html": "물품관리",
         "hobong.html": "교원 호봉획정",
@@ -404,6 +411,9 @@
 .hub-dd a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:#1E293B;text-decoration:none;font-size:14.5px;font-weight:700;white-space:nowrap}
 .hub-dd a:hover,.hub-dd a:focus{background:#EEF4FF;color:#1D4ED8;outline:none}
 .hub-dd a.active{background:#E0EAFF;color:#1D4ED8}
+.hub-dd a.soon{color:#94A3B8}
+.hub-dd a.soon:hover,.hub-dd a.soon:focus{background:#F8FAFC;color:#64748B}
+.hub-dd .dd-soon{margin-left:auto;padding-left:12px;font-size:11.5px;font-weight:800;color:#94A3B8}
 .hub-dd svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 @media (prefers-reduced-motion: reduce){.hub-dd,.nav-group .nav-caret{transition:none}}`;
         d.head.appendChild(st);
@@ -436,9 +446,14 @@
             const menu = d.createElement("div");
             menu.className = "hub-dd"; menu.setAttribute("role", "menu");
             menu.innerHTML = m.children.map(c => {
+                if (c.soon || !c.file) return `<a href="#" role="menuitem" class="soon" aria-disabled="true" data-soon="${HUB.esc(c.label)}"><svg viewBox="0 0 24 24">${c.icon}</svg>${HUB.esc(c.label)}<span class="dd-soon">준비 중</span></a>`;
                 const on = c.file === active;
                 return `<a href="${c.file}" role="menuitem"${on ? ' class="active" aria-current="page"' : ""}><svg viewBox="0 0 24 24">${c.icon}</svg>${HUB.esc(c.label)}</a>`;
             }).join("");
+            menu.querySelectorAll("a.soon").forEach(a => a.addEventListener("click", e => {
+                e.preventDefault(); ddClose();
+                HUB.toast("'" + a.dataset.soon + "' 메뉴는 준비 중입니다. 조금만 기다려 주세요.");
+            }));
             d.body.appendChild(menu);
             const later = () => { clearTimeout(ddTimer); ddTimer = setTimeout(ddClose, 180); };
             btn.addEventListener("mouseenter", () => ddShow(btn, menu));
