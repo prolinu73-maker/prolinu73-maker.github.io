@@ -235,9 +235,42 @@
         #cmpTable tr.cmp-d2 td { background: #fbfcfe; font-weight: 700; }
         #cmpTable td.cmp-calc { white-space: normal; min-width: 170px; max-width: 300px; font-size: 0.78rem; color: #334155; }
         #cmpTable td.cmp-calc.diff { background: #fff7ed; }
-        #cmpTable td.cmp-lab { white-space: normal; min-width: 260px; }
+        #cmpTable td.cmp-lab { white-space: normal; min-width: 120px; }
         .cmp-ctl select { max-width: 330px; }
         .cmp-help { font-size: 0.78rem; color: var(--text-muted); margin: -4px 0 10px; line-height: 1.5; }
+
+        /* ===== 연도 비교: 증감표 / 통계 분석 작은 탭 + 통계 화면 ===== */
+        .cmp-subtabs { display: flex; gap: 6px; margin: 4px 0 14px; border-bottom: 2px solid #0f766e; }
+        .cmp-subtab { padding: 8px 18px; font-size: 0.88rem; font-weight: 800; border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; background: #e2e8f0; color: #475569; cursor: pointer; }
+        .cmp-subtab.active { background: #0f766e; color: #fff; border-color: #0f766e; }
+        .st-sec { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; background: #fff; }
+        .st-sec h3 { font-size: 1rem; margin: 0 0 4px; color: #134e4a; }
+        .st-sec .st-desc { font-size: 0.78rem; color: var(--text-muted); margin: 0 0 10px; line-height: 1.5; white-space: normal; }
+        .st-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 1100px) { .st-two { grid-template-columns: 1fr; } }
+        .st-tbl { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        .st-tbl th { position: static; background: #f1f5f9; text-align: center; padding: 6px 8px; border: 1px solid var(--border); white-space: nowrap; }
+        .st-tbl td { padding: 5px 8px; border: 1px solid var(--border); white-space: nowrap; }
+        .st-tbl td.wrap { white-space: normal; min-width: 150px; }
+        .st-tbl td.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .st-tbl td.ctr { text-align: center; }
+        .st-tbl tr.tot td { background: #fffbeb; font-weight: 800; }
+        .st-tbl .sub { color: var(--text-muted); font-size: 0.72rem; }
+        .st-scroll { overflow: auto; max-height: 520px; border-radius: 6px; }
+        .st-bar2 { min-width: 150px; }
+        .st-bar2 div { height: 7px; border-radius: 3px; margin: 2px 0; }
+        .st-bar2 .a { background: #94a3b8; } .st-bar2 .b { background: #0f766e; }
+        .st-hbar { display: inline-block; height: 12px; border-radius: 3px; vertical-align: middle; }
+        .st-hbar.up { background: #2563eb; } .st-hbar.down { background: #dc2626; } .st-hbar.cnt { background: #0f766e; }
+        .st-wf { font-size: 0.8rem; }
+        .st-wf-row { display: grid; grid-template-columns: 220px 1fr 130px; gap: 8px; align-items: center; padding: 3px 0; border-bottom: 1px dashed #e2e8f0; }
+        .st-wf-lab { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .st-wf-track { position: relative; height: 18px; background: #f8fafc; border-radius: 3px; }
+        .st-wf-bar { position: absolute; top: 2px; height: 14px; border-radius: 3px; min-width: 2px; }
+        .st-wf-bar.base { background: #64748b; } .st-wf-bar.up { background: #2563eb; } .st-wf-bar.down { background: #dc2626; } .st-wf-bar.end { background: #0f766e; }
+        .st-wf-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+        .st-legend { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
+        .st-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 3px 0 10px; vertical-align: middle; }
 
         #errorBanner { display: none; background-color: #fef2f2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #f87171; font-weight: bold; }
     </style>
@@ -246,7 +279,7 @@
 
 <div class="container">
     <header>
-        <div class="hub-home-wrap"><span data-hub-home></span><script>if (typeof HUB !== 'undefined' && HUB.mountHomeButton) HUB.mountHomeButton()</script><h1>📋 세출예산 집행 현황</h1></div>
+        <div class="hub-home-wrap"><span data-hub-home></span><script>if (typeof HUB !== 'undefined' && HUB.mountHomeButton) HUB.mountHomeButton()</script><h1>📋 세출예산 관리(직속기관/교육지원청)</h1></div>
         <!-- 우측 상단에 인덱스 페이지로 돌아가는 버튼 및 방문자 수 위젯 추가 -->
         <div class="controls" style="display: flex; align-items: center; gap: 15px;">
             <div id="visitorStats">
@@ -352,53 +385,79 @@
             </div>
             <div id="cmpInfo" class="cmp-info"></div>
 
-            <div class="pivot-controls cmp-ctl">
-                <label>비교 방식</label>
-                <select id="cmpMode"></select>
-                <span id="cmpCustom" style="display: none;"><select id="cmpG1"></select> ▸ <select id="cmpG2"></select> ▸ <select id="cmpG3"></select></span>
-                <label>표시 단계</label><select id="cmpDepth"></select>
-                <label>단위</label>
-                <select id="cmpUnit"><option value="1">원</option><option value="1000">천원</option><option value="1000000">백만원</option></select>
-                <label class="pv-ck"><input type="checkbox" id="cmpCalc"> 목-세목·산출내역 보기</label>
-            </div>
-            <div class="pivot-controls cmp-ctl">
-                <label>보기</label>
-                <select id="cmpView">
-                    <option value="all">전체</option>
-                    <option value="changed">증감 있는 것만</option>
-                    <option value="inc">증액만</option>
-                    <option value="dec">감액만</option>
-                    <option value="new">신규만</option>
-                    <option value="gone">폐지만</option>
-                    <option value="calc">산출내역이 바뀐 것만</option>
-                </select>
-                <label>증감액</label><input type="number" id="cmpMinDiff" placeholder="이상 (선택 단위)" min="0">
-                <label>증감률</label><input type="number" id="cmpMinRate" placeholder="% 이상" min="0">
-                <label>정렬</label>
-                <select id="cmpSort">
-                    <option value="orig">원본(내역서) 순서</option>
-                    <option value="label">이름순</option>
-                    <option value="absDesc">증감 폭 큰 순</option>
-                    <option value="diffDesc">증액 큰 순</option>
-                    <option value="diffAsc">감액 큰 순</option>
-                    <option value="rateDesc">증감률 높은 순</option>
-                    <option value="bDesc">B 금액 큰 순</option>
-                </select>
-            </div>
+            <!-- 두 화면(증감표·통계 분석)에 함께 적용되는 조건 -->
             <div class="pivot-controls cmp-ctl">
                 <label>부서</label><select id="cmpDept"></select>
                 <label>목·세목</label><select id="cmpCat"></select>
-                <input type="text" id="cmpKw" placeholder="🔍 사업명·산출내역 검색">
+                <label>단위</label>
+                <select id="cmpUnit"><option value="1">원</option><option value="1000">천원</option><option value="1000000">백만원</option></select>
                 <label class="pv-ck"><input type="checkbox" id="cmpTri"> 감소는 △로 표시</label>
                 <label class="pv-ck"><input type="checkbox" id="cmpLink"> 이름이 바뀐 사업 자동 연결</label>
             </div>
 
-            <div id="cmpCards" class="cmp-cards"></div>
-            <div class="table-responsive">
-                <table id="cmpTable">
-                    <thead id="cmpHead"></thead>
-                    <tbody id="cmpBody"></tbody>
-                </table>
+            <div class="cmp-subtabs">
+                <button type="button" id="cmpSubTable" class="cmp-subtab active" onclick="cmpShowSub('table')">📋 증감표</button>
+                <button type="button" id="cmpSubStat" class="cmp-subtab" onclick="cmpShowSub('stat')">📊 통계 분석</button>
+            </div>
+
+            <!-- (가) 증감표 화면 -->
+            <div id="cmpViewTable">
+                <div class="pivot-controls cmp-ctl">
+                    <label>비교 방식</label>
+                    <select id="cmpMode"></select>
+                    <span id="cmpCustom" style="display: none;"><select id="cmpG1"></select> ▸ <select id="cmpG2"></select> ▸ <select id="cmpG3"></select></span>
+                    <label>표시 단계</label><select id="cmpDepth"></select>
+                    <label class="pv-ck"><input type="checkbox" id="cmpCalc"> 목-세목·산출내역 보기</label>
+                </div>
+                <div class="pivot-controls cmp-ctl">
+                    <label>보기</label>
+                    <select id="cmpView">
+                        <option value="all">전체</option>
+                        <option value="changed">증감 있는 것만</option>
+                        <option value="inc">증액만</option>
+                        <option value="dec">감액만</option>
+                        <option value="new">신규만</option>
+                        <option value="gone">폐지만</option>
+                        <option value="calc">산출내역이 바뀐 것만</option>
+                    </select>
+                    <label>증감액</label><input type="number" id="cmpMinDiff" placeholder="이상 (선택 단위)" min="0">
+                    <label>증감률</label><input type="number" id="cmpMinRate" placeholder="% 이상" min="0">
+                    <label>정렬</label>
+                    <select id="cmpSort">
+                        <option value="orig">원본(내역서) 순서</option>
+                        <option value="label">이름순</option>
+                        <option value="absDesc">증감 폭 큰 순</option>
+                        <option value="diffDesc">증액 큰 순</option>
+                        <option value="diffAsc">감액 큰 순</option>
+                        <option value="rateDesc">증감률 높은 순</option>
+                        <option value="bDesc">B 금액 큰 순</option>
+                    </select>
+                    <input type="text" id="cmpKw" placeholder="🔍 사업명·산출내역 검색">
+                    <button type="button" class="btn-toolbar cmp-preset" onclick="cmpAutoNote()" title="비어 있는 '증감 사유' 칸에 산출내역 변동 내용을 자동으로 적어 줍니다">✍ 증감 사유 자동 작성</button>
+                    <button type="button" class="btn-toolbar cmp-preset" onclick="cmpClearAutoNote()" title="자동으로 적은 내용만 지웁니다 (직접 고친 칸은 남김)">🧹 자동 작성분 지우기</button>
+                </div>
+
+                <div id="cmpCards" class="cmp-cards"></div>
+                <div class="table-responsive">
+                    <table id="cmpTable">
+                        <thead id="cmpHead"></thead>
+                        <tbody id="cmpBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- (나) 통계 분석 화면 -->
+            <div id="cmpViewStat" style="display: none;">
+                <div class="pivot-controls cmp-ctl">
+                    <label>분석 기준</label><select id="stDim"></select>
+                    <label>항목 단위</label><select id="stLevel"></select>
+                    <label>순위 개수</label>
+                    <select id="stTop"><option value="5">5위까지</option><option value="10">10위까지</option><option value="20">20위까지</option><option value="50">50위까지</option></select>
+                    <label>교차표</label><select id="stRow"></select> × <select id="stCol"></select>
+                    <select id="stVal"><option value="diff">증감액</option><option value="b">B 금액</option><option value="a">A 금액</option></select>
+                    <button type="button" class="btn-export btn-toolbar" onclick="cmpStatExport()">📤 통계 엑셀 다운로드</button>
+                </div>
+                <div id="cmpStatBody"></div>
             </div>
         </div>
 
@@ -2200,6 +2259,22 @@
     }
     const cmpWon = (x) => Math.round(x / 1000).toLocaleString('ko-KR') + '천원';
 
+    // 분류 단계를 표의 열로 배치: 정책사업·단위사업·세부사업 등은 단계마다 한 열씩,
+    // 사업내역1~6이 이어질 때는 원본 내역서처럼 '사업내역' 한 열에 들여쓰기로 표시
+    function cmpLabelCols(g) {
+        const cols = [], map = [];          // map[단계] = { col: 열 번호, indent: 들여쓰기 칸 }
+        let itemCol = -1, itemStart = 0;
+        g.forEach((f, d) => {
+            if (CMP_ITEMS.includes(f)) {
+                if (itemCol >= 0 && d > 0 && CMP_ITEMS.includes(g[d - 1])) { map.push({ col: itemCol, indent: d - itemStart }); cols[itemCol] = '사업내역'; return; }
+                itemCol = cols.length; itemStart = d;
+            }
+            map.push({ col: cols.length, indent: 0 });
+            cols.push(f);
+        });
+        return { cols: cols, map: map };
+    }
+
     function cmpRefresh() {
         if (!CMP_MODES[cmpOpt.mode]) cmpOpt.mode = 'full';
         if (![1, 1000, 1000000].includes(+cmpOpt.unit)) cmpOpt.unit = 1000;
@@ -2267,6 +2342,8 @@
         setIf('cmpMinDiff', cmpOpt.minDiff); setIf('cmpMinRate', cmpOpt.minRate); setIf('cmpKw', cmpOpt.kw);
         cmpStore('_opt', cmpOpt);
         cmpRenderTable();
+        cmpRenderStat();
+        cmpShowSub(cmpOpt.sub);
     }
 
     function cmpRenderTable() {
@@ -2278,7 +2355,7 @@
         if (!cmpFields().length) return msg('분류 기준을 하나 이상 골라 주세요.');
 
         const m = cmpCompute();
-        const gf = m.g, cn = cmpColNames(), t = m.total, wide = gf.length > 3, calc = !!cmpOpt.calc;
+        const gf = m.g, cn = cmpColNames(), t = m.total, calc = !!cmpOpt.calc, lc = cmpLabelCols(gf);
         const diffCls = (d) => d > 0 ? 'cmp-up' : d < 0 ? 'cmp-down' : '';
         const td = cmpDisp(t.b) - cmpDisp(t.a), c = m.counts;
         cards.innerHTML = `
@@ -2291,8 +2368,8 @@
                 <span class="cmp-badge cmp-b-inc">증액 ${c.inc}</span> <span class="cmp-badge cmp-b-dec">감액 ${c.dec}</span> <span class="cmp-badge cmp-b-same">동일 ${c.same}</span>
                 <span class="cmp-badge cmp-b-dec">산출내역 변경 ${c.calc}</span></p></div>`;
 
-        const nLab = wide ? 1 : gf.length, nCol = nLab + 6 + (calc ? 3 : 0);
-        head.innerHTML = '<tr>' + (wide ? `<th>구분 (${E(gf[0])} ▸ … ▸ 산출 항목)</th>` : gf.map(f => `<th>${E(f)}</th>`).join('')) +
+        const nLab = lc.cols.length, nCol = nLab + 6 + (calc ? 3 : 0);
+        head.innerHTML = '<tr>' + lc.cols.map(f => `<th>${E(f)}</th>`).join('') +
             `<th>${E(cn.a)}</th><th>${E(cn.b)}</th><th>증감액 (B−A)</th><th>증감률 (%)</th><th>구분</th>` +
             (calc ? `<th>목-세목</th><th>${E(cn.la)} 산출내역</th><th>${E(cn.lb)} 산출내역</th>` : '') + '<th>증감 사유 (직접 입력)</th></tr>';
 
@@ -2309,9 +2386,9 @@
         let h = `<tr class="cmp-total"><td colspan="${nLab}" class="cmp-c">합   계</td>${cell({ a: t.a, b: t.b }, true, -1)}</tr>`;
         m.rows.slice(0, LIMIT).forEach((r, i) => {
             const cls = r.leaf ? 'cmp-leaf' : ('cmp-d' + Math.min(r.depth, 3));
-            const labs = wide
-                ? `<td class="cmp-lab" style="padding-left:${10 + r.depth * 18}px" title="${E(r.field)}">${E(r.path[r.depth])}</td>`
-                : gf.map((f, l) => `<td>${l === r.depth ? E(r.path[l]) : ''}</td>`).join('');
+            const at = lc.map[r.depth];
+            const labs = lc.cols.map((f, l) => l !== at.col ? '<td></td>'
+                : `<td class="cmp-lab" style="padding-left:${12 + at.indent * 16}px" title="${E(r.field)}">${E(r.path[r.depth])}</td>`).join('');
             h += `<tr class="${cls}">` + labs + cell(r, false, i) + '</tr>';
         });
         if (!m.rows.length) h += `<tr><td class="cmp-msg" colspan="${nCol}">조건에 맞는 항목이 없습니다. '보기'나 증감액·증감률·부서·세목 조건을 바꿔 보세요.</td></tr>`;
@@ -2325,8 +2402,8 @@
     window.cmpExport = function() {
         if (typeof XLSX === 'undefined') return alert("엑셀 다운로드 모듈을 사용할 수 없습니다.");
         if (!cmpModel) return alert('내보낼 비교표가 없습니다. 먼저 ①, ② 자료를 넣어 주세요.');
-        const m = cmpModel, gf = m.g, cn = cmpColNames(), wide = gf.length > 3, calc = !!cmpOpt.calc;
-        const labCols = wide ? ['단계', '구분'] : gf, G = labCols.length;
+        const m = cmpModel, gf = m.g, cn = cmpColNames(), calc = !!cmpOpt.calc, lc = cmpLabelCols(gf);
+        const labCols = lc.cols, G = labCols.length;
         const viewName = { all: '전체', changed: '증감 있는 것만', inc: '증액만', dec: '감액만', new: '신규만', gone: '폐지만', calc: '산출내역이 바뀐 것만' }[cmpOpt.view];
         const conds = [`분류: ${gf.join(' ▸ ')}`, `보기: ${viewName}`];
         if (cmpOpt.dept) conds.push(`부서: ${cmpOpt.dept}`);
@@ -2342,9 +2419,9 @@
                     ...(calc ? (isTotal ? ['', '', ''] : [r.code, r.calcA, r.calcB]) : []),
                     cmpNotes[isTotal ? cmpNoteKey(['(합계)']) : cmpNoteKey(r.path)] || ''];
         };
-        const totalLabels = labCols.map(() => ''); totalLabels[G - 1 >= 1 && wide ? 1 : 0] = '합   계';
+        const totalLabels = labCols.map(() => ''); totalLabels[0] = '합   계';
         aoa.push(line(totalLabels, m.total, true));
-        m.rows.forEach(r => aoa.push(line(wide ? [r.field, '  '.repeat(r.depth) + r.path[r.depth]] : gf.map((f, l) => l === r.depth ? r.path[l] : ''), r, false)));
+        m.rows.forEach(r => { const at = lc.map[r.depth]; aoa.push(line(labCols.map((f, l) => l === at.col ? '  '.repeat(at.indent) + r.path[r.depth] : ''), r, false)); });
         const ws = XLSX.utils.aoa_to_sheet(aoa);
         const zNum = cmpOpt.tri ? '#,##0;"△"#,##0' : '#,##0', zRate = cmpOpt.tri ? '0.0;"△"0.0' : '0.0';
         for (let r = 4; r < aoa.length; r++) {
@@ -2355,7 +2432,8 @@
         }
         const last = aoa[3].length - 1;
         ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: last } }, { s: { r: 1, c: 0 }, e: { r: 1, c: last } }];
-        ws['!cols'] = [...(wide ? [{ wch: 11 }, { wch: 46 }] : gf.map(() => ({ wch: 28 }))), { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 10 }, { wch: 7 },
+        if (G > 1) ws['!merges'].push({ s: { r: 4, c: 0 }, e: { r: 4, c: G - 1 } });   // '합 계' 칸 병합
+        ws['!cols'] = [...labCols.map(f => ({ wch: f === '사업내역' ? 42 : 24 })), { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 10 }, { wch: 7 },
                        ...(calc ? [{ wch: 24 }, { wch: 34 }, { wch: 34 }] : []), { wch: 36 }];
         ws['!rows'] = [{ hpt: 28 }];
         const wb = XLSX.utils.book_new();
@@ -2383,6 +2461,337 @@
         XLSX.writeFile(wb, `세출각목내역서_정리자료_${cmpFileStamp()}.xlsx`);
     };
 
+    // ==========================================================================
+    // --- 4-2. 연도 비교: 통계 분석 ---
+    //  ① 총괄 요약        : 증액 합계·감액 합계·신규·폐지 건수와 금액
+    //  ② 구성비·기여도    : 분석 기준(세출목·세부사업 등)별 구성비 변화(%p)와 전체 증감에 대한 기여도
+    //  ③ 증감 요인(폭포)  : A 합계에서 무엇이 얼마나 늘고 줄어 B 합계가 되었는지
+    //  ④ 증액·감액 순위   : 많이 늘어난 항목 / 많이 줄어든 항목
+    //  ⑤ 증감률 구간 분포 : 몇 % 늘고 줄었는지 구간별 건수와 금액
+    //  ⑥ 교차표           : 행 × 열(예: 세부사업 × 세출목) 금액을 색 농도로 표시
+    //  ⑦ 산출내역 변경    : 산출식에서 단가가 바뀌었는지, 수량(인원·횟수 등)이 바뀌었는지 자동 판별
+    //  · 위쪽 '부서', '목·세목', '단위', '이름이 바뀐 사업 자동 연결' 조건이 함께 적용됩니다.
+    // ==========================================================================
+    const ST_DIMS = {
+        mok:    { name: '세출목', g: ['세출목'] },
+        semok:  { name: '세출세목', g: ['세출세목'] },
+        policy: { name: '정책사업', g: ['정책사업'] },
+        unit:   { name: '단위사업', g: ['단위사업'] },
+        sub:    { name: '세부사업', g: ['세부사업'] },
+        item:   { name: '사업내역(1.)', g: ['세부사업', '사업내역1'] },
+        item2:  { name: '사업내역(가.)', g: ['세부사업', '사업내역1', '사업내역2'] },
+        leaf:   { name: '산출 항목(맨 아래 줄)', g: ['세부사업', ...CMP_ITEMS] },
+        dept:   { name: '부서', g: ['부서'] },
+        bumun:  { name: '부문', g: ['부문'] }
+    };
+    const ST_DEFAULT = { dim: 'mok', level: 'sub', top: 10, row: 'sub', col: 'mok', val: 'diff' };
+    let cmpStatData = null;      // 화면에 그린 통계를 엑셀로 내보낼 때 쓰는 자료
+    let cmpNotesAuto = {};       // '증감 사유 자동 작성'으로 적은 내용 (지우기 단추용)
+
+    // 조건(부서·목세목)에 맞는 줄만 골라 주어진 분류로 묶음 → [{path, label, a, b, diff, rate, st, recA, recB, code}]
+    function cmpStatRows(side) {
+        const src = side === 'A' ? cmpLinked.rows : cmp.B.rows;
+        return src.filter(r => (!cmpOpt.dept || r[CMP_DEPT] === cmpOpt.dept) && (!cmpOpt.cat || r[CMP_MOK] === cmpOpt.cat || r[CMP_SEMOK] === cmpOpt.cat));
+    }
+    function cmpStatGroup(g) {
+        const gi = g.map(f => CMP_H.indexOf(f)), isItem = g.map(f => CMP_ITEMS.includes(f)), m = new Map();
+        const add = (side) => cmpStatRows(side).forEach(r => {
+            let path = gi.map(i => r[i]);
+            while (path.length && path[path.length - 1] === '' && isItem[path.length - 1]) path.pop();
+            path = path.map(t => t === '' ? CMP_NONE : t);
+            const k = path.join(PV_SEP);
+            let o = m.get(k);
+            if (!o) { o = { path: path, a: 0, b: 0, recA: [], recB: [], codes: new Set() }; m.set(k, o); }
+            o[side === 'A' ? 'a' : 'b'] += r[CMP_AMT];
+            o[side === 'A' ? 'recA' : 'recB'].push(r[CMP_CALC]);
+            o.codes.add(r[CMP_SEMOK]);
+        });
+        add('B'); add('A');
+        return [...m.values()].map(o => {
+            o.label = o.path[o.path.length - 1];
+            o.parent = o.path.slice(0, -1).join(' ▸ ');
+            o.full = o.path.join(' ▸ ');
+            o.diff = o.b - o.a; o.rate = cmpRate(o.a, o.b); o.st = cmpStatus(o.a, o.b);
+            o.code = o.codes.size <= 2 ? [...o.codes].join(', ') : '';
+            return o;
+        });
+    }
+
+    // 산출식 풀기:  "800,000원×2대×1일="  →  [{n:800000, u:'원'}, {n:2, u:'대'}, {n:1, u:'일'}]
+    function cmpParseCalc(t) {
+        const s = String(t || '').replace(/\s/g, '').replace(/=+$/, '');
+        if (!s) return null;
+        const out = [];
+        for (const part of s.split(/[×xX*]/)) {
+            const mm = part.match(/^([\d,]+(?:\.\d+)?)(.*)$/);
+            if (!mm) return null;
+            out.push({ n: parseFloat(mm[1].replace(/,/g, '')), u: mm[2], text: part });
+        }
+        return out;
+    }
+    // 두 산출식을 비교해 무엇이 바뀌었는지 설명:  { type: '단가 변경' | '수량 변경' | '단가·수량 변경' | '산출식 구조 변경', desc }
+    function cmpCalcChange(ta, tb) {
+        const a = cmpParseCalc(ta), b = cmpParseCalc(tb);
+        if (!a || !b || a.length !== b.length) return { type: '산출식 구조 변경', desc: `${ta || '(없음)'} → ${tb || '(없음)'}` };
+        const parts = [];
+        let price = false, qty = false;
+        a.forEach((x, i) => {
+            const y = b[i];
+            if (x.n === y.n && x.u === y.u) return;
+            if (i === 0) { price = true; parts.push(`단가 ${x.text}→${y.text}`); }
+            else { qty = true; parts.push(`수량 ${x.text}→${y.text}`); }
+        });
+        if (!parts.length) return null;
+        return { type: price && qty ? '단가·수량 변경' : price ? '단가 변경' : '수량 변경', desc: parts.join(', ') };
+    }
+
+    const stN = (x) => cmpNum(cmpDisp(x));
+    const stSigned = (x) => { const v = cmpDisp(x); return (v > 0 ? '+' : '') + cmpNum(v); };
+    const stPct = (x, d) => {
+        if (x === null) return '순증';
+        const t = Math.abs(x).toFixed(d === undefined ? 1 : d);
+        if (+t === 0) return t;                                   // 반올림하면 0인 값은 부호 없이 0.0 으로
+        return x < 0 ? (cmpOpt.tri ? '△' : '-') + t : t;
+    };
+    const stCls = (x) => x > 0 ? 'cmp-up' : x < 0 ? 'cmp-down' : '';
+
+    function cmpRenderStat() {
+        const box = document.getElementById('cmpStatBody');
+        cmpOpt.st = Object.assign({}, ST_DEFAULT, cmpOpt.st || {});
+        const o = cmpOpt.st;
+        ['dim', 'level', 'row', 'col'].forEach(k => { if (!ST_DIMS[o[k]]) o[k] = ST_DEFAULT[k]; });
+        const dimOpts = Object.keys(ST_DIMS).map(k => `<option value="${k}">${E(ST_DIMS[k].name)}</option>`).join('');
+        ['stDim', 'stLevel', 'stRow', 'stCol'].forEach(id => { const el = document.getElementById(id); if (!el.options.length) el.innerHTML = dimOpts; });
+        document.getElementById('stDim').value = o.dim; document.getElementById('stLevel').value = o.level;
+        document.getElementById('stRow').value = o.row; document.getElementById('stCol').value = o.col;
+        document.getElementById('stTop').value = String(o.top); document.getElementById('stVal').value = o.val;
+        if (!cmp.A || !cmp.B) { box.innerHTML = '<div class="st-sec">위 ①, ② 칸에 두 연도의 세출각목내역서 엑셀을 넣으면 통계가 만들어집니다.</div>'; cmpStatData = null; return; }
+
+        const cn = cmpColNames(), unit = cmpUnitName(), D = {};
+        const dim = ST_DIMS[o.dim], lvl = ST_DIMS[o.level];
+        const byDim = cmpStatGroup(dim.g), items = cmpStatGroup(lvl.g);
+        const TA = byDim.reduce((s, x) => s + x.a, 0), TB = byDim.reduce((s, x) => s + x.b, 0), TD = TB - TA;
+        let h = '';
+
+        // ① 총괄 요약
+        const inc = items.filter(x => x.diff > 0), dec = items.filter(x => x.diff < 0), nw = items.filter(x => x.st === 'new'), gone = items.filter(x => x.st === 'gone');
+        const sum = (arr, f) => arr.reduce((s, x) => s + f(x), 0);
+        const gInc = sum(inc, x => x.diff), gDec = sum(dec, x => x.diff);
+        D.summary = [['구분', '값', '비고'],
+            [cn.a, cmpDisp(TA), unit], [cn.b, cmpDisp(TB), unit], ['증감액(B-A)', cmpDisp(TB) - cmpDisp(TA), unit], ['증감률(%)', cmpRate(TA, TB) === null ? '순증' : Math.round(cmpRate(TA, TB) * 10) / 10, ''],
+            [`증액 항목 합계 (${lvl.name} 기준)`, cmpDisp(gInc), `${inc.length}건`], [`감액 항목 합계 (${lvl.name} 기준)`, cmpDisp(gDec), `${dec.length}건`],
+            ['신규 항목', cmpDisp(sum(nw, x => x.b)), `${nw.length}건`], ['폐지 항목', cmpDisp(sum(gone, x => x.a)), `${gone.length}건`], ['변동 없는 항목', '', `${items.filter(x => x.diff === 0).length}건`]];
+        h += `<div class="st-sec"><h3>① 총괄 요약</h3><p class="st-desc">'항목 단위'(${E(lvl.name)})로 세어 본 결과입니다. 늘어난 항목만 더한 금액과 줄어든 항목만 더한 금액을 따로 보여 줍니다. (단위: ${unit})</p>
+            <div class="cmp-cards" style="margin-bottom:0;">
+            <div class="cmp-card"><h4>${E(cn.a)}</h4><p>${stN(TA)}</p></div>
+            <div class="cmp-card"><h4>${E(cn.b)}</h4><p>${stN(TB)}</p></div>
+            <div class="cmp-card"><h4>순증감 (증감률)</h4><p class="${stCls(TD)}">${stN(TD)} (${stPct(cmpRate(TA, TB))}%)</p></div>
+            <div class="cmp-card"><h4>증액 항목 합계 · ${inc.length}건</h4><p class="cmp-up">${stSigned(gInc)}</p></div>
+            <div class="cmp-card"><h4>감액 항목 합계 · ${dec.length}건</h4><p class="cmp-down">${stN(gDec)}</p></div>
+            <div class="cmp-card"><h4>신규 ${nw.length}건 / 폐지 ${gone.length}건</h4><p><span class="cmp-up">${stSigned(sum(nw, x => x.b))}</span> / <span class="cmp-down">${stN(-sum(gone, x => x.a))}</span></p></div>
+            </div></div>`;
+
+        // ② 구성비·기여도
+        const share = byDim.slice().sort((x, y) => y.b - x.b || y.a - x.a);
+        const pc = (v, t) => t ? v / t * 100 : 0;
+        const mx = Math.max(1, ...share.map(x => Math.max(x.a, x.b)));
+        D.share = [[dim.name, cn.a, 'A 구성비(%)', cn.b, 'B 구성비(%)', '구성비 증감(%p)', '증감액', '증감률(%)', '증감 기여도(%p)']];
+        let rowsH = '';
+        share.forEach(x => {
+            const sa = pc(x.a, TA), sb = pc(x.b, TB), contrib = pc(x.diff, TA);
+            D.share.push([x.full, cmpDisp(x.a), +sa.toFixed(1), cmpDisp(x.b), +sb.toFixed(1), +(sb - sa).toFixed(1), cmpDisp(x.b) - cmpDisp(x.a), x.rate === null ? '순증' : +x.rate.toFixed(1), +contrib.toFixed(2)]);
+            rowsH += `<tr><td class="wrap">${x.parent ? `<span class="sub">${E(x.parent)} ▸ </span>` : ''}${E(x.label)}</td><td class="num">${stN(x.a)}</td><td class="num">${sa.toFixed(1)}</td><td class="num">${stN(x.b)}</td><td class="num">${sb.toFixed(1)}</td>
+                <td class="num ${stCls(sb - sa)}">${stPct(sb - sa)}</td><td class="num ${stCls(x.diff)}">${stN(x.diff)}</td><td class="num ${stCls(x.diff)}">${stPct(x.rate)}</td><td class="num ${stCls(x.diff)}">${stPct(contrib, 2)}</td>
+                <td class="st-bar2"><div class="a" style="width:${Math.max(0, x.a / mx * 100)}%"></div><div class="b" style="width:${Math.max(0, x.b / mx * 100)}%"></div></td></tr>`;
+        });
+        D.share.push(['합계', cmpDisp(TA), 100, cmpDisp(TB), 100, 0, cmpDisp(TB) - cmpDisp(TA), cmpRate(TA, TB) === null ? '순증' : +cmpRate(TA, TB).toFixed(1), +pc(TD, TA).toFixed(2)]);
+        h += `<div class="st-sec"><h3>② ${E(dim.name)}별 구성비·기여도</h3><p class="st-desc">구성비 = 전체 예산에서 차지하는 비율. 구성비 증감(%p) = B 구성비 − A 구성비. 증감 기여도(%p) = 그 항목의 증감액 ÷ A 합계 × 100 (모두 더하면 전체 증감률 ${stPct(cmpRate(TA, TB))}%가 됩니다).</p>
+            <div class="st-scroll"><table class="st-tbl"><thead><tr><th>${E(dim.name)}</th><th>${E(cn.a)}</th><th>A 구성비(%)</th><th>${E(cn.b)}</th><th>B 구성비(%)</th><th>구성비 증감(%p)</th><th>증감액</th><th>증감률(%)</th><th>기여도(%p)</th><th>A·B 규모</th></tr></thead>
+            <tbody><tr class="tot"><td class="ctr">합 계</td><td class="num">${stN(TA)}</td><td class="num">100.0</td><td class="num">${stN(TB)}</td><td class="num">100.0</td><td></td><td class="num ${stCls(TD)}">${stN(TD)}</td><td class="num ${stCls(TD)}">${stPct(cmpRate(TA, TB))}</td><td class="num ${stCls(TD)}">${stPct(pc(TD, TA), 2)}</td><td></td></tr>${rowsH}</tbody></table></div>
+            <div class="st-legend"><i style="background:#94a3b8"></i>${E(cn.la)} <i style="background:#0f766e"></i>${E(cn.lb)}</div></div>`;
+
+        // ③ 증감 요인 (폭포 그림)
+        const moved = byDim.filter(x => x.diff !== 0).sort((x, y) => Math.abs(y.diff) - Math.abs(x.diff));
+        const topW = moved.slice(0, 10).sort((x, y) => y.diff - x.diff), rest = moved.slice(10), restSum = sum(rest, x => x.diff);
+        const steps = topW.map(x => ({ label: x.full, d: x.diff }));
+        if (rest.length) steps.push({ label: `그 밖의 ${rest.length}개 항목`, d: restSum });
+        let cur = TA;
+        const pts = [TA, TB];
+        steps.forEach(s => { s.from = cur; cur += s.d; s.to = cur; pts.push(cur); });
+        let lo = Math.min(...pts), hi = Math.max(...pts);
+        const cutAxis = lo > 0 && (hi - lo) < hi * 0.6;
+        const pad = (hi - lo) * 0.12 || hi * 0.1 || 1;
+        lo = cutAxis ? lo - pad : Math.min(0, lo); hi = hi + pad * 0.3;
+        const pos = (v) => (v - lo) / (hi - lo) * 100;
+        const wfRow = (label, from, to, cls, val) => `<div class="st-wf-row"><div class="st-wf-lab" title="${E(label)}">${E(label)}</div>
+            <div class="st-wf-track"><div class="st-wf-bar ${cls}" style="left:${Math.min(pos(from), pos(to))}%; width:${Math.abs(pos(to) - pos(from))}%"></div></div><div class="st-wf-val ${cls === 'up' ? 'cmp-up' : cls === 'down' ? 'cmp-down' : ''}">${val}</div></div>`;
+        D.waterfall = [['구분', '증감액', '누계'], [cn.a, '', cmpDisp(TA)], ...steps.map(s => [s.label, cmpDisp(s.to) - cmpDisp(s.from), cmpDisp(s.to)]), [cn.b, '', cmpDisp(TB)]];
+        h += `<div class="st-sec"><h3>③ 증감 요인 — ${E(cn.la)} 예산이 ${E(cn.lb)} 예산이 되기까지 (${E(dim.name)} 기준)</h3>
+            <p class="st-desc">맨 위 막대(${E(cn.la)} 합계)에서 시작해, 늘어난 항목(파랑)만큼 오른쪽으로, 줄어든 항목(빨강)만큼 왼쪽으로 움직여 맨 아래 막대(${E(cn.lb)} 합계)에 이릅니다. 증감 폭이 큰 10개 항목을 보여 줍니다.${cutAxis ? ' ※ 변화가 잘 보이도록 막대의 왼쪽 부분은 생략했습니다(0부터 그린 그림이 아님).' : ''}</p>
+            <div class="st-wf">${wfRow(cn.a, lo, TA, 'base', stN(TA))}${steps.map(s => wfRow(s.label, s.from, s.to, s.d >= 0 ? 'up' : 'down', stSigned(s.d))).join('')}${wfRow(cn.b, lo, TB, 'end', stN(TB))}</div></div>`;
+
+        // ④ 증액·감액 순위
+        const N = parseInt(o.top, 10) || 10;
+        const topInc = inc.slice().sort((x, y) => y.diff - x.diff).slice(0, N), topDec = dec.slice().sort((x, y) => x.diff - y.diff).slice(0, N);
+        const rank = (arr, cls) => {
+            const m2 = Math.max(1, ...arr.map(x => Math.abs(x.diff)));
+            return `<table class="st-tbl"><thead><tr><th>순위</th><th>${E(lvl.name)}</th><th>${E(cn.la)}</th><th>${E(cn.lb)}</th><th>증감액</th><th>증감률(%)</th><th>크기</th></tr></thead><tbody>` +
+                (arr.length ? arr.map((x, i) => `<tr><td class="ctr">${i + 1}</td><td class="wrap">${x.parent ? `<span class="sub">${E(x.parent)} ▸ </span>` : ''}${E(x.label)}</td><td class="num">${stN(x.a)}</td><td class="num">${stN(x.b)}</td>
+                    <td class="num ${stCls(x.diff)}">${stN(x.diff)}</td><td class="num ${stCls(x.diff)}">${stPct(x.rate)}</td><td style="min-width:110px;"><span class="st-hbar ${cls}" style="width:${Math.abs(x.diff) / m2 * 100}%"></span></td></tr>`).join('')
+                : '<tr><td colspan="7" class="ctr">해당 항목이 없습니다.</td></tr>') + '</tbody></table>';
+        };
+        const rankAoa = (arr) => arr.map((x, i) => [i + 1, x.full, cmpDisp(x.a), cmpDisp(x.b), cmpDisp(x.b) - cmpDisp(x.a), x.rate === null ? '순증' : +x.rate.toFixed(1)]);
+        D.top = [['[증액 순위]'], ['순위', lvl.name, cn.a, cn.b, '증감액', '증감률(%)'], ...rankAoa(topInc), [], ['[감액 순위]'], ['순위', lvl.name, cn.a, cn.b, '증감액', '증감률(%)'], ...rankAoa(topDec)];
+        h += `<div class="st-sec"><h3>④ 증액·감액 순위 (${E(lvl.name)} 기준, ${N}위까지)</h3><p class="st-desc">위쪽 '항목 단위'를 바꾸면 세부사업·사업내역·산출 항목 단위로 순위를 볼 수 있습니다.</p>
+            <div class="st-two"><div><b class="cmp-up">▲ 많이 늘어난 항목</b><div class="st-scroll">${rank(topInc, 'up')}</div></div><div><b class="cmp-down">▽ 많이 줄어든 항목</b><div class="st-scroll">${rank(topDec, 'down')}</div></div></div></div>`;
+
+        // ⑤ 증감률 구간 분포
+        const bands = [
+            ['폐지 (B에 없음)', x => x.st === 'gone'], ['50% 이상 감소', x => x.rate !== null && x.rate <= -50], ['10% ~ 50% 감소', x => x.rate !== null && x.rate > -50 && x.rate <= -10],
+            ['10% 미만 감소', x => x.rate !== null && x.rate > -10 && x.rate < 0], ['변동 없음', x => x.diff === 0], ['10% 미만 증가', x => x.rate !== null && x.rate > 0 && x.rate < 10],
+            ['10% ~ 50% 증가', x => x.rate !== null && x.rate >= 10 && x.rate < 50], ['50% 이상 증가', x => x.rate !== null && x.rate >= 50], ['신규 (A에 없음)', x => x.st === 'new']];
+        const leftover = new Set(items);
+        const dist = bands.map(([name, f]) => { const arr = [...leftover].filter(f); arr.forEach(x => leftover.delete(x)); return { name: name, n: arr.length, a: sum(arr, x => x.a), b: sum(arr, x => x.b) }; });
+        const mN = Math.max(1, ...dist.map(x => x.n));
+        D.dist = [['증감률 구간', '건수', '건수 비율(%)', cn.a, cn.b, '증감액'], ...dist.map(x => [x.name, x.n, +pc(x.n, items.length).toFixed(1), cmpDisp(x.a), cmpDisp(x.b), cmpDisp(x.b) - cmpDisp(x.a)])];
+        h += `<div class="st-sec"><h3>⑤ 증감률 구간 분포 (${E(lvl.name)} ${items.length}건)</h3><p class="st-desc">얼마나 늘고 줄었는지를 구간으로 나누어 건수와 금액을 셉니다.</p>
+            <div class="st-scroll"><table class="st-tbl"><thead><tr><th>증감률 구간</th><th>건수</th><th>비율(%)</th><th>건수 그림</th><th>${E(cn.a)}</th><th>${E(cn.b)}</th><th>증감액</th></tr></thead><tbody>` +
+            dist.map(x => `<tr><td>${E(x.name)}</td><td class="num">${x.n}</td><td class="num">${pc(x.n, items.length).toFixed(1)}</td><td style="min-width:160px;"><span class="st-hbar cnt" style="width:${x.n / mN * 100}%"></span></td>
+                <td class="num">${stN(x.a)}</td><td class="num">${stN(x.b)}</td><td class="num ${stCls(x.b - x.a)}">${stN(x.b - x.a)}</td></tr>`).join('') + '</tbody></table></div></div>';
+
+        // ⑥ 교차표 (행 × 열)
+        const rd = ST_DIMS[o.row], cd = ST_DIMS[o.col];
+        const same = o.row === o.col;
+        const rmap = new Map(), cset = new Set();
+        const rowsAll = cmpStatRows('B').concat(cmpStatRows('A').map(r => { const c = r.slice(); c._a = true; return c; }));
+        const ri = rd.g.map(f => CMP_H.indexOf(f)), ci = cd.g.map(f => CMP_H.indexOf(f));
+        const lab = (r, idx) => idx.map(i => r[i]).filter(t => t !== '').join(' ▸ ') || CMP_NONE;
+        rowsAll.forEach(r => {
+            const rk = lab(r, ri), ck = lab(r, ci);
+            cset.add(ck);
+            let m2 = rmap.get(rk); if (!m2) { m2 = new Map(); rmap.set(rk, m2); }
+            const cell = m2.get(ck) || { a: 0, b: 0 };
+            if (r._a) cell.a += r[CMP_AMT]; else cell.b += r[CMP_AMT];
+            m2.set(ck, cell);
+        });
+        const cv = (c) => !c ? 0 : (o.val === 'a' ? c.a : o.val === 'b' ? c.b : c.b - c.a);
+        const colKeys = [...cset].sort((x, y) => x.localeCompare(y, 'ko', { numeric: true }));
+        const rowKeys = [...rmap.keys()];
+        const valName = { diff: '증감액', a: cn.a, b: cn.b }[o.val];
+        if (same || colKeys.length > 40) {
+            h += `<div class="st-sec"><h3>⑥ 교차표</h3><p class="st-desc">${same ? '행과 열을 서로 다른 기준으로 골라 주세요.' : '열 항목이 40개를 넘어 표로 그리기 어렵습니다. 열 기준을 세출목·세출세목·부서처럼 가짓수가 적은 것으로 골라 주세요.'}</p></div>`;
+            D.cross = null;
+        } else {
+            let mxC = 1;
+            rowKeys.forEach(rk => colKeys.forEach(ck => { mxC = Math.max(mxC, Math.abs(cv(rmap.get(rk).get(ck)))); }));
+            const heat = (v) => v === 0 ? '' : `background: rgba(${v > 0 ? '37,99,235' : '220,38,38'}, ${(0.07 + 0.5 * Math.abs(v) / mxC).toFixed(3)});`;
+            const colTot = colKeys.map(ck => rowKeys.reduce((s, rk) => s + cv(rmap.get(rk).get(ck)), 0));
+            const grand = colTot.reduce((s, v) => s + v, 0);
+            D.cross = [[`${rd.name} ＼ ${cd.name}`, ...colKeys, '합계'], ...rowKeys.map(rk => { const vs = colKeys.map(ck => cv(rmap.get(rk).get(ck))); return [rk, ...vs.map(v => cmpDisp(v)), cmpDisp(vs.reduce((s, v) => s + v, 0))]; }),
+                       ['합계', ...colTot.map(v => cmpDisp(v)), cmpDisp(grand)]];
+            const show = (v) => v === 0 ? '' : stN(v);
+            h += `<div class="st-sec"><h3>⑥ 교차표 — ${E(rd.name)} × ${E(cd.name)} (${E(valName)})</h3><p class="st-desc">가로·세로 두 기준을 함께 놓고 본 표입니다. 색이 진할수록 금액이 큽니다${o.val === 'diff' ? ' (파랑 = 증가, 빨강 = 감소)' : ''}. 빈칸은 0입니다. (단위: ${unit})</p>
+                <div class="st-scroll"><table class="st-tbl"><thead><tr><th>${E(rd.name)} ＼ ${E(cd.name)}</th>${colKeys.map(c => `<th>${E(c)}</th>`).join('')}<th>합계</th></tr></thead><tbody>` +
+                rowKeys.slice(0, 400).map(rk => { const vs = colKeys.map(ck => cv(rmap.get(rk).get(ck))), t2 = vs.reduce((s, v) => s + v, 0);
+                    return `<tr><td class="wrap">${E(rk)}</td>${vs.map(v => `<td class="num" style="${heat(v)}">${show(v)}</td>`).join('')}<td class="num ${o.val === 'diff' ? stCls(t2) : ''}" style="font-weight:700;">${show(t2)}</td></tr>`; }).join('') +
+                `<tr class="tot"><td class="ctr">합 계</td>${colTot.map(v => `<td class="num">${show(v)}</td>`).join('')}<td class="num">${show(grand)}</td></tr></tbody></table></div></div>`;
+        }
+
+        // ⑦ 산출내역(산출식) 변경 분석
+        const leaves = cmpStatGroup(ST_DIMS.leaf.g).filter(x => x.recA.length === 1 && x.recB.length === 1 && x.recA[0] !== x.recB[0]);
+        const chg = [];
+        leaves.forEach(x => { const c = cmpCalcChange(x.recA[0], x.recB[0]); if (c) chg.push({ x: x, type: c.type, desc: c.desc }); });
+        chg.sort((p, q) => Math.abs(q.x.diff) - Math.abs(p.x.diff));
+        const types = ['단가 변경', '수량 변경', '단가·수량 변경', '산출식 구조 변경'];
+        const tsum = types.map(t => { const arr = chg.filter(c => c.type === t); return { t: t, n: arr.length, d: sum(arr, c => c.x.diff) }; });
+        D.calc = [['[유형별 요약]'], ['변경 유형', '건수', '증감액 합계'], ...tsum.map(x => [x.t, x.n, cmpDisp(x.d)]), [],
+                  ['세부사업 ▸ 사업내역', '목-세목', `${cn.la} 산출내역`, `${cn.lb} 산출내역`, '변경 유형', '변경 내용', cn.a, cn.b, '증감액'],
+                  ...chg.map(c => [c.x.full, c.x.code, c.x.recA[0], c.x.recB[0], c.type, c.desc, cmpDisp(c.x.a), cmpDisp(c.x.b), cmpDisp(c.x.b) - cmpDisp(c.x.a)])];
+        h += `<div class="st-sec"><h3>⑦ 산출내역 변경 분석 (${chg.length}건)</h3><p class="st-desc">두 연도에 모두 있는 산출 항목 가운데 산출식이 달라진 것을 찾아, 식의 첫 번째 값(단가)이 바뀌었는지 뒤쪽 값(인원·횟수·개월 등 수량)이 바뀌었는지 자동으로 구분합니다. 증감액이 큰 순서입니다.</p>
+            <div class="cmp-cards">${tsum.map(x => `<div class="cmp-card"><h4>${x.t} · ${x.n}건</h4><p class="${stCls(x.d)}">${stSigned(x.d)}</p></div>`).join('')}</div>
+            <div class="st-scroll"><table class="st-tbl"><thead><tr><th>세부사업 ▸ 사업내역</th><th>목-세목</th><th>${E(cn.la)} 산출내역</th><th>${E(cn.lb)} 산출내역</th><th>변경 유형</th><th>변경 내용</th><th>증감액</th></tr></thead><tbody>` +
+            (chg.length ? chg.slice(0, 300).map(c => `<tr><td class="wrap"><span class="sub">${E(c.x.parent)} ▸ </span>${E(c.x.label)}</td><td>${E(c.x.code)}</td><td>${E(c.x.recA[0])}</td><td>${E(c.x.recB[0])}</td><td class="ctr">${c.type}</td><td class="wrap">${E(c.desc)}</td><td class="num ${stCls(c.x.diff)}">${stN(c.x.diff)}</td></tr>`).join('')
+                : '<tr><td colspan="7" class="ctr">산출식이 달라진 항목이 없습니다.</td></tr>') +
+            (chg.length > 300 ? `<tr><td colspan="7" class="ctr">… 화면에는 300건까지만 보입니다. 전체는 엑셀로 내려받아 확인하세요.</td></tr>` : '') + '</tbody></table></div></div>';
+
+        box.innerHTML = h;
+        D.meta = { dim: dim.name, level: lvl.name, unit: unit, la: cn.la, lb: cn.lb, row: rd.name, col: cd.name, valName: valName };
+        cmpStatData = D;
+    }
+
+    // 통계 전체를 엑셀 한 파일로 (통계마다 시트 하나)
+    window.cmpStatExport = function() {
+        if (typeof XLSX === 'undefined') return alert("엑셀 다운로드 모듈을 사용할 수 없습니다.");
+        if (!cmpStatData) return alert('내보낼 통계가 없습니다. 먼저 ①, ② 자료를 넣어 주세요.');
+        const D = cmpStatData, M = D.meta, wb = XLSX.utils.book_new();
+        const conds = [`단위: ${M.unit}`, `부서: ${cmpOpt.dept || '전체'}`, `목·세목: ${cmpOpt.cat || '전체'}`].join('  |  ');
+        const add = (name, title, aoa) => {
+            if (!aoa) return;
+            const ws = XLSX.utils.aoa_to_sheet([[title], [conds], [], ...aoa]);
+            const zNum = cmpOpt.tri ? '#,##0;"△"#,##0' : '#,##0';
+            Object.keys(ws).forEach(k => { if (k[0] !== '!' && ws[k].t === 'n' && Number.isInteger(ws[k].v) && Math.abs(ws[k].v) >= 1000) ws[k].z = zNum; });
+            const width = aoa.reduce((a, r) => Math.max(a, r.length), 1);
+            ws['!cols'] = Array.from({ length: width }, (_, i) => ({ wch: i === 0 ? 40 : 18 }));
+            XLSX.utils.book_append_sheet(wb, ws, name);
+        };
+        const t = `${M.la} 대비 ${M.lb}`;
+        add('1.총괄', `${t} 총괄 요약 (항목 단위: ${M.level})`, D.summary);
+        add('2.구성비·기여도', `${t} ${M.dim}별 구성비·기여도`, D.share);
+        add('3.증감요인', `${t} 증감 요인 (${M.dim} 기준)`, D.waterfall);
+        add('4.증감순위', `${t} 증액·감액 순위 (${M.level} 기준)`, D.top);
+        add('5.증감률분포', `${t} 증감률 구간 분포 (${M.level} 기준)`, D.dist);
+        add('6.교차표', `${t} 교차표 — ${M.row} × ${M.col} (${M.valName})`, D.cross);
+        add('7.산출내역변경', `${t} 산출내역 변경 분석`, D.calc);
+        XLSX.writeFile(wb, `예산비교통계_${M.la}_${M.lb}_${cmpFileStamp()}.xlsx`.replace(/[\\/:*?"<>|]/g, ''));
+    };
+
+    // 증감표 ↔ 통계 분석 작은 탭
+    window.cmpShowSub = function(which) {
+        cmpOpt.sub = which === 'stat' ? 'stat' : 'table';
+        document.getElementById('cmpSubTable').classList.toggle('active', cmpOpt.sub === 'table');
+        document.getElementById('cmpSubStat').classList.toggle('active', cmpOpt.sub === 'stat');
+        document.getElementById('cmpViewTable').style.display = cmpOpt.sub === 'table' ? '' : 'none';
+        document.getElementById('cmpViewStat').style.display = cmpOpt.sub === 'stat' ? '' : 'none';
+        cmpStore('_opt', cmpOpt);
+    };
+
+    // ---- 증감 사유 자동 작성 (빈 칸만 채움. 사실 관계만 적고 이유는 지어내지 않음) ----
+    //  · 맨 아래 줄 : 신규 편성 / 미편성 / "단가 800,000원→1,000,000원" 같은 산출식 변동 내용
+    //  · 묶음 줄    : 바로 아래 항목 가운데 증감이 큰 3개를 "주요 증감: ○○ +400, △△ △100" 식으로 정리
+    window.cmpAutoNote = function() {
+        if (!cmpModel) return alert('먼저 ①, ② 자료를 넣어 주세요.');
+        const rows = cmpModel.rows, unit = cmpUnitName();
+        let n = 0;
+        rows.forEach((r, i) => {
+            const key = cmpNoteKey(r.path);
+            if (cmpNotes[key]) return;
+            let text = '';
+            if (r.st === 'new') text = '신규 편성';
+            else if (r.st === 'gone') text = '미편성';
+            else if (r.leaf) {
+                if (r.calcDiff && !/ \/ |^\(\d+건\)$/.test(r.calcA) && !/ \/ |^\(\d+건\)$/.test(r.calcB)) { const c = cmpCalcChange(r.calcA, r.calcB); if (c) text = c.type === '산출식 구조 변경' ? `산출식 변경 (${c.desc})` : c.desc; }
+            } else if (r.a !== r.b) {
+                const kids = [];
+                for (let j = i + 1; j < rows.length && rows[j].depth > r.depth; j++) if (rows[j].depth === r.depth + 1 && cmpDisp(rows[j].b) - cmpDisp(rows[j].a) !== 0) kids.push(rows[j]);
+                kids.sort((x, y) => Math.abs(y.b - y.a) - Math.abs(x.b - x.a));
+                if (kids.length) text = '주요 증감: ' + kids.slice(0, 3).map(k => `${k.path[k.depth]} ${stSigned(k.b - k.a)}`).join(', ') + (kids.length > 3 ? ` 등 ${kids.length}건` : '') + ` (${unit})`;
+            }
+            if (!text) return;
+            cmpNotes[key] = text; cmpNotesAuto[key] = text; n++;
+        });
+        cmpStore('_note', cmpNotes); cmpStore('_noteAuto', cmpNotesAuto);
+        cmpRenderTable();
+        alert(n ? `비어 있던 증감 사유 ${n}칸을 채웠습니다.\n(산출식 변동 등 확인된 사실만 적었습니다. 실제 사유는 직접 고쳐 쓰세요.)` : '새로 채울 칸이 없습니다. (이미 내용이 있거나, 자동으로 적을 변동 내용이 없는 칸입니다)');
+    };
+    window.cmpClearAutoNote = function() {
+        let n = 0;
+        Object.keys(cmpNotesAuto).forEach(k => { if (cmpNotes[k] === cmpNotesAuto[k]) { delete cmpNotes[k]; n++; } });
+        cmpNotesAuto = {};
+        cmpStore('_note', cmpNotes); cmpStore('_noteAuto', cmpNotesAuto);
+        cmpRenderTable();
+        alert(n ? `자동으로 적었던 ${n}칸을 지웠습니다. (직접 고친 칸은 그대로 두었습니다)` : '지울 자동 작성 내용이 없습니다.');
+    };
+
     // ---- 탭 전환: 'main' = 집행실적(기존 화면 전부), 'compare' = 연도 비교 ----
     //  집행실적 화면은 숨겼다 보였다만 할 뿐, 자료·검색·피벗 상태는 전혀 건드리지 않습니다.
     window.showMainTab = function(which) {
@@ -2408,11 +2817,13 @@
             if (o && typeof o === 'object') cmpOpt = Object.assign(cmpOpt, o);
             const n = JSON.parse(localStorage.getItem(CMP_KEY + '_note') || 'null');
             if (n && typeof n === 'object') cmpNotes = n;
+            const na = JSON.parse(localStorage.getItem(CMP_KEY + '_noteAuto') || 'null');
+            if (na && typeof na === 'object') cmpNotesAuto = na;
         } catch (e) {}
 
         ['A', 'B'].forEach(side => {
             document.getElementById('cmpFile' + side).addEventListener('change', e => { cmpLoadFiles(side, e.target.files); e.target.value = ''; });
-            document.getElementById('cmpLabel' + side).addEventListener('input', e => { if (cmp[side]) { cmp[side].label = e.target.value.trim(); cmpRenderTable(); } });
+            document.getElementById('cmpLabel' + side).addEventListener('input', e => { if (cmp[side]) { cmp[side].label = e.target.value.trim(); cmpRenderTable(); cmpRenderStat(); } });
             document.getElementById('cmpLabel' + side).addEventListener('change', () => { if (cmp[side]) cmpSaveSlot(side); });
             // 칸 위로 파일을 끌어다 놓기
             const box = document.getElementById('cmpSlot' + side), wrap = document.getElementById('cmpSlots');
@@ -2437,6 +2848,14 @@
         bind('cmpMinDiff', el => cmpOpt.minDiff = el.value, 'input');
         bind('cmpMinRate', el => cmpOpt.minRate = el.value, 'input');
         bind('cmpKw', el => cmpOpt.kw = el.value, 'input');
+        // 통계 분석 화면의 선택 상자
+        const stSet = (k, v) => { cmpOpt.st = Object.assign({}, ST_DEFAULT, cmpOpt.st || {}); cmpOpt.st[k] = v; };
+        bind('stDim', el => stSet('dim', el.value));
+        bind('stLevel', el => stSet('level', el.value));
+        bind('stTop', el => stSet('top', +el.value));
+        bind('stRow', el => stSet('row', el.value));
+        bind('stCol', el => stSet('col', el.value));
+        bind('stVal', el => stSet('val', el.value));
 
         // 증감 사유: 칸을 벗어날 때 저장
         document.getElementById('cmpBody').addEventListener('focusout', e => {
