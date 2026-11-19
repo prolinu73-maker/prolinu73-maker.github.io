@@ -187,6 +187,58 @@
         #pvModal .pv-mtitle { font-weight: 800; font-size: 1rem; flex: 1; white-space: normal; }
         #pvModal .table-responsive { max-height: 68vh; }
 
+        /* ===== 화면 맨 위 탭 (집행실적 / 연도 비교) ===== */
+        .main-tabs { display: flex; gap: 6px; margin: 0 0 16px; border-bottom: 3px solid var(--primary); }
+        .main-tab { padding: 10px 22px; font-size: 0.95rem; font-weight: 800; border: 1px solid var(--border); border-bottom: none; border-radius: 10px 10px 0 0; background: #e2e8f0; color: #475569; cursor: pointer; }
+        .main-tab:hover { background: #cbd5e1; }
+        .main-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        /* ===== 연도 비교(증감 현황) ===== */
+        .cmp-slots { display: flex; gap: 10px; align-items: stretch; margin-bottom: 12px; flex-wrap: wrap; }
+        .cmp-slot { flex: 1; min-width: 320px; border: 2px solid var(--border); border-radius: 10px; padding: 12px; background: #f8fafc; }
+        .cmp-slot.ready { border-color: #0f766e; background: #f0fdfa; }
+        .cmp-st { font-weight: 800; font-size: 0.95rem; margin-bottom: 4px; }
+        .cmp-ss { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 8px; min-height: 1.3em; }
+        .cmp-slot.ready .cmp-ss { color: #0f766e; font-weight: 700; }
+        .cmp-sr { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 0.8rem; }
+        .cmp-sr input[type=text] { width: 150px; padding: 4px 8px; font-size: 0.8rem; height: 30px; }
+        .cmp-swap { align-self: center; }
+        .cmp-ctl input[type=text], .cmp-ctl input[type=number] { padding: 4px 8px; font-size: 0.8rem; height: 30px; width: 110px; }
+        .cmp-ctl #cmpKw { width: 170px; }
+        .cmp-ctl label { color: #0f766e; }
+        .cmp-ctl .pv-ck { color: var(--text-main); }
+        .cmp-preset { background: #fff; border: 1px solid #0f766e; color: #0f766e; }
+        .cmp-preset:hover { background: #0f766e; color: #fff; }
+        .cmp-cards { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+        .cmp-card { flex: 1; min-width: 170px; background: #fff; border: 1px solid var(--border); border-top: 4px solid #0f766e; border-radius: 8px; padding: 10px 12px; }
+        .cmp-card h4 { font-size: 0.76rem; color: var(--text-muted); margin: 0 0 4px; font-weight: 600; }
+        .cmp-card p { font-size: 1.1rem; font-weight: 800; margin: 0; }
+        .cmp-card.wide { flex: 2; min-width: 300px; }
+        .cmp-card.wide p { font-size: 0.9rem; line-height: 1.6; }
+        .cmp-up { color: #1d4ed8; } .cmp-down { color: var(--danger); }
+        #cmpTable th { text-align: center; }
+        #cmpTable tr.cmp-total td { background: #fffbeb; font-weight: 900; border-bottom: 2px solid var(--warning); }
+        #cmpTable tr.cmp-d0 td { background: #eef2f7; font-weight: 800; }
+        #cmpTable tr.cmp-d1 td { background: #f8fafc; font-weight: 700; }
+        #cmpTable tr.cmp-leaf td { background: #fff; font-weight: 400; }
+        #cmpTable td.cmp-c { text-align: center; }
+        #cmpTable td.cmp-note { min-width: 220px; white-space: normal; background: #fffef5; cursor: text; }
+        #cmpTable td.cmp-note:focus { outline: 2px solid var(--accent); background: #fff; }
+        #cmpTable td.cmp-msg { text-align: center; padding: 30px; white-space: normal; font-weight: 400; }
+        .cmp-badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.74rem; font-weight: 700; }
+        .cmp-b-new { background: #dcfce7; color: #166534; } .cmp-b-gone { background: #fee2e2; color: #991b1b; }
+        .cmp-b-inc { background: #dbeafe; color: #1e40af; } .cmp-b-dec { background: #ffedd5; color: #9a3412; } .cmp-b-same { background: #f1f5f9; color: #64748b; }
+        .cmp-slots.over .cmp-slot { border-style: dashed; border-color: var(--accent); background: #dbeafe; }
+        .cmp-info { font-size: 0.8rem; line-height: 1.6; margin: 0 0 12px; padding: 8px 12px; border-radius: 8px; background: #f0fdfa; border: 1px solid #99f6e4; color: #134e4a; white-space: normal; }
+        .cmp-info.warn { background: #fffbeb; border-color: #fcd34d; color: #78350f; }
+        .cmp-info:empty { display: none; }
+        #cmpTable tr.cmp-d2 td { background: #fbfcfe; font-weight: 700; }
+        #cmpTable td.cmp-calc { white-space: normal; min-width: 170px; max-width: 300px; font-size: 0.78rem; color: #334155; }
+        #cmpTable td.cmp-calc.diff { background: #fff7ed; }
+        #cmpTable td.cmp-lab { white-space: normal; min-width: 260px; }
+        .cmp-ctl select { max-width: 330px; }
+        .cmp-help { font-size: 0.78rem; color: var(--text-muted); margin: -4px 0 10px; line-height: 1.5; }
+
         #errorBanner { display: none; background-color: #fef2f2; color: #991b1b; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #f87171; font-weight: bold; }
     </style>
 </head>
@@ -194,7 +246,7 @@
 
 <div class="container">
     <header>
-        <div class="hub-home-wrap"><span data-hub-home></span><script>HUB.mountHomeButton()</script><h1>📋 세출예산 집행 현황</h1></div>
+        <div class="hub-home-wrap"><span data-hub-home></span><script>if (typeof HUB !== 'undefined' && HUB.mountHomeButton) HUB.mountHomeButton()</script><h1>📋 세출예산 집행 현황</h1></div>
         <!-- 우측 상단에 인덱스 페이지로 돌아가는 버튼 및 방문자 수 위젯 추가 -->
         <div class="controls" style="display: flex; align-items: center; gap: 15px;">
             <div id="visitorStats">
@@ -208,6 +260,12 @@
     <div id="errorBanner">⚠️ 보안망 차단 알림: 외부 엑셀 모듈 로드에 실패했습니다. 기능이 제한될 수 있습니다.</div>
 
     <!-- 에듀파인 다운로드 경로 안내 메시지 및 드래그 앤 드롭 영역 -->
+    <!-- 화면 탭: ① 집행실적(기존 기능 전부)  ② 연도 비교(세출각목내역서) -->
+    <div class="main-tabs">
+        <button type="button" id="tabMain" class="main-tab active" onclick="showMainTab('main')">📋 집행실적 (원장 · 통계 · 피벗)</button>
+        <button type="button" id="btnCompare" class="main-tab" onclick="showMainTab('compare')">📑 연도 비교 (세출각목내역서)</button>
+    </div>
+
     <div id="dropZone" class="info-box" onclick="document.getElementById('fileUpload').click();">
         <span>💡 <b>엑셀 파일 업로드 안내:</b> 에듀파인-재무회계-재정분석-집행실적-집행실적저장(직속기관/교육지원청)-'102-B' 선택-파일 다운로드 후 해당 파일을 <b>이곳에 드래그 앤 드롭</b>하거나 클릭하여 불러와주세요.</span>
     </div>
@@ -259,7 +317,92 @@
         </div>
 
         <!-- 3. 데이터 테이블 (상세 & 피벗 통합 패널) -->
-        <div class="panel">
+        <!-- 4. 연도 비교(세출각목내역서 증감 현황) 화면 : 맨 위 '📑 연도 비교' 탭을 누르면 나타남 -->
+        <div id="cmpPanel" class="panel" style="display: none;">
+            <div class="toolbar">
+                <h2>📑 연도별 예산 비교 (세출각목내역서)</h2>
+                <div class="toolbar-divider"></div>
+                <button type="button" class="btn-export btn-toolbar" onclick="cmpExport()">📤 비교표 엑셀 다운로드</button>
+                <button type="button" class="btn-toggle btn-toolbar" onclick="cmpExportData()">📄 정리된 원자료 엑셀 받기</button>
+            </div>
+            <div class="cmp-help">① 두 연도의 <b>세출각목내역서</b> 엑셀을 넣으면 → ② 프로그램이 한 줄에 한 건씩인 표로 자동 정리하고 → ③ 고른 방식대로 증감표를 만듭니다. (두 파일을 한꺼번에 골라도 되고, 아래 칸에 끌어다 놓아도 됩니다. 연도는 자동으로 구분합니다.)</div>
+
+            <input type="file" id="cmpFileA" accept=".xlsx, .xls" multiple style="display: none;">
+            <input type="file" id="cmpFileB" accept=".xlsx, .xls" multiple style="display: none;">
+            <div id="cmpSlots" class="cmp-slots">
+                <div id="cmpSlotA" class="cmp-slot">
+                    <div class="cmp-st">① 기준연도 자료 (A · 올해)</div>
+                    <div id="cmpStatA" class="cmp-ss"></div>
+                    <div class="cmp-sr">
+                        <button type="button" class="btn-import btn-toolbar" onclick="document.getElementById('cmpFileA').click()">📥 엑셀 불러오기</button>
+                        <button type="button" class="btn-clear btn-toolbar" onclick="cmpClear('A')">비우기</button>
+                        표에 쓸 이름 <input type="text" id="cmpLabelA" placeholder="예: 2026년">
+                    </div>
+                </div>
+                <button type="button" class="btn-clear btn-toolbar cmp-swap" onclick="cmpSwap()" title="A와 B를 서로 바꿉니다">⇄ 바꾸기</button>
+                <div id="cmpSlotB" class="cmp-slot">
+                    <div class="cmp-st">② 비교연도 자료 (B · 편성 중인 다음 연도)</div>
+                    <div id="cmpStatB" class="cmp-ss"></div>
+                    <div class="cmp-sr">
+                        <button type="button" class="btn-import btn-toolbar" onclick="document.getElementById('cmpFileB').click()">📥 엑셀 불러오기</button>
+                        <button type="button" class="btn-clear btn-toolbar" onclick="cmpClear('B')">비우기</button>
+                        표에 쓸 이름 <input type="text" id="cmpLabelB" placeholder="예: 2027년">
+                    </div>
+                </div>
+            </div>
+            <div id="cmpInfo" class="cmp-info"></div>
+
+            <div class="pivot-controls cmp-ctl">
+                <label>비교 방식</label>
+                <select id="cmpMode"></select>
+                <span id="cmpCustom" style="display: none;"><select id="cmpG1"></select> ▸ <select id="cmpG2"></select> ▸ <select id="cmpG3"></select></span>
+                <label>표시 단계</label><select id="cmpDepth"></select>
+                <label>단위</label>
+                <select id="cmpUnit"><option value="1">원</option><option value="1000">천원</option><option value="1000000">백만원</option></select>
+                <label class="pv-ck"><input type="checkbox" id="cmpCalc"> 목-세목·산출내역 보기</label>
+            </div>
+            <div class="pivot-controls cmp-ctl">
+                <label>보기</label>
+                <select id="cmpView">
+                    <option value="all">전체</option>
+                    <option value="changed">증감 있는 것만</option>
+                    <option value="inc">증액만</option>
+                    <option value="dec">감액만</option>
+                    <option value="new">신규만</option>
+                    <option value="gone">폐지만</option>
+                    <option value="calc">산출내역이 바뀐 것만</option>
+                </select>
+                <label>증감액</label><input type="number" id="cmpMinDiff" placeholder="이상 (선택 단위)" min="0">
+                <label>증감률</label><input type="number" id="cmpMinRate" placeholder="% 이상" min="0">
+                <label>정렬</label>
+                <select id="cmpSort">
+                    <option value="orig">원본(내역서) 순서</option>
+                    <option value="label">이름순</option>
+                    <option value="absDesc">증감 폭 큰 순</option>
+                    <option value="diffDesc">증액 큰 순</option>
+                    <option value="diffAsc">감액 큰 순</option>
+                    <option value="rateDesc">증감률 높은 순</option>
+                    <option value="bDesc">B 금액 큰 순</option>
+                </select>
+            </div>
+            <div class="pivot-controls cmp-ctl">
+                <label>부서</label><select id="cmpDept"></select>
+                <label>목·세목</label><select id="cmpCat"></select>
+                <input type="text" id="cmpKw" placeholder="🔍 사업명·산출내역 검색">
+                <label class="pv-ck"><input type="checkbox" id="cmpTri"> 감소는 △로 표시</label>
+                <label class="pv-ck"><input type="checkbox" id="cmpLink"> 이름이 바뀐 사업 자동 연결</label>
+            </div>
+
+            <div id="cmpCards" class="cmp-cards"></div>
+            <div class="table-responsive">
+                <table id="cmpTable">
+                    <thead id="cmpHead"></thead>
+                    <tbody id="cmpBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel" id="mainPanel">
             
             <!-- 통합 툴바 -->
             <div class="toolbar">
@@ -366,9 +509,26 @@
 </div>
 
 <script>
+(function () {   // ← 이 페이지 전용 영역 시작 (다른 공통 파일과 이름이 겹쳐도 안전)
+
+
+    // --------------------------------------------------------------------------
+    // 허브 공통 파일(common.js) 대비책
+    //  · 서버(허브)에서는 common.js 의 HUB 를 그대로 씁니다.
+    //  · 내 PC에서 이 파일만 열었을 때처럼 common.js 를 못 불러와도 화면 기능
+    //    (엑셀 불러오기·끌어다 놓기·탭·피벗·비교)은 모두 동작하도록 대신 쓸 것을 마련해 둡니다.
+    //    (이때는 방문자 수 집계와 '허브 홈' 단추만 쉬게 됩니다)
+    // --------------------------------------------------------------------------
+    const HUBX = (typeof HUB !== 'undefined' && HUB) ? HUB : {
+        db: () => null,
+        isAdminDevice: () => true,
+        esc: (v) => String(v === undefined || v === null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]),
+        mountHomeButton: () => {}
+    };
 
     // 파이어베이스 설정 및 방문자 수 업데이트 로직
-    const db = HUB.db();   // Firebase 연결 (설정은 common.js 한곳에)
+    let db = null;
+    try { db = HUBX.db(); } catch (e) { console.log('Firebase 연결을 건너뜁니다.', e); }   // Firebase 연결 (설정은 common.js 한곳에)
 
     // 방문자 카운트 로직 (예산관리 페이지 전용 집계)
     // - 페이지마다 Firestore 문서를 따로 써서 메인 허브·다른 페이지와 숫자가 섞이지 않게 함
@@ -376,6 +536,7 @@
     // - 트랜잭션으로 처리해 여러 명이 동시에 접속해도 숫자가 빠지지 않게 함
     const VISIT_PAGE_ID = "budget";
     async function updateVisitorCount() {
+        if (!db) return;   // common.js·Firebase 가 없으면 방문자 수 집계만 건너뜀
         const statRef = db.collection("stats").doc("visitors_" + VISIT_PAGE_ID);
         const visitKey = "visited_" + VISIT_PAGE_ID;
         const d = new Date();
@@ -384,7 +545,7 @@
         const dd = String(d.getDate()).padStart(2, '0');
         const todayFmt = `${yyyy}-${mm}-${dd}`;
         // 관리자(또는 이 브라우저에서 관리자로 로그인한 적이 있으면)는 접속자 수를 세지 않음
-        const hubAdminSkip = HUB.isAdminDevice();
+        const hubAdminSkip = HUBX.isAdminDevice();
         const isNewVisit = !sessionStorage.getItem(visitKey) && !hubAdminSkip;
 
         try {
@@ -440,9 +601,9 @@
     }
     window.addEventListener('DOMContentLoaded', () => {
         loadXlsx(0);
-        initApp();
-        updateVisitorCount();
-        setupDragAndDrop();
+        try { setupDragAndDrop(); } catch (e) { console.error(e); }
+        try { initApp(); } catch (e) { console.error(e); }
+        updateVisitorCount().catch(() => {});
     });
 
     const DEFAULT_HEADERS = [
@@ -527,6 +688,7 @@
         });
         
         pvInit();   // 피벗 테이블 마우스 동작 연결
+        cmpInit();  // 연도 비교 화면 준비
         renderApp();
     }
 
@@ -543,7 +705,7 @@
     }
 
     const fmt = (num) => parseInt(num || 0).toLocaleString('ko-KR');
-    const E = (v) => HUB.esc(v);   // 엑셀 칸 내용을 글자로만 표시 (코드가 실행되지 않게)
+    const E = (v) => HUBX.esc(v);   // 엑셀 칸 내용을 글자로만 표시 (코드가 실행되지 않게)
     const getRateColor = (rate) => {
         if (rate < 50) return 'var(--danger)';
         if (rate < 70) return 'var(--warning)';
@@ -1646,6 +1808,647 @@
         });
     }
 
+    // ==========================================================================
+    // --- 4. 연도 비교 (세출각목내역서: 올해 ↔ 편성 중인 다음 연도) ---
+    //  [1] 변환 : 에듀파인 '세출각목내역서' 엑셀(인쇄용 양식)을 읽어, 한 줄에 산출내역 한 건씩인
+    //            정리된 표로 바꿉니다.  →  열: 회계연도·부서·분야·부문·정책사업·단위사업·세부사업·
+    //            사업내역1~6·세출목·세출세목·산출내역·예산액
+    //            (쪽 나눔·머리글 반복·합계 줄은 걸러내고, '부서명 : 전체'는 부서별 자료와 겹치므로 뺌)
+    //  [2] 검산 : 정리한 금액의 합이 엑셀에 적힌 '합계'와 같은지 확인해서 알려 줍니다.
+    //  [3] 연결 : 이름이 바뀐 사업은 다음 연도 파일의 '전년도(B)' 금액을 이용해 자동으로 짝지어 줍니다.
+    //  [4] 비교 : 고른 방식(사업별·성질별·부서별·내역서 전체 등)으로 A, B, 증감액, 증감률, 구분을 계산합니다.
+    //  · 집행실적(102-B) 자료와는 완전히 따로 보관·계산하므로 '집행실적' 탭의 기능에는 영향을 주지 않습니다.
+    // ==========================================================================
+    const CMP_KEY = STORAGE_KEY + '_cmp2';
+    const CMP_H = ['회계연도', '부서', '분야', '부문', '정책사업', '단위사업', '세부사업', '사업내역1', '사업내역2', '사업내역3', '사업내역4', '사업내역5', '사업내역6', '세출목', '세출세목', '산출내역', '예산액'];
+    const CMP_AMT = 16, CMP_CALC = 15, CMP_SEMOK = 14, CMP_MOK = 13, CMP_DEPT = 1;
+    // 목·세목 이름표 (없는 코드는 코드만 표시됩니다. 필요하면 여기에 한 줄씩 추가하세요)
+    const CMP_MOK_NAME = { '110': '인건비', '210': '운영비', '220': '여비', '230': '업무추진비', '250': '직무수행경비', '310': '보전금', '320': '민간이전', '420': '건설비', '430': '유형자산' };
+    const CMP_SEMOK_NAME = {
+        '110-03': '기간제근로자보수', '210-01': '일반수용비', '210-02': '공공요금및제세', '210-03': '피복비', '210-05': '특근매식비', '210-06': '운영수당',
+        '210-08': '연료비', '210-09': '시설장비유지비', '210-10': '차량선박비', '210-12': '교육운영비', '210-13': '용역사업비', '210-15': '기타일반수용비',
+        '220-01': '국내여비', '230-01': '기관운영업무추진비', '230-02': '사업추진업무추진비', '230-03': '정원가산업무추진비', '250-02': '직책급업무수행경비',
+        '310-06': '기타보전금', '320-05': '기간제근로자법정부담금', '320-06': '보험료부담금', '420-03': '시설비', '430-01': '취득비'
+    };
+    const CMP_ITEMS = ['사업내역1', '사업내역2', '사업내역3', '사업내역4', '사업내역5', '사업내역6'];
+    // 비교 방식 목록 (g = 분류 순서, calc = 목-세목·산출내역 열을 기본으로 보일지)
+    const CMP_MODES = {
+        full:       { name: '① 각목내역서 전체 (정책사업 ▸ … ▸ 산출내역 한 줄씩)', g: ['정책사업', '단위사업', '세부사업', ...CMP_ITEMS], calc: true },
+        biz:        { name: '② 사업별 (정책사업 ▸ 단위사업 ▸ 세부사업)', g: ['정책사업', '단위사업', '세부사업'] },
+        item:       { name: '③ 세부사업 ▸ 사업내역(1.)별', g: ['세부사업', '사업내역1'] },
+        item2:      { name: '④ 세부사업 ▸ 사업내역(1.) ▸ (가.)별', g: ['세부사업', '사업내역1', '사업내역2'] },
+        nature:     { name: '⑤ 성질별 (세출목 ▸ 세목)', g: ['세출목', '세출세목'] },
+        natureBiz:  { name: '⑥ 세목별 ▸ 세부사업 (어느 사업에서 늘고 줄었나)', g: ['세출세목', '세부사업'] },
+        bizNature:  { name: '⑦ 세부사업 ▸ 세목별', g: ['세부사업', '세출세목'] },
+        dept:       { name: '⑧ 부서별 ▸ 세부사업', g: ['부서', '세부사업'] },
+        deptNature: { name: '⑨ 부서별 ▸ 세출목 ▸ 세목', g: ['부서', '세출목', '세출세목'] },
+        field:      { name: '⑩ 분야 ▸ 부문 ▸ 정책사업', g: ['분야', '부문', '정책사업'] },
+        custom:     { name: '⑪ 직접 고르기 (3단계까지)', g: [] }
+    };
+    const CMP_ST = { new: '신규', gone: '폐지', inc: '증', dec: '감', same: '-' };
+    const CMP_NONE = '(해당 없음)';
+    let isCompareMode = false;
+    let cmp = { A: null, B: null };      // 각 자료: { rows:[[...CMP_H 순서]], label, year, prevYear, unit, depts, total, stated, prevTotal, nodePrev }
+    let cmpOpt = { mode: 'full', g: ['세부사업', '', ''], depth: 0, unit: 1000, calc: true, view: 'all', minDiff: '', minRate: '', sort: 'orig', dept: '', cat: '', kw: '', tri: true, link: true };
+    let cmpNotes = {};                    // 증감 사유(직접 입력) 보관
+    let cmpModel = null;
+    let cmpLinked = { rows: [], links: [] };
+
+    function cmpStore(key, val) {
+        try {
+            if (val === null) localStorage.removeItem(CMP_KEY + key); else localStorage.setItem(CMP_KEY + key, JSON.stringify(val));
+            return true;
+        } catch (e) { return false; }
+    }
+    function cmpSaveSlot(side) {
+        if (!cmpStore('_' + side, cmp[side])) alert('자료가 커서 브라우저에 저장하지 못했습니다.\n지금은 그대로 비교할 수 있지만, 페이지를 닫으면 이 자료는 다시 불러와야 합니다.');
+    }
+    // "1,234" "△1,234" "-1,234" "(1,234)" → 숫자
+    function cmpToNum(v) {
+        let s = String(v === undefined || v === null ? '' : v).trim().replace(/,/g, '');
+        if (s === '') return 0;
+        let neg = false;
+        if (/^[△▲▽▼\-−]/.test(s)) { neg = true; s = s.slice(1); }
+        else if (/^\(.*\)$/.test(s)) { neg = true; s = s.slice(1, -1); }
+        const n = parseFloat(s);
+        return isNaN(n) ? 0 : (neg ? -n : n);
+    }
+
+    // ---- [1] 변환: 세출각목내역서 → 정리된 표 ----
+    function cmpParse(raw) {
+        const S = (v) => String(v === undefined || v === null ? '' : v);
+        // 머리글 줄에서 각 열의 위치를 찾음 (열 위치가 조금 달라도 읽히도록)
+        let col = null, year = '', prevYear = '';
+        for (let i = 0; i < Math.min(raw.length, 40) && !col; i++) {
+            const c = raw[i].map(x => S(x).replace(/\s/g, ''));
+            const f = (name) => c.indexOf(name);
+            if (f('분야') >= 0 && f('사업내역') >= 0 && f('산출내역') >= 0) {
+                const k = f('산출내역');
+                const amts = [];
+                for (let j = k + 1; j < c.length; j++) if (c[j] !== '') amts.push(j);
+                if (amts.length < 1) continue;
+                col = { h: [f('분야'), f('부문'), f('정책사업'), f('단위사업'), f('세부사업')], item: f('사업내역'), code: f('목-세목'), calc: k, a: amts[0], b: amts.length > 1 ? amts[1] : -1 };
+                year = (c[col.a].match(/(\d{4})/) || [])[1] || '';
+                prevYear = col.b >= 0 ? ((c[col.b].match(/(\d{4})/) || [])[1] || '') : '';
+            }
+        }
+        if (!col || col.h.some(x => x < 0) || col.code < 0) throw new Error("'세출각목내역서' 양식이 아닙니다.\n(머리글에 분야·부문·정책사업·단위사업·세부사업·사업내역·목-세목·산출내역이 있어야 합니다)");
+
+        const MARK = /^(\d+\.|[가-힣]\.|\d+\)|[가-힣]\)|\(\d+\)|\([가-힣]\)|[①-⑳])\s*/;
+        const markLevel = (t) => /^\d+\./.test(t) ? 0 : /^[가-힣]\./.test(t) ? 1 : /^\d+\)/.test(t) ? 2 : /^[가-힣]\)/.test(t) ? 3 : /^\(\d+\)/.test(t) ? 4 : /^\([가-힣]\)/.test(t) ? 5 : -1;
+        const sec = {};            // 부서별: { recs, stated, prev }
+        const nodePrev = {};       // '부서>분야>…>사업내역1' → 파일에 적힌 전년도 금액
+        let dept = '전체', unit = 1000, h = [], d = [], pending = null, lastRec = null;
+        const S0 = () => (sec[dept] = sec[dept] || { recs: [], stated: null, prev: 0 });
+        const push = (codeRaw, calc, amt) => {
+            const code = codeRaw.replace(/\s/g, '');
+            const mok = code ? code.split('-')[0] : '';
+            const rec = [year, dept, h[0] || '', h[1] || '', h[2] || '', h[3] || '', h[4] || ''];
+            for (let i = 0; i < 6; i++) rec.push(d[i] || '');
+            rec.push(code ? (mok + (CMP_MOK_NAME[mok] ? ' ' + CMP_MOK_NAME[mok] : '')) : '(목 없음)');
+            rec.push(code ? (code + (CMP_SEMOK_NAME[code] ? ' ' + CMP_SEMOK_NAME[code] : '')) : '(세목 없음)');
+            rec.push(calc);
+            rec.push(Math.round(amt * unit));
+            S0().recs.push(rec);
+            lastRec = rec;
+        };
+        // 목-세목이 없는데 아래 단계도 없는 줄은 그 자체를 한 건으로 넣음 (금액이 빠지지 않도록)
+        const flush = () => { if (pending) { const keep = d; d = pending.d; push('', pending.calc, pending.amt); d = keep; pending = null; } };
+
+        raw.forEach(r => {
+            const c = r.map(x => S(x).trim());
+            if (c.every(x => x === '')) return;
+            const first = c[col.h[0]] || '';
+            if (first.replace(/\s/g, '').startsWith('부서명')) {
+                const nd = (first.split(/[:：]/)[1] || '전체').trim() || '전체';
+                if (nd !== dept) { flush(); dept = nd; h = []; d = []; }
+                const u = c.join(' ').match(/단위\s*[:：]\s*(천원|백만원|원)/);
+                if (u) unit = u[1] === '천원' ? 1000 : u[1] === '백만원' ? 1000000 : 1;
+                return;
+            }
+            if (first.replace(/\s/g, '') === '분야') return;                    // 쪽마다 반복되는 머리글
+            const amtText = c[col.a] || '';
+            if (amtText === '') {                                              // 금액이 없는 줄: 제목·쪽 번호·경로 표시 줄, 또는 산출내역이 이어지는 줄
+                if ((c[col.item] || '') === '' && (c[col.calc] || '') !== '' && lastRec && first === '') lastRec[CMP_CALC] += ' ' + c[col.calc];
+                return;
+            }
+            const amt = cmpToNum(amtText), prev = col.b >= 0 ? cmpToNum(c[col.b]) : 0;
+            if (first.replace(/\s/g, '') === '합계') { flush(); const s = S0(); s.stated = Math.round(amt * unit); s.prev = Math.round(prev * unit); return; }
+            const L = col.h.findIndex(j => (c[j] || '') !== '');
+            if (L >= 0) {                                                       // 분야~세부사업 줄
+                flush();
+                h[L] = c[col.h[L]]; h.length = L + 1; d = [];
+                S0();
+                if (col.b >= 0 && c[col.b] !== '') nodePrev[[dept, ...h].join(PV_SEP)] = Math.round(prev * unit);
+                return;
+            }
+            const itemRaw = S(r[col.item]), item = itemRaw.trim();
+            if (item === '') {                                                  // 사업내역 글자 없이 금액만 있는 줄 → 바로 앞 단계의 추가 한 건
+                if ((c[col.code] || '') !== '') { flush(); push(c[col.code], c[col.calc] || '', amt); }
+                return;
+            }
+            let lvl = markLevel(item);
+            if (lvl < 0) lvl = Math.round((itemRaw.length - itemRaw.replace(/^\s+/, '').length) / 2);
+            lvl = Math.max(0, Math.min(lvl, d.length, 5));
+            if (pending && lvl <= pending.lvl) flush(); else pending = null;      // 아래 단계가 이어지면 묶음 줄이므로 버림
+            d[lvl] = item.replace(MARK, '').trim() || item;
+            d.length = lvl + 1;
+            if (lvl === 0 && col.b >= 0 && c[col.b] !== '') nodePrev[[dept, ...h, d[0]].join(PV_SEP)] = Math.round(prev * unit);
+            if ((c[col.code] || '') !== '') push(c[col.code], c[col.calc] || '', amt);
+            else pending = { lvl: lvl, d: d.slice(), calc: c[col.calc] || '', amt: amt };
+        });
+        flush();
+
+        // '전체'는 부서별 자료를 합친 것이므로, 부서별 자료가 있으면 '전체'는 쓰지 않음
+        const names = Object.keys(sec).filter(k => sec[k].recs.length);
+        const depts = names.filter(k => k !== '전체');
+        const use = depts.length ? depts : names;
+        if (!use.length) throw new Error('읽을 수 있는 예산 내역이 없습니다.');
+        const rows = [];
+        let stated = 0, prevTotal = 0, hasStated = true;
+        use.forEach(k => { sec[k].recs.forEach(x => rows.push(x)); if (sec[k].stated === null) hasStated = false; else { stated += sec[k].stated; prevTotal += sec[k].prev; } });
+        const keep = {};
+        Object.keys(nodePrev).forEach(k => { if (use.includes(k.split(PV_SEP)[0])) keep[k] = nodePrev[k]; });
+        const total = rows.reduce((a, x) => a + x[CMP_AMT], 0);
+        const all = (depts.length && sec['전체'] && sec['전체'].stated !== null) ? sec['전체'].stated : null;
+        return { rows: rows, label: year ? year + '년' : '', year: year, prevYear: prevYear, unit: unit, depts: use, total: total,
+                 stated: hasStated ? stated : null, allStated: all, prevTotal: prevTotal, nodePrev: keep };
+    }
+    function cmpReadFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onerror = () => reject(new Error('파일을 읽을 수 없습니다.'));
+            reader.onload = (evt) => {
+                try {
+                    const wb = XLSX.read(new Uint8Array(evt.target.result), { type: 'array' });
+                    let err = null;
+                    for (const n of wb.SheetNames) {
+                        try { return resolve(cmpParse(XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: '', raw: false }))); } catch (x) { err = x; }
+                    }
+                    reject(err || new Error('시트가 없습니다.'));
+                } catch (x) { reject(x); }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    }
+    // 파일 1개: 누른 칸에 넣음.  2개: 연도가 앞선 것을 A, 뒤인 것을 B에 자동 배치
+    function cmpLoadFiles(side, fileList) {
+        if (typeof XLSX === 'undefined') return alert("엑셀 모듈이 없습니다. 인터넷 연결 및 보안망을 확인해주세요.");
+        const files = Array.from(fileList).slice(0, 2);
+        if (!files.length) return;
+        Promise.all(files.map(f => cmpReadFile(f).catch(e => { throw new Error(`[${f.name}]\n${e.message}`); }))).then(slots => {
+            if (slots.length === 2) {
+                slots.sort((x, y) => String(x.year).localeCompare(String(y.year)));
+                cmp.A = slots[0]; cmp.B = slots[1];
+            } else {
+                cmp[side] = slots[0];
+                if (cmp.A && cmp.B && cmp.A.year && cmp.B.year && cmp.A.year > cmp.B.year) { const t = cmp.A; cmp.A = cmp.B; cmp.B = t; }
+            }
+            cmpSaveSlot('A'); cmpSaveSlot('B');
+            cmpRefresh();
+        }).catch(e => alert('엑셀을 읽지 못했습니다.\n' + e.message));
+    }
+    window.cmpClear = function(side) {
+        if (!cmp[side]) return;
+        if (!confirm((side === 'A' ? '기준연도(A)' : '비교연도(B)') + ' 자료를 비울까요?')) return;
+        cmp[side] = null;
+        cmpSaveSlot(side);
+        cmpRefresh();
+    };
+    window.cmpSwap = function() {
+        const t = cmp.A; cmp.A = cmp.B; cmp.B = t;
+        cmpSaveSlot('A'); cmpSaveSlot('B');
+        cmpRefresh();
+    };
+
+    // ---- [3] 연결: 이름이 바뀐 사업 자동으로 짝짓기 ----
+    //  다음 연도 파일에는 사업(분야~사업내역1)마다 '전년도(B)' 금액이 적혀 있습니다.
+    //  같은 상위 사업 아래에서, B 파일에만 있는 이름의 '전년도 금액'과 A 파일에만 있는 이름의 금액이
+    //  딱 하나만 일치하면 같은 사업으로 보고, A 쪽 이름을 새 이름으로 바꿔서 비교합니다.
+    function cmpBuildLink() {
+        cmpLinked = { rows: cmp.A ? cmp.A.rows : [], links: [] };
+        if (!cmp.A || !cmp.B || !cmpOpt.link) return;
+        const rows = cmp.A.rows.map(r => r.slice()), links = [], prevOf = cmp.B.nodePrev || {};
+        const keyOf = (r, upto) => { let k = r[CMP_DEPT]; for (let i = 2; i <= upto; i++) k += PV_SEP + r[i]; return k; };
+        for (let L = 2; L <= 7; L++) {
+            const aAmt = new Map(), bNames = new Map();
+            rows.forEach(r => { if (r[L] === '') return; const pk = keyOf(r, L - 1); let m = aAmt.get(pk); if (!m) { m = new Map(); aAmt.set(pk, m); } m.set(r[L], (m.get(r[L]) || 0) + r[CMP_AMT]); });
+            cmp.B.rows.forEach(r => { if (r[L] === '') return; const pk = keyOf(r, L - 1); let s = bNames.get(pk); if (!s) { s = new Set(); bNames.set(pk, s); } s.add(r[L]); });
+            bNames.forEach((names, pk) => {
+                const am = aAmt.get(pk);
+                if (!am) return;
+                const freeA = [...am.keys()].filter(n => !names.has(n));
+                if (!freeA.length) return;
+                const used = new Set();
+                names.forEach(bn => {
+                    if (am.has(bn)) return;
+                    const prior = prevOf[pk + PV_SEP + bn];
+                    if (!prior) return;
+                    const cand = freeA.filter(n => !used.has(n) && am.get(n) === prior);
+                    if (cand.length !== 1) return;
+                    used.add(cand[0]);
+                    links.push({ level: CMP_H[L], from: cand[0], to: bn });
+                    rows.forEach(r => { if (r[L] === cand[0] && keyOf(r, L - 1) === pk) r[L] = bn; });
+                });
+            });
+        }
+        // 사업내역2(가.) 아래 단계는 엑셀에 전년도 금액이 없으므로 '추정'으로 짝지음:
+        //  같은 상위 항목 아래에서, 한쪽에만 있는 이름끼리 '이름이 절반 이상 비슷하고'
+        //  ① 하위 항목 구성도 절반 이상 같거나 ② (하위 항목이 없을 때) 목-세목이 같으면 이름만 바뀐 것으로 봄
+        const bigram = (t) => { const o = new Set(); for (let i = 0; i < t.length - 1; i++) o.add(t.substr(i, 2)); return o; };
+        const overlap = (x, y, dice) => { if (!x.size || !y.size) return 0; let n = 0; x.forEach(v => { if (y.has(v)) n++; }); return dice ? 2 * n / (x.size + y.size) : n / (x.size + y.size - n); };
+        for (let L = 8; L <= 12; L++) {
+            const collect = (src) => {
+                const m = new Map();
+                src.forEach(r => {
+                    if (r[L] === '') return;
+                    const pk = keyOf(r, L - 1);
+                    let g = m.get(pk); if (!g) { g = new Map(); m.set(pk, g); }
+                    let o = g.get(r[L]); if (!o) { o = { kids: new Set(), codes: new Set() }; g.set(r[L], o); }
+                    if (L < 12 && r[L + 1] !== '') o.kids.add(r[L + 1]); else o.codes.add(r[CMP_SEMOK]);
+                });
+                return m;
+            };
+            const ma = collect(rows), mb = collect(cmp.B.rows);
+            mb.forEach((gb, pk) => {
+                const ga = ma.get(pk);
+                if (!ga) return;
+                const freeA = [...ga.keys()].filter(n => !gb.has(n)), freeB = [...gb.keys()].filter(n => !ga.has(n));
+                if (!freeA.length || !freeB.length) return;
+                const pairs = [];
+                freeA.forEach(an => freeB.forEach(bn => {
+                    const x = ga.get(an), y = gb.get(bn);
+                    const nameSim = overlap(bigram(an), bigram(bn), true);          // 이름이 얼마나 비슷한지 (0~1)
+                    if (nameSim < 0.5) return;                                       // 이름이 절반 이상 비슷해야 함 (다른 사업을 잘못 잇지 않도록)
+                    const sameShape = (x.kids.size && y.kids.size) ? overlap(x.kids, y.kids, false) >= 0.5
+                                    : (!x.kids.size && !y.kids.size && x.codes.size === 1 && overlap(x.codes, y.codes, false) === 1);
+                    if (sameShape) pairs.push({ an: an, bn: bn, score: nameSim });
+                }));
+                pairs.sort((p, q) => q.score - p.score);
+                const usedA = new Set(), usedB = new Set();
+                pairs.forEach(pr => {
+                    if (usedA.has(pr.an) || usedB.has(pr.bn)) return;
+                    usedA.add(pr.an); usedB.add(pr.bn);
+                    links.push({ level: CMP_H[L], from: pr.an, to: pr.bn, guess: true });
+                    rows.forEach(r => { if (r[L] === pr.an && keyOf(r, L - 1) === pk) r[L] = pr.bn; });
+                });
+            });
+        }
+        cmpLinked = { rows: rows, links: links };
+    }
+
+    // ---- [4] 비교 계산 ----
+    function cmpFields() {
+        let g = cmpOpt.mode === 'custom' ? cmpOpt.g.filter(Boolean) : (CMP_MODES[cmpOpt.mode] || CMP_MODES.full).g.slice();
+        const dep = parseInt(cmpOpt.depth, 10) || 0;
+        if (dep > 0 && dep < g.length) g = g.slice(0, dep);
+        return g;
+    }
+    const cmpStatus = (a, b) => (a === 0 && b === 0) ? 'same' : a === 0 ? 'new' : b === 0 ? 'gone' : b > a ? 'inc' : b < a ? 'dec' : 'same';
+    const cmpRate = (a, b) => a === 0 ? (b === 0 ? 0 : null) : (b - a) / Math.abs(a) * 100;     // null = 순증(전년도 0)
+    const cmpDisp = (x) => Math.round(x / (+cmpOpt.unit || 1));                                  // 고른 단위로 반올림
+
+    function cmpCompute() {
+        const g = cmpFields(), gi = g.map(f => CMP_H.indexOf(f)), isItem = g.map(f => CMP_ITEMS.includes(f));
+        const kw = (cmpOpt.kw || '').trim().toLowerCase();
+        const leaves = new Map();
+        const add = (rows, side) => rows.forEach(r => {
+            if (cmpOpt.dept && r[CMP_DEPT] !== cmpOpt.dept) return;
+            if (cmpOpt.cat && r[CMP_MOK] !== cmpOpt.cat && r[CMP_SEMOK] !== cmpOpt.cat) return;
+            // 사업내역은 깊이가 줄마다 다르므로, 뒤쪽의 빈 단계는 잘라냄
+            let path = gi.map(i => r[i]);
+            while (path.length && path[path.length - 1] === '' && isItem[path.length - 1]) path.pop();
+            path = path.map(t => t === '' ? CMP_NONE : t);
+            if (!path.length) path = [CMP_NONE];
+            const k = path.join(PV_SEP);
+            let o = leaves.get(k);
+            if (!o) { o = { path: path, a: 0, b: 0, recA: [], recB: [], codes: new Set() }; leaves.set(k, o); }
+            o[side === 'A' ? 'a' : 'b'] += r[CMP_AMT];
+            o[side === 'A' ? 'recA' : 'recB'].push(r[CMP_CALC]);
+            o.codes.add(r[CMP_SEMOK]);
+        });
+        add(cmp.B.rows, 'B');            // 다음 연도 내역서 순서를 기본 순서로
+        add(cmpLinked.rows, 'A');
+        let list = [];
+        leaves.forEach(o => {
+            o.calcA = o.recA.length <= 2 ? o.recA.join(' / ') : `(${o.recA.length}건)`;
+            o.calcB = o.recB.length <= 2 ? o.recB.join(' / ') : `(${o.recB.length}건)`;
+            o.code = o.codes.size <= 2 ? [...o.codes].join(', ') : '';
+            o.st = cmpStatus(o.a, o.b);
+            o.calcDiff = o.recA.length > 0 && o.recB.length > 0 && o.recA.slice().sort().join('|') !== o.recB.slice().sort().join('|');
+            if (kw && !(o.path.join(' ') + ' ' + o.recA.join(' ') + ' ' + o.recB.join(' ') + ' ' + o.code).toLowerCase().includes(kw)) return;
+            list.push(o);
+        });
+        const counts = { new: 0, gone: 0, inc: 0, dec: 0, same: 0, calc: 0 };
+        list.forEach(l => { counts[l.st]++; if (l.calcDiff) counts.calc++; });
+        const minDiff = parseFloat(cmpOpt.minDiff), minRate = parseFloat(cmpOpt.minRate), v = cmpOpt.view;
+        list = list.filter(l => {
+            if (v === 'changed' && l.st === 'same') return false;
+            if ((v === 'inc' || v === 'dec' || v === 'new' || v === 'gone') && l.st !== v) return false;
+            if (v === 'calc' && !l.calcDiff) return false;
+            if (!isNaN(minDiff) && Math.abs(cmpDisp(l.b) - cmpDisp(l.a)) < minDiff) return false;
+            if (!isNaN(minRate)) { const r = cmpRate(l.a, l.b); if (r !== null && Math.abs(r) < minRate) return false; }
+            return true;
+        });
+        // 단계별로 묶어 합계 내기 (화면에 남은 항목만 더함)
+        const root = { ch: new Map(), a: 0, b: 0 };
+        list.forEach(l => {
+            let n = root;
+            n.a += l.a; n.b += l.b;
+            l.path.forEach(lab => {
+                if (!n.ch.has(lab)) n.ch.set(lab, { ch: new Map(), a: 0, b: 0, label: lab, own: null });
+                n = n.ch.get(lab);
+                n.a += l.a; n.b += l.b;
+            });
+            n.own = l;
+        });
+        const sorter = {
+            label:    (x, y) => x.label.localeCompare(y.label, 'ko', { numeric: true }),
+            absDesc:  (x, y) => Math.abs(y.b - y.a) - Math.abs(x.b - x.a),
+            diffDesc: (x, y) => (y.b - y.a) - (x.b - x.a),
+            diffAsc:  (x, y) => (x.b - x.a) - (y.b - y.a),
+            rateDesc: (x, y) => { const rx = cmpRate(x.a, x.b), ry = cmpRate(y.a, y.b); return (ry === null ? Infinity : ry) - (rx === null ? Infinity : rx); },
+            bDesc:    (x, y) => y.b - x.b
+        }[cmpOpt.sort] || null;
+        const rows = [];
+        (function walk(node, path) {
+            const kids = [...node.ch.values()];
+            if (sorter) kids.sort(sorter);
+            kids.forEach(k => {
+                const p = [...path, k.label], leaf = k.ch.size === 0, o = k.own;
+                rows.push({ depth: p.length - 1, path: p, a: k.a, b: k.b, leaf: leaf, st: cmpStatus(k.a, k.b), field: g[p.length - 1],
+                            code: leaf && o ? o.code : '', calcA: leaf && o ? o.calcA : '', calcB: leaf && o ? o.calcB : '', calcDiff: !!(leaf && o && o.calcDiff) });
+                walk(k, p);
+            });
+        })(root, []);
+        return { g: g, rows: rows, total: { a: root.a, b: root.b }, counts: counts, leafCount: list.length };
+    }
+
+    // ---- 화면 그리기 ----
+    const cmpNum = (x) => (x < 0 && cmpOpt.tri) ? '△' + Math.abs(x).toLocaleString('ko-KR') : x.toLocaleString('ko-KR');
+    function cmpRateText(a, b) {
+        const r = cmpRate(a, b);
+        if (r === null) return '순증';
+        const t = Math.abs(r).toFixed(1);
+        return r < 0 ? (cmpOpt.tri ? '△' : '-') + t : t;
+    }
+    const cmpNoteKey = (path) => cmpFields().join('>') + '|' + path.join(PV_SEP);
+    const cmpUnitName = () => ({ 1: '원', 1000: '천원', 1000000: '백만원' })[+cmpOpt.unit] || '원';
+    function cmpColNames() {
+        const la = (cmp.A && cmp.A.label) || '기준연도', lb = (cmp.B && cmp.B.label) || '비교연도';
+        return { a: `${la} 예산액(A)`, b: `${lb} 예산액(B)`, la: la, lb: lb };
+    }
+    const cmpWon = (x) => Math.round(x / 1000).toLocaleString('ko-KR') + '천원';
+
+    function cmpRefresh() {
+        if (!CMP_MODES[cmpOpt.mode]) cmpOpt.mode = 'full';
+        if (![1, 1000, 1000000].includes(+cmpOpt.unit)) cmpOpt.unit = 1000;
+        if (!Array.isArray(cmpOpt.g)) cmpOpt.g = ['세부사업', '', ''];
+        cmpBuildLink();
+
+        // 자료 상태 + 검산 결과
+        ['A', 'B'].forEach(side => {
+            const s = cmp[side], box = document.getElementById('cmpSlot' + side);
+            box.classList.toggle('ready', !!s);
+            let t = side === 'A' ? '아직 없음 — 올해(예: 2026년) 세출각목내역서 엑셀을 넣어 주세요.' : '아직 없음 — 편성 중인 연도(예: 2027년) 세출각목내역서 엑셀을 넣어 주세요.';
+            if (s) {
+                const ok = s.stated === null ? '' : (s.stated === s.total ? ' · 엑셀의 합계와 일치 ✔' : ` · ⚠ 엑셀의 합계(${cmpWon(s.stated)})와 ${cmpWon(Math.abs(s.stated - s.total))} 차이`);
+                t = `✔ ${s.year}년도 · ${s.depts.join(', ')} · 산출내역 ${s.rows.length.toLocaleString('ko-KR')}줄 · 합계 ${cmpWon(s.total)}${ok}`;
+            }
+            document.getElementById('cmpStat' + side).innerText = t;
+            const inp = document.getElementById('cmpLabel' + side);
+            if (document.activeElement !== inp) inp.value = s ? s.label : '';
+        });
+        const info = document.getElementById('cmpInfo');
+        let msgs = [], warn = false;
+        if (cmp.A && cmp.B) {
+            if (cmp.B.prevYear && cmp.A.year && cmp.B.prevYear !== cmp.A.year) { warn = true; msgs.push(`⚠ B 자료의 전년도는 ${cmp.B.prevYear}년인데 A 자료는 ${cmp.A.year}년입니다. 파일을 맞게 넣었는지 확인해 주세요.`); }
+            else if (cmp.B.prevTotal === cmp.A.total) msgs.push(`✔ ${cmp.B.year}년 파일에 적힌 전년도 합계(${cmpWon(cmp.B.prevTotal)})와 ${cmp.A.year}년 파일 합계가 일치합니다.`);
+            else { warn = true; msgs.push(`⚠ ${cmp.B.year}년 파일에 적힌 전년도 합계(${cmpWon(cmp.B.prevTotal)})와 ${cmp.A.year}년 파일 합계(${cmpWon(cmp.A.total)})가 다릅니다. (추경 반영 여부 등 기준 시점이 다를 수 있습니다)`); }
+            const sure = cmpLinked.links.filter(l => !l.guess), guess = cmpLinked.links.filter(l => l.guess);
+            const show = (arr) => arr.slice(0, 10).map(l => `[${l.level}] ${l.from} → ${l.to}`).join(',  ') + (arr.length > 10 ? ` … 외 ${arr.length - 10}건` : '');
+            if (sure.length) msgs.push(`🔗 이름이 바뀐 사업 ${sure.length}건을 연결했습니다 (엑셀에 적힌 전년도 금액으로 확인): ` + show(sure));
+            if (guess.length) msgs.push(`🔗 이름만 바뀐 것으로 보이는 하위 항목 ${guess.length}건을 연결했습니다 (추정 — 이름이 비슷하고 하위 구성이나 세목이 같은 경우): ` + show(guess));
+            if (cmpLinked.links.length) msgs.push(`   ※ 연결이 맞지 않으면 아래 '이름이 바뀐 사업 자동 연결' 체크를 끄세요. 끄면 이름이 다른 항목은 '폐지 + 신규'로 따로 나옵니다.`);
+        }
+        info.className = 'cmp-info' + (warn ? ' warn' : '');
+        info.innerText = msgs.join('\n');
+
+        // 콤보 채우기
+        const fill = (id, opts, val) => { document.getElementById(id).innerHTML = opts.map(([v, t]) => `<option value="${E(v)}"${String(v) === String(val) ? ' selected' : ''}>${E(t)}</option>`).join(''); };
+        fill('cmpMode', Object.keys(CMP_MODES).map(k => [k, CMP_MODES[k].name]), cmpOpt.mode);
+        document.getElementById('cmpCustom').style.display = cmpOpt.mode === 'custom' ? 'inline' : 'none';
+        const cf = CMP_H.slice(1, 15);
+        fill('cmpG1', cf.map(f => [f, f]), cmpOpt.g[0]);
+        fill('cmpG2', [['', '(없음)'], ...cf.map(f => [f, f])], cmpOpt.g[1]);
+        fill('cmpG3', [['', '(없음)'], ...cf.map(f => [f, f])], cmpOpt.g[2]);
+        const full = cmpOpt.mode === 'custom' ? cmpOpt.g.filter(Boolean) : CMP_MODES[cmpOpt.mode].g;
+        if ((parseInt(cmpOpt.depth, 10) || 0) >= full.length) cmpOpt.depth = 0;
+        fill('cmpDepth', [[0, '끝까지'], ...full.slice(0, -1).map((f, i) => [i + 1, `${f}까지`])], cmpOpt.depth);
+        const both = [...(cmp.A ? cmp.A.rows : []), ...(cmp.B ? cmp.B.rows : [])];
+        const depts = [...new Set(both.map(r => r[CMP_DEPT]))];
+        if (cmpOpt.dept && !depts.includes(cmpOpt.dept)) cmpOpt.dept = '';
+        fill('cmpDept', [['', '전체 부서'], ...depts.map(x => [x, x])], cmpOpt.dept);
+        const moks = [...new Set(both.map(r => r[CMP_MOK]))].sort();
+        const cats = [['', '전체']];
+        moks.forEach(m => {
+            cats.push([m, `■ ${m} (목 전체)`]);
+            [...new Set(both.filter(r => r[CMP_MOK] === m).map(r => r[CMP_SEMOK]))].sort().forEach(s => cats.push([s, `　　${s}`]));
+        });
+        if (cmpOpt.cat && !cats.some(c => c[0] === cmpOpt.cat)) cmpOpt.cat = '';
+        fill('cmpCat', cats, cmpOpt.cat);
+        document.getElementById('cmpUnit').value = String(cmpOpt.unit);
+        document.getElementById('cmpView').value = cmpOpt.view;
+        document.getElementById('cmpSort').value = cmpOpt.sort;
+        document.getElementById('cmpCalc').checked = !!cmpOpt.calc;
+        document.getElementById('cmpTri').checked = !!cmpOpt.tri;
+        document.getElementById('cmpLink').checked = !!cmpOpt.link;
+        const setIf = (id, v) => { const el = document.getElementById(id); if (document.activeElement !== el) el.value = v; };
+        setIf('cmpMinDiff', cmpOpt.minDiff); setIf('cmpMinRate', cmpOpt.minRate); setIf('cmpKw', cmpOpt.kw);
+        cmpStore('_opt', cmpOpt);
+        cmpRenderTable();
+    }
+
+    function cmpRenderTable() {
+        const head = document.getElementById('cmpHead'), body = document.getElementById('cmpBody'), cards = document.getElementById('cmpCards');
+        const msg = (t) => { head.innerHTML = ''; cards.innerHTML = ''; body.innerHTML = `<tr><td class="cmp-msg">${t}</td></tr>`; cmpModel = null; };
+        if (!cmp.A && !cmp.B) return msg('위 ①, ② 칸에 <b>두 연도의 세출각목내역서 엑셀</b>을 넣어 주세요.<br>[엑셀 불러오기]에서 두 파일을 한꺼번에 골라도 되고, 칸 위로 끌어다 놓아도 됩니다.');
+        if (!cmp.A) return msg('<b>① 기준연도(올해)</b> 세출각목내역서를 넣어 주세요.');
+        if (!cmp.B) return msg('<b>② 비교연도(편성 중인 다음 연도)</b> 세출각목내역서를 넣어 주세요.');
+        if (!cmpFields().length) return msg('분류 기준을 하나 이상 골라 주세요.');
+
+        const m = cmpCompute();
+        const gf = m.g, cn = cmpColNames(), t = m.total, wide = gf.length > 3, calc = !!cmpOpt.calc;
+        const diffCls = (d) => d > 0 ? 'cmp-up' : d < 0 ? 'cmp-down' : '';
+        const td = cmpDisp(t.b) - cmpDisp(t.a), c = m.counts;
+        cards.innerHTML = `
+            <div class="cmp-card"><h4>${E(cn.a)}</h4><p>${cmpNum(cmpDisp(t.a))}</p></div>
+            <div class="cmp-card"><h4>${E(cn.b)}</h4><p>${cmpNum(cmpDisp(t.b))}</p></div>
+            <div class="cmp-card"><h4>증감액 (B−A) · 단위: ${cmpUnitName()}</h4><p class="${diffCls(td)}">${cmpNum(td)}</p></div>
+            <div class="cmp-card"><h4>증감률 (%)</h4><p class="${diffCls(td)}">${cmpRateText(t.a, t.b)}</p></div>
+            <div class="cmp-card wide"><h4>가장 아래 단계 기준 건수 ('보기'로 거르기 전)</h4>
+                <p><span class="cmp-badge cmp-b-new">신규 ${c.new}</span> <span class="cmp-badge cmp-b-gone">폐지 ${c.gone}</span>
+                <span class="cmp-badge cmp-b-inc">증액 ${c.inc}</span> <span class="cmp-badge cmp-b-dec">감액 ${c.dec}</span> <span class="cmp-badge cmp-b-same">동일 ${c.same}</span>
+                <span class="cmp-badge cmp-b-dec">산출내역 변경 ${c.calc}</span></p></div>`;
+
+        const nLab = wide ? 1 : gf.length, nCol = nLab + 6 + (calc ? 3 : 0);
+        head.innerHTML = '<tr>' + (wide ? `<th>구분 (${E(gf[0])} ▸ … ▸ 산출 항목)</th>` : gf.map(f => `<th>${E(f)}</th>`).join('')) +
+            `<th>${E(cn.a)}</th><th>${E(cn.b)}</th><th>증감액 (B−A)</th><th>증감률 (%)</th><th>구분</th>` +
+            (calc ? `<th>목-세목</th><th>${E(cn.la)} 산출내역</th><th>${E(cn.lb)} 산출내역</th>` : '') + '<th>증감 사유 (직접 입력)</th></tr>';
+
+        const cell = (r, isTotal, i) => {
+            const d = cmpDisp(r.b) - cmpDisp(r.a);
+            const nk = isTotal ? cmpNoteKey(['(합계)']) : cmpNoteKey(r.path);
+            return `<td class="number">${cmpNum(cmpDisp(r.a))}</td><td class="number">${cmpNum(cmpDisp(r.b))}</td>
+                    <td class="number ${diffCls(d)}">${cmpNum(d)}</td><td class="number ${diffCls(d)}">${cmpRateText(r.a, r.b)}</td>
+                    <td class="cmp-c">${isTotal ? '' : `<span class="cmp-badge cmp-b-${r.st}">${CMP_ST[r.st]}</span>`}</td>` +
+                    (calc ? `<td class="cmp-c">${E(isTotal ? '' : r.code)}</td><td class="cmp-calc${r.calcDiff ? ' diff' : ''}">${E(isTotal ? '' : r.calcA)}</td><td class="cmp-calc${r.calcDiff ? ' diff' : ''}">${E(isTotal ? '' : r.calcB)}</td>` : '') +
+                    `<td class="cmp-note" contenteditable="true" data-i="${i}">${E(cmpNotes[nk] || '')}</td>`;
+        };
+        const LIMIT = 3000;
+        let h = `<tr class="cmp-total"><td colspan="${nLab}" class="cmp-c">합   계</td>${cell({ a: t.a, b: t.b }, true, -1)}</tr>`;
+        m.rows.slice(0, LIMIT).forEach((r, i) => {
+            const cls = r.leaf ? 'cmp-leaf' : ('cmp-d' + Math.min(r.depth, 3));
+            const labs = wide
+                ? `<td class="cmp-lab" style="padding-left:${10 + r.depth * 18}px" title="${E(r.field)}">${E(r.path[r.depth])}</td>`
+                : gf.map((f, l) => `<td>${l === r.depth ? E(r.path[l]) : ''}</td>`).join('');
+            h += `<tr class="${cls}">` + labs + cell(r, false, i) + '</tr>';
+        });
+        if (!m.rows.length) h += `<tr><td class="cmp-msg" colspan="${nCol}">조건에 맞는 항목이 없습니다. '보기'나 증감액·증감률·부서·세목 조건을 바꿔 보세요.</td></tr>`;
+        if (m.rows.length > LIMIT) h += `<tr><td class="cmp-msg" colspan="${nCol}">… 화면에는 ${LIMIT.toLocaleString('ko-KR')}줄까지만 보입니다. 전체는 엑셀로 내려받아 확인하세요.</td></tr>`;
+        body.innerHTML = h;
+        cmpModel = m;
+    }
+
+    // ---- 비교표를 엑셀로 ----
+    function cmpFileStamp() { const d = new Date(), p2 = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}`; }
+    window.cmpExport = function() {
+        if (typeof XLSX === 'undefined') return alert("엑셀 다운로드 모듈을 사용할 수 없습니다.");
+        if (!cmpModel) return alert('내보낼 비교표가 없습니다. 먼저 ①, ② 자료를 넣어 주세요.');
+        const m = cmpModel, gf = m.g, cn = cmpColNames(), wide = gf.length > 3, calc = !!cmpOpt.calc;
+        const labCols = wide ? ['단계', '구분'] : gf, G = labCols.length;
+        const viewName = { all: '전체', changed: '증감 있는 것만', inc: '증액만', dec: '감액만', new: '신규만', gone: '폐지만', calc: '산출내역이 바뀐 것만' }[cmpOpt.view];
+        const conds = [`분류: ${gf.join(' ▸ ')}`, `보기: ${viewName}`];
+        if (cmpOpt.dept) conds.push(`부서: ${cmpOpt.dept}`);
+        if (cmpOpt.cat) conds.push(`목·세목: ${cmpOpt.cat}`);
+        if (cmpOpt.minDiff !== '') conds.push(`증감액 ${cmpOpt.minDiff}${cmpUnitName()} 이상`);
+        if (cmpOpt.minRate !== '') conds.push(`증감률 ${cmpOpt.minRate}% 이상`);
+        if (cmpOpt.kw) conds.push(`검색: ${cmpOpt.kw}`);
+        const aoa = [[`${cn.la} 대비 ${cn.lb} 세출예산 증감 현황`], [conds.join('  |  ') + `   (단위: ${cmpUnitName()}, %)`], [],
+                     [...labCols, cn.a, cn.b, '증감액(B-A)', '증감률(%)', '구분', ...(calc ? ['목-세목', `${cn.la} 산출내역`, `${cn.lb} 산출내역`] : []), '증감 사유']];
+        const line = (labels, r, isTotal) => {
+            const a = cmpDisp(r.a), b = cmpDisp(r.b), rate = cmpRate(r.a, r.b);
+            return [...labels, a, b, b - a, rate === null ? '순증' : Math.round(rate * 10) / 10, isTotal ? '' : CMP_ST[r.st],
+                    ...(calc ? (isTotal ? ['', '', ''] : [r.code, r.calcA, r.calcB]) : []),
+                    cmpNotes[isTotal ? cmpNoteKey(['(합계)']) : cmpNoteKey(r.path)] || ''];
+        };
+        const totalLabels = labCols.map(() => ''); totalLabels[G - 1 >= 1 && wide ? 1 : 0] = '합   계';
+        aoa.push(line(totalLabels, m.total, true));
+        m.rows.forEach(r => aoa.push(line(wide ? [r.field, '  '.repeat(r.depth) + r.path[r.depth]] : gf.map((f, l) => l === r.depth ? r.path[l] : ''), r, false)));
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        const zNum = cmpOpt.tri ? '#,##0;"△"#,##0' : '#,##0', zRate = cmpOpt.tri ? '0.0;"△"0.0' : '0.0';
+        for (let r = 4; r < aoa.length; r++) {
+            for (let k = 0; k < 4; k++) {
+                const c = ws[XLSX.utils.encode_cell({ r: r, c: G + k })];
+                if (c && c.t === 'n') c.z = k === 3 ? zRate : zNum;
+            }
+        }
+        const last = aoa[3].length - 1;
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: last } }, { s: { r: 1, c: 0 }, e: { r: 1, c: last } }];
+        ws['!cols'] = [...(wide ? [{ wch: 11 }, { wch: 46 }] : gf.map(() => ({ wch: 28 }))), { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 10 }, { wch: 7 },
+                       ...(calc ? [{ wch: 24 }, { wch: 34 }, { wch: 34 }] : []), { wch: 36 }];
+        ws['!rows'] = [{ hpt: 28 }];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, '증감현황');
+        XLSX.writeFile(wb, `예산증감현황_${cn.la}_${cn.lb}_${cmpFileStamp()}.xlsx`.replace(/[\\/:*?"<>|]/g, ''));
+    };
+    // 정리된 원자료(한 줄에 산출내역 한 건)를 엑셀로: 엑셀 피벗 테이블·필터에 바로 쓸 수 있는 모양
+    window.cmpExportData = function() {
+        if (typeof XLSX === 'undefined') return alert("엑셀 다운로드 모듈을 사용할 수 없습니다.");
+        if (!cmp.A && !cmp.B) return alert('먼저 세출각목내역서 엑셀을 넣어 주세요.');
+        const head = [...CMP_H.slice(0, CMP_AMT), '예산액(천원)'];
+        const conv = (rows) => rows.map(r => [...r.slice(0, CMP_AMT), Math.round(r[CMP_AMT] / 1000)]);
+        const sheet = (rows) => {
+            const ws = XLSX.utils.aoa_to_sheet([head, ...conv(rows)]);
+            for (let i = 1; i <= rows.length; i++) { const c = ws[XLSX.utils.encode_cell({ r: i, c: CMP_AMT })]; if (c) c.z = '#,##0'; }
+            ws['!cols'] = head.map((h, i) => ({ wch: i === CMP_CALC ? 36 : (i >= 4 && i <= 12) ? 24 : 14 }));
+            ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rows.length, c: head.length - 1 } }) };
+            return ws;
+        };
+        const wb = XLSX.utils.book_new();
+        const safe = (n) => String(n).replace(/[\\/?*\[\]:]/g, '').slice(0, 28) || '자료';
+        XLSX.utils.book_append_sheet(wb, sheet([...(cmp.A ? cmp.A.rows : []), ...(cmp.B ? cmp.B.rows : [])]), '합친자료');
+        if (cmp.A) XLSX.utils.book_append_sheet(wb, sheet(cmp.A.rows), safe(cmp.A.label || 'A') + '_A');
+        if (cmp.B) XLSX.utils.book_append_sheet(wb, sheet(cmp.B.rows), safe(cmp.B.label || 'B') + '_B');
+        XLSX.writeFile(wb, `세출각목내역서_정리자료_${cmpFileStamp()}.xlsx`);
+    };
+
+    // ---- 탭 전환: 'main' = 집행실적(기존 화면 전부), 'compare' = 연도 비교 ----
+    //  집행실적 화면은 숨겼다 보였다만 할 뿐, 자료·검색·피벗 상태는 전혀 건드리지 않습니다.
+    window.showMainTab = function(which) {
+        isCompareMode = (which === 'compare');
+        document.getElementById('tabMain').classList.toggle('active', !isCompareMode);
+        document.getElementById('btnCompare').classList.toggle('active', isCompareMode);
+        document.getElementById('mainPanel').style.display = isCompareMode ? 'none' : '';
+        document.querySelector('.summary-grid').style.display = isCompareMode ? 'none' : '';
+        document.getElementById('dropZone').style.display = isCompareMode ? 'none' : '';
+        document.getElementById('cmpPanel').style.display = isCompareMode ? 'block' : 'none';
+        if (isCompareMode) cmpRefresh();
+    };
+    window.toggleCompareView = function() { showMainTab(isCompareMode ? 'main' : 'compare'); };
+
+    // ---- 처음 한 번: 저장된 자료 불러오기 + 단추·콤보 연결 ----
+    function cmpInit() {
+        try {
+            ['A', 'B'].forEach(side => {
+                const s = JSON.parse(localStorage.getItem(CMP_KEY + '_' + side) || 'null');
+                if (s && Array.isArray(s.rows) && Array.isArray(s.depts)) cmp[side] = s;
+            });
+            const o = JSON.parse(localStorage.getItem(CMP_KEY + '_opt') || 'null');
+            if (o && typeof o === 'object') cmpOpt = Object.assign(cmpOpt, o);
+            const n = JSON.parse(localStorage.getItem(CMP_KEY + '_note') || 'null');
+            if (n && typeof n === 'object') cmpNotes = n;
+        } catch (e) {}
+
+        ['A', 'B'].forEach(side => {
+            document.getElementById('cmpFile' + side).addEventListener('change', e => { cmpLoadFiles(side, e.target.files); e.target.value = ''; });
+            document.getElementById('cmpLabel' + side).addEventListener('input', e => { if (cmp[side]) { cmp[side].label = e.target.value.trim(); cmpRenderTable(); } });
+            document.getElementById('cmpLabel' + side).addEventListener('change', () => { if (cmp[side]) cmpSaveSlot(side); });
+            // 칸 위로 파일을 끌어다 놓기
+            const box = document.getElementById('cmpSlot' + side), wrap = document.getElementById('cmpSlots');
+            box.addEventListener('dragover', e => { e.preventDefault(); wrap.classList.add('over'); });
+            box.addEventListener('dragleave', () => wrap.classList.remove('over'));
+            box.addEventListener('drop', e => { e.preventDefault(); wrap.classList.remove('over'); if (e.dataTransfer.files.length) cmpLoadFiles(side, e.dataTransfer.files); });
+        });
+        const bind = (id, fn, ev) => document.getElementById(id).addEventListener(ev || 'change', e => { fn(e.target); cmpRefresh(); });
+        bind('cmpMode', el => { cmpOpt.mode = el.value; cmpOpt.depth = 0; cmpOpt.calc = !!CMP_MODES[el.value].calc; });
+        bind('cmpG1', el => cmpOpt.g[0] = el.value);
+        bind('cmpG2', el => cmpOpt.g[1] = el.value);
+        bind('cmpG3', el => cmpOpt.g[2] = el.value);
+        bind('cmpDepth', el => cmpOpt.depth = +el.value);
+        bind('cmpUnit', el => cmpOpt.unit = +el.value);
+        bind('cmpCalc', el => cmpOpt.calc = el.checked);
+        bind('cmpView', el => cmpOpt.view = el.value);
+        bind('cmpSort', el => cmpOpt.sort = el.value);
+        bind('cmpDept', el => cmpOpt.dept = el.value);
+        bind('cmpCat', el => cmpOpt.cat = el.value);
+        bind('cmpTri', el => cmpOpt.tri = el.checked);
+        bind('cmpLink', el => cmpOpt.link = el.checked);
+        bind('cmpMinDiff', el => cmpOpt.minDiff = el.value, 'input');
+        bind('cmpMinRate', el => cmpOpt.minRate = el.value, 'input');
+        bind('cmpKw', el => cmpOpt.kw = el.value, 'input');
+
+        // 증감 사유: 칸을 벗어날 때 저장
+        document.getElementById('cmpBody').addEventListener('focusout', e => {
+            if (!e.target.classList || !e.target.classList.contains('cmp-note') || !cmpModel) return;
+            const i = +e.target.dataset.i;
+            const key = i < 0 ? cmpNoteKey(['(합계)']) : cmpNoteKey(cmpModel.rows[i].path);
+            const text = e.target.innerText.replace(/\s+$/, '');
+            if (text) cmpNotes[key] = text; else delete cmpNotes[key];
+            cmpStore('_note', cmpNotes);
+        });
+    }
+
     // --- 엑셀 내보내기 ---
     window.handleExcelExport = function() {
         if (typeof XLSX === 'undefined') return alert("엑셀 다운로드 모듈을 사용할 수 없습니다.");
@@ -1757,6 +2560,8 @@
             clearSearch();
         }
     }
+
+})();   // ← 이 페이지 전용 영역 끝
 </script>
 <!-- 방문 기록은 common.js가 자동으로 남깁니다 -->
 </body>
