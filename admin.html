@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>관리자 페이지 · 조효식 허브 PRO</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<style>
+  :root {
+    --accent: #2563EB; --accent-d: #1D4ED8; --accent-soft: #EEF4FF;
+    --bg: #F1F5F9; --card: #fff; --line: #E2E8F0; --line2: #CBD5E1;
+    --text: #0F172A; --sub: #475569; --muted: #94A3B8;
+    --ok: #16A34A; --warn: #D97706; --bad: #DC2626;
+    --side: 232px; --top: 60px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Pretendard', -apple-system, 'Malgun Gothic', sans-serif; background: var(--bg); color: var(--text); font-size: 14.5px; }
+  button, input, select, textarea { font-family: inherit; font-size: inherit; }
+  a { color: var(--accent); }
+  [hidden] { display: none !important; }
+
+  /* ── 상단 상태바 ── */
+  .top { position: fixed; inset: 0 0 auto 0; height: var(--top); z-index: 50; background: #0F172A; color: #fff; display: flex; align-items: center; gap: 14px; padding: 0 18px; }
+  .top .brand { font-weight: 800; font-size: 16px; white-space: nowrap; }
+  .top .brand small { font-weight: 600; color: #94A3B8; margin-left: 6px; font-size: 12.5px; }
+  .top .conn { font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: #334155; color: #CBD5E1; white-space: nowrap; }
+  .top .conn.on { background: #14532D; color: #BBF7D0; }
+  .top .spacer { flex: 1; }
+  .top .dirty { font-size: 13px; font-weight: 800; padding: 5px 11px; border-radius: 999px; background: #334155; color: #CBD5E1; white-space: nowrap; }
+  .top .dirty.has { background: #F59E0B; color: #1C1917; }
+  .top .tbtn { border: none; border-radius: 9px; padding: 9px 15px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+  .top .tbtn.ghost { background: #1E293B; color: #E2E8F0; border: 1px solid #475569; }
+  .top .tbtn.ghost:hover { background: #334155; }
+  .top .tbtn.pri { background: var(--accent); color: #fff; }
+  .top .tbtn.pri:hover { background: var(--accent-d); }
+  .top .tbtn:disabled { opacity: .45; cursor: not-allowed; }
+  .top .menu-toggle { display: none; background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+
+  /* ── 좌측 사이드바 ── */
+  .side { position: fixed; top: var(--top); bottom: 0; left: 0; width: var(--side); background: #fff; border-right: 1px solid var(--line); padding: 14px 10px; overflow-y: auto; z-index: 40; }
+  .side .sec { font-size: 11.5px; font-weight: 800; color: var(--muted); padding: 12px 10px 6px; letter-spacing: .02em; }
+  .side button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: none; background: none; padding: 10px 12px; border-radius: 9px; font-weight: 700; color: var(--sub); cursor: pointer; }
+  .side button:hover { background: #F1F5F9; color: var(--text); }
+  .side button.on { background: var(--accent-soft); color: var(--accent-d); }
+  .side button .cnt { margin-left: auto; font-size: 11.5px; background: #E2E8F0; color: var(--sub); border-radius: 999px; padding: 1px 8px; }
+  .side .home { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .side .home a { display: block; padding: 10px 12px; border-radius: 9px; font-weight: 700; color: var(--sub); text-decoration: none; }
+  .side .home a:hover { background: #F1F5F9; }
+
+  /* ── 메인 ── */
+  main { margin-left: var(--side); padding: calc(var(--top) + 22px) 26px 60px; max-width: calc(1180px + var(--side)); }
+  .page-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .page-h h1 { margin: 0; font-size: 23px; letter-spacing: -0.02em; }
+  .page-h p { margin: 4px 0 0; color: var(--sub); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+  .card h2 { margin: 0 0 14px; font-size: 16.5px; display: flex; align-items: center; gap: 8px; }
+  .card h2 .r { margin-left: auto; display: flex; gap: 6px; }
+  .hint { color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 18px; }
+  .full { grid-column: 1 / -1; }
+  label.f { display: block; font-size: 13px; font-weight: 800; color: #334155; margin-bottom: 6px; }
+  label.f small { font-weight: 600; color: var(--muted); }
+  .in, select.in, textarea.in { width: 100%; padding: 10px 12px; border: 1.5px solid var(--line2); border-radius: 9px; background: #fff; color: var(--text); }
+  .in:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.13); }
+  textarea.in { min-height: 90px; resize: vertical; line-height: 1.6; }
+  .btn { border: 1.5px solid var(--line2); background: #fff; color: var(--text); border-radius: 9px; padding: 8px 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.pri:hover { background: var(--accent-d); color: #fff; }
+  .btn.danger { color: var(--bad); }
+  .btn.danger:hover { border-color: var(--bad); background: #FEF2F2; }
+  .btn.sm { padding: 5px 9px; font-size: 12.5px; border-radius: 7px; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .chk { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; cursor: pointer; }
+  .chk input { width: 17px; height: 17px; accent-color: var(--accent); }
+
+  /* 스위치 */
+  .switch { position: relative; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 800; }
+  .switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .switch .tr { width: 46px; height: 26px; border-radius: 999px; background: #CBD5E1; position: relative; transition: background .2s; flex-shrink: 0; }
+  .switch .tr::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: left .2s; }
+  .switch input:checked + .tr { background: var(--accent); }
+  .switch input:checked + .tr::after { left: 23px; }
+  .switch input:focus-visible + .tr { outline: 3px solid #93C5FD; outline-offset: 2px; }
+  .switch.warn input:checked + .tr { background: #F97316; }
+
+  /* 요약 카드 */
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .stat .n { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stat .l { font-size: 12.5px; font-weight: 700; color: var(--sub); margin-top: 2px; }
+  .stat.ok .n { color: var(--ok); } .stat.warn .n { color: var(--warn); } .stat.mute .n { color: var(--muted); } .stat.acc .n { color: var(--accent); }
+
+  /* 표 */
+  .tbl-wrap { overflow-x: auto; }
+  table.t { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table.t th { text-align: left; font-size: 12px; color: var(--sub); font-weight: 800; padding: 9px 10px; border-bottom: 2px solid var(--line); white-space: nowrap; background: #F8FAFC; }
+  table.t td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  table.t tr.drag-over td { background: var(--accent-soft); }
+  table.t tr[draggable="true"] { cursor: grab; }
+  .handle { cursor: grab; color: var(--muted); font-size: 16px; user-select: none; }
+  .pill { display: inline-block; font-size: 11.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .st-active { background: #DCFCE7; color: #166534; } .st-maintenance { background: #FEF3C7; color: #92400E; } .st-hidden { background: #E2E8F0; color: #475569; }
+  .lv-info { background: #DBEAFE; color: #1E40AF; } .lv-warning { background: #FEF3C7; color: #92400E; } .lv-danger { background: #FEE2E2; color: #991B1B; }
+  .b-NEW { background: #EF4444; color: #fff; } .b-BETA { background: #7C3AED; color: #fff; } .b-UPDATE { background: #0EA5E9; color: #fff; }
+  .ty { background: #F1F5F9; color: #334155; }
+  .muted { color: var(--muted); }
+  .mono { font-family: Consolas, 'D2Coding', monospace; font-size: 12.5px; }
+  .ellip { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .empty { text-align: center; color: var(--muted); padding: 26px 10px; }
+
+  /* 알림 */
+  .alert { border-radius: 11px; padding: 12px 15px; margin-bottom: 14px; display: flex; gap: 10px; align-items: flex-start; line-height: 1.6; }
+  .alert.info { background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E3A8A; }
+  .alert.warn { background: #FFFBEB; border: 1px solid #FDE68A; color: #78350F; }
+  .alert.bad { background: #FEF2F2; border: 1px solid #FECACA; color: #7F1D1D; }
+  .alert.ok { background: #F0FDF4; border: 1px solid #BBF7D0; color: #14532D; }
+  .alert .r { margin-left: auto; display: flex; gap: 6px; flex-shrink: 0; }
+
+  /* 창(모달) */
+  .mback { position: fixed; inset: 0; z-index: 100; background: rgba(15,23,42,.55); display: flex; align-items: flex-start; justify-content: center; padding: 40px 14px; overflow-y: auto; }
+  .modal { background: #fff; border-radius: 16px; width: 640px; max-width: 100%; box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+  .modal.wide { width: 860px; }
+  .modal .mh { padding: 18px 22px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+  .modal .mh h3 { margin: 0; font-size: 18px; }
+  .modal .mh .x { margin-left: auto; border: none; background: none; font-size: 24px; cursor: pointer; color: var(--muted); line-height: 1; }
+  .modal .mb { padding: 20px 22px; }
+  .modal .mf { padding: 14px 22px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; background: #F8FAFC; border-radius: 0 0 16px 16px; }
+
+  /* Diff */
+  .diff { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 10px; max-height: 320px; overflow-y: auto; }
+  .diff li { padding: 8px 12px; border-top: 1px solid var(--line); font-size: 13.5px; display: flex; gap: 8px; align-items: baseline; }
+  .diff li:first-child { border-top: none; }
+  .diff .k { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; flex-shrink: 0; }
+  .diff .k.add { background: #DCFCE7; color: #166534; } .diff .k.mod { background: #DBEAFE; color: #1E40AF; } .diff .k.del { background: #FEE2E2; color: #991B1B; }
+  .diff .d { color: var(--sub); font-size: 12.5px; }
+
+  /* 변경이력 편집 */
+  .loglist { list-style: none; margin: 0 0 10px; padding: 0; border: 1px solid var(--line); border-radius: 10px; }
+  .loglist li { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-top: 1px solid var(--line); }
+  .loglist li:first-child { border-top: none; }
+  .loglist .d { font-weight: 800; color: var(--sub); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .loglist .n { flex: 1; }
+  .emoji-pick { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .emoji-pick button { border: 1px solid var(--line); background: #fff; border-radius: 7px; width: 34px; height: 34px; font-size: 18px; cursor: pointer; }
+  .emoji-pick button:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .seg { display: inline-flex; border: 1.5px solid var(--line2); border-radius: 9px; overflow: hidden; }
+  .seg label { cursor: pointer; }
+  .seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .seg span { display: block; padding: 8px 13px; font-weight: 700; color: var(--sub); border-left: 1px solid var(--line2); }
+  .seg label:first-child span { border-left: none; }
+  .seg input:checked + span { background: var(--accent); color: #fff; }
+  .seg input:focus-visible + span { outline: 2px solid #93C5FD; outline-offset: -2px; }
+
+  /* 알림(토스트) */
+  #toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 300; background: #1F2937; color: #fff; padding: 12px 20px; border-radius: 10px; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,.25); max-width: 92vw; display: none; }
+  #toast.show { display: block; }
+  #toast.bad { background: #991B1B; }
+
+  .hc-ok { color: var(--ok); font-weight: 800; } .hc-bad { color: var(--bad); font-weight: 800; } .hc-unk { color: var(--warn); font-weight: 800; }
+  .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid #CBD5E1; border-top-color: var(--accent); border-radius: 50%; animation: sp .8s linear infinite; vertical-align: -2px; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+
+  @media (max-width: 980px) {
+    .side { transform: translateX(-100%); transition: transform .2s; box-shadow: 0 0 30px rgba(0,0,0,.2); }
+    .side.open { transform: none; }
+    main { margin-left: 0; padding-left: 14px; padding-right: 14px; }
+    .top .menu-toggle { display: block; }
+    .top .brand small, .top .conn { display: none; }
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ───────── 상단 상태바 ───────── -->
+<header class="top">
+  <button class="menu-toggle" onclick="document.querySelector('.side').classList.toggle('open')" aria-label="메뉴 열기">☰</button>
+  <div class="brand">⚙️ 관리자 페이지<small>조효식 허브 PRO</small></div>
+  <span class="conn" id="connBadge">연결 안 됨</span>
+  <span class="spacer"></span>
+  <span class="dirty" id="dirtyBadge" title="배포되지 않은 변경 건수">변경 없음</span>
+  <button class="tbtn ghost" id="btnPreview" onclick="openPreview()" title="편집 중인 내용으로 첫 화면을 새 탭에서 미리 봅니다">👀 미리보기</button>
+  <button class="tbtn pri" id="btnDeploy" onclick="openDeploy()" title="변경 내용을 GitHub에 저장해 사이트에 반영합니다">🚀 저장·배포</button>
+</header>
+
+<!-- ───────── 좌측 사이드바 ───────── -->
+<nav class="side" aria-label="관리 메뉴">
+  <div class="sec">시작</div>
+  <button data-page="connect">🔑 연결 설정</button>
+  <button data-page="dashboard">📊 대시보드</button>
+  <div class="sec">내용 관리</div>
+  <button data-page="site">🏠 사이트 설정·점검 모드</button>
+  <button data-page="notices">📢 공지·배너·팝업 <span class="cnt" id="cntNotices">0</span></button>
+  <button data-page="categories">🗂 카테고리 <span class="cnt" id="cntCats">0</span></button>
+  <button data-page="items">🧩 콘텐츠(프로그램) <span class="cnt" id="cntItems">0</span></button>
+  <div class="sec">배포·보관</div>
+  <button data-page="history">🕘 배포 이력·롤백</button>
+  <button data-page="backup">💾 백업·복원</button>
+  <div class="home"><a href="index.html" target="_blank" rel="noopener">🌐 사이트 열기 ↗</a></div>
+</nav>
+
+<main id="main"></main>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   조효식 허브 PRO · 관리자 페이지 (admin.html)
+   - data/site-config.json 을 GitHub REST API로 읽고, 고치고, 커밋(배포)합니다.
+   - 서버 없이 이 파일 하나로 동작합니다. 비밀 값(토큰)은 코드에 넣지 않습니다.
+   - 토큰은 기본적으로 '이 창(sessionStorage)'에만 보관하고, 원하면 '이 PC(localStorage)'에 보관합니다.
+   ===================================================================== */
+
+/* ───────── 1. 기본값 · 저장소 키 ───────── */
+const DEFAULT_CONN = { owner: 'prolinu73-maker', repo: 'prolinu73-maker.github.io', branch: 'main', path: 'data/site-config.json' };
+const K = {
+  conn: 'adminConn',            // 연결 정보(토큰 제외)
+  token: 'adminGhToken',        // 토큰 (session 또는 local)
+  draft: 'adminDraft',          // 자동 임시저장
+  preview: 'siteConfigPreview', // 미리보기용 (index.html?preview=1이 읽음)
+  page: 'adminPage'
+};
+const API = 'https://api.github.com';
+const STATUS = { active: '사용 중', maintenance: '점검 중', hidden: '숨김' };
+const TYPES = { banner: '배너', popup: '팝업', list: '목록' };
+const LEVELS = { info: '안내', warning: '주의', danger: '긴급' };
+const BADGES = ['', 'NEW', 'BETA', 'UPDATE'];
+const EMOJIS = ['🚀','⚖️','🚗','📦','📈','📊','💳','🏗️','📝','📋','📁','🧮','🗂','📅','🏫','👥','💬','🔧','🔍','📢','💡','🛠️','📚','🗳️'];
+
+/* ───────── 2. 상태 ───────── */
+const S = {
+  conn: Object.assign({}, DEFAULT_CONN),
+  token: '',
+  login: '',          // GitHub 로그인 이름
+  canPush: false,
+  original: null,     // GitHub에 배포되어 있는 설정 (비교 기준)
+  sha: null,          // 파일 sha (충돌 방지용, PUT에 꼭 포함)
+  draft: null,        // 편집 중인 설정
+  page: 'connect',
+  commits: [],
+  health: {},         // 링크 점검 결과 { url: {state, code} }
+  itemFilter: { cat: '', status: '', q: '' },
+  previewWin: null
+};
+
+/* ───────── 3. 작은 도구 ───────── */
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const kNow = () => { const d = new Date(Date.now() + 9 * 3600e3); return d.toISOString().slice(0, 19) + '+09:00'; };
+const kToday = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+const newId = p => p + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const store = {
+  get(k, def) { try { const v = localStorage.getItem(k); return v == null ? def : JSON.parse(v); } catch (e) { return def; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+let toastT;
+function toast(msg, bad) {
+  const t = $('toast'); t.textContent = msg; t.className = 'show' + (bad ? ' bad' : '');
+  clearTimeout(toastT); toastT = setTimeout(() => t.className = '', bad ? 6000 : 3500);
+}
+function fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso); if (isNaN(d)) return iso;
+  const k = new Date(d.getTime() + 9 * 3600e3).toISOString();
+  return k.slice(0, 10) + ' ' + k.slice(11, 16);
+}
+
+/* ───────── 4. 한글이 깨지지 않는 Base64 (UTF-8) ───────── */
+function b64EncodeUtf8(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+function b64DecodeUtf8(b64) {
+  const bin = atob(String(b64 || '').replace(/\s/g, ''));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+/* ───────── 5. GitHub API ───────── */
+async function gh(path, opt) {
+  opt = opt || {};
+  if (!S.token) throw Object.assign(new Error('토큰이 없습니다. [연결 설정]에서 토큰을 넣어 주세요.'), { status: 0 });
+  const res = await fetch(API + path, {
+    method: opt.method || 'GET',
+    headers: Object.assign({
+      'Accept': 'application/vnd.github+json',
+      'Authorization': 'Bearer ' + S.token,
+      'X-GitHub-Api-Version': '2022-11-28'
+    }, opt.body ? { 'Content-Type': 'application/json' } : {}),
+    body: opt.body ? JSON.stringify(opt.body) : undefined,
+    cache: 'no-store'
+  });
+  let data = null; try { data = await res.json(); } catch (e) {}
+  if (!res.ok) {
+    const err = new Error((data && data.message) || ('HTTP ' + res.status));
+    err.status = res.status; err.data = data; throw err;
+  }
+  return data;
+}
+const repoPath = () => `/repos/${encodeURIComponent(S.conn.owner)}/${encodeURIComponent(S.conn.repo)}`;
+const filePath = () => S.conn.path.split('/').map(encodeURIComponent).join('/');
+function ghErrMsg(e) {
+  if (e.status === 401) return '토큰이 맞지 않거나 만료되었습니다. 새 토큰을 넣어 주세요. (401)';
+  if (e.status === 403) return '권한이 없습니다. 토큰의 저장소 권한(Contents: Read and write)을 확인해 주세요. (403)';
+  if (e.status === 404) return '저장소 또는 파일을 찾지 못했습니다. 소유자·저장소·경로를 확인해 주세요. (404)';
+  if (e.status === 409) return '다른 곳에서 먼저 파일이 바뀌었습니다. [최신 불러오기] 후 다시 배포해 주세요. (409)';
+  if (e.status === 422) return '요청 내용이 올바르지 않습니다. 파일 경로나 내용을 확인해 주세요. (422)';
+  if (e.status === 0) return e.message;
+  return (e.message || '알 수 없는 오류') + (e.status ? ' (' + e.status + ')' : '');
+}
+async function ghGetFile(ref) {
+  const q = '?ref=' + encodeURIComponent(ref || S.conn.branch);
+  const d = await gh(`${repoPath()}/contents/${filePath()}${q}`);
+  if (Array.isArray(d)) throw Object.assign(new Error('경로가 파일이 아니라 폴더입니다.'), { status: 422 });
+  let text;
+  if (d.content) text = b64DecodeUtf8(d.content);
+  else if (d.download_url) text = await (await fetch(d.download_url + (d.download_url.includes('?') ? '&' : '?') + 't=' + Date.now())).text();   // 1MB 넘는 파일
+  else text = '';
+  return { json: JSON.parse(text), sha: d.sha };
+}
+async function ghPutFile(obj, message, sha) {
+  const body = { message, content: b64EncodeUtf8(JSON.stringify(obj, null, 2) + '\n'), branch: S.conn.branch };
+  if (sha) body.sha = sha;   // 충돌 방지: 불러올 때 받은 sha를 꼭 함께 보냄
+  return gh(`${repoPath()}/contents/${filePath()}`, { method: 'PUT', body });
+}
+
+/* ───────── 6. 데이터 기본 모양 맞추기 (빠진 칸 채우기) ───────── */
+function normalize(c) {
+  c = c && typeof c === 'object' ? c : {};
+  c.meta = Object.assign({ version: '1.0.0', updatedAt: '', updatedBy: '' }, c.meta || {});
+  c.site = Object.assign({ title: '', subtitle: '', themeColor: '#2563eb', footerText: '' }, c.site || {});
+  c.site.maintenance = Object.assign({ enabled: false, message: '시스템 점검 중입니다. 잠시 후 다시 접속해 주세요.', endTime: '' }, c.site.maintenance || {});
+  c.site.analytics = Object.assign({ ga4Id: '', cloudflareToken: '' }, c.site.analytics || {});
+  c.notices = Array.isArray(c.notices) ? c.notices : [];
+  c.categories = Array.isArray(c.categories) ? c.categories : [];
+  c.items = Array.isArray(c.items) ? c.items : [];
+  c.items.forEach(i => { i.tags = Array.isArray(i.tags) ? i.tags : []; i.changelog = Array.isArray(i.changelog) ? i.changelog : []; });
+  return c;
+}
+function emptyConfig() {
+  return normalize({ site: { title: '조효식 허브 PRO', subtitle: '', footerText: '© ' + new Date().getFullYear() + ' prolinu73-maker. All rights reserved.' },
+    categories: [{ id: 'cat-1', name: '주요 프로그램', order: 1, visible: true }] });
+}
+
+/* ───────── 7. 변경 비교 (Diff) ───────── */
+const FIELD_NAMES = {
+  title: '제목', subtitle: '부제', themeColor: '테마 색', footerText: '꼬리말', 'maintenance.enabled': '점검 모드', 'maintenance.message': '점검 안내 문구',
+  'maintenance.endTime': '점검 종료 시간', 'analytics.ga4Id': 'GA4 ID', 'analytics.cloudflareToken': 'Cloudflare 토큰',
+  type: '유형', level: '중요도', content: '내용', link: '링크', startDate: '시작일', endDate: '종료일', active: '활성', dismissKey: '다시보지않기 키',
+  name: '이름', order: '순서', visible: '표시', categoryId: '카테고리', description: '설명', url: '주소', openInNewTab: '새 탭', icon: '아이콘',
+  badge: '배지', status: '상태', version: '버전', tags: '태그', changelog: '변경이력'
+};
+function flat(o, p, out) {
+  out = out || {}; p = p || '';
+  Object.keys(o || {}).forEach(k => {
+    const v = o[k], key = p ? p + '.' + k : k;
+    if (v && typeof v === 'object' && !Array.isArray(v)) flat(v, key, out); else out[key] = v;
+  });
+  return out;
+}
+function diffList(a, b, label, nameOf) {
+  const out = [], am = new Map(a.map(x => [x.id, x])), bm = new Map(b.map(x => [x.id, x]));
+  b.forEach(x => {
+    const o = am.get(x.id);
+    if (!o) out.push({ k: 'add', t: `${label} 추가: ${nameOf(x)}` });
+    else if (!same(o, x)) {
+      const fields = Object.keys(Object.assign({}, o, x)).filter(f => !same(o[f], x[f])).map(f => FIELD_NAMES[f] || f);
+      out.push({ k: 'mod', t: `${label} 수정: ${nameOf(x)}`, d: fields.join(', ') });
+    }
+  });
+  a.forEach(x => { if (!bm.has(x.id)) out.push({ k: 'del', t: `${label} 삭제: ${nameOf(x)}` }); });
+  return out;
+}
+function computeDiff() {
+  if (!S.draft) return [];
+  const a = normalize(clone(S.original || emptyConfig())), b = S.draft;
+  const out = [];
+  const fa = flat(a.site), fb = flat(b.site);
+  Object.keys(Object.assign({}, fa, fb)).forEach(k => {
+    if (!same(fa[k], fb[k])) out.push({ k: 'mod', t: '사이트 설정: ' + (FIELD_NAMES[k] || k), d: k === 'analytics.cloudflareToken' ? '' : `${short(fa[k])} → ${short(fb[k])}` });
+  });
+  out.push(...diffList(a.notices, b.notices, '공지', x => x.title || x.id));
+  out.push(...diffList(a.categories, b.categories, '카테고리', x => x.name || x.id));
+  out.push(...diffList(a.items, b.items, '콘텐츠', x => x.title || x.id));
+  return out;
+}
+const short = v => { const s = v === true ? '켬' : v === false ? '끔' : String(v == null || v === '' ? '(비어 있음)' : v); return s.length > 30 ? s.slice(0, 30) + '…' : s; };
+
+/* ───────── 8. 편집 내용이 바뀔 때마다: 임시저장 · 변경 건수 · 미리보기 갱신 ───────── */
+let saveT;
+function touched(rerender) {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    if (S.draft) store.set(K.draft, { draft: S.draft, baseSha: S.sha, savedAt: kNow(), conn: S.conn.owner + '/' + S.conn.repo + '/' + S.conn.path });
+    pushPreview();
+  }, 400);
+  updateTop();
+  if (rerender) render();
+}
+function updateTop() {
+  const n = computeDiff().length;
+  const b = $('dirtyBadge');
+  b.textContent = n ? `미저장 변경 ${n}건` : '변경 없음';
+  b.className = 'dirty' + (n ? ' has' : '');
+  $('btnDeploy').disabled = !S.draft || !n;
+  $('btnPreview').disabled = !S.draft;
+  $('connBadge').textContent = S.original ? `연결됨 · ${S.conn.repo}` + (S.login ? ` (${S.login})` : '') : (S.token ? '토큰 있음 · 불러오기 전' : '연결 안 됨');
+  $('connBadge').className = 'conn' + (S.original ? ' on' : '');
+  if (S.draft) {
+    $('cntNotices').textContent = S.draft.notices.length;
+    $('cntCats').textContent = S.draft.categories.length;
+    $('cntItems').textContent = S.draft.items.length;
+  }
+}
+window.addEventListener('beforeunload', e => { if (computeDiff().length) { e.preventDefault(); e.returnValue = ''; } });
+
+/* ───────── 9. 미리보기 ───────── */
+function pushPreview() {
+  if (!S.draft) return;
+  try { localStorage.setItem(K.preview, JSON.stringify(S.draft)); } catch (e) {}
+  try { if (S.previewWin && !S.previewWin.closed) S.previewWin.postMessage({ type: 'site-config-preview', config: S.draft }, location.origin); } catch (e) {}
+}
+function openPreview() {
+  if (!S.draft) return toast('먼저 설정을 불러와 주세요.', true);
+  try { localStorage.setItem(K.preview, JSON.stringify(S.draft)); } catch (e) { return toast('미리보기 저장 공간이 부족합니다.', true); }
+  S.previewWin = window.open('index.html?preview=1', 'sitePreview');
+  toast('새 탭에서 미리보기를 열었습니다. 여기서 고치면 미리보기도 바로 바뀝니다.');
+}
+window.addEventListener('message', e => {
+  if (e.origin === location.origin && e.data && e.data.type === 'site-config-preview-ready') pushPreview();
+});
+
+/* ───────── 10. 연결 · 불러오기 ───────── */
+function loadSavedConn() {
+  S.conn = Object.assign({}, DEFAULT_CONN, store.get(K.conn, {}));
+  try { S.token = sessionStorage.getItem(K.token) || localStorage.getItem(K.token) || ''; } catch (e) { S.token = ''; }
+}
+function saveConn(remember) {
+  store.set(K.conn, S.conn);
+  try {
+    sessionStorage.removeItem(K.token); localStorage.removeItem(K.token);
+    if (S.token) (remember ? localStorage : sessionStorage).setItem(K.token, S.token);
+  } catch (e) {}
+}
+async function testConnection() {
+  const me = await gh('/user').catch(() => null);   // Fine-grained 토큰은 /user가 막혀 있을 수 있음 → 없어도 진행
+  S.login = me && me.login ? me.login : '';
+  const repo = await gh(repoPath());
+  S.canPush = !!(repo.permissions && (repo.permissions.push || repo.permissions.admin || repo.permissions.maintain));
+  return repo;
+}
+async function loadLatest(silent) {
+  try {
+    const f = await ghGetFile();
+    S.original = normalize(f.json); S.sha = f.sha;
+    const saved = store.get(K.draft, null);
+    if (saved && saved.draft && saved.conn === S.conn.owner + '/' + S.conn.repo + '/' + S.conn.path && !same(normalize(clone(saved.draft)), S.original)) {
+      S.draft = clone(S.original);
+      S.pendingRestore = saved;
+    } else {
+      S.draft = clone(S.original); S.pendingRestore = null;
+      store.del(K.draft);
+    }
+    S.missingFile = false;
+    if (!silent) toast('최신 설정을 불러왔습니다.');
+    loadCommits();
+  } catch (e) {
+    if (e.status === 404) {
+      S.missingFile = true; S.original = null; S.sha = null;
+      if (!S.draft) S.draft = emptyConfig();
+      toast('GitHub에 설정 파일이 아직 없습니다. 첫 배포 때 새로 만들어집니다.', true);
+    } else { toast(ghErrMsg(e), true); throw e; }
+  }
+  updateTop(); pushPreview(); render();
+}
+async function loadCommits() {
+  try {
+    S.commits = await gh(`${repoPath()}/commits?path=${encodeURIComponent(S.conn.path)}&sha=${encodeURIComponent(S.conn.branch)}&per_page=10`);
+  } catch (e) { S.commits = []; S.commitErr = ghErrMsg(e); }
+  if (S.page === 'dashboard' || S.page === 'history') render();
+}
+async function loadPublic() {
+  // 토큰 없이도 '현재 공개된 설정'을 읽어 둘러볼 수 있게 함 (배포는 토큰이 있어야 가능)
+  try {
+    const r = await fetch('./data/site-config.json?t=' + Date.now(), { cache: 'no-store' });
+    if (r.ok) { const j = normalize(await r.json()); if (!S.draft) S.draft = j; if (!S.publicCopy) S.publicCopy = j; }
+  } catch (e) {}
+}
+
+/* ───────── 11. 화면 그리기 ───────── */
+const PAGES = {};
+function go(p) {
+  S.page = p; store.set(K.page, p);
+  document.querySelectorAll('.side button[data-page]').forEach(b => b.classList.toggle('on', b.dataset.page === p));
+  document.querySelector('.side').classList.remove('open');
+  render(); window.scrollTo(0, 0);
+}
+function render() {
+  const m = $('main');
+  const needData = !['connect', 'backup'].includes(S.page);
+  if (needData && !S.draft) {
+    m.innerHTML = `<div class="page-h"><div><h1>설정을 먼저 불러와 주세요</h1></div></div>
+      <div class="alert info">ℹ️ <div>[🔑 연결 설정]에서 GitHub 토큰을 넣고 [연결하고 불러오기]를 누르면 편집할 수 있습니다.</div><div class="r"><button class="btn pri" onclick="go('connect')">연결 설정으로</button></div></div>`;
+    return;
+  }
+  m.innerHTML = restoreBanner() + readonlyBanner() + PAGES[S.page]();
+  if (PAGES[S.page].after) PAGES[S.page].after();
+}
+function restoreBanner() {
+  const r = S.pendingRestore; if (!r) return '';
+  return `<div class="alert warn">💾 <div><b>배포하지 않은 편집 내용이 임시저장되어 있습니다.</b><br><span class="hint">임시저장 시각: ${esc(fmtDate(r.savedAt))}${r.baseSha && r.baseSha !== S.sha ? ' · ⚠️ 그 사이 GitHub의 파일이 바뀌었습니다. 복구하면 최신 내용 위에 덮어쓰게 되니 [Diff]를 꼭 확인하세요.' : ''}</span></div>
+    <div class="r"><button class="btn pri sm" onclick="restoreDraft()">복구하기</button><button class="btn sm" onclick="discardDraft()">버리기</button></div></div>`;
+}
+function readonlyBanner() {
+  if (S.original || S.missingFile || S.page === 'connect') return '';
+  return `<div class="alert info">👁 <div>지금은 <b>공개된 설정을 읽기 전용으로</b> 보고 있습니다. 고친 내용을 배포하려면 [🔑 연결 설정]에서 토큰으로 연결해 주세요.</div></div>`;
+}
+function restoreDraft() { S.draft = normalize(clone(S.pendingRestore.draft)); S.pendingRestore = null; touched(true); toast('임시저장된 편집 내용을 복구했습니다.'); }
+function discardDraft() { S.pendingRestore = null; store.del(K.draft); render(); toast('임시저장 내용을 버렸습니다.'); }
+
+/* ── 11-1. 연결 설정 ── */
+PAGES.connect = function () {
+  const c = S.conn;
+  return `<div class="page-h"><div><h1>🔑 연결 설정</h1><p>GitHub 저장소에 연결해 <span class="mono">${esc(c.path)}</span>를 불러오고 배포합니다.</p></div></div>
+  <div class="card">
+    <h2>저장소 정보</h2>
+    <div class="grid2">
+      <div><label class="f" for="cOwner">소유자 (Owner)</label><input class="in" id="cOwner" value="${esc(c.owner)}"></div>
+      <div><label class="f" for="cRepo">저장소 (Repo)</label><input class="in" id="cRepo" value="${esc(c.repo)}"></div>
+      <div><label class="f" for="cBranch">브랜치 (Branch)</label><input class="in" id="cBranch" value="${esc(c.branch)}"></div>
+      <div><label class="f" for="cPath">설정 파일 경로</label><input class="in mono" id="cPath" value="${esc(c.path)}"></div>
+      <div class="full"><label class="f" for="cToken">GitHub 토큰 (Fine-grained PAT) <small>· 코드에는 저장되지 않습니다</small></label>
+        <div class="row"><input class="in mono" id="cToken" type="password" autocomplete="off" placeholder="github_pat_..." value="${esc(S.token)}" style="flex:1;min-width:220px">
+        <button class="btn" type="button" onclick="const i=$('cToken');i.type=i.type==='password'?'text':'password'">보기</button></div>
+        <label class="chk" style="margin-top:10px"><input type="checkbox" id="cRemember" ${localStorageHasToken() ? 'checked' : ''}> 이 PC에 토큰 기억하기 <span class="hint">(체크하지 않으면 이 창을 닫을 때 지워집니다 · 공용 PC에서는 체크하지 마세요)</span></label>
+      </div>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn pri" onclick="doConnect()" id="btnConnect">연결하고 불러오기</button>
+      <button class="btn" onclick="forgetToken()">토큰 지우기</button>
+      <span id="connMsg" class="hint"></span>
+    </div>
+  </div>
+  ${S.original ? `<div class="alert ok">✅ <div><b>연결되었습니다.</b> ${S.login ? esc(S.login) + ' 계정 · ' : ''}${S.canPush ? '쓰기 권한 있음' : '<b style="color:#B91C1C">쓰기 권한 없음 — 토큰 권한을 확인하세요</b>'} · 파일 sha <span class="mono">${esc((S.sha || '').slice(0, 7))}</span></div><div class="r"><button class="btn sm" onclick="loadLatest()">최신 불러오기</button><button class="btn sm pri" onclick="go('dashboard')">대시보드로</button></div></div>` : ''}
+  ${S.missingFile ? `<div class="alert warn">📄 <div>저장소에 <span class="mono">${esc(c.path)}</span> 파일이 없습니다. 내용을 편집한 뒤 [저장·배포]를 누르면 새로 만들어집니다. [백업·복원]에서 JSON 파일을 올려 시작할 수도 있습니다.</div></div>` : ''}
+  <div class="card">
+    <h2>🔐 토큰 발급 요약</h2>
+    <ol class="hint" style="font-size:13.5px;color:var(--sub);line-height:1.9;margin:0;padding-left:20px">
+      <li>GitHub → 오른쪽 위 프로필 → <b>Settings</b> → 왼쪽 맨 아래 <b>Developer settings</b></li>
+      <li><b>Personal access tokens → Fine-grained tokens → Generate new token</b></li>
+      <li>이름·만료일 지정 → <b>Repository access: Only select repositories</b> → <span class="mono">${esc(c.repo)}</span> 선택</li>
+      <li><b>Permissions → Repository permissions → Contents: Read and write</b> (Metadata: Read-only는 자동)</li>
+      <li><b>Generate token</b> → 나온 <span class="mono">github_pat_...</span> 값을 복사해 위에 붙여 넣기 (다시 볼 수 없으니 안전한 곳에 보관)</li>
+    </ol>
+  </div>`;
+};
+function localStorageHasToken() { try { return !!localStorage.getItem(K.token); } catch (e) { return false; } }
+function readConnForm() {
+  S.conn = { owner: $('cOwner').value.trim(), repo: $('cRepo').value.trim(), branch: $('cBranch').value.trim() || 'main', path: $('cPath').value.trim().replace(/^\/+/, '') };
+  S.token = $('cToken').value.trim();
+}
+async function doConnect() {
+  readConnForm();
+  if (!S.conn.owner || !S.conn.repo || !S.conn.path) return toast('소유자·저장소·경로를 모두 적어 주세요.', true);
+  if (!S.token) return toast('토큰을 넣어 주세요.', true);
+  saveConn($('cRemember').checked);
+  const btn = $('btnConnect'); btn.disabled = true; $('connMsg').innerHTML = '<span class="spin"></span> 연결 확인 중...';
+  try {
+    await testConnection();
+    $('connMsg').innerHTML = '<span class="spin"></span> 설정 파일 불러오는 중...';
+    await loadLatest(true);
+    toast(S.missingFile ? '연결되었습니다. 설정 파일은 첫 배포 때 만들어집니다.' : '연결되었고 최신 설정을 불러왔습니다.');
+  } catch (e) {
+    $('connMsg').textContent = '';
+    toast(ghErrMsg(e), true);
+    btn.disabled = false;
+  }
+}
+function forgetToken() {
+  try { sessionStorage.removeItem(K.token); localStorage.removeItem(K.token); } catch (e) {}
+  S.token = ''; S.original = null; S.sha = null; S.login = '';
+  if ($('cToken')) $('cToken').value = '';
+  updateTop(); render(); toast('토큰을 지웠습니다.');
+}
+
+/* ── 11-2. 대시보드 ── */
+PAGES.dashboard = function () {
+  const d = S.draft, it = d.items;
+  const cnt = s => it.filter(i => i.status === s).length;
+  const liveN = d.notices.filter(n => n.active && (!n.startDate || n.startDate <= kToday()) && (!n.endDate || n.endDate >= kToday())).length;
+  const urls = healthTargets();
+  return `<div class="page-h"><div><h1>📊 대시보드</h1><p>편집 중인 설정 기준 요약입니다.${d.meta.updatedAt ? ` 마지막 배포: ${esc(fmtDate(d.meta.updatedAt))}${d.meta.updatedBy ? ' · ' + esc(d.meta.updatedBy) : ''} · v${esc(d.meta.version)}` : ''}</p></div></div>
+  ${d.site.maintenance.enabled ? `<div class="alert warn">🛠 <div><b>점검 모드가 켜져 있습니다.</b> 방문자에게는 점검 안내 화면만 보입니다.</div><div class="r"><button class="btn sm" onclick="go('site')">설정 보기</button></div></div>` : ''}
+  <div class="stats">
+    <div class="stat acc"><div class="n">${it.length}</div><div class="l">전체 콘텐츠</div></div>
+    <div class="stat ok"><div class="n">${cnt('active')}</div><div class="l">사용 중 (active)</div></div>
+    <div class="stat warn"><div class="n">${cnt('maintenance')}</div><div class="l">점검 중 (maintenance)</div></div>
+    <div class="stat mute"><div class="n">${cnt('hidden')}</div><div class="l">숨김 (hidden)</div></div>
+    <div class="stat acc"><div class="n">${liveN}</div><div class="l">지금 노출 중인 공지</div></div>
+    <div class="stat"><div class="n">${d.categories.length}</div><div class="l">카테고리</div></div>
+  </div>
+  <div class="card">
+    <h2>🩺 링크 상태 일괄 점검 <span class="r"><button class="btn sm pri" onclick="runHealth()" id="btnHealth">점검 시작</button></span></h2>
+    <p class="hint" style="margin:-6px 0 12px">사이트 안 주소(<span class="mono">/</span>로 시작)는 실제 응답 코드(200/404)를 확인합니다. 바깥 사이트 주소는 브라우저 보안(CORS) 때문에 '연결만 되는지'만 확인되니, 필요하면 [새 탭에서 열기]로 직접 확인하세요.</p>
+    <div class="tbl-wrap"><table class="t"><thead><tr><th>대상</th><th>주소</th><th>종류</th><th>결과</th><th></th></tr></thead><tbody>
+    ${urls.map(u => { const h = S.health[u.url] || {};
+      return `<tr><td>${esc(u.name)}</td><td class="mono ellip" title="${esc(u.url)}">${esc(u.url)}</td><td>${u.internal ? '내부' : '외부'}</td>
+        <td>${h.state === 'run' ? '<span class="spin"></span>' : h.state === 'ok' ? `<span class="hc-ok">✔ 정상${h.code ? ' (' + h.code + ')' : ''}</span>` : h.state === 'bad' ? `<span class="hc-bad">✖ 문제${h.code ? ' (' + h.code + ')' : ''}</span>` : h.state === 'reach' ? '<span class="hc-unk">◐ 연결됨 (내용 확인 불가)</span>' : '<span class="muted">-</span>'}</td>
+        <td><a class="btn sm" href="${esc(openableUrl(u.url))}" target="_blank" rel="noopener">새 탭에서 열기</a></td></tr>`; }).join('') || '<tr><td colspan="5" class="empty">점검할 주소가 없습니다.</td></tr>'}
+    </tbody></table></div>
+  </div>
+  <div class="card">
+    <h2>🕘 최근 배포 이력 (10건) <span class="r"><button class="btn sm" onclick="loadCommits()">새로고침</button><button class="btn sm" onclick="go('history')">롤백하러 가기</button></span></h2>
+    ${commitTable(false)}
+  </div>`;
+};
+function healthTargets() {
+  const out = [];
+  S.draft.items.forEach(i => { if (i.url) out.push({ name: '콘텐츠 · ' + i.title, url: i.url, internal: isInternal(i.url) }); });
+  S.draft.notices.forEach(n => { if (n.link) out.push({ name: '공지 · ' + n.title, url: n.link, internal: isInternal(n.link) }); });
+  return out;
+}
+const isInternal = u => /^\/(?!\/)/.test(u) || (!/^[a-z][a-z0-9+.-]*:/i.test(u) && !/^\/\//.test(u));
+const openableUrl = u => isInternal(u) ? (u.startsWith('/') ? u : './' + u.replace(/^\.\//, '')) : (/^https?:\/\//i.test(u) ? u : '#');
+async function checkOne(u) {
+  const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    if (u.internal) {
+      const url = openableUrl(u.url);
+      const r = await fetch(url + (url.includes('?') ? '&' : '?') + 'hc=' + Date.now(), { method: 'GET', cache: 'no-store', signal: ctrl.signal });
+      return { state: r.ok ? 'ok' : 'bad', code: r.status };
+    }
+    if (!/^https?:\/\//i.test(u.url)) return { state: 'bad', code: '주소 형식' };
+    await fetch(u.url, { mode: 'no-cors', cache: 'no-store', signal: ctrl.signal });   // 도달만 확인 (응답 코드는 볼 수 없음)
+    return { state: 'reach' };
+  } catch (e) { return { state: 'bad', code: e.name === 'AbortError' ? '시간 초과' : '연결 실패' }; }
+  finally { clearTimeout(t); }
+}
+async function runHealth() {
+  const list = healthTargets(); if (!list.length) return;
+  list.forEach(u => S.health[u.url] = { state: 'run' }); render();
+  for (let i = 0; i < list.length; i += 4) {
+    await Promise.all(list.slice(i, i + 4).map(async u => { S.health[u.url] = await checkOne(u); }));
+    if (S.page === 'dashboard') render();
+  }
+  const bad = list.filter(u => S.health[u.url].state === 'bad').length;
+  toast(bad ? `점검 완료 — 문제 있는 주소 ${bad}개` : '점검 완료 — 모두 정상입니다.', !!bad);
+}
+function commitTable(withRollback) {
+  if (!S.token) return '<p class="empty">토큰으로 연결하면 이력을 볼 수 있습니다.</p>';
+  if (S.commitErr && !S.commits.length) return `<p class="empty">${esc(S.commitErr)}</p>`;
+  if (!S.commits.length) return '<p class="empty">아직 이력이 없습니다.</p>';
+  return `<div class="tbl-wrap"><table class="t"><thead><tr><th>날짜</th><th>메시지</th><th>작성자</th><th>커밋</th>${withRollback ? '<th></th>' : ''}</tr></thead><tbody>
+  ${S.commits.map((c, i) => `<tr><td style="white-space:nowrap">${esc(fmtDate(c.commit && c.commit.author && c.commit.author.date))}</td>
+    <td class="ellip" title="${esc(c.commit && c.commit.message)}">${esc((c.commit && c.commit.message || '').split('\n')[0])}${i === 0 ? ' <span class="pill st-active">현재</span>' : ''}</td>
+    <td>${esc((c.author && c.author.login) || (c.commit && c.commit.author && c.commit.author.name) || '')}</td>
+    <td><a class="mono" href="${esc(c.html_url)}" target="_blank" rel="noopener">${esc(c.sha.slice(0, 7))}</a></td>
+    ${withRollback ? `<td><button class="btn sm" onclick="rollbackTo('${esc(c.sha)}')" ${i === 0 ? 'disabled title="지금 배포된 상태입니다"' : ''}>이 시점으로 복원</button></td>` : ''}</tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+/* ── 11-3. 사이트 설정 · 점검 모드 ── */
+PAGES.site = function () {
+  const s = S.draft.site, m = s.maintenance, a = s.analytics;
+  return `<div class="page-h"><div><h1>🏠 사이트 설정·점검 모드</h1><p>고친 내용은 자동으로 임시저장되며, [저장·배포]를 눌러야 사이트에 반영됩니다.</p></div></div>
+  <div class="card">
+    <h2>🛠 전체 점검 모드</h2>
+    <label class="switch warn"><input type="checkbox" data-bind="site.maintenance.enabled" ${m.enabled ? 'checked' : ''}><span class="tr"></span><span>${m.enabled ? '점검 모드 켜짐 — 방문자는 안내 화면만 봅니다' : '점검 모드 꺼짐'}</span></label>
+    <div class="grid2" style="margin-top:14px">
+      <div class="full"><label class="f" for="mMsg">안내 문구</label><textarea class="in" id="mMsg" data-bind="site.maintenance.message">${esc(m.message)}</textarea></div>
+      <div><label class="f" for="mEnd">예정 종료 시간 <small>예) 2026-11-20 12:00</small></label><input class="in" id="mEnd" data-bind="site.maintenance.endTime" value="${esc(m.endTime)}" placeholder="YYYY-MM-DD HH:MM"></div>
+      <div><label class="f">빠른 입력</label><div class="row"><button class="btn sm" onclick="quickEnd(1)">1시간 뒤</button><button class="btn sm" onclick="quickEnd(3)">3시간 뒤</button><button class="btn sm" onclick="quickEnd(24)">내일 이 시간</button></div></div>
+    </div>
+    <p class="hint" style="margin:12px 0 0">※ 관리자 브라우저(관리자로 로그인한 적이 있는 PC)에서는 사이트가 그대로 보이고 위쪽에 '점검 모드' 띠만 나옵니다.</p>
+  </div>
+  <div class="card">
+    <h2>기본 정보</h2>
+    <div class="grid2">
+      <div><label class="f" for="sTitle">사이트 제목</label><input class="in" id="sTitle" data-bind="site.title" value="${esc(s.title)}"></div>
+      <div><label class="f" for="sColor">테마 색상</label>
+        <div class="row"><input type="color" id="sColorPick" value="${esc(validColor(s.themeColor))}" data-bind="site.themeColor" style="width:48px;height:40px;border:none;background:none;cursor:pointer;padding:0">
+        <input class="in mono" id="sColor" data-bind="site.themeColor" value="${esc(s.themeColor)}" style="flex:1"></div></div>
+      <div class="full"><label class="f" for="sSub">한 줄 설명 (부제)</label><input class="in" id="sSub" data-bind="site.subtitle" value="${esc(s.subtitle)}"></div>
+      <div class="full"><label class="f" for="sFoot">꼬리말 문구</label><input class="in" id="sFoot" data-bind="site.footerText" value="${esc(s.footerText)}"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>📈 방문 분석 <small class="hint">(비워 두면 사용하지 않음)</small></h2>
+    <div class="grid2">
+      <div><label class="f" for="sGa">Google Analytics 4 측정 ID <small>예) G-XXXXXXXXXX</small></label><input class="in mono" id="sGa" data-bind="site.analytics.ga4Id" value="${esc(a.ga4Id)}"></div>
+      <div><label class="f" for="sCf">Cloudflare Web Analytics 토큰</label><input class="in mono" id="sCf" data-bind="site.analytics.cloudflareToken" value="${esc(a.cloudflareToken)}"></div>
+    </div>
+  </div>`;
+};
+PAGES.site.after = bindInputs;
+const validColor = c => /^#[0-9a-f]{6}$/i.test(c || '') ? c : '#2563eb';
+function quickEnd(h) {
+  const d = new Date(Date.now() + 9 * 3600e3 + h * 3600e3).toISOString();
+  S.draft.site.maintenance.endTime = d.slice(0, 10) + ' ' + d.slice(11, 16);
+  touched(true);
+}
+// data-bind="a.b.c" 입력칸 ↔ S.draft 연결
+function bindInputs() {
+  document.querySelectorAll('#main [data-bind]').forEach(el => {
+    const path = el.dataset.bind.split('.');
+    const ev = el.type === 'checkbox' || el.type === 'color' ? 'change' : 'input';
+    el.addEventListener(ev, () => {
+      let o = S.draft; for (let i = 0; i < path.length - 1; i++) o = o[path[i]];
+      o[path[path.length - 1]] = el.type === 'checkbox' ? el.checked : el.value;
+      if (el.dataset.bind === 'site.themeColor') { if (el.type === 'color') $('sColor').value = el.value; else if (/^#[0-9a-f]{6}$/i.test(el.value)) $('sColorPick').value = el.value; }
+      touched(el.type === 'checkbox');
+    });
+  });
+}
+
+/* ── 11-4. 공지사항 · 배너 · 팝업 ── */
+PAGES.notices = function () {
+  const list = S.draft.notices;
+  const t = kToday();
+  const live = n => n.active && (!n.startDate || n.startDate <= t) && (!n.endDate || n.endDate >= t);
+  return `<div class="page-h"><div><h1>📢 공지·배너·팝업</h1><p>배너는 첫 화면 위쪽 띠, 팝업은 열릴 때 뜨는 창, 목록은 '공지사항' 칸에 보입니다.</p></div>
+    <button class="btn pri" onclick="editNotice()">+ 공지 추가</button></div>
+  <div class="card"><div class="tbl-wrap"><table class="t"><thead><tr><th>활성</th><th>유형</th><th>중요도</th><th>제목</th><th>노출 기간</th><th>지금</th><th></th></tr></thead><tbody>
+  ${list.map((n, i) => `<tr>
+    <td><label class="switch" title="활성/비활성"><input type="checkbox" ${n.active ? 'checked' : ''} onchange="S.draft.notices[${i}].active=this.checked;touched(true)"><span class="tr"></span></label></td>
+    <td><span class="pill ty">${esc(TYPES[n.type] || n.type)}</span></td>
+    <td><span class="pill lv-${esc(n.level)}">${esc(LEVELS[n.level] || n.level)}</span></td>
+    <td><b>${esc(n.title)}</b><div class="hint ellip">${esc(n.content)}</div></td>
+    <td style="white-space:nowrap">${esc(n.startDate || '제한 없음')} ~ ${esc(n.endDate || '제한 없음')}</td>
+    <td>${live(n) ? '<span class="pill st-active">노출 중</span>' : !n.active ? '<span class="pill st-hidden">꺼짐</span>' : (n.startDate && n.startDate > t) ? '<span class="pill lv-info">예약</span>' : '<span class="pill st-hidden">기간 끝</span>'}</td>
+    <td style="white-space:nowrap"><button class="btn sm" onclick="editNotice(${i})">수정</button> <button class="btn sm" onclick="renewDismiss(${i})" title="'다시 보지 않기'를 누른 방문자에게도 다시 보이게 합니다">다시 보이기</button> <button class="btn sm danger" onclick="delNotice(${i})">삭제</button></td>
+  </tr>`).join('') || '<tr><td colspan="7" class="empty">공지가 없습니다. [+ 공지 추가]를 눌러 보세요.</td></tr>'}
+  </tbody></table></div></div>`;
+};
+function newDismissKey() { return 'v' + kToday().replace(/-/g, '') + '-' + Math.random().toString(36).slice(2, 5); }
+function renewDismiss(i) { S.draft.notices[i].dismissKey = newDismissKey(); touched(true); toast("'다시 보지 않기' 키를 새로 만들었습니다. 배포하면 모든 방문자에게 다시 보입니다."); }
+function delNotice(i) { if (!confirm(`'${S.draft.notices[i].title}' 공지를 삭제할까요?`)) return; S.draft.notices.splice(i, 1); touched(true); }
+function editNotice(i) {
+  const isNew = i == null;
+  const n = isNew ? { id: newId('notice'), type: 'banner', level: 'info', title: '', content: '', link: '', startDate: kToday(), endDate: '', active: true, dismissKey: newDismissKey() } : clone(S.draft.notices[i]);
+  const radios = (name, map, val) => `<div class="seg">${Object.keys(map).map(k => `<label><input type="radio" name="${name}" value="${k}" ${val === k ? 'checked' : ''}><span>${map[k]}</span></label>`).join('')}</div>`;
+  const m = modal(isNew ? '📢 공지 추가' : '📢 공지 수정', `
+    <div class="grid2">
+      <div><label class="f">유형</label>${radios('nType', TYPES, n.type)}</div>
+      <div><label class="f">중요도</label>${radios('nLevel', LEVELS, n.level)}</div>
+      <div class="full"><label class="f" for="nTitle">제목 <small>필수</small></label><input class="in" id="nTitle" value="${esc(n.title)}" maxlength="80"></div>
+      <div class="full"><label class="f" for="nContent">내용</label><textarea class="in" id="nContent">${esc(n.content)}</textarea></div>
+      <div class="full"><label class="f" for="nLink">링크 <small>선택 · '자세히 보기' 버튼으로 연결</small></label><input class="in mono" id="nLink" value="${esc(n.link)}" placeholder="/labor.html 또는 https://..."></div>
+      <div><label class="f" for="nStart">노출 시작일 <small>비우면 바로</small></label><input class="in" type="date" id="nStart" value="${esc(n.startDate)}"></div>
+      <div><label class="f" for="nEnd">노출 종료일 <small>비우면 계속</small></label><input class="in" type="date" id="nEnd" value="${esc(n.endDate)}"></div>
+      <div><label class="switch"><input type="checkbox" id="nActive" ${n.active ? 'checked' : ''}><span class="tr"></span><span>활성</span></label></div>
+      <div><label class="f">다시 보지 않기 키 <small>바꾸면 모두에게 다시 보임</small></label><div class="row"><input class="in mono" id="nKey" value="${esc(n.dismissKey)}" style="flex:1"><button class="btn sm" type="button" onclick="$('nKey').value=newDismissKey()">새로 만들기</button></div></div>
+    </div>`, [{ t: '취소' }, { t: isNew ? '추가' : '적용', pri: true, fn: () => {
+      const v = { id: n.id,
+        type: document.querySelector('input[name=nType]:checked').value, level: document.querySelector('input[name=nLevel]:checked').value,
+        title: $('nTitle').value.trim(), content: $('nContent').value.trim(), link: $('nLink').value.trim(),
+        startDate: $('nStart').value, endDate: $('nEnd').value, active: $('nActive').checked, dismissKey: $('nKey').value.trim() || newDismissKey() };
+      if (!v.title) { toast('제목을 적어 주세요.', true); $('nTitle').focus(); return false; }
+      if (v.startDate && v.endDate && v.startDate > v.endDate) { toast('종료일이 시작일보다 빠릅니다.', true); return false; }
+      if (isNew) S.draft.notices.push(v); else S.draft.notices[i] = v;
+      touched(true); toast(isNew ? '공지를 추가했습니다. (배포 전)' : '공지를 고쳤습니다. (배포 전)');
+    } }]);
+  setTimeout(() => $('nTitle').focus(), 30);
+  return m;
+}
+
+/* ── 11-5. 카테고리 ── */
+PAGES.categories = function () {
+  const cats = sortedCats();
+  return `<div class="page-h"><div><h1>🗂 카테고리</h1><p>행을 끌어 놓거나 ▲▼로 순서를 바꿉니다. 숨긴 카테고리의 콘텐츠는 첫 화면에 보이지 않습니다.</p></div>
+    <button class="btn pri" onclick="addCat()">+ 카테고리 추가</button></div>
+  <div class="card"><div class="tbl-wrap"><table class="t" id="catTbl"><thead><tr><th></th><th>순서</th><th>이름</th><th>표시</th><th>콘텐츠 수</th><th></th></tr></thead><tbody>
+  ${cats.map((c, idx) => { const n = S.draft.items.filter(i => i.categoryId === c.id).length;
+    return `<tr draggable="true" data-id="${esc(c.id)}">
+      <td class="handle" title="끌어서 순서 바꾸기">⋮⋮</td><td>${idx + 1}</td>
+      <td><input class="in" value="${esc(c.name)}" onchange="catById('${esc(c.id)}').name=this.value.trim()||'이름 없음';touched()" style="min-width:180px"></td>
+      <td><label class="switch"><input type="checkbox" ${c.visible !== false ? 'checked' : ''} onchange="catById('${esc(c.id)}').visible=this.checked;touched(true)"><span class="tr"></span></label></td>
+      <td>${n}</td>
+      <td style="white-space:nowrap"><button class="btn sm" onclick="moveCat('${esc(c.id)}',-1)" ${idx === 0 ? 'disabled' : ''}>▲</button> <button class="btn sm" onclick="moveCat('${esc(c.id)}',1)" ${idx === cats.length - 1 ? 'disabled' : ''}>▼</button>
+        <button class="btn sm" onclick="S.itemFilter.cat='${esc(c.id)}';go('items')">콘텐츠 보기</button> <button class="btn sm danger" onclick="delCat('${esc(c.id)}')">삭제</button></td></tr>`; }).join('') || '<tr><td colspan="6" class="empty">카테고리가 없습니다.</td></tr>'}
+  </tbody></table></div></div>`;
+};
+PAGES.categories.after = () => enableDrag($('catTbl'), ids => { ids.forEach((id, i) => catById(id).order = i + 1); touched(true); });
+const sortedCats = () => S.draft.categories.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+const catById = id => S.draft.categories.find(c => c.id === id);
+function renumberCats(list) { list.forEach((c, i) => c.order = i + 1); }
+function addCat() {
+  const name = prompt('새 카테고리 이름을 적어 주세요.'); if (!name || !name.trim()) return;
+  S.draft.categories.push({ id: newId('cat'), name: name.trim(), order: S.draft.categories.length + 1, visible: true });
+  renumberCats(sortedCats()); touched(true);
+}
+function moveCat(id, dir) {
+  const list = sortedCats(), i = list.findIndex(c => c.id === id), j = i + dir;
+  if (j < 0 || j >= list.length) return;
+  [list[i], list[j]] = [list[j], list[i]]; renumberCats(list); touched(true);
+}
+function delCat(id) {
+  const c = catById(id), n = S.draft.items.filter(i => i.categoryId === id).length;
+  if (n) return alert(`'${c.name}'에 콘텐츠가 ${n}개 있습니다.\n콘텐츠를 다른 카테고리로 옮기거나 삭제한 뒤 지워 주세요.`);
+  if (!confirm(`'${c.name}' 카테고리를 삭제할까요?`)) return;
+  S.draft.categories = S.draft.categories.filter(x => x.id !== id); renumberCats(sortedCats()); touched(true);
+}
+
+/* ── 11-6. 콘텐츠(프로그램) ── */
+PAGES.items = function () {
+  const f = S.itemFilter, cats = sortedCats();
+  const q = f.q.trim().toLowerCase();
+  const list = S.draft.items.filter(i => (!f.cat || i.categoryId === f.cat) && (!f.status || i.status === f.status) &&
+    (!q || [i.title, i.description, i.url, (i.tags || []).join(' ')].join(' ').toLowerCase().includes(q)))
+    .sort((a, b) => catOrder(a.categoryId) - catOrder(b.categoryId) || (a.order || 0) - (b.order || 0));
+  const canDrag = !!f.cat && !f.status && !q;
+  return `<div class="page-h"><div><h1>🧩 콘텐츠(프로그램)</h1><p>첫 화면의 업무 카드입니다. 순서는 카테고리를 하나 고르면 끌어서 바꿀 수 있습니다.</p></div>
+    <button class="btn pri" onclick="editItem()">+ 콘텐츠 추가</button></div>
+  <div class="card" style="padding:14px 16px">
+    <div class="row">
+      <select class="in" style="width:auto" onchange="S.itemFilter.cat=this.value;render()"><option value="">전체 카테고리</option>${cats.map(c => `<option value="${esc(c.id)}" ${f.cat === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
+      <select class="in" style="width:auto" onchange="S.itemFilter.status=this.value;render()"><option value="">전체 상태</option>${Object.keys(STATUS).map(k => `<option value="${k}" ${f.status === k ? 'selected' : ''}>${STATUS[k]}</option>`).join('')}</select>
+      <input class="in" id="itemQ" placeholder="🔍 제목·설명·주소·태그 검색" value="${esc(f.q)}" style="flex:1;min-width:200px">
+      ${f.cat || f.status || f.q ? `<button class="btn sm" onclick="S.itemFilter={cat:'',status:'',q:''};render()">필터 지우기</button>` : ''}
+    </div>
+    ${!canDrag ? '<p class="hint" style="margin:8px 0 0">↕ 순서를 끌어서 바꾸려면 카테고리를 하나 고르고 상태·검색 필터를 비워 주세요. (▲▼ 버튼은 언제나 쓸 수 있습니다)</p>' : ''}
+  </div>
+  <div class="card"><div class="tbl-wrap"><table class="t" id="itemTbl"><thead><tr><th></th><th>아이콘</th><th>제목</th><th>카테고리</th><th>상태</th><th>배지</th><th>버전</th><th>주소</th><th></th></tr></thead><tbody>
+  ${list.map(i => `<tr ${canDrag ? 'draggable="true"' : ''} data-id="${esc(i.id)}">
+    <td class="handle">${canDrag ? '⋮⋮' : ''}</td><td style="font-size:22px">${esc(i.icon)}</td>
+    <td><b>${esc(i.title)}</b>${i.openInNewTab ? ' <span class="hint">↗새 탭</span>' : ''}<div class="hint ellip">${esc(i.description)}</div></td>
+    <td>${esc((catById(i.categoryId) || {}).name || '⚠️ 없음')}</td>
+    <td><select class="in" style="width:auto;padding:5px 8px" onchange="itemById('${esc(i.id)}').status=this.value;touched(true)">${Object.keys(STATUS).map(k => `<option value="${k}" ${i.status === k ? 'selected' : ''}>${STATUS[k]}</option>`).join('')}</select></td>
+    <td>${i.badge ? `<span class="pill b-${esc(i.badge)}">${esc(i.badge)}</span>` : '<span class="muted">-</span>'}</td>
+    <td class="mono">${esc(i.version)}</td>
+    <td class="mono ellip" style="max-width:160px" title="${esc(i.url)}">${esc(i.url)}</td>
+    <td style="white-space:nowrap"><button class="btn sm" onclick="moveItem('${esc(i.id)}',-1)">▲</button> <button class="btn sm" onclick="moveItem('${esc(i.id)}',1)">▼</button> <button class="btn sm" onclick="editItem('${esc(i.id)}')">수정</button> <button class="btn sm danger" onclick="delItem('${esc(i.id)}')">삭제</button></td>
+  </tr>`).join('') || '<tr><td colspan="9" class="empty">조건에 맞는 콘텐츠가 없습니다.</td></tr>'}
+  </tbody></table></div></div>`;
+};
+PAGES.items.after = () => {
+  const q = $('itemQ'); let t;
+  q.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { S.itemFilter.q = q.value; const pos = q.selectionStart; render(); const n = $('itemQ'); n.focus(); n.setSelectionRange(pos, pos); }, 250); });
+  if (S.itemFilter.cat && !S.itemFilter.status && !S.itemFilter.q) enableDrag($('itemTbl'), ids => { ids.forEach((id, i) => itemById(id).order = i + 1); touched(true); });
+};
+const catOrder = id => (catById(id) || { order: 999 }).order || 0;
+const itemById = id => S.draft.items.find(i => i.id === id);
+const itemsIn = cid => S.draft.items.filter(i => i.categoryId === cid).sort((a, b) => (a.order || 0) - (b.order || 0));
+function moveItem(id, dir) {
+  const it = itemById(id), list = itemsIn(it.categoryId), i = list.indexOf(it), j = i + dir;
+  if (j < 0 || j >= list.length) return toast(dir < 0 ? '카테고리 안에서 맨 앞입니다.' : '카테고리 안에서 맨 뒤입니다.');
+  [list[i], list[j]] = [list[j], list[i]]; list.forEach((x, k) => x.order = k + 1); touched(true);
+}
+function delItem(id) {
+  const it = itemById(id); if (!confirm(`'${it.title}' 콘텐츠를 삭제할까요?\n(첫 화면에서 잠시만 빼려면 상태를 '숨김'으로 바꾸세요)`)) return;
+  S.draft.items = S.draft.items.filter(x => x.id !== id); itemsIn(it.categoryId).forEach((x, k) => x.order = k + 1); touched(true);
+}
+function bumpVersion(v) { const p = String(v || '1.0.0').split('.').map(n => parseInt(n, 10) || 0); while (p.length < 3) p.push(0); p[2]++; return p.join('.'); }
+function editItem(id) {
+  const isNew = !id, cats = sortedCats();
+  if (!cats.length) return toast('먼저 카테고리를 하나 만들어 주세요.', true);
+  const it = isNew ? { id: newId('item'), categoryId: S.itemFilter.cat || cats[0].id, title: '', description: '', url: '', openInNewTab: false, icon: '🚀', badge: '', status: 'active', version: '1.0.0', order: 0, tags: [], changelog: [{ date: kToday(), note: '최초 배포' }] } : clone(itemById(id));
+  let log = it.changelog.slice();
+  const radios = (name, map, val) => `<div class="seg">${Object.keys(map).map(k => `<label><input type="radio" name="${name}" value="${k}" ${val === k ? 'checked' : ''}><span>${map[k]}</span></label>`).join('')}</div>`;
+  const drawLog = () => {
+    const s = log.slice().map((l, k) => ({ l, k })).sort((a, b) => String(b.l.date).localeCompare(String(a.l.date)));
+    $('iLog').innerHTML = s.map(({ l, k }) => `<li><span class="d">${esc(l.date)}</span><span class="n">${esc(l.note)}</span><button class="btn sm danger" type="button" data-k="${k}">삭제</button></li>`).join('') || '<li class="hint">변경이력이 없습니다.</li>';
+    $('iLog').querySelectorAll('button[data-k]').forEach(b => b.onclick = () => { log.splice(+b.dataset.k, 1); drawLog(); });
+  };
+  modal(isNew ? '🧩 콘텐츠 추가' : '🧩 콘텐츠 수정', `
+    <div class="grid2">
+      <div class="full"><label class="f" for="iTitle">프로그램명 <small>필수</small></label><input class="in" id="iTitle" value="${esc(it.title)}" maxlength="60"></div>
+      <div><label class="f" for="iCat">카테고리</label><select class="in" id="iCat">${cats.map(c => `<option value="${esc(c.id)}" ${it.categoryId === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div>
+      <div><label class="f" for="iIcon">아이콘 (이모지)</label><input class="in" id="iIcon" value="${esc(it.icon)}" maxlength="8" style="font-size:20px;width:80px">
+        <div class="emoji-pick">${EMOJIS.map(e => `<button type="button" onclick="$('iIcon').value='${e}'">${e}</button>`).join('')}</div></div>
+      <div class="full"><label class="f" for="iDesc">설명</label><textarea class="in" id="iDesc" style="min-height:70px">${esc(it.description)}</textarea></div>
+      <div class="full"><label class="f" for="iUrl">주소 <small>사이트 안은 /파일명.html · 바깥은 https://...</small></label>
+        <div class="row"><input class="in mono" id="iUrl" value="${esc(it.url)}" placeholder="/labor.html" style="flex:1"><label class="chk"><input type="checkbox" id="iNew" ${it.openInNewTab ? 'checked' : ''}> 새 탭에서 열기</label></div></div>
+      <div class="full"><label class="f">상태</label>${radios('iStatus', { active: '✅ 사용 중', maintenance: '🛠 점검 중 (클릭 막힘)', hidden: '🙈 숨김' }, it.status)}</div>
+      <div><label class="f">배지</label>${radios('iBadge', { '': '없음', NEW: 'NEW', BETA: 'BETA', UPDATE: 'UPDATE' }, it.badge || '')}</div>
+      <div><label class="f" for="iVer">버전</label><div class="row"><input class="in mono" id="iVer" value="${esc(it.version)}" style="flex:1"><button class="btn sm" type="button" onclick="$('iVer').value=bumpVersion($('iVer').value)">+0.0.1</button></div></div>
+      <div class="full"><label class="f" for="iTags">태그 <small>쉼표(,)로 구분</small></label><input class="in" id="iTags" value="${esc(it.tags.join(', '))}" placeholder="엑셀 불러오기, 검색"></div>
+      <div class="full"><label class="f">변경이력 (Changelog)</label><ul class="loglist" id="iLog"></ul>
+        <div class="row"><input class="in" type="date" id="iLogDate" value="${kToday()}" style="width:auto"><input class="in" id="iLogNote" placeholder="바뀐 내용 (예: 엑셀 내보내기 추가)" style="flex:1;min-width:180px"><button class="btn sm pri" type="button" id="iLogAdd">이력 추가</button></div></div>
+    </div>`, [{ t: '취소' }, { t: isNew ? '추가' : '적용', pri: true, fn: () => {
+      const v = Object.assign(it, {
+        title: $('iTitle').value.trim(), categoryId: $('iCat').value, icon: $('iIcon').value.trim() || '📄',
+        description: $('iDesc').value.trim(), url: $('iUrl').value.trim(), openInNewTab: $('iNew').checked,
+        status: document.querySelector('input[name=iStatus]:checked').value, badge: document.querySelector('input[name=iBadge]:checked').value,
+        version: $('iVer').value.trim(), tags: $('iTags').value.split(',').map(t => t.trim()).filter(Boolean), changelog: log
+      });
+      if (!v.title) { toast('프로그램명을 적어 주세요.', true); $('iTitle').focus(); return false; }
+      if (v.url && /^javascript:/i.test(v.url)) { toast('이 주소는 쓸 수 없습니다.', true); return false; }
+      if (isNew) { v.order = itemsIn(v.categoryId).length + 1; S.draft.items.push(v); }
+      else {
+        const old = itemById(id);
+        if (old.categoryId !== v.categoryId) v.order = itemsIn(v.categoryId).length + 1;
+        S.draft.items[S.draft.items.indexOf(old)] = v;
+        if (old.categoryId !== v.categoryId) itemsIn(old.categoryId).forEach((x, k) => x.order = k + 1);
+      }
+      touched(true); toast(isNew ? '콘텐츠를 추가했습니다. (배포 전)' : '콘텐츠를 고쳤습니다. (배포 전)');
+    } }], true);
+  drawLog();
+  $('iLogAdd').onclick = () => { const note = $('iLogNote').value.trim(); if (!note) return $('iLogNote').focus(); log.push({ date: $('iLogDate').value || kToday(), note }); $('iLogNote').value = ''; drawLog(); };
+  $('iLogNote').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('iLogAdd').click(); } });
+  setTimeout(() => $('iTitle').focus(), 30);
+}
+
+/* 끌어서 순서 바꾸기 (표의 tr[draggable]) */
+function enableDrag(table, done) {
+  if (!table) return;
+  let dragEl = null;
+  table.querySelectorAll('tbody tr[draggable="true"]').forEach(tr => {
+    tr.addEventListener('dragstart', e => { dragEl = tr; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', tr.dataset.id); } catch (x) {} tr.style.opacity = '.4'; });
+    tr.addEventListener('dragend', () => { tr.style.opacity = ''; table.querySelectorAll('.drag-over').forEach(x => x.classList.remove('drag-over')); });
+    tr.addEventListener('dragover', e => { e.preventDefault(); tr.classList.add('drag-over'); });
+    tr.addEventListener('dragleave', () => tr.classList.remove('drag-over'));
+    tr.addEventListener('drop', e => {
+      e.preventDefault(); tr.classList.remove('drag-over');
+      if (!dragEl || dragEl === tr) return;
+      const rows = [...table.querySelectorAll('tbody tr[draggable="true"]')];
+      const from = rows.indexOf(dragEl), to = rows.indexOf(tr);
+      tr.parentNode.insertBefore(dragEl, from < to ? tr.nextSibling : tr);
+      done([...table.querySelectorAll('tbody tr[draggable="true"]')].map(r => r.dataset.id));
+    });
+  });
+}
+
+/* ── 11-7. 배포 이력 · 롤백 ── */
+PAGES.history = function () {
+  return `<div class="page-h"><div><h1>🕘 배포 이력·롤백</h1><p>설정 파일(<span class="mono">${esc(S.conn.path)}</span>)이 바뀐 최근 10번의 기록입니다.</p></div>
+    <button class="btn" onclick="loadCommits()">새로고침</button></div>
+  <div class="alert info">↩️ <div>[이 시점으로 복원]을 누르면 그때의 설정을 <b>편집 화면으로만</b> 불러옵니다. 내용을 확인한 뒤 [🚀 저장·배포]를 눌러야 사이트에 실제로 반영됩니다.</div></div>
+  <div class="card">${commitTable(true)}</div>`;
+};
+async function rollbackTo(sha) {
+  if (computeDiff().length && !confirm('지금 편집 중인(배포 안 된) 내용이 있습니다.\n그 시점의 설정으로 바꾸면 편집 내용이 사라집니다. 계속할까요?')) return;
+  try {
+    const f = await ghGetFile(sha);
+    S.draft = normalize(f.json);
+    touched(); go('dashboard');
+    toast(`${sha.slice(0, 7)} 시점의 설정을 불러왔습니다. 확인 후 [저장·배포]를 누르면 복원이 확정됩니다.`);
+  } catch (e) { toast(ghErrMsg(e), true); }
+}
+
+/* ── 11-8. 백업 · 복원 ── */
+PAGES.backup = function () {
+  return `<div class="page-h"><div><h1>💾 백업·복원</h1><p>편집 중인 설정을 JSON 파일로 내려받거나, 보관해 둔 JSON 파일을 불러옵니다.</p></div></div>
+  <div class="card"><h2>⬇️ 내려받기 (백업)</h2>
+    <p class="hint" style="margin-top:-6px">지금 편집 화면의 내용을 파일로 저장합니다. 큰 수정 전에 한 번씩 받아 두세요.</p>
+    <div class="row"><button class="btn pri" onclick="downloadJson('draft')" ${S.draft ? '' : 'disabled'}>편집 중인 설정 내려받기</button>
+    <button class="btn" onclick="downloadJson('original')" ${S.original ? '' : 'disabled'}>배포된 설정 내려받기</button></div></div>
+  <div class="card"><h2>⬆️ 불러오기 (복원)</h2>
+    <p class="hint" style="margin-top:-6px">JSON 파일을 고르면 편집 화면으로 불러옵니다. [저장·배포]를 눌러야 사이트에 반영됩니다.</p>
+    <input type="file" id="upJson" accept=".json,application/json" class="in" style="max-width:420px"></div>
+  <div class="card"><h2>🧹 이 브라우저의 임시저장</h2>
+    <p class="hint" style="margin-top:-6px">자동 임시저장 내용과 미리보기 자료를 지웁니다. (GitHub의 파일은 그대로)</p>
+    <button class="btn danger" onclick="store.del(K.draft);store.del(K.preview);S.pendingRestore=null;toast('임시저장을 지웠습니다.')">임시저장 지우기</button></div>`;
+};
+PAGES.backup.after = () => {
+  $('upJson').addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const j = JSON.parse(await f.text());
+      if (!j || typeof j !== 'object' || (!j.site && !j.items)) throw new Error('site-config 형식이 아닙니다.');
+      if (S.draft && computeDiff().length && !confirm('지금 편집 중인 내용이 파일 내용으로 바뀝니다. 계속할까요?')) return;
+      S.draft = normalize(j); touched(); toast(`'${f.name}'을(를) 불러왔습니다. 확인 후 [저장·배포]하세요.`); go('dashboard');
+    } catch (err) { toast('파일을 읽지 못했습니다: ' + err.message, true); }
+    e.target.value = '';
+  });
+};
+function downloadJson(which) {
+  const obj = which === 'original' ? S.original : S.draft; if (!obj) return;
+  const blob = new Blob([JSON.stringify(obj, null, 2) + '\n'], { type: 'application/json;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `site-config_${which === 'original' ? '배포본' : '편집본'}_${kToday()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* ───────── 12. 저장 · 배포 ───────── */
+function validate(c) {
+  const errs = [], ids = new Set();
+  const dup = (arr, label) => arr.forEach(x => { if (!x.id) errs.push(`${label}에 id가 없는 항목이 있습니다.`); else if (ids.has(x.id)) errs.push(`id가 겹칩니다: ${x.id}`); else ids.add(x.id); });
+  dup(c.notices, '공지'); dup(c.categories, '카테고리'); dup(c.items, '콘텐츠');
+  const catIds = new Set(c.categories.map(x => x.id));
+  c.items.forEach(i => { if (!i.title) errs.push(`제목이 없는 콘텐츠가 있습니다 (${i.id}).`); if (!catIds.has(i.categoryId)) errs.push(`'${i.title}'의 카테고리가 없습니다.`); });
+  c.notices.forEach(n => { if (!n.title) errs.push(`제목이 없는 공지가 있습니다 (${n.id}).`); });
+  if (c.site.themeColor && !/^#[0-9a-f]{3,8}$/i.test(c.site.themeColor)) errs.push('테마 색상 형식이 올바르지 않습니다. (예: #2563eb)');
+  return errs;
+}
+function openDeploy() {
+  if (!S.draft) return;
+  const d = computeDiff();
+  if (!d.length) return toast('배포할 변경 내용이 없습니다.');
+  const errs = validate(S.draft);
+  const noConn = !S.token || (!S.original && !S.missingFile);
+  const def = d.length === 1 ? d[0].t : `${d[0].t} 외 ${d.length - 1}건`;
+  modal('🚀 저장·배포', `
+    ${noConn ? `<div class="alert bad">🔑 <div>GitHub에 연결되어 있지 않아 배포할 수 없습니다. [연결 설정]에서 토큰으로 연결해 주세요. 편집 내용은 임시저장되어 있습니다.</div></div>` : ''}
+    ${errs.length ? `<div class="alert bad">⛔ <div><b>고쳐야 할 점이 있습니다.</b><br>${errs.map(esc).join('<br>')}</div></div>` : ''}
+    <label class="f">바뀐 내용 (${d.length}건)</label>
+    <ul class="diff">${d.map(x => `<li><span class="k ${x.k}">${{ add: '추가', mod: '수정', del: '삭제' }[x.k]}</span><span>${esc(x.t)}${x.d ? ` <span class="d">— ${esc(x.d)}</span>` : ''}</span></li>`).join('')}</ul>
+    <label class="f" for="cMsg" style="margin-top:16px">커밋 메시지 <small>무엇을 바꿨는지 짧게</small></label>
+    <input class="in" id="cMsg" value="${esc('설정 변경: ' + def)}" maxlength="120">
+    <p class="hint" style="margin:10px 0 0">배포하면 1~2분 뒤 사이트에 반영됩니다. 버전은 자동으로 ${esc(S.draft.meta.version)} → ${esc(bumpVersion(S.draft.meta.version))}(으)로 올라갑니다.</p>`,
+    [{ t: '취소' }, { t: '🚀 배포하기', pri: true, disabled: noConn || errs.length > 0, fn: doDeploy }], true);
+}
+async function doDeploy(btn) {
+  const msg = ($('cMsg').value || '').trim() || '설정 변경';
+  const next = clone(S.draft);
+  next.meta = Object.assign({}, next.meta, { version: bumpVersion(next.meta.version), updatedAt: kNow(), updatedBy: S.login || S.conn.owner || 'admin' });
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> 배포 중...';
+  try {
+    const r = await ghPutFile(next, msg, S.sha);
+    S.sha = r.content && r.content.sha; S.original = clone(next); S.draft = clone(next); S.missingFile = false;
+    store.del(K.draft); S.pendingRestore = null;
+    closeModal(); updateTop(); pushPreview(); render();
+    toast('✅ 배포했습니다. 1~2분 뒤 사이트에 반영됩니다.');
+    loadCommits();
+  } catch (e) {
+    btn.disabled = false; btn.textContent = '🚀 배포하기';
+    if (e.status === 409 || (e.status === 422 && /sha/i.test(e.message))) {
+      if (confirm(ghErrMsg({ status: 409 }) + '\n\n지금 GitHub의 최신 파일을 불러올까요? (편집 내용은 임시저장되어 [복구하기]로 되살릴 수 있습니다)')) {
+        store.set(K.draft, { draft: S.draft, baseSha: S.sha, savedAt: kNow(), conn: S.conn.owner + '/' + S.conn.repo + '/' + S.conn.path });
+        closeModal(); await loadLatest();
+      }
+    } else toast(ghErrMsg(e), true);
+  }
+}
+
+/* ───────── 13. 창(모달) ───────── */
+let curModal = null;
+function modal(title, body, buttons, wide) {
+  closeModal();
+  const back = document.createElement('div');
+  back.className = 'mback';
+  back.innerHTML = `<div class="modal${wide ? ' wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <div class="mh"><h3>${esc(title)}</h3><button class="x" aria-label="닫기">×</button></div>
+    <div class="mb">${body}</div>
+    <div class="mf">${buttons.map((b, i) => `<button class="btn${b.pri ? ' pri' : ''}" data-i="${i}" ${b.disabled ? 'disabled' : ''}>${b.t}</button>`).join('')}</div></div>`;
+  document.body.appendChild(back);
+  back.querySelector('.x').onclick = closeModal;
+  back.addEventListener('mousedown', e => { if (e.target === back) closeModal(); });
+  back.querySelectorAll('.mf button').forEach(btn => btn.onclick = async () => {
+    const b = buttons[+btn.dataset.i];
+    if (!b.fn) return closeModal();
+    const r = await b.fn(btn);
+    if (r !== false && b.fn !== doDeploy) closeModal();
+  });
+  curModal = back;
+  return back;
+}
+function closeModal() { if (curModal) { curModal.remove(); curModal = null; } }
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && curModal) closeModal();
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); openDeploy(); }   // Ctrl+S = 저장·배포 창
+});
+
+/* ───────── 14. 시작 ───────── */
+(async function init() {
+  document.querySelectorAll('.side button[data-page]').forEach(b => b.onclick = () => go(b.dataset.page));
+  loadSavedConn();
+  const saved = store.get(K.page, 'connect');
+  S.page = PAGES[saved] ? saved : 'connect';
+  if (S.token) {
+    S.page = S.page === 'connect' ? 'dashboard' : S.page;
+    go(S.page);
+    $('main').innerHTML = '<div class="card"><span class="spin"></span> GitHub에 연결해 최신 설정을 불러오는 중입니다...</div>';
+    try { await testConnection(); await loadLatest(true); }
+    catch (e) { toast(ghErrMsg(e), true); await loadPublic(); go('connect'); }
+  } else {
+    await loadPublic();
+    go('connect');
+  }
+  updateTop();
+})();
+</script>
+</body>
+</html>
