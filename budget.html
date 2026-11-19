@@ -216,13 +216,24 @@
         .cmp-card.wide { flex: 2; min-width: 300px; }
         .cmp-card.wide p { font-size: 0.9rem; line-height: 1.6; }
         .cmp-up { color: #1d4ed8; } .cmp-down { color: var(--danger); }
-        #cmpTable th { text-align: center; }
+        #cmpTable { width: max-content; min-width: 0; }   /* 칸 너비를 머리글·내용 길이에 딱 맞춤 (화면 폭까지 억지로 늘리지 않음) */
+        #cmpTable thead { position: sticky; top: 0; z-index: 10; }
+        #cmpTable th { position: static; text-align: center; }
+        /* 사업내역 레벨1~6 : 레벨 사이 구분선 */
+        #cmpTable th.cmp-lvg { background: #ccfbf1; color: #134e4a; border-left: 2px solid #0f766e; border-right: 2px solid #0f766e; border-bottom: 1px solid #0f766e; }
+        #cmpTable th.cmp-lv { background: #f0fdfa; color: #134e4a; font-size: 0.78rem; border-left: 1px solid #0f766e; }
+        #cmpTable th.cmp-lv:last-child { border-right: 2px solid #0f766e; }
+        #cmpTable th.cmp-lv { padding-left: 8px; padding-right: 8px; }
+        #cmpTable td.cmp-lv { border-left: 1px solid #14b8a6; }
+        #cmpTable td.cmp-lv.cmp-lab { padding-left: 8px; }   /* 계단식: 자기 레벨 칸에서 시작해 오른쪽 레벨 칸까지 이어 씀 */
+        #cmpTable td.cmp-lv + td:not(.cmp-lv) { border-left: 2px solid #0f766e; }
+        #cmpTable tbody td.cmp-lv:first-child, #cmpTable td:not(.cmp-lv) + td.cmp-lv { border-left: 2px solid #0f766e; }
         #cmpTable tr.cmp-total td { background: #fffbeb; font-weight: 900; border-bottom: 2px solid var(--warning); }
         #cmpTable tr.cmp-d0 td { background: #eef2f7; font-weight: 800; }
         #cmpTable tr.cmp-d1 td { background: #f8fafc; font-weight: 700; }
         #cmpTable tr.cmp-leaf td { background: #fff; font-weight: 400; }
         #cmpTable td.cmp-c { text-align: center; }
-        #cmpTable td.cmp-note { min-width: 220px; white-space: normal; background: #fffef5; cursor: text; }
+        #cmpTable td.cmp-note { background: #fffef5; cursor: text; }
         #cmpTable td.cmp-note:focus { outline: 2px solid var(--accent); background: #fff; }
         #cmpTable td.cmp-msg { text-align: center; padding: 30px; white-space: normal; font-weight: 400; }
         .cmp-badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.74rem; font-weight: 700; }
@@ -233,9 +244,9 @@
         .cmp-info.warn { background: #fffbeb; border-color: #fcd34d; color: #78350f; }
         .cmp-info:empty { display: none; }
         #cmpTable tr.cmp-d2 td { background: #fbfcfe; font-weight: 700; }
-        #cmpTable td.cmp-calc { white-space: normal; min-width: 170px; max-width: 300px; font-size: 0.78rem; color: #334155; }
+        #cmpTable td.cmp-calc { font-size: 0.78rem; color: #334155; }
         #cmpTable td.cmp-calc.diff { background: #fff7ed; }
-        #cmpTable td.cmp-lab { white-space: normal; min-width: 120px; }
+        #cmpTable td.cmp-lab { white-space: nowrap; }
         .cmp-ctl select { max-width: 330px; }
         .cmp-help { font-size: 0.78rem; color: var(--text-muted); margin: -4px 0 10px; line-height: 1.5; }
 
@@ -2259,20 +2270,18 @@
     }
     const cmpWon = (x) => Math.round(x / 1000).toLocaleString('ko-KR') + '천원';
 
-    // 분류 단계를 표의 열로 배치: 정책사업·단위사업·세부사업 등은 단계마다 한 열씩,
-    // 사업내역1~6이 이어질 때는 원본 내역서처럼 '사업내역' 한 열에 들여쓰기로 표시
+    // 분류 단계를 표의 열로 배치: 단계마다 한 열씩.
+    // 사업내역1~6은 큰 머리글 '사업내역' 아래에 '레벨1'~'레벨6' 작은 머리글로 나누어 표시
+    //  → cols: [{ name: 머리글, lv: 레벨 번호(사업내역이 아니면 0) }],  map[단계] = { col: 열 번호 }
     function cmpLabelCols(g) {
-        const cols = [], map = [];          // map[단계] = { col: 열 번호, indent: 들여쓰기 칸 }
-        let itemCol = -1, itemStart = 0;
-        g.forEach((f, d) => {
-            if (CMP_ITEMS.includes(f)) {
-                if (itemCol >= 0 && d > 0 && CMP_ITEMS.includes(g[d - 1])) { map.push({ col: itemCol, indent: d - itemStart }); cols[itemCol] = '사업내역'; return; }
-                itemCol = cols.length; itemStart = d;
-            }
-            map.push({ col: cols.length, indent: 0 });
-            cols.push(f);
+        const cols = g.map(f => { const lv = CMP_ITEMS.indexOf(f) + 1; return { name: lv ? '레벨' + lv : f, lv: lv }; });
+        // 머리글 첫 줄: 이어진 레벨 열은 '사업내역' 한 칸으로 묶고, 나머지는 두 줄을 합친 칸
+        const top = [];
+        cols.forEach((c, i) => {
+            if (c.lv && i > 0 && cols[i - 1].lv) top[top.length - 1].span++;
+            else top.push({ name: c.lv ? '사업내역' : c.name, span: 1, group: !!c.lv, start: i });
         });
-        return { cols: cols, map: map };
+        return { cols: cols, map: g.map((f, i) => ({ col: i })), top: top, two: cols.some(c => c.lv) };
     }
 
     function cmpRefresh() {
@@ -2369,9 +2378,12 @@
                 <span class="cmp-badge cmp-b-dec">산출내역 변경 ${c.calc}</span></p></div>`;
 
         const nLab = lc.cols.length, nCol = nLab + 6 + (calc ? 3 : 0);
-        head.innerHTML = '<tr>' + lc.cols.map(f => `<th>${E(f)}</th>`).join('') +
-            `<th>${E(cn.a)}</th><th>${E(cn.b)}</th><th>증감액 (B−A)</th><th>증감률 (%)</th><th>구분</th>` +
-            (calc ? `<th>목-세목</th><th>${E(cn.la)} 산출내역</th><th>${E(cn.lb)} 산출내역</th>` : '') + '<th>증감 사유 (직접 입력)</th></tr>';
+        // 머리글: 사업내역이 있으면 두 줄 (윗줄 '사업내역', 아랫줄 '레벨1'~'레벨6')
+        const rs = lc.two ? ' rowspan="2"' : '';
+        const others = [cn.a, cn.b, '증감액 (B−A)', '증감률 (%)', '구분', ...(calc ? ['목-세목', `${cn.la} 산출내역`, `${cn.lb} 산출내역`] : []), '증감 사유 (직접 입력)'];
+        head.innerHTML = '<tr>' + lc.top.map(t => t.group ? `<th class="cmp-lvg" colspan="${t.span}">${E(t.name)}</th>` : `<th${rs}>${E(t.name)}</th>`).join('') +
+            others.map(n => `<th${rs}>${E(n)}</th>`).join('') + '</tr>' +
+            (lc.two ? '<tr>' + lc.cols.filter(c => c.lv).map(c => `<th class="cmp-lv">${E(c.name)}</th>`).join('') + '</tr>' : '');
 
         const cell = (r, isTotal, i) => {
             const d = cmpDisp(r.b) - cmpDisp(r.a);
@@ -2387,8 +2399,16 @@
         m.rows.slice(0, LIMIT).forEach((r, i) => {
             const cls = r.leaf ? 'cmp-leaf' : ('cmp-d' + Math.min(r.depth, 3));
             const at = lc.map[r.depth];
-            const labs = lc.cols.map((f, l) => l !== at.col ? '<td></td>'
-                : `<td class="cmp-lab" style="padding-left:${12 + at.indent * 16}px" title="${E(r.field)}">${E(r.path[r.depth])}</td>`).join('');
+            // 계단식 표시: 레벨 칸의 내용은 자기 레벨 열에서 시작해 그 묶음의 마지막 레벨 열까지 이어서 한 칸으로 씀
+            let labs = '', skipTo = -1;
+            lc.cols.forEach((c, l) => {
+                if (l <= skipTo) return;
+                if (l !== at.col) { labs += `<td class="${c.lv ? 'cmp-lv' : ''}"></td>`; return; }
+                let end = l;
+                if (c.lv) while (end + 1 < lc.cols.length && lc.cols[end + 1].lv) end++;
+                skipTo = end;
+                labs += `<td class="${c.lv ? 'cmp-lv ' : ''}cmp-lab"${end > l ? ` colspan="${end - l + 1}"` : ''} title="${E(r.field)}">${E(r.path[r.depth])}</td>`;
+            });
             h += `<tr class="${cls}">` + labs + cell(r, false, i) + '</tr>';
         });
         if (!m.rows.length) h += `<tr><td class="cmp-msg" colspan="${nCol}">조건에 맞는 항목이 없습니다. '보기'나 증감액·증감률·부서·세목 조건을 바꿔 보세요.</td></tr>`;
@@ -2403,7 +2423,7 @@
         if (typeof XLSX === 'undefined') return alert("엑셀 다운로드 모듈을 사용할 수 없습니다.");
         if (!cmpModel) return alert('내보낼 비교표가 없습니다. 먼저 ①, ② 자료를 넣어 주세요.');
         const m = cmpModel, gf = m.g, cn = cmpColNames(), calc = !!cmpOpt.calc, lc = cmpLabelCols(gf);
-        const labCols = lc.cols, G = labCols.length;
+        const labCols = lc.cols.map(c => c.name), G = labCols.length, HR = lc.two ? 2 : 1, R0 = 3 + HR;   // HR = 머리글 줄 수, R0 = '합 계' 줄 위치
         const viewName = { all: '전체', changed: '증감 있는 것만', inc: '증액만', dec: '감액만', new: '신규만', gone: '폐지만', calc: '산출내역이 바뀐 것만' }[cmpOpt.view];
         const conds = [`분류: ${gf.join(' ▸ ')}`, `보기: ${viewName}`];
         if (cmpOpt.dept) conds.push(`부서: ${cmpOpt.dept}`);
@@ -2411,8 +2431,12 @@
         if (cmpOpt.minDiff !== '') conds.push(`증감액 ${cmpOpt.minDiff}${cmpUnitName()} 이상`);
         if (cmpOpt.minRate !== '') conds.push(`증감률 ${cmpOpt.minRate}% 이상`);
         if (cmpOpt.kw) conds.push(`검색: ${cmpOpt.kw}`);
-        const aoa = [[`${cn.la} 대비 ${cn.lb} 세출예산 증감 현황`], [conds.join('  |  ') + `   (단위: ${cmpUnitName()}, %)`], [],
-                     [...labCols, cn.a, cn.b, '증감액(B-A)', '증감률(%)', '구분', ...(calc ? ['목-세목', `${cn.la} 산출내역`, `${cn.lb} 산출내역`] : []), '증감 사유']];
+        const otherHead = [cn.a, cn.b, '증감액(B-A)', '증감률(%)', '구분', ...(calc ? ['목-세목', `${cn.la} 산출내역`, `${cn.lb} 산출내역`] : []), '증감 사유'];
+        const aoa = [[`${cn.la} 대비 ${cn.lb} 세출예산 증감 현황`], [conds.join('  |  ') + `   (단위: ${cmpUnitName()}, %)`], []];
+        if (lc.two) {
+            aoa.push([...lc.cols.map(c => c.lv ? '사업내역' : c.name), ...otherHead]);            // 윗줄
+            aoa.push([...lc.cols.map(c => c.lv ? c.name : ''), ...otherHead.map(() => '')]);      // 아랫줄 (레벨1~6)
+        } else aoa.push([...labCols, ...otherHead]);
         const line = (labels, r, isTotal) => {
             const a = cmpDisp(r.a), b = cmpDisp(r.b), rate = cmpRate(r.a, r.b);
             return [...labels, a, b, b - a, rate === null ? '순증' : Math.round(rate * 10) / 10, isTotal ? '' : CMP_ST[r.st],
@@ -2421,10 +2445,10 @@
         };
         const totalLabels = labCols.map(() => ''); totalLabels[0] = '합   계';
         aoa.push(line(totalLabels, m.total, true));
-        m.rows.forEach(r => { const at = lc.map[r.depth]; aoa.push(line(labCols.map((f, l) => l === at.col ? '  '.repeat(at.indent) + r.path[r.depth] : ''), r, false)); });
+        m.rows.forEach(r => { const at = lc.map[r.depth]; aoa.push(line(labCols.map((f, l) => l === at.col ? r.path[r.depth] : ''), r, false)); });
         const ws = XLSX.utils.aoa_to_sheet(aoa);
         const zNum = cmpOpt.tri ? '#,##0;"△"#,##0' : '#,##0', zRate = cmpOpt.tri ? '0.0;"△"0.0' : '0.0';
-        for (let r = 4; r < aoa.length; r++) {
+        for (let r = R0; r < aoa.length; r++) {
             for (let k = 0; k < 4; k++) {
                 const c = ws[XLSX.utils.encode_cell({ r: r, c: G + k })];
                 if (c && c.t === 'n') c.z = k === 3 ? zRate : zNum;
@@ -2432,9 +2456,26 @@
         }
         const last = aoa[3].length - 1;
         ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: last } }, { s: { r: 1, c: 0 }, e: { r: 1, c: last } }];
-        if (G > 1) ws['!merges'].push({ s: { r: 4, c: 0 }, e: { r: 4, c: G - 1 } });   // '합 계' 칸 병합
-        ws['!cols'] = [...labCols.map(f => ({ wch: f === '사업내역' ? 42 : 24 })), { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 10 }, { wch: 7 },
-                       ...(calc ? [{ wch: 24 }, { wch: 34 }, { wch: 34 }] : []), { wch: 36 }];
+        if (G > 1) ws['!merges'].push({ s: { r: R0, c: 0 }, e: { r: R0, c: G - 1 } });   // '합 계' 칸 병합
+        if (lc.two) {                                                                     // 머리글 두 줄 병합: '사업내역'은 가로로, 나머지는 세로로
+            lc.top.forEach(t => ws['!merges'].push(t.group ? { s: { r: 3, c: t.start }, e: { r: 3, c: t.start + t.span - 1 } } : { s: { r: 3, c: t.start }, e: { r: 4, c: t.start } }));
+            for (let c = G; c <= last; c++) ws['!merges'].push({ s: { r: 3, c: c }, e: { r: 4, c: c } });
+        }
+        // 열 너비: 머리글·내용 길이에 맞춤 (한글은 2칸으로 계산).
+        // 레벨 칸은 좁게 두어 글자가 오른쪽 빈 레벨 칸으로 넘쳐 보이게(계단식) 하고, 마지막 레벨 칸만 내용 길이에 맞춤
+        const tw = (v) => String(v === undefined || v === null ? '' : v).split('').reduce((a, ch) => a + (ch.charCodeAt(0) > 255 ? 2 : 1), 0);
+        const fit = (c, from) => { let w = 4; for (let r = from; r < aoa.length; r++) w = Math.max(w, tw(typeof aoa[r][c] === 'number' ? aoa[r][c].toLocaleString('ko-KR') : aoa[r][c])); return Math.min(w + 2, 60); };
+        ws['!cols'] = aoa[3].map((h, c) => {
+            const col = lc.cols[c];
+            if (col && col.lv && lc.cols[c + 1] && lc.cols[c + 1].lv) return { wch: 7 };      // 레벨1~5: 좁게(계단 한 칸)
+            if (col && col.lv) {                                                               // 마지막 레벨 칸: 앞 레벨에서 넘쳐 온 글자까지 다 보이는 너비
+                let w = 8, first = c;
+                while (first > 0 && lc.cols[first - 1].lv) first--;
+                for (let r = R0; r < aoa.length; r++) for (let k = first; k <= c; k++) w = Math.max(w, tw(aoa[r][k]) + 2 - 7 * (c - k));
+                return { wch: Math.min(w, 60) };
+            }
+            return { wch: fit(c, 3) };
+        });
         ws['!rows'] = [{ hpt: 28 }];
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, '증감현황');
