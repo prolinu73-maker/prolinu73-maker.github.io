@@ -167,6 +167,70 @@
   .auth-close { width: 100%; padding: 10px; margin-top: 12px; background: #e2e8f0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: inherit; }
   .hdr-btn.signup { background: #fff; color: var(--accent); border: 1.5px solid var(--accent); }
   .hdr-btn.mine { background: #64748b; }
+  /* ───────── 관리자 설정(data/site-config.json)으로 그리는 부분 ───────── */
+  .sc-banners { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+  .sc-banners:empty { display: none; }
+  .sc-banner { display: flex; align-items: flex-start; gap: 12px; margin-top: 14px; padding: 13px 16px; border-radius: 12px; border: 1px solid; font-size: 14.5px; line-height: 1.55; }
+  .sc-banner .ico { font-size: 18px; line-height: 1.3; }
+  .sc-banner .txt { flex: 1; min-width: 0; }
+  .sc-banner .txt b { margin-right: 6px; }
+  .sc-banner a { font-weight: 800; color: inherit; }
+  .sc-banner .x { border: none; background: none; font-size: 20px; line-height: 1; cursor: pointer; color: inherit; opacity: .6; padding: 0 2px; }
+  .sc-banner .x:hover { opacity: 1; }
+  .lv-info { background: #EFF6FF; border-color: #BFDBFE; color: #1E3A8A; }
+  .lv-warning { background: #FFFBEB; border-color: #FDE68A; color: #78350F; }
+  .lv-danger { background: #FEF2F2; border-color: #FECACA; color: #7F1D1D; }
+  .sc-notice-list { background: #fff; border: 1px solid var(--line2); border-radius: 16px; padding: 18px 22px; margin-bottom: 36px; }
+  .sc-notice-list h2 { margin: 0 0 10px; font-size: 19px; }
+  .sc-notice-list ul { list-style: none; margin: 0; padding: 0; }
+  .sc-notice-list li { border-top: 1px solid #EEF2F7; }
+  .sc-notice-list li:first-child { border-top: none; }
+  .sc-notice-list details { padding: 11px 0; }
+  .sc-notice-list summary { cursor: pointer; font-weight: 700; display: flex; gap: 10px; align-items: center; list-style: none; }
+  .sc-notice-list summary::-webkit-details-marker { display: none; }
+  .sc-notice-list .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .sc-notice-list .dot.lv-info { background: #3B82F6; } .sc-notice-list .dot.lv-warning { background: #F59E0B; } .sc-notice-list .dot.lv-danger { background: #EF4444; }
+  .sc-notice-list .date { margin-left: auto; font-size: 12.5px; color: #94A3B8; font-weight: 600; white-space: nowrap; }
+  .sc-notice-list .body { margin: 8px 0 2px 18px; color: #475569; font-size: 14.5px; line-height: 1.65; white-space: pre-wrap; }
+  .sc-cat { margin-bottom: 30px; }
+  .sc-cat h3.sc-cat-title { font-size: 17px; margin: 0 0 12px; color: #334155; display: flex; align-items: center; gap: 8px; }
+  .sc-cat h3.sc-cat-title::before { content: ""; width: 4px; height: 17px; border-radius: 2px; background: var(--accent); }
+  .sc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .sc-grid .svc { grid-column: auto; }
+  .svc .svc-icon.emoji { font-size: 24px; }
+  .sc-badge { position: absolute; top: 16px; right: 16px; font-size: 11px; font-weight: 800; letter-spacing: .03em; padding: 3px 8px; border-radius: 999px; color: #fff; }
+  .sc-badge.NEW { background: #EF4444; } .sc-badge.BETA { background: #7C3AED; } .sc-badge.UPDATE { background: #0EA5E9; }
+  .sc-meta { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 12.5px; color: #94A3B8; }
+  .sc-log-btn { border: 1px solid #CBD5E1; background: #fff; border-radius: 999px; padding: 3px 10px; font-family: inherit; font-size: 12px; font-weight: 700; color: #475569; cursor: pointer; }
+  .sc-log-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .svc.is-maint { background: #F8FAFC; cursor: not-allowed; }
+  .svc.is-maint:hover { transform: none; box-shadow: none; border-color: var(--line2); }
+  .svc.is-maint h3, .svc.is-maint p { color: #94A3B8; }
+  .sc-maint-chip { display: inline-block; margin-left: 6px; font-size: 11.5px; font-weight: 800; color: #B45309; background: #FEF3C7; border-radius: 6px; padding: 2px 7px; vertical-align: 2px; }
+  .sc-foot-text { flex-basis: 100%; font-size: 12.5px; color: #94A3B8; }
+  .sc-modal-back { position: fixed; inset: 0; z-index: 2500; background: rgba(15,23,42,.55); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .sc-modal { background: #fff; border-radius: 16px; width: 480px; max-width: 100%; max-height: 88vh; overflow-y: auto; padding: 26px; box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+  .sc-modal h3 { margin: 0 0 12px; font-size: 20px; }
+  .sc-modal .body { color: #475569; line-height: 1.7; white-space: pre-wrap; margin: 0 0 18px; }
+  .sc-modal .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sc-modal .row button, .sc-modal .row a { flex: 1; text-align: center; padding: 11px; border: none; border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer; text-decoration: none; background: #E2E8F0; color: #1E293B; }
+  .sc-modal .row .pri { background: var(--accent); color: #fff; }
+  .sc-modal.lv-warning, .sc-modal.lv-danger, .sc-modal.lv-info { border-top: 6px solid; }
+  .sc-log { list-style: none; margin: 0 0 18px; padding: 0; }
+  .sc-log li { display: flex; gap: 12px; padding: 9px 0; border-top: 1px solid #EEF2F7; font-size: 14.5px; color: #334155; }
+  .sc-log li:first-child { border-top: none; }
+  .sc-log .d { font-weight: 800; color: #64748B; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  #scMaint { position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center; padding: 20px; background: linear-gradient(135deg, #0F172A, #1E3A8A); }
+  #scMaint .box { background: #fff; border-radius: 18px; max-width: 460px; width: 100%; padding: 34px 28px; text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,.35); }
+  #scMaint .ico { font-size: 48px; }
+  #scMaint h1 { font-size: 22px; margin: 10px 0; }
+  #scMaint p { color: #475569; line-height: 1.7; white-space: pre-wrap; margin: 0 0 6px; }
+  #scMaint .end { margin-top: 12px; font-weight: 800; color: #1D4ED8; }
+  html.sc-maint-on body { overflow: hidden; }
+  .sc-topbar { position: sticky; top: 0; z-index: 2400; text-align: center; font-size: 13.5px; font-weight: 800; padding: 8px 12px; }
+  .sc-topbar.preview { background: #FACC15; color: #422006; }
+  .sc-topbar.maint { background: #F97316; color: #fff; }
+
   /* 문의하기 */
   .hdr-btn.contact { background: #fff; color: #334155; border: 1.5px solid #CBD5E1; }
   .hdr-btn.contact:hover { border-color: var(--accent); color: var(--accent); filter: none; }
@@ -305,7 +369,13 @@
   </div>
 </div>
 
+<!-- 공지 배너 자리 (data/site-config.json) -->
+<div id="scBanners" class="sc-banners" aria-live="polite"></div>
+
 <main id="services">
+  <!-- 공지사항 목록 자리 (data/site-config.json의 type: list) -->
+  <section id="scNoticeList" class="sc-notice-list" hidden aria-label="공지사항"></section>
+
   <div class="sec-head">
     <div>
       <h2>업무 바로가기</h2>
@@ -313,7 +383,11 @@
     </div>
   </div>
 
-  <div class="services">
+  <!-- 관리자 페이지에서 고친 업무 카드 (data/site-config.json을 읽으면 아래 기본 카드 대신 보임) -->
+  <div id="scCatalog" class="sc-catalog" hidden></div>
+
+  <!-- 기본 카드: site-config.json을 읽지 못했을 때만 보임 -->
+  <div class="services" id="svcStatic">
     <a class="svc feature" href="labor.html" style="--tab:#F4C430">
       <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/></svg></div>
       <h3>노무관리 정보마당</h3>
@@ -374,8 +448,9 @@
 </main>
 
 <footer>
-  <span class="chalk-sign">조효식 허브 PRO</span>
-  <span>교육행정 종합 업무포털 · 실무자가 만들고 실무자가 씁니다</span>
+  <span class="chalk-sign" id="scFootTitle">조효식 허브 PRO</span>
+  <span id="scFootSub">교육행정 종합 업무포털 · 실무자가 만들고 실무자가 씁니다</span>
+  <span id="scFootText" class="sc-foot-text" hidden></span>
 </footer>
 
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -452,8 +527,9 @@
   /* ── 동적 텍스트 4: 노무관리 카드의 질문이 바뀜 ── */
   const faqs = ['"이 경우 수당은 어떻게 계산하지?"', '"연차휴가는 며칠이 생기지?"', '"방학 중 비근무자 임금은?"', '"연장근로 한도는 몇 시간이지?"', '"퇴직금 평균임금은 어떻게 내지?"'];
   if (!reduceMotion) {
-    let fi = 0; const fq = $('faqQ');
-    setInterval(() => { fq.style.opacity = 0; setTimeout(() => { fi = (fi + 1) % faqs.length; fq.textContent = faqs[fi]; fq.style.opacity = 1; }, 350); }, 3500);
+    let fi = 0;
+    setInterval(() => { const fq = $('faqQ'); if (!fq) return;   // 카드가 없으면(관리자 설정으로 바뀐 경우) 건너뜀
+      fq.style.opacity = 0; setTimeout(() => { fi = (fi + 1) % faqs.length; fq.textContent = faqs[fi]; fq.style.opacity = 1; }, 350); }, 3500);
   }
 
   /* ── 흘러가는 안내 문구: 끊김 없이 이어지도록 한 번 더 붙임 ── */
@@ -1587,5 +1663,244 @@
         });
 </script>
 <!-- 방문 기록은 common.js가 자동으로 남깁니다 -->
+<script>
+/* =====================================================================
+   관리자 설정 연동 (data/site-config.json)
+   - admin.html에서 고친 설정을 읽어 첫 화면에 반영합니다.
+   - 반영하는 것: 점검 모드, 공지(배너·팝업·목록), 업무 카드(카테고리별), 사이트 제목·색·꼬리말, 방문 분석(GA4·Cloudflare)
+   - ?preview=1 : admin.html이 넘겨준 '배포 전' 설정으로 미리보기 (서버 파일은 읽지 않음)
+   - 설정 파일을 못 읽으면 지금까지의 기본 화면을 그대로 보여 줍니다.
+   ===================================================================== */
+(function () {
+  const PREVIEW = new URLSearchParams(location.search).get('preview') === '1';
+  const PREVIEW_KEY = 'siteConfigPreview';
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const kToday = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);   // 한국 날짜
+  const COLORS = ['#F4C430', '#2F6FDE', '#1A9C7B', '#E0598B', '#7C5CD6', '#E07A2F', '#0EA5E9', '#64748B'];
+  const LV_ICON = { info: 'ℹ️', warning: '⚠️', danger: '🚨' };
+  const ls = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+
+  // 링크 주소 안전 확인: 같은 사이트 경로(/..., ./..., 파일명) 또는 http(s)만 허용
+  function safeUrl(u) {
+    u = String(u || '').trim();
+    if (!u) return '#';
+    if (/^(https?:)?\/\//i.test(u) || /^[a-z][a-z0-9+.-]*:/i.test(u)) return /^https?:\/\//i.test(u) ? u : '#';
+    return u;
+  }
+  function inPeriod(n) {
+    const t = kToday();
+    if (n.startDate && t < n.startDate) return false;
+    if (n.endDate && t > n.endDate) return false;
+    return true;
+  }
+  function liveNotices(cfg, type) {
+    return (cfg.notices || []).filter(n => n && n.active && n.type === type && inPeriod(n));
+  }
+  const isAdmin = () => { try { return window.HUB && HUB.isAdminDevice && HUB.isAdminDevice(); } catch (e) { return false; } };
+  function toast(msg) { if (window.HUB && HUB.toast) HUB.toast(msg); else alert(msg); }
+
+  // ── 상단 알림 띠 (미리보기 / 관리자에게만 보이는 점검 안내) ──
+  function topbar(kind, text) {
+    let b = document.getElementById('scTop-' + kind);
+    if (!text) { if (b) b.remove(); return; }
+    if (!b) { b = document.createElement('div'); b.id = 'scTop-' + kind; b.className = 'sc-topbar ' + kind; document.body.prepend(b); }
+    b.textContent = text;
+  }
+
+  // ── 1. 사이트 기본 설정 ──
+  function applySite(cfg) {
+    const s = cfg.site || {};
+    if (s.themeColor && /^#[0-9a-f]{3,8}$/i.test(s.themeColor)) document.documentElement.style.setProperty('--accent', s.themeColor);
+    if (s.title) {
+      document.title = s.title + (s.subtitle ? ' - ' + s.subtitle.split('·')[0].trim() : '');
+      document.getElementById('scFootTitle').textContent = s.title;
+    }
+    if (s.subtitle) document.getElementById('scFootSub').textContent = s.subtitle;
+    const ft = document.getElementById('scFootText');
+    ft.textContent = s.footerText || ''; ft.hidden = !s.footerText;
+  }
+
+  // ── 2. 점검 모드 (관리자 브라우저와 미리보기에서는 화면을 가리지 않고 띠로만 알림) ──
+  function applyMaintenance(cfg) {
+    const m = ((cfg.site || {}).maintenance) || {};
+    const old = document.getElementById('scMaint');
+    if (old) old.remove();
+    document.documentElement.classList.remove('sc-maint-on');
+    topbar('maint', '');
+    if (!m.enabled) return;
+    if (isAdmin() || PREVIEW) {
+      topbar('maint', '🛠 점검 모드가 켜져 있습니다 — 방문자에게는 점검 안내 화면만 보입니다' + (PREVIEW ? ' (미리보기)' : ' (관리자 브라우저라서 사이트가 보입니다)'));
+      if (!PREVIEW) return;
+    }
+    const box = document.createElement('div');
+    box.id = 'scMaint'; box.setAttribute('role', 'alertdialog'); box.setAttribute('aria-modal', 'true');
+    box.innerHTML = `<div class="box"><div class="ico">🛠️</div><h1>시스템 점검 중입니다</h1>
+      <p>${esc(m.message || '잠시 후 다시 접속해 주세요.')}</p>
+      ${m.endTime ? `<p class="end">예정 종료: ${esc(m.endTime)}</p>` : ''}
+      ${PREVIEW ? '<p style="margin-top:14px;font-size:13px;color:#B45309">※ 미리보기 화면입니다. 이 안내를 눌러 닫을 수 있습니다.</p>' : ''}</div>`;
+    if (PREVIEW) box.addEventListener('click', () => { box.remove(); document.documentElement.classList.remove('sc-maint-on'); });
+    document.body.appendChild(box);
+    document.documentElement.classList.add('sc-maint-on');
+  }
+
+  // ── 3. 공지: 배너 · 목록 · 팝업 ──
+  const dismissed = n => ls.get('scNoticeHide:' + n.id) === String(n.dismissKey || '') ||
+                         ls.get('scNoticeDay:' + n.id) === String(n.dismissKey || '') + '@' + kToday();
+  function applyBanners(cfg) {
+    const wrap = document.getElementById('scBanners');
+    const list = liveNotices(cfg, 'banner').filter(n => PREVIEW || !dismissed(n));
+    wrap.innerHTML = list.map(n => `
+      <div class="sc-banner lv-${esc(n.level || 'info')}" data-id="${esc(n.id)}">
+        <span class="ico" aria-hidden="true">${LV_ICON[n.level] || LV_ICON.info}</span>
+        <div class="txt"><b>${esc(n.title)}</b>${esc(n.content)}${n.link ? ` <a href="${esc(safeUrl(n.link))}" target="_blank" rel="noopener">자세히 보기 →</a>` : ''}</div>
+        <button type="button" class="x" title="이 공지 닫기 (다시 보지 않기)" aria-label="공지 닫기">×</button>
+      </div>`).join('');
+    wrap.querySelectorAll('.sc-banner').forEach(el => el.querySelector('.x').onclick = () => {
+      const n = list.find(x => x.id === el.dataset.id);
+      if (n && !PREVIEW) ls.set('scNoticeHide:' + n.id, String(n.dismissKey || ''));
+      el.remove();
+    });
+  }
+  function applyNoticeList(cfg) {
+    const sec = document.getElementById('scNoticeList');
+    const list = liveNotices(cfg, 'list').sort((a, b) => String(b.startDate || '').localeCompare(String(a.startDate || '')));
+    if (!list.length) { sec.hidden = true; sec.innerHTML = ''; return; }
+    sec.innerHTML = `<h2>📢 공지사항</h2><ul>${list.map((n, i) => `
+      <li><details${i === 0 ? ' open' : ''}><summary><span class="dot lv-${esc(n.level || 'info')}"></span>${esc(n.title)}<span class="date">${esc(n.startDate || '')}</span></summary>
+      <div class="body">${esc(n.content)}${n.link ? `\n<a href="${esc(safeUrl(n.link))}" target="_blank" rel="noopener">자세히 보기 →</a>` : ''}</div></details></li>`).join('')}</ul>`;
+    sec.hidden = false;
+  }
+  function openModal(html, cls) {
+    const back = document.createElement('div');
+    back.className = 'sc-modal-back';
+    back.innerHTML = `<div class="sc-modal ${cls || ''}" role="dialog" aria-modal="true">${html}</div>`;
+    const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
+    const onKey = e => { if (e.key === 'Escape') close(); };
+    back.addEventListener('click', e => { if (e.target === back) close(); });
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(back);
+    back.close = close;
+    return back;
+  }
+  function applyPopups(cfg) {
+    document.querySelectorAll('.sc-modal-back.sc-pop').forEach(x => x.remove());
+    const queue = liveNotices(cfg, 'popup').filter(n => PREVIEW || !dismissed(n));
+    (function next() {
+      const n = queue.shift(); if (!n) return;
+      const m = openModal(`<h3>${LV_ICON[n.level] || LV_ICON.info} ${esc(n.title)}</h3>
+        <div class="body">${esc(n.content)}</div>
+        <div class="row">
+          ${n.link ? `<a class="pri" href="${esc(safeUrl(n.link))}" target="_blank" rel="noopener">자세히 보기</a>` : ''}
+          <button type="button" data-a="day">오늘 하루 보지 않기</button>
+          <button type="button" data-a="never">다시 보지 않기</button>
+          <button type="button" data-a="close"${n.link ? '' : ' class="pri"'}>닫기</button>
+        </div>`, 'lv-' + (n.level || 'info'));
+      m.classList.add('sc-pop');
+      m.querySelector('.sc-modal').style.borderTopColor = { info: '#3B82F6', warning: '#F59E0B', danger: '#EF4444' }[n.level] || '#3B82F6';
+      m.querySelectorAll('button[data-a]').forEach(b => b.onclick = () => {
+        if (!PREVIEW) {
+          if (b.dataset.a === 'day') ls.set('scNoticeDay:' + n.id, String(n.dismissKey || '') + '@' + kToday());
+          if (b.dataset.a === 'never') ls.set('scNoticeHide:' + n.id, String(n.dismissKey || ''));
+        }
+        m.close(); next();
+      });
+    })();
+  }
+
+  // ── 4. 업무 카드 (카테고리별) ──
+  function applyCatalog(cfg) {
+    const cat = document.getElementById('scCatalog'), stat = document.getElementById('svcStatic');
+    const cats = (cfg.categories || []).filter(c => c && c.visible !== false).sort((a, b) => (a.order || 0) - (b.order || 0));
+    const items = (cfg.items || []).filter(i => i && i.status !== 'hidden');
+    let n = 0;
+    const html = cats.map(c => {
+      const list = items.filter(i => i.categoryId === c.id).sort((a, b) => (a.order || 0) - (b.order || 0));
+      if (!list.length) return '';
+      return `<section class="sc-cat"><h3 class="sc-cat-title">${esc(c.name)}</h3><div class="sc-grid">${list.map(it => {
+        const color = COLORS[(n++) % COLORS.length];
+        const maint = it.status === 'maintenance';
+        const badge = ['NEW', 'BETA', 'UPDATE'].includes(it.badge) ? `<span class="sc-badge ${it.badge}">${it.badge}</span>` : '';
+        const tags = (it.tags || []).filter(Boolean);
+        const hasLog = (it.changelog || []).length > 0;
+        return `<a class="svc${maint ? ' is-maint' : ''}" href="${maint ? '#' : esc(safeUrl(it.url))}"${it.openInNewTab && !maint ? ' target="_blank" rel="noopener"' : ''}
+            style="--tab:${color}" data-id="${esc(it.id)}"${maint ? ' aria-disabled="true"' : ''}>
+          ${badge}
+          <div class="svc-icon emoji" aria-hidden="true">${esc(it.icon || '📄')}</div>
+          <h3>${esc(it.title)}${maint ? '<span class="sc-maint-chip">점검 중</span>' : ''}</h3>
+          <p>${esc(it.description)}</p>
+          ${tags.length ? `<ul>${tags.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
+          <div class="sc-meta">${it.version ? `<span>v${esc(it.version)}</span>` : ''}${hasLog ? `<button type="button" class="sc-log-btn" data-log="${esc(it.id)}">업데이트 내역</button>` : ''}</div>
+        </a>`;
+      }).join('')}</div></section>`;
+    }).join('');
+    if (!html) { cat.hidden = true; stat.hidden = false; return; }
+    cat.innerHTML = html; cat.hidden = false; stat.hidden = true;
+    cat.querySelectorAll('.svc').forEach(a => a.addEventListener('click', e => {
+      const b = e.target.closest('.sc-log-btn');
+      const it = (cfg.items || []).find(x => x.id === a.dataset.id); if (!it) return;
+      if (b) { e.preventDefault(); e.stopPropagation(); return showLog(it); }
+      if (it.status === 'maintenance') { e.preventDefault(); toast(`'${it.title}'은(는) 지금 점검 중입니다. 잠시 후 다시 이용해 주세요.`); }
+    }));
+  }
+  function showLog(it) {
+    const log = (it.changelog || []).slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+    const m = openModal(`<h3>${esc(it.icon || '')} ${esc(it.title)} · 업데이트 내역</h3>
+      ${it.version ? `<p style="margin:-6px 0 12px;color:#64748B;font-size:13.5px">현재 버전 v${esc(it.version)}</p>` : ''}
+      <ul class="sc-log">${log.map(l => `<li><span class="d">${esc(l.date)}</span><span>${esc(l.note)}</span></li>`).join('') || '<li>기록이 없습니다.</li>'}</ul>
+      <div class="row"><button type="button" class="pri">닫기</button></div>`);
+    m.querySelector('button').onclick = m.close;
+  }
+
+  // ── 5. 방문 분석 (ID를 넣었을 때만, 한 번만) ──
+  let analyticsDone = false;
+  function applyAnalytics(cfg) {
+    if (analyticsDone || PREVIEW) return;
+    const a = ((cfg.site || {}).analytics) || {};
+    if (a.ga4Id && /^G-[A-Z0-9]+$/i.test(a.ga4Id)) {
+      const s = document.createElement('script'); s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(a.ga4Id);
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || []; window.gtag = function () { dataLayer.push(arguments); };
+      gtag('js', new Date()); gtag('config', a.ga4Id);
+    }
+    if (a.cloudflareToken && /^[A-Za-z0-9]+$/.test(a.cloudflareToken)) {
+      const s = document.createElement('script'); s.defer = true; s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+      s.setAttribute('data-cf-beacon', JSON.stringify({ token: a.cloudflareToken }));
+      document.head.appendChild(s);
+    }
+    analyticsDone = true;
+  }
+
+  function render(cfg) {
+    if (!cfg || typeof cfg !== 'object') return;
+    window.SITE_CONFIG = cfg;
+    try { applySite(cfg); } catch (e) { console.log('사이트 설정 반영 실패', e); }
+    try { applyCatalog(cfg); } catch (e) { console.log('업무 카드 반영 실패', e); }
+    try { applyBanners(cfg); applyNoticeList(cfg); applyPopups(cfg); } catch (e) { console.log('공지 반영 실패', e); }
+    try { applyMaintenance(cfg); } catch (e) { console.log('점검 모드 반영 실패', e); }
+    try { applyAnalytics(cfg); } catch (e) { console.log('분석 코드 반영 실패', e); }
+  }
+
+  function start() {
+    if (PREVIEW) {
+      topbar('preview', '👀 미리보기 화면입니다 — 아직 배포되지 않은 내용입니다 (관리자 페이지에서 [저장·배포]해야 실제로 바뀝니다)');
+      let cfg = null; try { cfg = JSON.parse(ls.get(PREVIEW_KEY) || 'null'); } catch (e) {}
+      if (cfg) render(cfg); else topbar('preview', '👀 미리보기할 내용이 없습니다. 관리자 페이지의 [미리보기] 버튼으로 열어 주세요.');
+      // 관리자 페이지에서 고칠 때마다 바로 바뀜
+      window.addEventListener('message', e => {
+        if (e.origin !== location.origin || !e.data || e.data.type !== 'site-config-preview') return;
+        render(e.data.config);
+      });
+      window.addEventListener('storage', e => { if (e.key === PREVIEW_KEY && e.newValue) { try { render(JSON.parse(e.newValue)); } catch (x) {} } });
+      try { if (window.opener) window.opener.postMessage({ type: 'site-config-preview-ready' }, location.origin); } catch (e) {}
+      return;
+    }
+    fetch('./data/site-config.json?t=' + Date.now(), { cache: 'no-store' })   // 캐시 우회: 항상 최신 설정
+      .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+      .then(render)
+      .catch(e => console.log('site-config.json을 읽지 못해 기본 화면을 보여 줍니다.', e));
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
 </body>
 </html>
