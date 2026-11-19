@@ -71,6 +71,14 @@ input[type=number]{font-variant-numeric:tabular-nums;text-align:right}
 input:disabled{background:var(--soft);color:var(--muted)}
 input[type=checkbox],input[type=radio]{width:20px;height:20px;padding:0;accent-color:var(--accent);flex:none}
 .hint{font-size:14px;color:var(--muted);margin:0}
+.savebar .btn:disabled{opacity:.4;cursor:not-allowed}
+.ratestate{font-size:14px;margin:4px 0 12px;padding:8px 12px;border-radius:8px;background:var(--soft)}
+.ratestate.mine{background:var(--warn-bg);color:var(--warn)}
+.savebar{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:12px 0 4px;margin-top:12px;display:flex;flex-direction:column;gap:10px;z-index:2}
+.savemsg{font-size:14px;color:var(--muted)}.savemsg.dirty{color:var(--warn);font-weight:600}.savemsg.ok{color:var(--ok)}.savemsg.bad{color:var(--warn)}
+#view-rates input.changed{border-color:var(--warn);background:var(--warn-bg)}
+#view-rates input.mine{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.adminbox{font-size:14px;border:1px dashed var(--accent);border-radius:10px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
 .basis{margin:12px 0;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--soft)}
 .basis summary{cursor:pointer;font-weight:700}
 .basis ul{margin:8px 0 10px;padding-left:20px;font-size:14px;line-height:1.65}
@@ -485,7 +493,8 @@ footer{color:var(--muted);font-size:13.5px}
   <!-- ④ 지급 기준 -->
   <section id="view-rates" class="panel" hidden>
     <h2>지급 기준 금액</h2>
-    <p class="hint">규정이 바뀌면 여기 숫자만 고치면 됩니다. 소속 기관의 여비 지침과 맞는지 먼저 확인하세요.</p>
+    <p class="hint">숫자를 고친 뒤 아래 <b>[저장]</b>을 눌러야 계산에 반영됩니다. 저장한 값은 <b>이 브라우저에만</b> 남고, <b>[기본값으로 되돌리기]</b>를 누르면 관리자가 정한 기본값으로 돌아갑니다.</p>
+    <p class="ratestate" id="rateState" aria-live="polite"></p>
     <div class="row">
       <label class="f">일비(1일) <input data-rate="ilbi" type="number" step="1000"></label>
       <label class="f">식비(1일) <input data-rate="sikbi" type="number" step="1000"></label>
@@ -512,7 +521,18 @@ footer{color:var(--muted);font-size:13.5px}
       </ul>
       <p class="note">⚠️ 연비(전비)는 「공무원보수 등의 업무지침(공무원여비업무 처리기준)」의 승용차 유종별 연비(전비) 기준표 값입니다. 지침이 개정되면 위 칸을 고치세요. 전기 충전 단가(347원/kWh)와 수소 가격(10,000원/kg)은 <b>임시값</b>이므로 출장 시작일 기준 고시 요금으로 바꿔 쓰세요.</p>
     </details>
-    <div class="actions"><button class="btn ghost" id="resetRates">기본값으로 되돌리기</button></div>
+    <div class="savebar" id="rateBar">
+      <span class="savemsg" id="rateMsg" aria-live="polite"></span>
+      <div class="actions">
+        <button class="btn" id="saveRates" type="button" disabled>저장</button>
+        <button class="btn ghost" id="cancelRates" type="button" disabled>취소</button>
+        <button class="btn ghost" id="resetRates" type="button">기본값으로 되돌리기</button>
+      </div>
+      <div class="adminbox" id="rateAdmin" hidden>
+        <b>🔑 관리자</b> 지금 칸에 적힌 값을 <b>모든 사용자의 기본값</b>으로 정합니다.
+        <button class="btn" id="publishRates" type="button">모든 사용자 기본값으로 저장</button>
+      </div>
+    </div>
   </section>
 
   <!-- ⑤ 자유게시판 -->
@@ -579,7 +599,14 @@ footer{color:var(--muted);font-size:13.5px}
   function load(key,def){try{var s=localStorage.getItem(key);if(s)return JSON.parse(s)}catch(e){}return JSON.parse(JSON.stringify(def))}
   function save(key,val){try{localStorage.setItem(key,JSON.stringify(val))}catch(e){}}
 
-  var rates=Object.assign({},DEF_RATES,load('yeobi-rates-v2',{}));   // 예전에 저장한 값이 있어도 새 항목은 기본값으로 채움
+  // 지급 기준 = 파일 기본값 ← 관리자 기본값(Firebase) ← 내가 저장한 값(이 브라우저) 순서로 덮어씀
+  var adminRates=load('yeobi-admin-rates',{});      // 관리자 기본값(마지막으로 받아 둔 것)
+  var adminMeta=load('yeobi-admin-rates-meta',{});
+  var myRates=load('yeobi-rates-mine',{});           // 사용자가 [저장]으로 바꾼 값만
+  function baseRates(){var b=Object.assign({},DEF_RATES);Object.keys(adminRates).forEach(function(k){if(k in DEF_RATES&&+adminRates[k]>0)b[k]=+adminRates[k]});return b}
+  function buildRates(){var b=baseRates();Object.keys(myRates).forEach(function(k){if(k in b&&+myRates[k]>0)b[k]=+myRates[k]});return b}
+  var rates=buildRates();
+  try{localStorage.removeItem('yeobi-rates-v2')}catch(e){}   // 예전 방식(자동 저장) 값은 쓰지 않음
   var fares=load('yeobi-routes-v2',DEF_FARES);
   var relay=RELAY_URL;   // 중계 서버 주소는 이 파일 맨 위 RELAY_URL 한곳에서만 관리
   var route=null,lastText='';
@@ -598,7 +625,7 @@ footer{color:var(--muted);font-size:13.5px}
     VIEWS.forEach(function(v){$('view-'+v).hidden=(v!==view)});
     $('conn').hidden=(view!=='calc');   // 요금 조회 상태는 대중교통 화면에서만 보여 줌
   }
-  function go(view){show(view);if(view==='board')loadPosts();if(view==='car'&&fuelFirst){fuelFirst=false;autoFuel()}try{history.replaceState(null,'',location.pathname+location.search+(isAdminHash()?'#'+ADMIN_WORD:''))}catch(e){}window.scrollTo(0,0)}
+  function go(view){show(view);if(view==='rates')showAdminBox();if(view==='board')loadPosts();if(view==='car'&&fuelFirst){fuelFirst=false;autoFuel()}try{history.replaceState(null,'',location.pathname+location.search+(isAdminHash()?'#'+ADMIN_WORD:''))}catch(e){}window.scrollTo(0,0)}
   function isAdminHash(){return location.hash.replace('#','')===ADMIN_WORD}
   document.querySelectorAll('.tabs button').forEach(function(b){b.addEventListener('click',function(){go(b.dataset.view)})});
   document.querySelectorAll('[data-go]').forEach(function(b){b.addEventListener('click',function(){go(b.dataset.go)})});
@@ -920,10 +947,91 @@ footer{color:var(--muted);font-size:13.5px}
     var g=$('gEffRows');g.innerHTML='';
     FUELS.forEach(function(f){var tr=document.createElement('tr');tr.innerHTML='<td></td><td></td><td class="num"></td><td></td>';
       tr.children[0].textContent=f[4];tr.children[1].textContent=f[1];tr.children[2].textContent=rates['eff_'+f[0]]+' '+f[2];tr.children[3].textContent=f[5]||'-';g.appendChild(tr)});
+    rateInputs().forEach(function(x){x.classList.remove('changed')});
+    if($('saveRates')){$('saveRates').disabled=$('cancelRates').disabled=true}
+    rateStateText();
   }
-  function bindRate(x){x.addEventListener('change',function(){var v=parseFloat(x.value);rates[x.dataset.rate]=isFinite(v)&&v>0?v:DEF_RATES[x.dataset.rate];save('yeobi-rates-v2',rates);renderRates();calc();if(carShown)carCalc(false)})}
+  // 칸을 고쳐도 바로 반영하지 않고 [저장]을 눌러야 반영
+  function bindRate(x){x.addEventListener('input',markDirty)}
   document.querySelectorAll('#view-rates .row [data-rate]').forEach(bindRate);
-  $('resetRates').addEventListener('click',function(){rates=JSON.parse(JSON.stringify(DEF_RATES));save('yeobi-rates-v2',rates);renderRates();calc();setFuel();if(carShown)carCalc(false)});
+  function rateInputs(){return document.querySelectorAll('#view-rates [data-rate]')}
+  function markDirty(){
+    var n=0;
+    rateInputs().forEach(function(x){var ch=String(x.value)!==String(rates[x.dataset.rate]);x.classList.toggle('changed',ch);if(ch)n++});
+    $('saveRates').disabled=$('cancelRates').disabled=!n;
+    rateMsg(n?'저장하지 않은 변경 '+n+'개가 있습니다. [저장]을 눌러야 계산에 반영됩니다.':'',n?'dirty':'');
+    return n;
+  }
+  function rateMsg(t,k){var m=$('rateMsg');m.textContent=t;m.className='savemsg'+(k?' '+k:'')}
+  function readInputs(errs){
+    var out={};
+    rateInputs().forEach(function(x){
+      var v=Number(String(x.value).trim());
+      if(String(x.value).trim()===''||!isFinite(v)||v<=0){
+        var lab=x.getAttribute('aria-label')||(x.closest('label')?x.closest('label').firstChild.textContent.trim():x.dataset.rate);
+        errs.push(lab);return;
+      }
+      out[x.dataset.rate]=v;
+    });
+    return out;
+  }
+  function applyRates(){rates=buildRates();renderRates();calc();setFuel();if(carShown)carCalc(false)}
+  function rateStateText(){
+    var mine=Object.keys(myRates).length,el=$('rateState');
+    var src=Object.keys(adminRates).length?'관리자 기본값'+(adminMeta.at?' ('+adminMeta.at+' 저장)':''):'파일 기본값';
+    el.textContent=mine?'⚠️ 이 브라우저에서 직접 바꾼 값 '+mine+'개를 쓰고 있습니다. 파란 테두리 칸이 바꾼 값입니다. 기준: '+src
+      :'✅ '+src+'을 쓰고 있습니다.';
+    el.className='ratestate'+(mine?' mine':'');
+    var b=baseRates();
+    rateInputs().forEach(function(x){x.classList.toggle('mine',x.dataset.rate in myRates&&+myRates[x.dataset.rate]!==b[x.dataset.rate])});
+  }
+  $('saveRates').addEventListener('click',function(){
+    var errs=[],vals=readInputs(errs);
+    if(errs.length){rateMsg('0보다 큰 숫자를 넣어 주세요: '+errs.join(', '),'bad');return}
+    var b=baseRates();myRates={};
+    Object.keys(vals).forEach(function(k){if(vals[k]!==b[k])myRates[k]=vals[k]});   // 기본값과 다른 것만 기억
+    save('yeobi-rates-mine',myRates);applyRates();
+    rateMsg(Object.keys(myRates).length?'저장했습니다. 이 브라우저의 계산에 바뀐 값이 쓰입니다.':'저장했습니다. 기본값과 같아서 기본값을 그대로 씁니다.','ok');
+  });
+  $('cancelRates').addEventListener('click',function(){renderRates();rateMsg('고친 내용을 취소했습니다.','')});
+  $('resetRates').addEventListener('click',function(){
+    myRates={};save('yeobi-rates-mine',myRates);applyRates();
+    rateMsg('관리자가 정한 기본값으로 되돌렸습니다.','ok');
+  });
+
+  /* ---------- 관리자 기본값 (Firestore  settings / perdiem_rates) ---------- */
+  var RATE_DOC=['settings','perdiem_rates'];
+  function showAdminBox(){$('rateAdmin').hidden=!HUB.isAdmin()}
+  function fetchAdminRates(){
+    getDb().then(function(db){return db.collection(RATE_DOC[0]).doc(RATE_DOC[1]).get()}).then(function(snap){
+      if(!snap.exists)return;
+      var d=snap.data()||{};
+      adminRates=d.rates||{};adminMeta={at:d.at||'',by:d.by||''};
+      save('yeobi-admin-rates',adminRates);save('yeobi-admin-rates-meta',adminMeta);
+      var dirty=markDirty();
+      rates=buildRates();if(!dirty)renderRates();else rateStateText();
+      calc();setFuel();if(carShown)carCalc(false);
+    }).catch(function(err){try{console.log('관리자 기본값을 불러오지 못함',err)}catch(e){}});
+  }
+  $('publishRates').addEventListener('click',function(){
+    if(!HUB.isAdmin()){rateMsg('관리자로 로그인해야 합니다.','bad');return}
+    var errs=[],vals=readInputs(errs);
+    if(errs.length){rateMsg('0보다 큰 숫자를 넣어 주세요: '+errs.join(', '),'bad');return}
+    if(!confirm('지금 값을 모든 사용자의 기본값으로 저장할까요?'))return;
+    var d=new Date(),at=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+    var u=HUB.getUser&&HUB.getUser();
+    $('publishRates').disabled=true;rateMsg('저장하는 중입니다…','');
+    authReady().then(getDb).then(function(db){
+      return db.collection(RATE_DOC[0]).doc(RATE_DOC[1]).set({rates:vals,at:at,by:(u&&u.name)||'관리자'});
+    }).then(function(){
+      adminRates=vals;adminMeta={at:at};save('yeobi-admin-rates',adminRates);save('yeobi-admin-rates-meta',adminMeta);
+      myRates={};save('yeobi-rates-mine',myRates);applyRates();
+      rateMsg('모든 사용자의 기본값으로 저장했습니다.','ok');
+    }).catch(function(err){
+      try{console.log('관리자 기본값 저장 실패',err)}catch(e){}
+      rateMsg('저장하지 못했습니다. Firebase 보안 규칙에 settings 모음 쓰기 허용이 필요합니다. ('+(err&&err.code||err)+')','bad');
+    }).then(function(){$('publishRates').disabled=false});
+  });
 
   /* ---------- 자가용 여비 계산 ---------- */
   var carShown=false,carText='';
@@ -1070,6 +1178,7 @@ footer{color:var(--muted);font-size:13.5px}
       if(lodge>cap)warn.push('숙박비가 상한액을 넘어 상한액까지만 넣었습니다.');
       if(lodge===0)warn.push('숙박비는 실비 정산입니다. 실제 숙박비를 넣으세요.');
     }
+    if(Object.keys(myRates).length)warn.push('※ 지급 기준 탭에서 직접 바꾼 값('+Object.keys(myRates).length+'개)으로 계산했습니다.');
     if(!rider)warn.push('자가용 실비는 대중교통이 없거나 공무상 부득이한 사유가 있을 때만 지급합니다. 사유와 증빙을 갖추세요.');
 
     var total=0,tb=$('cLines');tb.innerHTML='';
@@ -1168,6 +1277,9 @@ footer{color:var(--muted);font-size:13.5px}
     dbPromise.catch(function(){dbPromise=null});   // 실패하면 다음에 다시 시도
     return dbPromise;
   }
+
+  // 관리자 기본값 받아 오기 + 관리자 단추 보이기(허브 로그인 확인 뒤 한 번 더)
+  fetchAdminRates();showAdminBox();authReady().then(showAdminBox);
 
   /* ---------- 접속자 수 (오늘 / 누적) — Firestore  stats / page_perdiem ---------- */
   // 세는 방식: 허브와 같음 — 브라우저 창(세션)마다 처음 열 때 1번만 셈
