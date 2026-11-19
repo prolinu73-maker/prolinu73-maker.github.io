@@ -248,7 +248,7 @@ header.top .q{border-color:#fff}
     <button class="btn light" id="testBtn">API 연결 테스트</button>
     <button class="btn light" id="guideBtn">📖 사용법</button>
     <span id="connStatus">미확인</span>
-    <span class="visits" id="visits" title="사이트 모든 페이지 기준 · 한 사람(브라우저)은 하루 1번만 셉니다">오늘 <b id="vToday">-</b>명 · 누적 <b id="vTotal">-</b>명</span>
+    <span class="visits" id="visits" title="회의록 작성 페이지 기준 · 한 사람(브라우저)은 하루 1번만 셉니다">오늘 <b id="vToday">-</b>명 · 누적 <b id="vTotal">-</b>명</span>
   </div>
 </header>
 
@@ -1669,26 +1669,48 @@ $('guideClose').onclick = () => { $('guide').classList.add('hidden'); lsSet(LS_G
 })();
 </script>
 <script>
-/* 사이트 전체 접속자 수(오늘·누적): 세기는 common.js가 하고(하루 1번, 관리자 제외), 여기서는 숫자를 읽어 보여 줌.
-   창은 항상 보이며, 숫자를 못 읽으면 '-'로 두고 마우스를 올리면 이유를 알려 줌.
-   common.js가 없을 때(내 컴퓨터에서 직접 열기 등)는 같은 Firebase에서 읽기만 함(세지는 않음) */
+/* 이 페이지(회의록 작성)만의 접속자 수(오늘·누적)
+   - 저장 위치: Firebase stats/page_minutes { total, todayCount, todayDate } (사이트 전체 숫자와 따로 셈)
+   - 한 사람(브라우저)은 이 페이지를 하루 1번만 셈 (새로고침·재방문해도 1명), 관리자 브라우저는 세지 않음
+   - 창은 항상 보이며, 숫자를 못 읽으면 '-'로 두고 마우스를 올리면 이유를 알려 줌
+   - 사이트 전체 접속자 수는 common.js가 따로 셈 (첫 화면 index.html에 표시) */
 (function(){
   var box=document.getElementById('visits');
-  function put(t,n){document.getElementById('vToday').textContent=Number(t||0).toLocaleString('ko-KR');document.getElementById('vTotal').textContent=Number(n||0).toLocaleString('ko-KR');box.title='사이트 모든 페이지 기준 · 한 사람(브라우저)은 하루 1번만 셉니다'}
+  var C=(window.HUB&&HUB.FIREBASE_CONFIG)||{apiKey:'AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw',projectId:'prolinu73-6c409'};
+  var BASE='projects/'+C.projectId+'/databases/(default)/documents';
+  var DOC=BASE+'/stats/page_minutes';
+  var API='https://firestore.googleapis.com/v1/';
+  var DAY_KEY='hubVisitDay_minutes';
+  var today=new Date(Date.now()+9*3600e3).toISOString().slice(0,10);   // 한국 시간 기준 오늘
+  var num=function(x){return x?Number(x.integerValue!=null?x.integerValue:(x.doubleValue||0)):0};
+  function put(t,n){document.getElementById('vToday').textContent=Number(t||0).toLocaleString('ko-KR');document.getElementById('vTotal').textContent=Number(n||0).toLocaleString('ko-KR');box.title='회의록 작성 페이지 기준 · 한 사람(브라우저)은 하루 1번만 셉니다'}
   function fail(e){box.title='접속자 수를 불러오지 못했습니다(인터넷·Firebase 보안 규칙 확인)';try{console.log('접속자 수 불러오기 실패',e)}catch(x){}}
-  function viaRest(){
-    var C=(window.HUB&&HUB.FIREBASE_CONFIG)||{apiKey:'AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw',projectId:'prolinu73-6c409'};
-    return fetch('https://firestore.googleapis.com/v1/projects/'+C.projectId+'/databases/(default)/documents/stats/visitors?key='+C.apiKey)
+  function readDoc(){
+    return fetch(API+DOC+'?key='+C.apiKey)
       .then(function(r){return r.status===404?{fields:{}}:(r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)))})
-      .then(function(j){var f=j.fields||{},n=function(x){return x?Number(x.integerValue!=null?x.integerValue:(x.doubleValue||0)):0};
-        var k=new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
-        return {total:n(f.total),todayCount:(f.todayDate&&f.todayDate.stringValue===k)?n(f.todayCount):0}});
+      .then(function(j){return j.fields||{}});
   }
-  function show(){
-    var p=(window.HUB&&HUB.visitors)?HUB.visitors.read():viaRest();
-    p.then(function(v){put(v.todayCount,v.total)}).catch(fail);
+  function isAdminDevice(){try{return (window.HUB&&HUB.isAdminDevice)?HUB.isAdminDevice():localStorage.getItem('hubAdminDevice')==='1'}catch(e){return true}}
+  // 하루 1번 세기: 서버에서 1을 더함(동시 접속에도 빠지지 않음), 날짜가 바뀌었으면 오늘 수를 1부터
+  function count(f){
+    var done=false;try{done=localStorage.getItem(DAY_KEY)===today}catch(e){done=true}
+    if(done||isAdminDevice())return Promise.resolve(f);
+    try{localStorage.setItem(DAY_KEY,today)}catch(e){}
+    var saved=f.todayDate?f.todayDate.stringValue:'';
+    var newDay=!saved||today>saved;
+    var fields={todayDate:{stringValue:newDay?today:saved}},mask=['todayDate'];
+    var tr=[{fieldPath:'total',increment:{integerValue:'1'}}];
+    if(newDay){fields.todayCount={integerValue:'1'};mask.push('todayCount')}
+    else tr.push({fieldPath:'todayCount',increment:{integerValue:'1'}});
+    var body={writes:[{update:{name:DOC,fields:fields},updateMask:{fieldPaths:mask},updateTransforms:tr}]};
+    return fetch(API+BASE+':commit?key='+C.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+      .then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(r.status+' '+t)});return readDoc()})
+      .catch(function(e){try{localStorage.removeItem(DAY_KEY)}catch(x){}try{console.log('접속자 수 저장 실패',e)}catch(x){}return f});
   }
-  if(window.HUB&&HUB.visitors)HUB.visitors.ready.then(show,show);else show();
+  readDoc().then(count).then(function(f){
+    var sameDay=f.todayDate&&f.todayDate.stringValue===today;
+    put(sameDay?num(f.todayCount):0,num(f.total));
+  }).catch(fail);
 })();
 </script>
 </body>
