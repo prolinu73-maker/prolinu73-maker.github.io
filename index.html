@@ -167,6 +167,34 @@
   .auth-close { width: 100%; padding: 10px; margin-top: 12px; background: #e2e8f0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: inherit; }
   .hdr-btn.signup { background: #fff; color: var(--accent); border: 1.5px solid var(--accent); }
   .hdr-btn.mine { background: #64748b; }
+  /* 문의하기 */
+  .hdr-btn.contact { background: #fff; color: #334155; border: 1.5px solid #CBD5E1; }
+  .hdr-btn.contact:hover { border-color: var(--accent); color: var(--accent); filter: none; }
+  #contactModal .modal-content { width: 460px; max-width: 94%; max-height: 92vh; overflow-y: auto; }
+  .ct-lead { margin: -6px 0 14px; font-size: 13.5px; color: #64748b; text-align: center; line-height: 1.6; }
+  .ct-label { display: block; font-size: 13px; font-weight: 800; color: #334155; margin: 4px 0 5px; }
+  .ct-label small { font-weight: 600; color: #94a3b8; }
+  .ct-types { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .ct-types label { cursor: pointer; }
+  .ct-types input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+  .ct-types span { display: inline-block; padding: 7px 12px; border: 1.5px solid #CBD5E1; border-radius: 999px; font-size: 13px; font-weight: 700; color: #475569; background: #fff; }
+  .ct-types input:checked + span { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .ct-types input:focus-visible + span { outline: 3px solid #93C5FD; outline-offset: 1px; }
+  #contactModal textarea { width: 100%; min-height: 150px; padding: 12px; border: 1.5px solid var(--line); border-radius: 8px; font-family: inherit; font-size: 14.5px; line-height: 1.6; resize: vertical; box-sizing: border-box; }
+  #contactModal textarea:focus { border-color: var(--accent); outline: none; }
+  .ct-count { text-align: right; font-size: 12px; color: #94a3b8; margin: 3px 0 8px; }
+  .ct-hp { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; overflow: hidden; }
+  .ct-note { font-size: 12px; color: #94a3b8; line-height: 1.55; margin: 2px 0 12px; }
+  .ct-msg { min-height: 1.3em; font-size: 13.5px; font-weight: 700; margin: 0 0 10px; color: #DC2626; }
+  .ct-msg.ok { color: #15803D; }
+  .ct-row { display: flex; gap: 8px; }
+  .ct-row button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 800; cursor: pointer; }
+  .ct-send { background: var(--accent); color: #fff; }
+  .ct-send:disabled { opacity: .6; cursor: wait; }
+  .ct-close { background: #e2e8f0; color: #1e293b; }
+  .ct-done { text-align: center; padding: 10px 0 4px; }
+  .ct-done .big { font-size: 44px; }
+  .ct-done p { color: #475569; line-height: 1.7; margin: 8px 0 18px; }
   .board-table { width: 100%; border-collapse: collapse; }
   .board-table th, .board-table td { padding: 12px; border-bottom: 1px solid #EDF2EF; font-size: 14px; }
   .board-table th { background: var(--paper); font-weight: 800; color: #5B6B63; }
@@ -222,7 +250,7 @@
 <header id="hubHeader"></header>
 <script>
   HUB.renderHeader({ wrapAt: 1140, rightClass: 'user-area', rightId: 'userArea',
-    right: `<button class="hdr-btn signup" onclick="openModal('signup')">회원가입</button> <button class="login-link" onclick="openModal('login')">로그인</button>` });
+    right: `<button class="hdr-btn contact" onclick="openContact()" title="사이트 이용 중 궁금한 점·오류·건의를 관리자에게 보냅니다">✉️ 문의하기</button> <button class="hdr-btn signup" onclick="openModal('signup')">회원가입</button> <button class="login-link" onclick="openModal('login')">로그인</button>` });
 </script>
 
 <!-- 첫 화면 -->
@@ -583,6 +611,39 @@
     </div>
 
     <!-- 방문 기록 모달 (관리자 전용) -->
+    <!-- 문의하기: 관리자 이메일로 바로 보냄 (메일 프로그램을 열 필요 없음) -->
+    <div id="contactModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="contactTitle">
+        <div class="modal-content">
+            <h3 id="contactTitle">✉️ 문의하기</h3>
+            <div id="ctForm">
+                <p class="ct-lead">궁금한 점, 오류, 바라는 기능을 적어 주세요.<br>관리자에게 바로 전달됩니다.</p>
+                <span class="ct-label">문의 종류</span>
+                <div class="ct-types" role="radiogroup" aria-label="문의 종류">
+                    <label><input type="radio" name="ctType" value="이용 문의" checked><span>💬 이용 문의</span></label>
+                    <label><input type="radio" name="ctType" value="오류 신고"><span>🐞 오류 신고</span></label>
+                    <label><input type="radio" name="ctType" value="기능 건의"><span>💡 기능 건의</span></label>
+                    <label><input type="radio" name="ctType" value="기타"><span>📝 기타</span></label>
+                </div>
+                <label class="ct-label" for="ctName">이름(닉네임) <small>선택</small></label>
+                <input type="text" id="ctName" maxlength="40" placeholder="예) 홍길동 / ○○학교 행정실" autocomplete="name">
+                <label class="ct-label" for="ctEmail">답변 받을 이메일 <small>선택 · 적으면 답장을 받을 수 있어요</small></label>
+                <input type="email" id="ctEmail" maxlength="100" placeholder="example@korea.kr" autocomplete="email">
+                <label class="ct-label" for="ctText">문의 내용 <small>필수</small></label>
+                <textarea id="ctText" maxlength="2000" placeholder="어느 페이지에서 무엇을 하다가 어떤 일이 생겼는지 적어 주시면 빨리 도와드릴 수 있어요."></textarea>
+                <div class="ct-count"><span id="ctCnt">0</span> / 2000</div>
+                <div class="ct-hp" aria-hidden="true"><label>이 칸은 비워 두세요 <input type="text" id="ctHoney" tabindex="-1" autocomplete="off"></label></div>
+                <p class="ct-note">※ 보내 주신 이름·이메일은 답변에만 쓰고 따로 보관하지 않습니다. 비밀번호·주민등록번호 같은 개인정보는 적지 마세요.</p>
+                <p class="ct-msg" id="ctMsg" role="alert"></p>
+                <div class="ct-row"><button type="button" class="ct-send" id="ctSend" onclick="sendContact()">보내기</button><button type="button" class="ct-close" onclick="closeContact()">닫기</button></div>
+            </div>
+            <div id="ctDone" class="ct-done" hidden>
+                <div class="big">✅</div>
+                <p><b>문의가 접수되었습니다.</b><br>확인하는 대로 답변드리겠습니다.<br><span id="ctDoneMail"></span></p>
+                <div class="ct-row"><button type="button" class="ct-close" onclick="closeContact()">닫기</button></div>
+            </div>
+        </div>
+    </div>
+
     <div id="visitModal" class="modal-overlay">
         <div class="modal-content" style="width: 900px; max-width: 94%; max-height: 90vh; overflow-y: auto; box-sizing: border-box;">
             <h3 style="margin-bottom: 6px;">📈 방문 기록 (관리자 전용)</h3>
@@ -1077,11 +1138,75 @@
             const ui = document.getElementById('userArea');
             if (currentUser) {
                 // 프로필 그림 + 닉네임 버튼 → 누르면 메뉴가 펼쳐짐 (모양은 common.js 한곳에서 관리)
-                ui.innerHTML = HUB.userMenuHTML(currentUser, { myInfo: 'openMyInfo()', members: 'openAdminModal()', visits: 'openVisitModal()', logout: 'logout()' });
+                ui.innerHTML = `<button class="hdr-btn contact" onclick="openContact()" title="사이트 이용 중 궁금한 점·오류·건의를 관리자에게 보냅니다">✉️ 문의하기</button> ` + HUB.userMenuHTML(currentUser, { myInfo: 'openMyInfo()', members: 'openAdminModal()', visits: 'openVisitModal()', logout: 'logout()' });
             } else {
-                ui.innerHTML = `<button class="hdr-btn signup" onclick="openModal('signup')">회원가입</button>
+                ui.innerHTML = `<button class="hdr-btn contact" onclick="openContact()" title="사이트 이용 중 궁금한 점·오류·건의를 관리자에게 보냅니다">✉️ 문의하기</button> <button class="hdr-btn signup" onclick="openModal('signup')">회원가입</button>
                                 <button class="login-link" onclick="openModal('login')">로그인</button>`;
             }
+        }
+
+        // ── 문의하기 ──
+        //  FormSubmit(무료 메일 전달 서비스)를 거쳐 관리자 메일로 바로 보냄 → 방문자는 메일 프로그램 없이 창 안에서 끝
+        //  ※ 처음 1번은 관리자 메일로 'Activate Form'(사용 확인) 메일이 옴 → 그 메일의 버튼을 눌러야 이후 문의가 전달됨
+        const CONTACT_TO = 'prolinu73@gmail.com';
+        const CONTACT_URL = 'https://formsubmit.co/ajax/' + CONTACT_TO;
+        function ctMsg(t, ok) { const m = document.getElementById('ctMsg'); m.textContent = t || ''; m.classList.toggle('ok', !!ok); }
+        function openContact() {
+            const md = document.getElementById('contactModal');
+            document.getElementById('ctForm').hidden = false;
+            document.getElementById('ctDone').hidden = true;
+            ctMsg('');
+            const u = HUB.getUser();
+            const nm = document.getElementById('ctName');
+            if (u && u.name && !nm.value) nm.value = u.name;   // 로그인했으면 닉네임 자동 입력
+            md.style.display = 'flex';
+            setTimeout(() => document.getElementById('ctText').focus(), 50);
+        }
+        function closeContact() { document.getElementById('contactModal').style.display = 'none'; }
+        document.addEventListener('DOMContentLoaded', () => {
+            const tx = document.getElementById('ctText'), md = document.getElementById('contactModal');
+            tx.addEventListener('input', () => { document.getElementById('ctCnt').textContent = tx.value.length; });
+            md.addEventListener('click', e => { if (e.target === md) closeContact(); });   // 바깥을 누르면 닫힘
+            document.addEventListener('keydown', e => { if (e.key === 'Escape' && md.style.display === 'flex') closeContact(); });
+            if (location.hash === '#contact') openContact();   // 다른 페이지에서 index.html#contact 로 오면 바로 열림
+        });
+        async function sendContact() {
+            const text = document.getElementById('ctText').value.trim();
+            const name = document.getElementById('ctName').value.trim();
+            const email = document.getElementById('ctEmail').value.trim();
+            const type = (document.querySelector('input[name="ctType"]:checked') || {}).value || '이용 문의';
+            if (document.getElementById('ctHoney').value) return;            // 자동 프로그램(스팸)이 채운 경우 조용히 무시
+            if (text.length < 5) { document.getElementById('ctText').focus(); return ctMsg('문의 내용을 5글자 이상 적어 주세요.'); }
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById('ctEmail').focus(); return ctMsg('이메일 주소를 다시 확인해 주세요. (비워 두셔도 됩니다)'); }
+            let last = 0; try { last = Number(localStorage.getItem('hubContactAt') || 0); } catch (e) {}
+            if (Date.now() - last < 60000) return ctMsg('방금 보내셨어요. 1분 뒤에 다시 보내 주세요.');
+            const btn = document.getElementById('ctSend');
+            btn.disabled = true; ctMsg('보내는 중입니다...', true);
+            const u = HUB.getUser();
+            const now = new Date(Date.now() + 9 * 3600e3).toISOString().replace('T', ' ').slice(0, 16);
+            const body = {
+                _subject: '[조효식 허브 문의] ' + type + ' - ' + (name || '이름 없음'),
+                _template: 'table', _captcha: 'false', _honey: '',
+                '문의 종류': type,
+                '이름(닉네임)': name || '(적지 않음)',
+                '회원 여부': u && u.uid ? '로그인 회원 (' + (u.name || '') + ')' : '로그인 안 함',
+                '문의 내용': text,
+                '보낸 시각(한국)': now,
+                '보낸 페이지': location.href.split('#')[0]
+            };
+            if (email) { body.email = email; body._replyto = email; }   // 메일에서 [답장]을 누르면 이 주소로 감
+            try {
+                const res = await fetch(CONTACT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body) });
+                const j = await res.json().catch(() => ({}));
+                if (!res.ok || String(j.success) === 'false') throw new Error(j.message || ('HTTP ' + res.status));
+                try { localStorage.setItem('hubContactAt', String(Date.now())); } catch (e) {}
+                document.getElementById('ctText').value = ''; document.getElementById('ctCnt').textContent = '0';
+                document.getElementById('ctDoneMail').textContent = email ? '답변은 ' + email + ' 로 보내 드립니다.' : '';
+                document.getElementById('ctForm').hidden = true; document.getElementById('ctDone').hidden = false;
+            } catch (e) {
+                console.log('문의 보내기 실패', e);
+                ctMsg('보내지 못했습니다. 잠시 후 다시 시도하시거나 ' + CONTACT_TO + ' 로 메일을 보내 주세요.');
+            } finally { btn.disabled = false; }
         }
 
         function openAdminModal() {
