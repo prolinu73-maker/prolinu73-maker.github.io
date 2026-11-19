@@ -1,8 +1,8 @@
 {
   "meta": {
-    "version": "1.0.1",
-    "updatedAt": "2026-11-20T08:50:52+09:00",
-    "updatedBy": "prolinu73-maker"
+    "version": "1.0.0",
+    "updatedAt": "2026-11-20T09:00:00+09:00",
+    "updatedBy": "admin"
   },
   "site": {
     "title": "조효식 허브 PRO",
@@ -46,30 +46,10 @@
     }
   ],
   "categories": [
-    {
-      "id": "cat-1",
-      "name": "주요 업무",
-      "order": 1,
-      "visible": true
-    },
-    {
-      "id": "cat-2",
-      "name": "인사·복무",
-      "order": 2,
-      "visible": true
-    },
-    {
-      "id": "cat-3",
-      "name": "예산·재무",
-      "order": 3,
-      "visible": true
-    },
-    {
-      "id": "cat-4",
-      "name": "시설·학교운영",
-      "order": 4,
-      "visible": true
-    }
+    { "id": "cat-1", "name": "주요 업무", "order": 1, "visible": true },
+    { "id": "cat-2", "name": "인사·복무", "order": 2, "visible": true },
+    { "id": "cat-3", "name": "예산·재무", "order": 3, "visible": true },
+    { "id": "cat-4", "name": "시설·학교운영", "order": 4, "visible": true }
   ],
   "items": [
     {
@@ -84,19 +64,9 @@
       "status": "active",
       "version": "1.0.0",
       "order": 1,
-      "tags": [
-        "AI 노무상담",
-        "질문·답변",
-        "정보·자료실",
-        "핵심 노무 FAQ",
-        "노무 계산기",
-        "업무 체크리스트"
-      ],
+      "tags": ["AI 노무상담", "질문·답변", "정보·자료실", "핵심 노무 FAQ", "노무 계산기", "업무 체크리스트"],
       "changelog": [
-        {
-          "date": "2026-11-15",
-          "note": "질문·답변, 정보·자료 게시판 추가"
-        }
+        { "date": "2026-11-15", "note": "질문·답변, 정보·자료 게시판 추가" }
       ]
     },
     {
@@ -111,15 +81,9 @@
       "status": "active",
       "version": "1.0.0",
       "order": 2,
-      "tags": [
-        "출장 여비 계산",
-        "교통비 조회"
-      ],
+      "tags": ["출장 여비 계산", "교통비 조회"],
       "changelog": [
-        {
-          "date": "2026-11-11",
-          "note": "최초 배포"
-        }
+        { "date": "2026-11-11", "note": "최초 배포" }
       ]
     },
     {
@@ -134,15 +98,9 @@
       "status": "active",
       "version": "1.0.0",
       "order": 3,
-      "tags": [
-        "엑셀 불러오기",
-        "물품 검색"
-      ],
+      "tags": ["엑셀 불러오기", "물품 검색"],
       "changelog": [
-        {
-          "date": "2026-11-12",
-          "note": "최초 배포"
-        }
+        { "date": "2026-11-12", "note": "최초 배포" }
       ]
     },
     {
@@ -157,15 +115,9 @@
       "status": "active",
       "version": "1.0.0",
       "order": 1,
-      "tags": [
-        "호봉 계산",
-        "호봉획정표"
-      ],
+      "tags": ["호봉 계산", "호봉획정표"],
       "changelog": [
-        {
-          "date": "2026-11-18",
-          "note": "최초 배포"
-        }
+        { "date": "2026-11-18", "note": "최초 배포" }
       ]
     },
     {
@@ -180,16 +132,9 @@
       "status": "active",
       "version": "1.0.0",
       "order": 2,
-      "tags": [
-        "엑셀 불러오기",
-        "검색",
-        "집계"
-      ],
+      "tags": ["엑셀 불러오기", "검색", "집계"],
       "changelog": [
-        {
-          "date": "2026-11-12",
-          "note": "최초 배포"
-        }
+        { "date": "2026-11-12", "note": "최초 배포" }
       ]
     },
     {
@@ -204,15 +149,9 @@
       "status": "active",
       "version": "1.0.0",
       "order": 1,
-      "tags": [
-        "연도별 보기",
-        "항목 검색"
-      ],
+      "tags": ["연도별 보기", "항목 검색"],
       "changelog": [
-        {
-          "date": "2026-11-16",
-          "note": "최초 배포"
-        }
+        { "date": "2026-11-16", "note": "최초 배포" }
       ]
     },
     {
@@ -227,15 +166,9 @@
       "status": "active",
       "version": "1.0.0",
       "order": 1,
-      "tags": [
-        "단계별 입력",
-        "공고문 자동 작성"
-      ],
+      "tags": ["단계별 입력", "공고문 자동 작성"],
       "changelog": [
-        {
-          "date": "2026-11-13",
-          "note": "최초 배포"
-        }
+        { "date": "2026-11-13", "note": "최초 배포" }
       ]
     },
     {
@@ -250,16 +183,9 @@
       "status": "active",
       "version": "1.0.0",
       "order": 2,
-      "tags": [
-        "녹음 분석",
-        "회의록 서식",
-        "한글 다운로드"
-      ],
+      "tags": ["녹음 분석", "회의록 서식", "한글 다운로드"],
       "changelog": [
-        {
-          "date": "2026-11-19",
-          "note": "최초 배포"
-        }
+        { "date": "2026-11-19", "note": "최초 배포" }
       ]
     }
   ]

@@ -231,6 +231,9 @@
   .sc-topbar.preview { background: #FACC15; color: #422006; }
   .sc-topbar.maint { background: #F97316; color: #fff; }
 
+  /* 관리자 페이지 버튼 */
+  .hdr-btn.admin-page { background: #0F172A; color: #fff; text-decoration: none; display: inline-flex; align-items: center; }
+  .hdr-btn.admin-page:hover { background: #1E293B; filter: none; }
   /* 문의하기 */
   .hdr-btn.contact { background: #fff; color: #334155; border: 1.5px solid #CBD5E1; }
   .hdr-btn.contact:hover { border-color: var(--accent); color: var(--accent); filter: none; }
@@ -1209,12 +1212,14 @@
 
         const avatarHTML = HUB.avatarHTML;     // 프로필 그림 (common.js)
 
+        // 관리자 페이지 버튼 (관리자 계정으로 로그인했을 때만 보임)
+        const ADMIN_BTN = `<a class="hdr-btn admin-page" href="admin.html" title="공지·업무 카드·점검 모드 등을 고치는 관리자 페이지로 이동합니다">⚙️ 관리자 페이지</a> `;
         // 상단 오른쪽: 로그인 상태와 관리자 버튼
         function updateLoginUI() {
             const ui = document.getElementById('userArea');
             if (currentUser) {
                 // 프로필 그림 + 닉네임 버튼 → 누르면 메뉴가 펼쳐짐 (모양은 common.js 한곳에서 관리)
-                ui.innerHTML = `<button class="hdr-btn contact" onclick="openContact()" title="사이트 이용 중 궁금한 점·오류·건의를 관리자에게 보냅니다">✉️ 문의하기</button> ` + HUB.userMenuHTML(currentUser, { myInfo: 'openMyInfo()', members: 'openAdminModal()', visits: 'openVisitModal()', logout: 'logout()' });
+                ui.innerHTML = (HUB.isAdmin(currentUser) ? ADMIN_BTN : '') + `<button class="hdr-btn contact" onclick="openContact()" title="사이트 이용 중 궁금한 점·오류·건의를 관리자에게 보냅니다">✉️ 문의하기</button> ` + HUB.userMenuHTML(currentUser, { myInfo: 'openMyInfo()', members: 'openAdminModal()', visits: 'openVisitModal()', logout: 'logout()' });
             } else {
                 ui.innerHTML = `<button class="hdr-btn contact" onclick="openContact()" title="사이트 이용 중 궁금한 점·오류·건의를 관리자에게 보냅니다">✉️ 문의하기</button> <button class="hdr-btn signup" onclick="openModal('signup')">회원가입</button>
                                 <button class="login-link" onclick="openModal('login')">로그인</button>`;
