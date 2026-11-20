@@ -2086,6 +2086,16 @@ function letterDoc(v){ return ['─────────── [붙임 2] 가
   '  ○ 궁금하신 사항은 학교 행정실(전화 ○○○-○○○○)로 문의하여 주시기 바랍니다.','',
   '                              '+v.today,'','                         '+v.sc+'장'];
 }
+// 6단계 붙임 2: 안건처리 상황표
+function statusDoc(v){
+  const day=v.date.replace(/\(.\)$/,'');
+  const rows=v.ag.length?'    번호 | 안건명 | 제안자 | 심의일 | 심의결과 | 비고\n'+v.ag.map((a,i)=>('    '+(i+1)+' | '+a.name+' | '+a.by+' | '+day+' | '+a.res+' | '+String(a.memo||'').replace(/\s+/g,' ').trim()).replace(/\s+$/,'')).join('\n'):'    (안건을 입력하세요)';
+  return ['─────────── [붙임 2] 안건처리 상황표 ───────────','',
+  '                  '+v.mtg+' 안건처리 상황표','',
+  '  ○ 회의 일시: '+dt(v),'  ○ 장소: '+v.place,'  ○ 처리 현황: 총 '+v.ag.length+'건 ('+cnt(v)+')','  ○ 안건별 처리 상황',rows,'',
+  '  ※ 심의결과 구분: 원안가결, 수정가결, 부결, 보류','',
+  '                              '+v.today,'','                    '+v.sc+'운영위원회 위원장'];
+}
 function gonggo(v,label){ return ['─────────── '+label+' ───────────','',
      '                '+v.sc+'운영위원회 공고 제'+(new Date().getFullYear())+'-○호','',
      '                  '+v.mtg+' 개최 공고','',
@@ -2151,15 +2161,16 @@ function gen(n){
      ...gonggo(v,'[홈페이지 게시용 공고문]')].join('\n')};
   case 6: { const un=v.ag.filter(a=>a.res==='미정').length, bad=v.ag.some(a=>a.res==='부결'||a.res==='보류');
     return {to:v.sc+'장',from:v.sc+'운영위원회 위원장 (기안: 간사)',ap:AP.com3,
-    note:un?('⚠ 심의결과가 \'미정\'인 안건이 '+un+'건 있습니다. 위 [안건별 심의결과 선택]에서 고르면 즉시 반영됩니다.'):'위 [안건별 심의결과 선택]에서 고른 결과가 표로 반영됩니다. 회의록 사본을 붙임으로 첨부하세요.',
+    note:un?('⚠ 심의결과가 \'미정\'인 안건이 '+un+'건 있습니다. 위 [안건별 심의결과 선택]에서 고르면 즉시 반영됩니다.'):'위 [안건별 심의결과 선택]에서 고른 결과가 표로 반영됩니다. 본문 아래쪽에 붙임 2(안건처리 상황표)가 함께 만들어집니다. 회의록 사본(붙임 1)은 따로 첨부하세요.',
     noteCls:un?'warn':'info',
     title:v.mtg+' 안건 처리 결과 이송',
     body:['1. 관련','  가. '+LAW+v.rule+'.','  나. 학교장의 회의 소집 요구 공문(문서번호 ○○○-○○○○, ○○○○. ○. ○.).','',
      '2. '+v.date+' 개최한 '+v.mtg+'에서 심의한 안건의 처리 결과를 다음과 같이 이송하오니 학교운영에 반영하여 주시기 바랍니다.',
      '  가. 회의 일시: '+dt(v),'  나. 장소: '+v.place,'  다. 안건별 심의결과 ('+cnt(v)+')',tbl(v),
      bad?'  라. 부결 또는 보류된 안건은 위원회의 심의 의견을 참고하여 재검토하여 주시기 바랍니다.':'  라. 원안가결·수정가결된 안건은 심의 내용(수정 사항 포함)을 반영하여 추진하여 주시기 바랍니다.','',
-     '3. 회의록 사본을 붙임과 같이 송부하며, 심의결과는 학교 홈페이지 공개 등 후속 조치에 활용하여 주시기 바랍니다.','',
-     attach(['회의록 사본 1부.'])].join('\n')}; }
+     '3. 회의록 사본과 안건처리 상황표를 붙임과 같이 송부하며, 심의결과는 학교 홈페이지 공개 등 후속 조치에 활용하여 주시기 바랍니다.','',
+     attach(['회의록 사본 1부.','안건처리 상황표 1부.']),'',
+     ...statusDoc(v)].join('\n')}; }
   case 7: return {to:'내부결재 (수신자 없음)',from:v.sc+' (기안: 담당자)',ap:AP.sch,note:'위원회로부터 이송받은 심의결과를 접수하고 홈페이지 공개·학부모 안내를 하는 학교 내부결재입니다. 본문 아래쪽에 붙임 1(심의결과)과 붙임 2(가정통신문 안)가 함께 만들어집니다.',
     title:v.mtg+' 심의결과 접수 및 공개 계획',
     body:['1. 관련','  가. '+LAW+v.rule+'.','  나. '+v.sc+'운영위원회의 안건 처리 결과 이송 공문(문서번호 ○○○-○○○○, ○○○○. ○. ○.).','',
@@ -2244,7 +2255,7 @@ function bodyToHtml(t){
     if(/^[ \t]*.+ \| .+ \| .+/.test(lines[i])){
       const rows=[]; while(i<lines.length&&/^[ \t]*.+ \| .+ \| .+/.test(lines[i])){ rows.push(lines[i].trim().split(/ \|(?: |$)/)); i++; }
       out.push('<table class="gt" border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;margin-left:28px"><tr>'+rows[0].map(c=>'<th style="background:#e8edf3;text-align:center">'+esc2(c)+'</th>').join('')+'</tr>'
-        +rows.slice(1).map(r=>'<tr>'+r.map((c,k)=>'<td'+(k===0||k===2||k===3?' class="c" style="text-align:center"':(k===4?' style="min-width:120px"':''))+'>'+esc2(c)+'</td>').join('')+'</tr>').join('')+'</table>');
+        +rows.slice(1).map(r=>'<tr>'+r.map((c,k)=>'<td'+(k!==1&&k!==r.length-1?' class="c" style="text-align:center"':(k===r.length-1?' style="min-width:120px"':''))+'>'+esc2(c)+'</td>').join('')+'</tr>').join('')+'</table>');
     } else { out.push('<div>'+(lines[i].trim()?sp(lines[i]):'<br>')+'</div>'); i++; }
   }
   return out.join('');
@@ -2304,7 +2315,7 @@ function lint(){
   const blank=S.agendas.length-v.ag.length; if(blank>0) add('warn','안건명이 빈 칸인 안건이 '+blank+'건 있습니다. (공문에는 나오지 않습니다)');
   if(!t.trim()) add('err','제목이 비어 있습니다.');
   const marks=(all.match(/○/g)||[]).length; if(marks) add('warn','○ 표시가 '+marks+'곳 남아 있습니다. 문서번호·연락처 등 실제 값으로 바꾸세요.');
-  if((S.step!==5&&S.step!==3&&S.step!==7) ? !/끝\.\s*$/.test(b.trimEnd()) : !/끝\./.test(b)) add('warn','본문 끝에 \'끝.\' 표시가 없습니다.');
+  if((S.step!==5&&S.step!==3&&S.step!==7&&S.step!==6) ? !/끝\.\s*$/.test(b.trimEnd()) : !/끝\./.test(b)) add('warn','본문 끝에 \'끝.\' 표시가 없습니다.');
   const nums=[...b.matchAll(/^(\d+)\.\s/gm)].map(m=>+m[1]);
   if(nums.length&&nums.some((n,i)=>n!==i+1)) add('warn','1. 2. 3. 항목 번호가 순서대로 이어지지 않습니다. (현재: '+nums.join(', ')+')');
   [...all.matchAll(/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})\.\s*\(([일월화수목금토])\)/g)].forEach(m=>{
@@ -2389,8 +2400,8 @@ function gmHwpxSection(){
     while(k<L.length){
       if(/^[ \t]*.+ \| .+ \| .+/.test(L[k])){
         const rows=[]; while(k<L.length&&/^[ \t]*.+ \| .+ \| .+/.test(L[k])){ rows.push(L[k].trim().split(/ \|(?: |$)/)); k++; }
-        const n=Math.max(...rows.map(r=>r.length)), ws=n===5?[3400,19000,6000,7000,12790]:Array.from({length:n},(_,j)=>j<n-1?Math.floor(W/n):W-Math.floor(W/n)*(n-1));
-        const xml=rows.map((r,ri)=>'<hp:tr>'+ws.map((w,ci)=>hCell(ci,ri,w,1200,[r[ci]||''],ri===0?{para:20,char:7,fill:4}:{para:(n===5&&(ci===1||ci===4))?22:20})).join('')+'</hp:tr>').join('');
+        const n=Math.max(...rows.map(r=>r.length)), ws=n===5?[3400,19000,6000,7000,12790]:n===6?[3000,17000,5600,8000,6400,8190]:Array.from({length:n},(_,j)=>j<n-1?Math.floor(W/n):W-Math.floor(W/n)*(n-1));
+        const xml=rows.map((r,ri)=>'<hp:tr>'+ws.map((w,ci)=>hCell(ci,ri,w,1200,[r[ci]||''],ri===0?{para:20,char:7,fill:4}:{para:(ci===1||ci===n-1)?22:20})).join('')+'</hp:tr>').join('');
         x+=`<hp:p id="${hwpId++}" paraPrIDRef="0" styleIDRef="0" pageBreak="0" columnBreak="0" merged="0"><hp:run charPrIDRef="0">${hTable(rows.length,n,W,1200*rows.length,xml)}<hp:t/></hp:run></hp:p>`;
       } else { x+=hPara(L[k],22,0); k++; }
     }
