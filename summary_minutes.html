@@ -2184,8 +2184,59 @@ function gen(n){
   }
 }
 
+/* 같은 내용이면 화면 조각을 다시 만들지 않게 함.
+   (왼쪽 칸에 입력한 직후 단계 버튼·선택 상자를 누를 때, 누르는 도중에 버튼이 새로 만들어져 첫 클릭이 먹히지 않던 문제 방지) */
+(function(){ const d=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
+  ['gmSteps','gmMeta','gmNote','gmRes','gmReq','d7box','gmCheckSum','gmCheckList'].forEach(id=>{ const el=$(id); if(!el||!d) return; let last=null;
+    Object.defineProperty(el,'innerHTML',{configurable:true,get(){ return d.get.call(el); },set(v){ v=String(v); if(v===last) return; last=v; d.set.call(el,v); }}); });
+})();
+
 /* ---------- 우측 패널 ---------- */
 function curGen(){ return gen(S.step); }
+/* ---------- 직접 고친 글 + 왼쪽 입력 변경을 함께 살리기 (3방향 합치기) ----------
+   기준 글(고칠 당시 자동 생성본) → 고친 글 의 차이와, 기준 글 → 새 자동 생성본 의 차이를 합침.
+   같은 자리를 양쪽이 다 바꿨으면 그 줄 안에서 낱말 단위로 다시 합치고, 그래도 겹치면 새 입력값을 씀 */
+function lcsMatch(x,y){
+  const n=x.length,m=y.length,W=m+1,T=new Uint16Array((n+1)*W);
+  for(let i=n-1;i>=0;i--) for(let j=m-1;j>=0;j--) T[i*W+j]=x[i]===y[j]?T[(i+1)*W+j+1]+1:Math.max(T[(i+1)*W+j],T[i*W+j+1]);
+  const map=new Int32Array(n).fill(-1); let i=0,j=0;
+  while(i<n&&j<m){ if(x[i]===y[j]){ map[i]=j; i++; j++; } else if(T[(i+1)*W+j]>=T[i*W+j+1]) i++; else j++; }
+  return map;
+}
+function diff3(a,o,b,onConflict){
+  const ma=lcsMatch(o,a), mb=lcsMatch(o,b), out=[]; let io=0,ia=0,ib=0;
+  const eq=(p,q)=>p.length===q.length&&p.every((v,k)=>v===q[k]);
+  const flush=(eo,ea,eb)=>{ const so=o.slice(io,eo), sa=a.slice(ia,ea), sb=b.slice(ib,eb);
+    if(eq(sa,so)) out.push(...sb); else if(eq(sb,so)||eq(sa,sb)) out.push(...sa); else out.push(...onConflict(sa,so,sb)); };
+  for(let k=0;k<o.length;k++){
+    if(ma[k]>=0&&mb[k]>=0&&ma[k]>=ia&&mb[k]>=ib){ flush(k,ma[k],mb[k]); out.push(o[k]); io=k+1; ia=ma[k]+1; ib=mb[k]+1; }
+  }
+  flush(o.length,a.length,b.length);
+  return out;
+}
+const tok=s=>s.match(/\n|[ \t]+|\d{4}\. ?\d{1,2}\. ?\d{1,2}\.(?:\([일월화수목금토]\))?|\d{1,2}:\d{2}|[0-9]+|[A-Za-z]+|[가-힣]+|[\s\S]/g)||[];   // 날짜·시각은 한 덩어리로
+function merge3(mine,base,gen2){
+  if(mine===base) return gen2; if(base===gen2) return mine;
+  // 낱말 단위에서도 겹칠 때: 한쪽이 원래 글을 그대로 둔 채 앞뒤에 덧붙이기만 했으면 둘 다 살리고, 아니면 새 입력값을 씀
+  const find=(big,small)=>{ for(let i=0;i+small.length<=big.length;i++){ let k=0; while(k<small.length&&big[i+k]===small[k]) k++; if(k===small.length) return i; } return -1; };
+  const clash=(x,y,z)=>{ if(!y.length) return z.concat(x); let i=find(x,y); if(i>=0) return x.slice(0,i).concat(z,x.slice(i+y.length)); i=find(z,y); if(i>=0) return z.slice(0,i).concat(x,z.slice(i+y.length)); return z; };
+  const words=(sa,so,sb)=>diff3(tok(sa),tok(so),tok(sb),clash).join('');
+  if(mine.indexOf('\n')<0&&base.indexOf('\n')<0&&gen2.indexOf('\n')<0) return words(mine,base,gen2);
+  return diff3(mine.split('\n'),base.split('\n'),gen2.split('\n'),(sa,so,sb)=>words(sa.join('\n'),so.join('\n'),sb.join('\n')).split('\n')).join('\n');
+}
+// n단계의 지금 보여 줄 글: 직접 고친 글이 있으면 새 자동 생성본에 맞춰 다시 합친 뒤 돌려줌
+function eff(n){
+  const g=gen(n), e=S.edits[n];
+  if(!e) return {g,title:g.title,body:g.body,edited:false};
+  if(e.baseBody==null){ e.baseTitle=g.title; e.baseBody=g.body; save(); }      // 예전 방식으로 저장된 글: 지금부터 기준으로 삼음
+  if(e.baseTitle!==g.title||e.baseBody!==g.body){
+    try{ e.title=merge3(e.title,e.baseTitle,g.title); e.body=merge3(e.body,e.baseBody,g.body); }catch(x){ try{console.log('합치기 실패',x)}catch(y){} }
+    e.baseTitle=g.title; e.baseBody=g.body;
+    if(e.title===g.title&&e.body===g.body){ delete S.edits[n]; save(); return {g,title:g.title,body:g.body,edited:false}; }
+    save();
+  }
+  return {g,title:e.title,body:e.body,edited:true};
+}
 function renderRes(){
   const el=$('gmRes'); if(S.step<6){ el.innerHTML=''; return; }
   const ac=document.activeElement; if(ac&&el.contains(ac)&&ac.tagName==='INPUT') return;   // 비고 입력 중에는 다시 그리지 않음
@@ -2222,15 +2273,15 @@ function renderSteps(){
 }
 function renderRight(){
   renderSteps();
-  const g=curGen(), ed=S.edits[S.step];
+  const E=eff(S.step), g=E.g, ed=E.edited?E:null;
   $('gmMeta').innerHTML='<div class="r"><div class="k">수신</div><div class="v">'+esc2(g.to)+'</div></div>'
    +'<div class="r"><div class="k">발신(기안)</div><div class="v">'+esc2(g.from)+'</div></div>'
    +'<div class="r"><div class="k">결재선</div><div class="v"><span class="ap">'+g.ap.map(x=>'<span class="c">'+esc2(x)+'</span>').join('<span class="ar">→</span>')+'</span></div></div>';
   let note='<div class="notice '+(g.noteCls||'info')+'" style="margin:10px 16px 0">'+esc2(g.note)+'</div>';
-  if(ed && (ed.title!==g.title||ed.body!==g.body)) note+='<div class="notice warn" style="margin:8px 16px 0">✏ 이 단계는 <b>직접 고친 글</b>입니다. 왼쪽 입력을 바꿔도 이 글은 자동으로 바뀌지 않습니다. 새 입력을 반영하려면 [↺ 초기화]를 누르세요.</div>';
+  if(ed) note+='<div class="notice warn" style="margin:8px 16px 0">✏ 이 단계에는 <b>직접 고친 부분</b>이 있습니다. 고친 부분은 그대로 두고, 왼쪽 입력을 바꾸면 나머지 내용에 자동으로 반영됩니다. 처음 상태로 되돌리려면 [↺ 초기화]를 누르세요.</div>';
   $('gmNote').innerHTML=note;
   const act=document.activeElement, editing=(act===$('gmTitle')||act===$('gmBodyView'));
-  if(!editing){ const t=(ed&&(ed.title!==g.title||ed.body!==g.body))?ed:g; $('gmTitle').value=t.title; $('gmBody').value=t.body; paintBody(); }
+  if(!editing){ const t=E; $('gmTitle').value=t.title; $('gmBody').value=t.body; paintBody(); }
   renderRes(); renderReq(); renderTbl(); renderCheck();
 }
 $('gmSteps').addEventListener('click',e=>{
@@ -2240,10 +2291,10 @@ $('gmSteps').addEventListener('click',e=>{
 });
 $('gmSteps').addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('gs')){ e.preventDefault(); S.step=+e.target.dataset.s; save(); renderRight(); } });
 function onEdit(){ const g=curGen(), t=$('gmTitle').value, b=$('gmBody').value;
-  if(t===g.title&&b===g.body) delete S.edits[S.step]; else S.edits[S.step]={title:t,body:b};
+  if(t===g.title&&b===g.body) delete S.edits[S.step]; else S.edits[S.step]={title:t,body:b,baseTitle:g.title,baseBody:g.body};
   save(); renderNoteOnly(); renderTbl(); renderCheck(); }
 function renderNoteOnly(){ const g=curGen(), ed=S.edits[S.step]; let note='<div class="notice '+(g.noteCls||'info')+'" style="margin:10px 16px 0">'+esc2(g.note)+'</div>';
-  if(ed) note+='<div class="notice warn" style="margin:8px 16px 0">✏ 이 단계는 <b>직접 고친 글</b>입니다. 왼쪽 입력을 바꿔도 이 글은 자동으로 바뀌지 않습니다. 새 입력을 반영하려면 [↺ 초기화]를 누르세요.</div>'; $('gmNote').innerHTML=note; }
+  if(ed) note+='<div class="notice warn" style="margin:8px 16px 0">✏ 이 단계에는 <b>직접 고친 부분</b>이 있습니다. 고친 부분은 그대로 두고, 왼쪽 입력을 바꾸면 나머지 내용에 자동으로 반영됩니다. 처음 상태로 되돌리려면 [↺ 초기화]를 누르세요.</div>'; $('gmNote').innerHTML=note; }
 $('gmTitle').addEventListener('input',onEdit); $('gmBody').addEventListener('input',onEdit);
 $('gmReset').onclick=()=>{ delete S.edits[S.step]; save(); $('gmTitle').blur(); $('gmBodyView').blur(); renderRight(); toast(S.step+'단계를 자동 생성 내용으로 되돌렸습니다'); };
 /* 본문 글자 → 표가 있는 화면용 HTML (' | '로 나뉜 연속 줄을 표로 바꿈) */
@@ -2261,7 +2312,8 @@ function bodyToHtml(t){
   return out.join('');
 }
 function renderTbl(){ $('gmCopyPlain').classList.toggle('hidden',!hasTable($('gmBody').value)); }
-function paintBody(){ $('gmBodyView').innerHTML=bodyToHtml($('gmBody').value); }
+let paintedBody=null;   // 화면에 그려 둔 본문 글자 (같은 내용이면 다시 그리지 않음 → 누르던 자리·커서가 유지됨)
+function paintBody(){ const t=$('gmBody').value; if(t===paintedBody) return; paintedBody=t; $('gmBodyView').innerHTML=bodyToHtml(t); }
 /* 화면(표가 있는 본문) → 글자 본문. 표는 '번호 | 안건명 | …' 줄로 바뀌어 저장됨 */
 function viewToText(){
   const out=[];
@@ -2274,7 +2326,7 @@ function viewToText(){
   }); })($('gmBodyView'));
   return out.map(s=>s.replace(/\u00a0/g,' ').replace(/\s+$/,'')).join('\n');
 }
-$('gmBodyView').addEventListener('input',()=>{ $('gmBody').value=viewToText(); onEdit(); });
+$('gmBodyView').addEventListener('input',()=>{ $('gmBody').value=viewToText(); paintedBody=$('gmBody').value; onEdit(); });
 $('gmBodyView').addEventListener('paste',e=>{ e.preventDefault(); const t=(e.clipboardData||window.clipboardData).getData('text/plain'); document.execCommand('insertText',false,t); });
 function copyRich(){
   const html='<div style="font-family:\'맑은 고딕\',sans-serif;font-size:12pt;line-height:1.8">'+bodyToHtml($('gmBody').value)+'</div>', plain=$('gmBody').value;
@@ -2326,7 +2378,7 @@ function lint(){
     if(left<0 && S.step<=5) add('err','개최 7일 전 마감일('+fmtDate(dd7)+')이 이미 지났습니다. 희망 회의 날짜를 늦추거나 통지 일정을 확인하세요.');
     else if(left<=2 && S.step<=5) add('warn','개최 7일 전 마감일('+fmtDate(dd7)+')까지 '+(left===0?'오늘이 마감입니다.':left+'일 남았습니다.')); }
   if(S.step>=6){ const un=v.ag.filter(a=>a.res==='미정').length; if(un) add('warn','심의결과가 \'미정\'인 안건이 '+un+'건 있습니다. 위 [안건별 심의결과 선택]에서 고르세요.'); }
-  const ed=S.edits[S.step]; if(ed) add('warn','직접 고친 글입니다. 왼쪽 입력과 달라진 부분이 없는지 확인하세요.');
+  const ed=S.edits[S.step]; if(ed) add('warn','직접 고친 부분이 있습니다. 왼쪽 입력을 바꾼 뒤에는 고친 부분 주변이 자연스러운지 한 번 확인하세요.');
   return L;
 }
 function renderCheck(){
@@ -2391,7 +2443,7 @@ function gmHwpxSection(){
   hwpId=1000; const W=48190, pb=s=>s.replace('pageBreak="0"','pageBreak="1"');
   let x='', txt=[];
   STEPS.forEach((s,i)=>{
-    const g=gen(s.n), e=S.edits[s.n], t=e?e.title:g.title, b=e?e.body:g.body, head='■ '+s.n+'단계. '+s.name;
+    const E=eff(s.n), g=E.g, t=E.title, b=E.body, head='■ '+s.n+'단계. '+s.name;
     if(i===0) x+=`<hp:p id="${hwpId++}" paraPrIDRef="22" styleIDRef="0" pageBreak="0" columnBreak="0" merged="0"><hp:run charPrIDRef="0">${$('hwpxSecPr').textContent}</hp:run><hp:run charPrIDRef="7"><hp:t>${xesc(head)}</hp:t></hp:run></hp:p>`;
     else x+=pb(hPara(head,22,7));
     x+=hPara('수신: '+g.to,22,0)+hPara('발신(기안): '+g.from,22,0)+hPara('결재선: '+g.ap.join(' → '),22,0)+hPara('',22,0)+hPara('제목: '+t,22,7)+hPara('',22,0);
