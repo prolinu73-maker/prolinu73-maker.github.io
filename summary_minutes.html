@@ -2594,38 +2594,46 @@ window.addEventListener('beforeunload',()=>{ if(!switching) snap(false); });
 })();
 </script>
 <script>
-/* 사이트 전체 접속자 수(오늘·누적)
-   - 세는 일은 common.js가 함: 한 브라우저는 하루 1번만, 관리자 브라우저는 세지 않음 (허브 첫 화면과 같은 숫자)
-   - 여기서는 숫자를 읽어 보여 주고, 화면을 켜 둔 동안 1분마다 새 숫자로 바꿈
-   - 마우스를 올리면 이 접속이 세어졌는지 이유와 함께 알려 줌 */
+/* 이 페이지(회의 관리)만의 접속자 수 (오늘 · 누적) — Firestore  stats / page_minutes
+   - 사이트 전체 숫자(허브 첫 화면)와 따로 셈
+   - 한 브라우저는 하루 1번만 셈(새로고침·다시 열기는 세지 않음) · 날짜(한국 시간)가 바뀌면 오늘 숫자는 1부터
+   - 관리자로 로그인한 적이 있는 브라우저는 세지 않음
+   - 1분마다 새 숫자로 바꿈 · 마우스를 올리면 이 접속이 세어졌는지 알려 줌 */
 (function(){
-  var box=document.getElementById('visits'), why='';
-  function put(t,n){document.getElementById('vToday').textContent=Number(t||0).toLocaleString('ko-KR');document.getElementById('vTotal').textContent=Number(n||0).toLocaleString('ko-KR');
-    box.title='사이트 모든 페이지 기준 · 한 사람(브라우저)은 하루 1번만 셉니다'+(why?'\n'+why:'')}
-  function fail(e){box.title='접속자 수를 불러오지 못했습니다(인터넷·Firebase 보안 규칙 확인)';try{console.log('접속자 수 불러오기 실패',e)}catch(x){}}
-  function viaRest(){
-    var C=(window.HUB&&HUB.FIREBASE_CONFIG)||{apiKey:'AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw',projectId:'prolinu73-6c409'};
-    return fetch('https://firestore.googleapis.com/v1/projects/'+C.projectId+'/databases/(default)/documents/stats/visitors?key='+C.apiKey)
-      .then(function(r){return r.status===404?{fields:{}}:(r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)))})
-      .then(function(j){var f=j.fields||{},n=function(x){return x?Number(x.integerValue!=null?x.integerValue:(x.doubleValue||0)):0};
-        var k=new Date(Date.now()+9*3600e3).toISOString().slice(0,10);
-        return {total:n(f.total),todayCount:(f.todayDate&&f.todayDate.stringValue===k)?n(f.todayCount):0}});
+  var C=(window.HUB&&HUB.FIREBASE_CONFIG)||{apiKey:'AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw',projectId:'prolinu73-6c409'};
+  var ROOT='projects/'+C.projectId+'/databases/(default)/documents', DOC=ROOT+'/stats/page_minutes', API='https://firestore.googleapis.com/v1/';
+  var DAY_KEY='scmVisitDay', box=document.getElementById('visits'), why='';
+  var today=function(){return new Date(Date.now()+9*3600e3).toISOString().slice(0,10)};
+  var num=function(x){return x?Number(x.integerValue!=null?x.integerValue:(x.doubleValue||0)):0};
+  function isAdmin(){try{if(window.HUB&&HUB.isAdminDevice)return !!HUB.isAdminDevice();return localStorage.getItem('hubAdminDevice')==='1'}catch(e){return false}}
+  function getDoc(){return fetch(API+DOC+'?key='+C.apiKey).then(function(r){
+    if(r.status===404)return {fields:{}};
+    if(!r.ok){var e=new Error('HTTP '+r.status);e.status=r.status;throw e}
+    return r.json()})}
+  function put(f){var t=today(),td=f.todayDate?f.todayDate.stringValue:'';
+    document.getElementById('vToday').textContent=(td===t?num(f.todayCount):0).toLocaleString('ko-KR');
+    document.getElementById('vTotal').textContent=num(f.total).toLocaleString('ko-KR');
+    box.title='이 페이지(회의 관리)를 방문한 사람 수 · 한 사람(브라우저)은 하루 1번만 셉니다'+(why?'\n'+why:'')}
+  function fail(e){
+    box.title=(e&&e.status===403)?'접속자 수를 표시할 수 없습니다: Firebase 보안 규칙에 stats/page_minutes 허용이 필요합니다':'접속자 수를 불러오지 못했습니다(인터넷 연결 확인)';
+    try{console.log('접속자 수 오류',e)}catch(x){}}
+  function show(){return getDoc().then(function(j){put(j.fields||{})}).catch(fail)}
+  function count(){
+    var t=today();
+    if(isAdmin()){why='※ 관리자로 로그인한 적이 있는 브라우저라서 이 접속은 세지 않습니다.';return Promise.resolve()}
+    try{if(localStorage.getItem(DAY_KEY)===t){why='※ 이 브라우저는 오늘 이미 세었습니다(하루 1번).';return Promise.resolve()}}catch(e){return Promise.resolve()}
+    try{localStorage.setItem(DAY_KEY,t)}catch(e){}
+    return getDoc().then(function(j){
+      var f=j.fields||{},saved=f.todayDate?f.todayDate.stringValue:'',newDay=!saved||t>saved;
+      var fields={todayDate:{stringValue:newDay?t:saved}},mask=['todayDate'],tr=[{fieldPath:'total',increment:{integerValue:'1'}}];
+      if(newDay){fields.todayCount={integerValue:'1'};mask.push('todayCount')}else tr.push({fieldPath:'todayCount',increment:{integerValue:'1'}});
+      return fetch(API+ROOT+':commit?key='+C.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({writes:[{update:{name:DOC,fields:fields},updateMask:{fieldPaths:mask},updateTransforms:tr}]})})
+        .then(function(r){if(!r.ok){var e=new Error('HTTP '+r.status);e.status=r.status;throw e} why='✔ 방금 이 접속을 1명으로 셌습니다.'});
+    }).catch(function(e){try{localStorage.removeItem(DAY_KEY)}catch(x){} why='※ 이 접속을 세지 못했습니다'+(e&&e.status===403?'(Firebase 보안 규칙 확인 필요).':'.'); try{console.log('접속자 수 저장 실패',e)}catch(x){}});
   }
-  function show(){
-    var p=(window.HUB&&HUB.visitors)?HUB.visitors.read():viaRest();
-    return p.then(function(v){put(v.todayCount,v.total)}).catch(fail);
-  }
-  if(window.HUB&&HUB.visitors){
-    HUB.visitors.ready.then(function(counted){
-      var admin=false; try{admin=!!(HUB.isAdminDevice&&HUB.isAdminDevice())}catch(e){}
-      why=counted?'✔ 방금 이 접속을 1명으로 셌습니다.':(admin?'※ 관리자로 로그인한 적이 있는 브라우저라서 이 접속은 세지 않습니다.':'※ 이 브라우저는 오늘 이미 세었습니다(하루 1번).');
-      show();
-    },show);
-  }else{
-    why='※ 공통 파일(common.js)이 없거나 옛 버전이라 숫자만 읽었습니다. 이 접속은 세지 않았습니다.';
-    show();
-  }
-  setInterval(function(){ if(!document.hidden) show(); },60000);
+  count().then(show,show);
+  setInterval(function(){if(!document.hidden)show()},60000);
 })();
 </script>
 </body>
