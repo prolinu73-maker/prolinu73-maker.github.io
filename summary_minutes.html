@@ -408,9 +408,9 @@ body:not(.on-gm) #meetBar .btn{display:none}   /* 보관함 버튼들은 공문�
 </header>
 
 
-<!-- ================= 메인 탭: 회의록 자동 작성 / 공문기안문 자동 생성 ================= -->
+<!-- ================= 메인 탭: 회의록 자동 작성 / 기안문 자동 생성 ================= -->
 <nav id="mainTabs"><div class="in">
-  <button type="button" class="mtab" data-main="view2">📄 공문기안문 자동 생성 <small>7단계 K-에듀파인용</small></button>
+  <button type="button" class="mtab" data-main="view2">📄 기안문 자동 생성 <small>7단계 K-에듀파인용</small></button>
   <button type="button" class="mtab on" data-main="view1">🎙️ 회의록 자동 작성 <small>녹음 → 13개 기재사항</small></button>
 </div></nav>
 
@@ -590,7 +590,7 @@ body:not(.on-gm) #meetBar .btn{display:none}   /* 보관함 버튼들은 공문�
 </main>
 </div><!-- /view1 -->
 
-<!-- ================= 탭 2: 공문기안문 자동 생성 ================= -->
+<!-- ================= 탭 2: 기안문 자동 생성 ================= -->
 <div id="view2" class="hidden">
 <div id="guide2" class="hidden"><div class="in">
   <div class="g"><b>① 공통 정보 입력</b>왼쪽에 학교명·회기·회의 구분·일시·장소를 적습니다. 희망 회의 날짜를 넣으면 <b style="display:inline">개최 7일 전 마감일</b>이 자동 계산됩니다.</div>
@@ -1943,7 +1943,7 @@ $('guideClose').onclick = () => { $('guide').classList.add('hidden'); lsSet(LS_G
 </script>
 <script>
 /* =====================================================================
- * 19. 공문기안문 자동 생성 (탭 2) + 회의록 '회의 정보'와 양방향 연동
+ * 19. 기안문 자동 생성 (탭 2) + 회의록 '회의 정보'와 양방향 연동
  *     - API 호출 없이 자바스크립트 문장 틀로 즉시 생성
  *     - 저장: localStorage 'scm_gongmun_v1' (공통정보·완료체크·직접 고친 글)
  * ===================================================================== */
@@ -2423,7 +2423,7 @@ document.querySelectorAll('.mtab').forEach(b=>b.onclick=()=>showMain(b.dataset.m
   if(!p.prePlace&&S.place) toPre('place'); if(!p.preAgenda&&S.agendas.length) toPre('agenda');
   fromPre();                         // 그다음 회의록 쪽 내용을 가져와 맞춤
   renderLeft(); renderRight();
-  showMain(lsGet(LS_MAIN)==='view2'?'view2':'view1');
+  showMain('view2');   // 접속하면 항상 [기안문 자동 생성] 탭부터 보여 줌
 })();
 })();
 </script>
