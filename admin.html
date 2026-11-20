@@ -6,6 +6,8 @@
 <meta name="robots" content="noindex, nofollow">
 <title>관리자 페이지 · 조효식 허브 PRO</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="common.css?v=10">
+<script src="common.js?v=16"></script>
 <style>
   :root {
     --accent: #2563EB; --accent-d: #1D4ED8; --accent-soft: #EEF4FF;
@@ -22,6 +24,7 @@
 
   /* ── 상단 상태바 ── */
   .top { position: fixed; inset: 0 0 auto 0; height: var(--top); z-index: 50; background: #0F172A; color: #fff; display: flex; align-items: center; gap: 14px; padding: 0 18px; }
+  .top #hubHomeBtn { margin-right: 4px; }
   .top .brand { font-weight: 800; font-size: 16px; white-space: nowrap; }
   .top .brand small { font-weight: 600; color: #94A3B8; margin-left: 6px; font-size: 12.5px; }
   .top .conn { font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: #334155; color: #CBD5E1; white-space: nowrap; }
@@ -179,6 +182,8 @@
 <!-- ───────── 상단 상태바 ───────── -->
 <header class="top">
   <button class="menu-toggle" onclick="document.querySelector('.side').classList.toggle('open')" aria-label="메뉴 열기">☰</button>
+  <!-- '홈으로' 버튼: 다른 페이지(노무·예산·여비 등)와 같은 모양 (common.js가 그림) -->
+  <span data-hub-home></span><script>if (window.HUB && HUB.mountHomeButton) HUB.mountHomeButton({ title: '포털 첫 화면(index.html)으로 이동합니다' });</script>
   <div class="brand">⚙️ 관리자 페이지<small>조효식 허브 PRO</small></div>
   <span class="conn" id="connBadge">연결 안 됨</span>
   <span class="spacer"></span>
