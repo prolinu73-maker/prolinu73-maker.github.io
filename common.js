@@ -24,7 +24,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.5.2';
+    HUB.VERSION = '1.5.3';
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
@@ -87,7 +87,7 @@
         { label: "학교운영위원회",
           icon: '<circle cx="12" cy="7" r="2.6"/><circle cx="5" cy="9.5" r="2.1"/><circle cx="19" cy="9.5" r="2.1"/><path d="M7.5 20a4.5 4.5 0 0 1 9 0"/><path d="M1.8 19a3.3 3.3 0 0 1 5.4-2.5"/><path d="M22.2 19a3.3 3.3 0 0 0-5.4-2.5"/>',
           children: [
-            { file: "summary_minutes.html", label: "회의록 작성",
+            { file: "summary_minutes.html", label: "회의 관리",
               icon: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/>' }
           ] },
         { file: "facility.html", label: "시설공사 공고문 작성",
