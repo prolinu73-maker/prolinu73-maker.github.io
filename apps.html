@@ -6,8 +6,8 @@
     <title>스마트 업무도구 - 조효식 허브</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="common.css?v=10">
-    <script src="common.js?v=19"></script>
+    <link rel="stylesheet" href="common.css?v=7">
+    <script src="common.js?v=7"></script>
     <style>
         /* ===== 조효식 허브 PRO · 밝은 파랑 테마 (index.html과 같은 색·모양) ===== */
         :root {
@@ -81,10 +81,11 @@
         /* ───── 업무 도구 등록 ───── */
         .tool-form { background: #fff; padding: 22px 24px; border-radius: 16px; border: 1px solid var(--line2); margin-bottom: 26px; }
         .tool-form-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; align-items: center; }
-        .tool-form input, .tool-form select { padding: 12px 14px; border: 1.5px solid var(--line2); border-radius: 8px; font-family: 'Pretendard', sans-serif; font-size: 15px; background: #fff; transition: border-color .2s; }
-        .tool-form input:focus, .tool-form select:focus { border-color: var(--accent); outline: none; }
+        .tool-form input, .tool-form select, .tool-form textarea { padding: 12px 14px; border: 1.5px solid var(--line2); border-radius: 8px; font-family: 'Pretendard', sans-serif; font-size: 15px; background: #fff; transition: border-color .2s; }
+        .tool-form input:focus, .tool-form select:focus, .tool-form textarea:focus { border-color: var(--accent); outline: none; }
         .link-input-group { flex: 1 1 220px; position: relative; display: flex; align-items: center; }
         .link-input-label { position: absolute; left: 12px; top: -9px; background: #fff; padding: 0 5px; font-size: 11.5px; font-weight: 800; color: var(--accent); }
+        #toolDesc { min-height: 120px; resize: vertical; line-height: 1.55; }   /* 상세 설명: 여러 줄 입력 (오른쪽 아래를 끌어 크기 조절) */
         #toolLink { width: 100%; padding-left: 38px; background: #F5F8FF; font-weight: 600; }
         .link-icon { position: absolute; left: 13px; font-size: 16px; pointer-events: none; }
 
@@ -227,11 +228,6 @@
             .visit-summary { grid-template-columns: repeat(2, 1fr); }
             .visit-two-col { grid-template-columns: 1fr; }
         }
-        .moved-card { display: flex; align-items: center; gap: 16px; background: #fff; border: 1px solid var(--line2); border-radius: 16px; padding: 22px 24px; margin: 10px 0 60px; text-decoration: none; color: var(--sub); line-height: 1.6; transition: border-color .2s, box-shadow .2s; }
-        .moved-card:hover { border-color: var(--accent); box-shadow: 0 12px 28px rgba(15,23,42,.08); }
-        .moved-card b { color: var(--text); font-size: 17px; }
-        .moved-ico { font-size: 34px; }
-        .moved-go { margin-left: auto; font-weight: 800; color: var(--accent); white-space: nowrap; }
         .admin-badge { background: #fef08a; color: #854d0e; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 900; margin-left: 5px; vertical-align: middle; display: inline-block; }
     </style>
 </head>
@@ -248,13 +244,13 @@
         <div class="board">
             <div>
                 <p class="board-tagline">조효식 허브 PRO · 함께 만드는 업무 공간</p>
-                <h1>스마트 업무도구</h1>
-                <p class="chalk-sub">동료가 만든 도구를 받고, 유용한 사이트를 함께 모아요</p>
+                <h1>스마트 업무도구 · 커뮤니티</h1>
+                <p class="chalk-sub">동료가 만든 도구를 받고, 노하우를 함께 나눠요</p>
             </div>
             <div class="board-menu">
                 <a href="#cardGrid">💡 업무 도구</a>
                 <a href="#siteListWrapper">🔗 유용한 사이트</a>
-                <a href="index.html#community">💬 커뮤니티 라운지</a>
+                <a href="#boardBody">💬 게시판·자료실</a>
             </div>
         </div>
         <div class="ledge" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -308,7 +304,7 @@
                 </div>
                 
                 <div class="tool-form-row" style="margin-bottom: 0;">
-                    <input type="text" id="toolDesc" style="flex: 1 1 100%;" placeholder="도구에 대한 상세 설명을 입력하세요" autocomplete="off">
+                    <textarea id="toolDesc" rows="5" style="flex: 1 1 100%;" placeholder="도구에 대한 상세 설명을 입력하세요 (Enter로 줄을 바꿀 수 있어요)" autocomplete="off"></textarea>
                     <input type="password" id="toolGuestPw" style="flex: 0 0 160px; display:none;" placeholder="🔒 비번(삭제 시 필요)" autocomplete="new-password">
                     <button class="btn-submit" onclick="addTool()" style="flex: 0 0 130px;">✨ 등록하기</button>
                 </div>
@@ -317,6 +313,57 @@
             <p class="member-note" hidden>🔒 업무도구 등록은 <b>회원</b>만 할 수 있어요. 둘러보기와 내려받기는 누구나 할 수 있습니다. <a href="index.html#signup">30초 만에 회원가입</a> · <a href="index.html#login">로그인</a></p>
             <div class="grid" id="cardGrid"></div>
 
+            <div class="section-header" style="margin-top: 20px; margin-bottom: 10px; border-bottom: none;">
+                <h3>💬 커뮤니티 라운지 및 자료실</h3>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" id="tab-free" onclick="switchTab('free')">🎈 자유게시판</button>
+                <button class="tab-btn" id="tab-qa" onclick="switchTab('qa')">❓ 묻고 답하기</button>
+                <button class="tab-btn" id="tab-data" onclick="switchTab('data')">💾 자료 공유방</button>
+            </div>
+            
+            <div class="board-container">
+                <div class="board-form" id="postFormWrapper">
+                    <textarea id="postTitle" class="title-input" placeholder="새로운 업무 노하우나 질문을 자유롭게 작성해주세요!" autocomplete="off"></textarea>
+                    
+                    <div id="postFileLinkGroup">
+                        <input type="text" id="postFileLink" placeholder="🔗 파일 공유 링크 (구글드라이브·네이버 MYBOX 등) 붙여넣기 — 첨부할 파일이 없으면 비워 두세요" autocomplete="off">
+                        <small style="display:block; margin-top:6px; font-size:12.5px; color:#64748b; line-height:1.5;">📎 파일 올리는 법: 구글드라이브에 파일 올리기 → 파일에서 마우스 오른쪽 <b>[공유] → [링크 복사]</b> (일반 액세스를 <b>'링크가 있는 모든 사용자'</b>로 바꿔야 다른 사람이 열 수 있어요) → 위 칸에 붙여넣기</small>
+                    </div>
+
+                    <p class="member-note" hidden>✏️ 글쓰기는 누구나 할 수 있어요. 🔒 <b>파일 공유 링크</b>는 회원만 올릴 수 있어요. <a href="index.html#signup">30초 만에 회원가입</a> · <a href="index.html#login">로그인</a></p>
+                    <!-- 직접 파일 첨부는 쓰지 않음 (Firebase 무료 요금제에서는 파일 저장소를 쓸 수 없음) → 위 '파일 공유 링크' 칸 사용 -->
+                    <div class="file-upload-wrapper" style="display:none;">
+                        <span class="file-upload-label">📎 내 컴퓨터에서 파일 및 이미지 직접 첨부하기</span>
+                        <input type="file" id="actualFileInput" class="custom-file-input" multiple onchange="handleFileSelect(event)">
+                        <label for="actualFileInput" class="custom-file-btn">
+                            📁 파일 선택
+                        </label>
+                        <div id="filePreviewArea"></div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 5px; width: 100%; justify-content: flex-end; align-items: center;">
+                        <span id="uploadStatusMsg" style="color: #2563EB; font-size: 13px; font-weight: bold; margin-right: auto; display: none;">등록하는 중입니다... ⏳</span>
+                        <input type="text" id="postAuthor" value="게스트" style="text-align: center; width: 150px;" placeholder="이름" autocomplete="off">
+                        <input type="password" id="postGuestPw" style="text-align: center; width: 150px;" placeholder="🔒 게스트 비번" autocomplete="new-password">
+                        <button class="btn-submit" id="postSubmitBtn" onclick="addPost()">✨ 등록하기</button>
+                    </div>
+                </div>
+                
+                <table class="board-table">
+                    <thead>
+                        <tr>
+                            <th width="8%">번호</th>
+                            <th>제목 및 내용</th>
+                            <th width="14%">작성자</th>
+                            <th width="12%" class="center">날짜</th>
+                            <th width="24%" class="center">반응 / 관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="boardBody"></tbody>
+                </table>
+            </div>
             
         </div>
     </div>
@@ -539,9 +586,6 @@
         // 주소 끝이 #qa #data 이면 그 게시판을 바로 보여 줌 (내 페이지에서 넘어올 때)
         function openTabFromHash() {
             const h = location.hash.replace('#', '');
-            // 예전 주소(apps.html#free 등, 내 페이지 즐겨찾기)는 첫 화면의 커뮤니티 라운지로 보냄
-            if (['free', 'qa', 'data', 'boardBody'].includes(h)) { location.replace('index.html#' + (h === 'boardBody' ? 'community' : h)); return; }
-            if (!document.getElementById('postFormWrapper')) return;
             if (h === 'qa' || h === 'data') {
                 switchTab(h);
                 document.getElementById('postFormWrapper').style.display = 'none';
@@ -563,11 +607,9 @@
 
         function updateLoginUI() {
             const uiArea = document.getElementById('userInfoArea');
-            // 게시판 입력칸은 index.html로 옮겨서 없을 수 있음 → 없으면 빈 칸으로 대신함
-            const dummy = () => ({ style: {}, value: '', readOnly: false });
-            const postAuthor = document.getElementById('postAuthor') || dummy();
+            const postAuthor = document.getElementById('postAuthor');
             const toolGuestPw = document.getElementById('toolGuestPw');
-            const postGuestPw = document.getElementById('postGuestPw') || dummy();
+            const postGuestPw = document.getElementById('postGuestPw');
             const siteGuestPw = document.getElementById('siteGuestPw');
             
             const isAdmin = HUB.isAdmin(currentUser);
@@ -739,25 +781,38 @@
                     ${controlBtns}
                     <div class="badge ${E(tool.category)}">${E(tool.badgeText)}</div>
                     <h4 class="card-title">${E(tool.title)}</h4>
-                    <p class="card-desc">${E(tool.desc)}</p>
+                    <p class="card-desc">${multiline(tool.desc)}</p>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
                         <span style="font-size: 12px; color: #64748b; font-weight: 700;">다운로드 <span class="dl-count" style="font-size: 13px; font-weight: 800; color: #2563EB;">${downloads}회</span></span>
                         <span style="display:flex; gap:6px; align-items:center;">
                             <button class="like-card ${likedPosts['tool:' + doc.id] ? 'on' : ''}" data-like-tool="${doc.id}" title="${likedPosts['tool:' + doc.id] ? '다시 누르면 좋아요 취소' : '좋아요'}" onclick="event.preventDefault(); event.stopPropagation(); likeTool('${doc.id}')">👍 <span>${Math.max(0, tool.likes || 0)}</span></button>
-                            ${favButton('smartTools', doc.id, tool.title, tool.link, 'fav-card')}${HUB.msg.button(tool.authorPhone, '도구 올린 회원')}
+                            ${favButton('smartTools', doc.id, tool.title, tool.link, 'fav-card')}
                         </span>
                     </div>`;
                     
+                /* 다운로드 수 세기 (부풀려지지 않게)
+                   ① 같은 브라우저는 도구 하나당 1번만 셈 (여러 번 눌러도 1회)
+                   ② 등록한 본인과 관리자가 누른 것은 세지 않음
+                   ③ 링크 주소가 없는 도구는 세지 않음
+                   ※ 외부 사이트(구글드라이브 등)에서 실제로 내려받았는지는 브라우저가 알 수 없어,
+                      '내려받으러 간 사람 수'를 셉니다. */
                 card.onclick = (e) => {
-                    if (!e.target.closest('.card-controls')) {
-                        db.collection("smartTools").doc(doc.id).update({
-                            downloads: firebase.firestore.FieldValue.increment(1)
-                        }).catch(console.error);
-                        
-                        const dlCountEl = card.querySelector('.dl-count');
-                        if(dlCountEl) {
-                            dlCountEl.innerText = parseInt(dlCountEl.innerText) + 1 + "회";
-                        }
+                    if (e.target.closest('.card-controls')) return;
+                    if (!safeUrl(tool.link)) return;
+                    if (isMine(tool) || HUB.isAdmin(currentUser) || HUB.isAdminDevice()) return;
+                    let counted = {};
+                    try { counted = JSON.parse(localStorage.getItem("dlCounted") || "{}"); } catch (err) {}
+                    if (counted[doc.id]) return;                       // 이 브라우저에서 이미 셈
+                    counted[doc.id] = Date.now();
+                    try { localStorage.setItem("dlCounted", JSON.stringify(counted)); } catch (err) {}
+
+                    db.collection("smartTools").doc(doc.id).update({
+                        downloads: firebase.firestore.FieldValue.increment(1)
+                    }).catch(console.error);
+
+                    const dlCountEl = card.querySelector('.dl-count');
+                    if(dlCountEl) {
+                        dlCountEl.innerText = parseInt(dlCountEl.innerText) + 1 + "회";
                     }
                 };
                 
@@ -1264,7 +1319,6 @@
 
         async function loadPosts() {
             const boardBody = document.getElementById("boardBody");
-            if (!boardBody) return;   // 게시판은 index.html(커뮤니티 라운지)로 옮김
             boardBody.innerHTML = `<tr><td colspan="5" class="center">데이터를 불러오는 중입니다...</td></tr>`; 
             
             // 최적화: 게시글 최대 30개로 한정 렌더링
