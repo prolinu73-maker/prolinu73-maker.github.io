@@ -300,6 +300,33 @@
   .cm-file { display: inline-block; margin: 10px 5px 0 0; padding: 5px 12px; background: var(--accent-soft); color: #1E3A8A; font-size: 13px; border-radius: 8px; text-decoration: none; font-weight: 800; border: 1px solid #BFD3FB; }
   .cm-file:hover { background: var(--accent); color: #fff; }
   #cmEditModal .cm-thumbs { margin-bottom: 8px; }
+  /* 목록: 글 칸을 누르면 게시글 보기 창 · 긴 글은 3줄까지만 */
+  .cm-title.cm-open { cursor: pointer; }
+  .cm-title.cm-open:hover .cm-clamp { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+  .cm-clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .cm-more { display: inline-block; margin-top: 4px; font-size: 12px; font-weight: 800; color: var(--accent); }
+  .cm-pimgs.small img { max-width: 120px; max-height: 80px; }
+  /* 게시글 보기 창 */
+  .cm-view-back { position: fixed; inset: 0; z-index: 2600; background: rgba(15,23,42,.55); display: flex; align-items: flex-start; justify-content: center; padding: 40px 14px; overflow-y: auto; }
+  .cm-view-back[hidden] { display: none; }
+  .cm-view { background: #fff; border-radius: 18px; width: 760px; max-width: 100%; box-shadow: 0 24px 60px rgba(0,0,0,.3); overflow: hidden; }
+  .cm-v-top { display: flex; align-items: center; gap: 10px; padding: 16px 22px; border-bottom: 1px solid #E2E8F0; background: #F8FAFC; }
+  .cm-v-board { font-size: 12.5px; font-weight: 800; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 4px 11px; }
+  .cm-v-x { margin-left: auto; border: none; background: none; font-size: 26px; line-height: 1; color: #94A3B8; cursor: pointer; }
+  .cm-v-x:hover { color: #1E293B; }
+  .cm-v-body { padding: 22px 26px 8px; }
+  .cm-v-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13.5px; color: #64748B; margin-bottom: 16px; }
+  .cm-v-meta b { color: #1E293B; font-size: 15px; }
+  .cm-v-text { font-size: 16px; line-height: 1.8; color: #0F172A; white-space: pre-wrap; word-break: break-word; }
+  .cm-v-text .cm-q { font-size: 18px; }
+  .cm-v-imgs { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+  .cm-v-imgs img { max-width: 100%; border-radius: 10px; border: 1px solid #E2E8F0; cursor: zoom-in; }
+  .cm-v-acts { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 16px 26px; border-top: 1px dashed #E2E8F0; margin-top: 18px; }
+  .cm-v-acts .cm-mb { font-size: 13px; padding: 7px 12px; }
+  .cm-v-acts .sp { flex: 1; }
+  .cm-v-cmts { padding: 18px 26px 24px; background: #F8FAFC; border-top: 1px solid #E2E8F0; }
+  .cm-v-cmts h4 { margin: 0 0 12px; font-size: 15px; }
+  @media (max-width: 760px) { .cm-view-back { padding: 0; } .cm-view { border-radius: 0; min-height: 100%; } .cm-v-body, .cm-v-acts, .cm-v-cmts { padding-left: 16px; padding-right: 16px; } }
   .cm-img { max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--line2); display: block; cursor: zoom-in; }
   .cm-admin { background: #fef08a; color: #854d0e; padding: 2px 7px; border-radius: 12px; font-size: 10.5px; font-weight: 900; margin-left: 4px; vertical-align: middle; }
   .cm-q { color: #ec4899; font-weight: 900; margin-right: 5px; }
@@ -315,6 +342,7 @@
   .cm-c-form .cm-c-text { flex: 1 1 220px; }
   .cm-c-form .cm-c-small { width: 80px; flex-shrink: 0; }
   .cm-c-form button { background: var(--accent); color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; font-family: inherit; }
+  #cmEditModal { z-index: 2700; }   /* 게시글 보기 창 위에 뜨도록 */
   #cmEditModal .modal-content { width: 520px; max-width: 94%; max-height: 92vh; overflow-y: auto; }
   #cmEditModal textarea, #cmEditModal input { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1.5px solid var(--line2); border-radius: 8px; font-family: inherit; font-size: 15px; margin-bottom: 10px; }
   .cm-efiles { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
@@ -513,6 +541,11 @@
     </div>
   </div>
 </section>
+
+<!-- 게시글 보기 창 (목록에서 글을 누르면 열림) -->
+<div id="cmView" class="cm-view-back" hidden role="dialog" aria-modal="true" aria-labelledby="cmViewHead">
+  <div class="cm-view" id="cmViewBox"></div>
+</div>
 
 <!-- 이미지 크게 보기 -->
 <div id="cmLightbox" class="cm-lightbox" hidden onclick="this.hidden=true" role="dialog" aria-label="이미지 크게 보기"><img id="cmLightImg" alt="첨부 이미지 크게 보기"><span class="cm-lb-x">✖ 닫기</span></div>
@@ -1768,6 +1801,7 @@ window.CM = (function () {
   // 글에 넣을 이미지 (회원 전용): 브라우저에서 줄이고 압축해 글과 함께 저장 (무료 요금제용, 파일 저장소 안 씀)
   const MAX_IMGS = 3, MAX_BYTES = 250 * 1024, MAX_SIDE = 1280;
   let newImgs = [];   // 새 글에 넣을 이미지 (data URL)
+  let viewing = null; // 게시글 보기 창에 열려 있는 글 번호
   const okImg = u => /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/]+=*$/.test(u || '') && u.length <= 400000;
   const $ = id => document.getElementById(id);
   const E = s => HUB.esc(s == null ? '' : s);
@@ -1903,6 +1937,7 @@ window.CM = (function () {
     const form = $('cmForm');
     if (tab === target && !keepForm) { form.style.display = form.style.display === 'none' ? 'flex' : 'none'; return; }
     form.style.display = 'flex';
+    if (viewing) closePost();
     tab = target;
     Object.keys(BOARDS).forEach(k => { const b = $('cm-tab-' + k); b.classList.toggle('active', k === name); b.setAttribute('aria-selected', String(k === name)); });
     $('cmPostLink').value = '';
@@ -1931,12 +1966,12 @@ window.CM = (function () {
                                     : `<br><a href="${E(au)}" target="_blank" rel="noopener" class="cm-file" download>📎 ${E(a.name)} 다운로드</a>`;
       });
       const imgs = (p.images || []).filter(okImg);
-      if (imgs.length) files += `<div class="cm-pimgs">${imgs.map((d, k) => `<img src="${d}" alt="첨부 이미지 ${k + 1}" loading="lazy" onclick="CM.zoom(this)">`).join('')}</div>`;
+      if (imgs.length) files += `<div class="cm-pimgs small">${imgs.map((d, k) => `<img src="${d}" alt="첨부 이미지 ${k + 1}" loading="lazy">`).join('')}</div>`;
       const can = admin || isMine(p) || p.authorPhone === 'guest';
       const guestInputs = u ? '' : `<input type="text" id="cm-ca-${id}" class="cm-c-small" placeholder="이름" autocomplete="off" maxlength="30"><input type="password" id="cm-cp-${id}" class="cm-c-small" placeholder="🔒 비번" autocomplete="new-password">`;
       return `<tr>
         <td class="center">${n--}</td>
-        <td class="cm-title">${tab === 'qaBoard' ? '<span class="cm-q">Q.</span>' : ''}${multiline(p.title)}${files}</td>
+        <td class="cm-title cm-open" title="누르면 게시글을 크게 봅니다" onclick="if(!event.target.closest('a,button'))CM.openPost('${id}')"><div class="cm-clamp">${tab === 'qaBoard' ? '<span class="cm-q">Q.</span>' : ''}${multiline(p.title)}</div>${String(p.title || '').split('\n').length > 3 || String(p.title || '').length > 150 ? '<span class="cm-more">…더 보기</span>' : ''}${files}</td>
         <td class="center" style="font-weight:600;font-size:12.5px">${E(p.author)}${HUB.msg ? HUB.msg.button(p.authorPhone, p.author) : ''}${p.byAdmin ? '<span class="cm-admin">A</span>' : ''}</td>
         <td class="center" style="font-size:12px;color:#64748b">${E(p.date)}</td>
         <td class="center"><div class="cm-btns">
@@ -1989,6 +2024,7 @@ window.CM = (function () {
       await db.collection(tab).doc(id).update({ likes: firebase.firestore.FieldValue.increment(had ? -1 : 1) });
       if (had) delete L[id]; else L[id] = true;
       localStorage.setItem('likedPosts', JSON.stringify(L)); loadPosts();
+      if (viewing === id) openPost(id);
     } catch (e) { console.error(e); alert('좋아요를 저장하지 못했습니다.'); }
   }
 
@@ -1998,9 +2034,47 @@ window.CM = (function () {
     try {
       const st = HUB.storage && HUB.storage();
       if (right !== 'guest' && st) for (const f of ((p && p.attachments) || [])) { try { await st.refFromURL(f.url).delete(); } catch (e) {} }
-      await removeDoc(db.collection(tab).doc(id), right); loadPosts();
+      await removeDoc(db.collection(tab).doc(id), right); if (viewing === id) closePost(); loadPosts();
     } catch (e) { console.error(e); alert('삭제 중 오류가 발생했습니다. (' + (e.code || e.message) + ')'); }
   }
+
+  // ── 게시글 보기 창 ──
+  async function openPost(id) {
+    if (!db || !HUB.okId(id)) return;
+    let p = ROWS[tab + '/' + id];
+    try { const s = await db.collection(tab).doc(id).get(); if (!s.exists || s.data().deleted) { alert('글을 찾을 수 없습니다. 이미 지워졌을 수 있어요.'); closePost(); loadPosts(); return; } p = s.data(); ROWS[tab + '/' + id] = p; }
+    catch (e) { if (!p) return alert('글을 불러오지 못했습니다.'); }
+    viewing = id;
+    const u = me(), L = liked(), can = isAdmin() || isMine(p) || p.authorPhone === 'guest';
+    const fl = safeUrl(p.fileLink);
+    const imgs = (p.images || []).filter(okImg);
+    const olds = (p.attachments || []).map(a => ({ a, u: safeUrl(a.url) })).filter(x => x.u);
+    const guestInputs = u ? '' : `<input type="text" id="cmV-ca" class="cm-c-small" placeholder="이름" autocomplete="off" maxlength="30"><input type="password" id="cmV-cp" class="cm-c-small" placeholder="🔒 비번" autocomplete="new-password">`;
+    $('cmViewBox').innerHTML = `
+      <div class="cm-v-top"><span class="cm-v-board" id="cmViewHead">${E(NAMES[tab])}</span><button class="cm-v-x" type="button" onclick="CM.closePost()" aria-label="닫기">×</button></div>
+      <div class="cm-v-body">
+        <div class="cm-v-meta"><b>${E(p.author)}</b>${HUB.msg ? HUB.msg.button(p.authorPhone, p.author) : ''}${p.byAdmin ? '<span class="cm-admin">ADMIN</span>' : ''}<span>·</span><span>${E(p.date)}</span></div>
+        <div class="cm-v-text">${tab === 'qaBoard' ? '<span class="cm-q">Q.</span>' : ''}${E(p.title === '(이미지)' && imgs.length ? '' : p.title)}</div>
+        ${fl ? `<a href="${E(fl)}" target="_blank" rel="noopener" class="cm-file">🔗 첨부 파일 열기</a>` : ''}
+        ${olds.map(x => x.a.type === 'image' ? `<div class="cm-v-imgs"><img src="${E(x.u)}" alt="첨부 이미지" onclick="CM.zoom(this)"></div>` : `<a href="${E(x.u)}" target="_blank" rel="noopener" class="cm-file" download>📎 ${E(x.a.name)} 다운로드</a>`).join('')}
+        ${imgs.length ? `<div class="cm-v-imgs">${imgs.map((d, k) => `<img src="${d}" alt="첨부 이미지 ${k + 1}" onclick="CM.zoom(this)">`).join('')}</div>` : ''}
+      </div>
+      <div class="cm-v-acts">
+        <button class="cm-mb cm-like ${L[id] ? 'on' : ''}" aria-pressed="${!!L[id]}" onclick="CM.likePost('${id}')">👍 좋아요 ${Math.max(0, p.likes || 0)}</button>
+        ${favButton(tab, id, p.title)}
+        <span class="sp"></span>
+        ${can ? `<button class="cm-mb cm-edit-b" onclick="CM.editPost('${id}')">수정</button><button class="cm-mb cm-del" onclick="CM.deletePost('${id}')">삭제</button>` : ''}
+      </div>
+      <div class="cm-v-cmts">
+        <h4>💬 댓글 <span id="cmV-cn">0</span></h4>
+        <div id="cmV-cl" style="margin-bottom:14px"></div>
+        <div class="cm-c-form">${guestInputs}<input type="text" id="cmV-ct" class="cm-c-text" placeholder="따뜻한 댓글을 남겨주세요..." autocomplete="off" maxlength="1000" onkeydown="if(event.key==='Enter')CM.addComment('${id}',true)"><button onclick="CM.addComment('${id}',true)">등록</button></div>
+      </div>`;
+    $('cmView').hidden = false;
+    document.body.style.overflow = 'hidden';
+    loadComments(id);
+  }
+  function closePost() { $('cmView').hidden = true; viewing = null; document.body.style.overflow = ''; }
 
   // ── 댓글 ──
   function toggleComments(id) {
@@ -2008,9 +2082,11 @@ window.CM = (function () {
     r.style.display = open ? 'table-row' : 'none'; if (open) loadComments(id);
   }
   async function loadComments(id) {
-    const box = $('cm-cl-' + id); box.innerHTML = '<div style="padding:8px;color:#64748b;font-size:13px">댓글 불러오는 중...</div>';
+    const boxes = [$('cm-cl-' + id), viewing === id ? $('cmV-cl') : null].filter(Boolean);
+    const put = h => boxes.forEach(b => b.innerHTML = h);
+    put('<div style="padding:8px;color:#64748b;font-size:13px">댓글 불러오는 중...</div>');
     let s; try { s = await db.collection(tab).doc(id).collection('comments').orderBy('createdAt', 'asc').get(); }
-    catch (e) { box.innerHTML = '<div style="padding:8px;color:#dc2626;font-size:13px">댓글을 불러오지 못했습니다.</div>'; return; }
+    catch (e) { put('<div style="padding:8px;color:#dc2626;font-size:13px">댓글을 불러오지 못했습니다.</div>'); return; }
     const admin = isAdmin(); let shown = 0, html = '';
     s.forEach(cs => {
       if (!HUB.okId(cs.id)) return; const c = cs.data(); if (c.deleted) return;
@@ -2020,11 +2096,13 @@ window.CM = (function () {
         <div>${can ? `<button class="cm-c-act" style="color:#2F6FDE" onclick="CM.editComment('${id}','${cs.id}')">수정</button><button class="cm-c-act" style="color:#ef4444" onclick="CM.deleteComment('${id}','${cs.id}')">삭제</button>` : ''}</div></div>
         <div class="cm-c-body">${E(c.text)}</div></div>`;
     });
-    box.innerHTML = html || '<div style="padding:8px;color:#94a3b8;font-size:13px">아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!</div>';
+    put(html || '<div style="padding:8px;color:#94a3b8;font-size:13px">아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!</div>');
     const b = $('cm-cb-' + id); if (b) b.textContent = `💬 ${shown}`;
+    if (viewing === id && $('cmV-cn')) $('cmV-cn').textContent = shown;
   }
-  async function addComment(id) {
-    const t = $('cm-ct-' + id), a = $('cm-ca-' + id), pw = $('cm-cp-' + id), u = me();
+  async function addComment(id, inView) {
+    const k = inView ? 'cmV-' : 'cm-', sfx = inView ? '' : '-' + id;
+    const t = $(k + 'ct' + sfx), a = $(k + 'ca' + sfx), pw = $(k + 'cp' + sfx), u = me();
     if (!t.value.trim()) return alert('댓글 내용을 입력해주세요!');
     if (!u && (!a || !a.value.trim() || !pw || !pw.value.trim())) return alert('게스트로 쓸 때는 이름과 삭제용 비밀번호를 모두 넣어 주세요.');
     const d = new Date();
@@ -2090,7 +2168,7 @@ window.CM = (function () {
       await db.collection(e.col).doc(e.id).update(upd);
       const st = HUB.storage && HUB.storage();
       if (st) for (const i of e.removed) { try { await st.refFromURL(e.data.attachments[i].url).delete(); } catch (x) {} }
-      closeEdit(); loadPosts();
+      const vid = e.id; closeEdit(); loadPosts(); if (viewing === vid) openPost(vid);
     } catch (err) { console.error(err); msg('저장하지 못했습니다. (' + (err.code || err.message) + ')'); }
     finally { btn.disabled = false; }
   }
@@ -2109,7 +2187,13 @@ window.CM = (function () {
     $('cmEditModal').addEventListener('mousedown', ev => { if (ev.target.id === 'cmEditModal') closeEdit(); });
     wireImageInput($('cmPostText'), 'new');
     wireImageInput($('cmEditText'), 'edit');
-    document.addEventListener('keydown', ev => { if (ev.key === 'Escape') $('cmLightbox').hidden = true; });
+    document.addEventListener('keydown', ev => {
+      if (ev.key !== 'Escape') return;
+      if (!$('cmLightbox').hidden) { $('cmLightbox').hidden = true; return; }
+      if ($('cmEditModal').style.display === 'flex') return;
+      if (!$('cmView').hidden) closePost();
+    });
+    $('cmView').addEventListener('mousedown', ev => { if (ev.target.id === 'cmView') closePost(); });
     if (!(await HUB.firebaseReady())) { $('cmBody').innerHTML = `<tr><td colspan="5" class="center cm-empty">서버에 연결하지 못했습니다. 새로고침해 주세요.</td></tr>`; return; }
     db = HUB.db();
     await loadFavs();
@@ -2119,7 +2203,7 @@ window.CM = (function () {
   });
   HUB.onUserChange(async () => { updateForm(); if (db) { await loadFavs(); loadPosts(); } });
 
-  return { pickImages, onFiles, dropImg, zoom, switchTab, addPost, likePost, deletePost, editPost, saveEdit, closeEdit, toggleFile, toggleComments, addComment, editComment, deleteComment, toggleFav, reload: loadPosts };
+  return { openPost, closePost, pickImages, onFiles, dropImg, zoom, switchTab, addPost, likePost, deletePost, editPost, saveEdit, closeEdit, toggleFile, toggleComments, addComment, editComment, deleteComment, toggleFav, reload: loadPosts };
 })();
 </script>
 
