@@ -294,6 +294,7 @@ table.cmp tr.sum td{background:#f8fafc;font-weight:800}
 • 오른쪽 월별 달력에서 날짜 칸을 직접 눌러도 지정·해제할 수 있습니다.
 • 이 PC 브라우저에 저장되어 모든 직원 계산에 똑같이 적용됩니다. (휴일은 직원마다 다르지 않기 때문입니다)
 • 토·일요일이나 이미 들어 있는 공휴일은 넣을 필요가 없습니다.">?</span></h2>
+    <div class="ev-guide" id="hdGuide"></div>
     <div class="row">
       <input type="date" id="hd_date" style="width:150px;margin:0" aria-label="휴일 날짜">
       <input type="text" id="hd_name" style="flex:1;min-width:120px;margin:0" maxlength="20" placeholder="이름 (예: 임시공휴일, 개교기념일)" aria-label="휴일 이름">
@@ -1247,6 +1248,28 @@ if (typeof module !== 'undefined') module.exports = YC;
     }
     if (!R.error && inp.retire != null) o += '<ul><li><b>퇴직 정산:</b> 퇴직(예정)일을 넣었으므로, 정산표를 정확히 보려면 <b>' + F(inp.hire) + ' ~ ' + F(inp.retire) + '</b> 재직 기간 전체의 인사 변동을 모두 넣어 주세요.</li></ul>';
     $('evGuide').innerHTML = o;
+    renderHdGuide(R);
+  }
+  /* ---------- 어느 해의 휴일을 지정해야 하는지 안내 (3단계) ---------- */
+  function renderHdGuide(R) {
+    var inp = R.inp, F = YC.fmt, y = inp.year || new Date().getFullYear(), s, e, why;
+    if (R.error || R.stage == null) {
+      if (inp.emp === 'hire') { $('hdGuide').innerHTML = '📌 입사일을 넣으면 어느 기간의 휴일을 넣어야 하는지 안내합니다.'; return; }
+      var fm = inp.emp === 'school' ? 3 : 1; s = YC.D(y - 1, fm, 1); e = YC.D(y, fm, 1) - 1;
+      why = '기준연도 <b>' + y + '년</b> 연차는 그 전 1년의 근무 실적으로 계산하기 때문입니다.';
+    } else if (R.stage === 3) { s = R.ps; e = R.pe; why = F(R.B) + '에 주는 연차는 <b>그 전 1년</b>의 근무 실적으로 계산하기 때문입니다. (' + y + '년의 휴일이 아닙니다)'; }
+    else if (R.stage === 2) { s = inp.hire; e = Math.max(R.pe, YC.addYears(inp.hire, 1) - 1); why = '중도입사자는 입사일부터의 근무 실적과 입사 후 1년간의 월차를 함께 계산하기 때문입니다.'; }
+    else { s = inp.hire; e = YC.addYears(inp.hire, 1) - 1; why = '입사 후 1년 동안의 월차를 계산하기 때문입니다.'; }
+    var o = '📌 지금 설정에서는 <span class="big">' + F(s) + ' ~ ' + F(e) + '</span> 사이의 휴일만 계산에 영향을 줍니다.<ul><li>' + why + '</li>';
+    if (!R.error && inp.retire != null) { o += '<li><b>퇴직 정산</b>을 함께 보는 경우에는 재직기간 전체(' + F(inp.hire) + ' ~ ' + F(inp.retire) + ')의 휴일이 해당 연도 계산에 쓰입니다.</li>'; if (inp.hire < s) s = inp.hire; if (inp.retire > e) e = inp.retire; }
+    /* 내장 공휴일(2023~2029년) 밖의 해가 끼어 있는지 */
+    var ys = [], y1 = YC.P(s).y, y2 = YC.P(e).y, k;
+    for (k = y1; k <= y2; k++) if (k < 2023 || k > 2029) ys.push(k);
+    o += '<li>프로그램에는 <b>2023~2029년</b> 공휴일(설·추석, 대체공휴일, 이미 지정된 임시공휴일 포함)이 들어 있습니다. 그 뒤에 <b>새로 지정된 임시공휴일</b>이나 개교기념일·재량휴업일처럼 우리 기관만 쉬는 날만 넣으면 됩니다.</li>';
+    if (ys.length) o += '<li><b style="color:#b45309">⚠️ ' + (ys.length > 6 ? ys[0] + '~' + ys[ys.length - 1] : ys.join(', ')) + '년은 내장 공휴일이 없습니다.</b> 그 해는 설·추석 연휴, 부처님오신날, 대체공휴일도 평일이면 직접 넣어야 정확합니다.</li>';
+    var inRange = holidays.filter(function (x) { var n = YC.parse(x.d); return n >= s && n <= e; }).length;
+    o += '<li>지금 이 기간 안에 직접 지정한 휴일: <b>' + inRange + '일</b>' + (holidays.length > inRange ? ' (기간 밖 ' + (holidays.length - inRange) + '일은 이번 계산에 영향 없음)' : '') + '</li></ul>';
+    $('hdGuide').innerHTML = o;
   }
   function calc() {
     try {
