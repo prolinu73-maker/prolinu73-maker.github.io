@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>법령ㆍ판례 검색 (lawsearch)</title>
+<link rel="stylesheet" href="common.css?v=10">
+<script src="common.js?v=22"></script>
+<script>
+/* common.js를 못 불러온 경우(파일만 따로 열었을 때)에도 '메인 허브' 버튼은 보이게 함 */
+if (!window.HUB) {
+  window.HUB = {
+    mountHomeButton: () => {
+      const el = document.querySelector('[data-hub-home]');
+      if (el) el.innerHTML = '<button class="hub-btn" onclick="location.href=\'index.html\'">🏠 메인 허브</button>';
+    }
+  };
+}
+</script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:"맑은 고딕","Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:#f4f6f9;color:#1f2937;font-size:14px;line-height:1.55}
+header.top{background:#1e3a8a;color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+header.top h1{margin:0;font-size:19px;font-weight:700}
+header.top .sub{font-size:12px;opacity:.85;margin-top:2px}
+header.top .nav{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
+header.top .top-left{display:flex;align-items:center;gap:14px;min-width:0}
+.visit-box{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:6px 14px;font-size:13px;color:#e0e7ff;white-space:nowrap}
+.visit-box[hidden]{display:none}
+.visit-box b{color:#fff;font-size:14px;font-variant-numeric:tabular-nums}
+.visit-box .sep{opacity:.5}
+.hub-btn{background:#fff;color:#1e3a8a;border:0;border-radius:6px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.hub-btn:hover{background:#dbeafe}
+
+.ls-wrap{max-width:1180px;margin:0 auto;padding:16px}
+.ls-card{background:#fff;border:1px solid #dbe1ea;border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.ls-views{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.ls-view{background:#fff;border:1px solid #cbd5e1;border-radius:999px;padding:7px 16px;font-size:14px;font-weight:700;color:#475569;cursor:pointer;font-family:inherit}
+.ls-view.on{background:#1e3a8a;border-color:#1e3a8a;color:#fff}
+
+.ls-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.ls-tab{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;color:#334155;cursor:pointer;font-family:inherit;white-space:nowrap}
+.ls-tab:hover{background:#e0e7ff}
+.ls-tab.on{background:#1e3a8a;border-color:#1e3a8a;color:#fff}
+.ls-tab .cnt{font-weight:400;font-size:12px;opacity:.85;margin-left:4px}
+
+.ls-bar{display:flex;gap:8px;flex-wrap:wrap}
+.ls-bar input[type=text]{flex:1 1 280px;min-width:0;padding:11px 14px;border:2px solid #1e3a8a;border-radius:8px;font-size:16px;font-family:inherit}
+.ls-bar input[type=text]:focus{outline:3px solid #bfdbfe}
+.ls-btn{background:#1e3a8a;color:#fff;border:0;border-radius:8px;padding:10px 18px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.ls-btn:hover{background:#1e40af}
+.ls-btn.light{background:#eef2ff;color:#1e3a8a;border:1px solid #c7d2fe}
+.ls-btn.light:hover{background:#e0e7ff}
+.ls-btn.sm{padding:5px 10px;font-size:12.5px;border-radius:6px}
+.ls-btn.warn{background:#fff;color:#b91c1c;border:1px solid #fecaca}
+.ls-btn:disabled{opacity:.5;cursor:default}
+
+.ls-opts{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:flex-end;margin-top:10px}
+.ls-f{display:flex;flex-direction:column;font-size:12px;font-weight:700;color:#475569;gap:3px}
+.ls-f select,.ls-f input{padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:#111}
+.ls-f input[type=date]{width:150px}
+details.ls-adv{margin-top:10px;border-top:1px dashed #cbd5e1;padding-top:8px}
+details.ls-adv summary{cursor:pointer;font-weight:700;color:#1e3a8a;font-size:13px}
+.ls-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.ls-chips .lab{font-size:12px;color:#64748b;font-weight:700}
+.ls-chip{background:#f8fafc;border:1px solid #e2e8f0;border-radius:999px;padding:3px 11px;font-size:12.5px;color:#334155;cursor:pointer;font-family:inherit}
+.ls-chip:hover{background:#e0e7ff;border-color:#c7d2fe}
+
+.ls-status{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.ls-status .tot{font-size:15px;font-weight:700;color:#1e3a8a}
+.ls-status input{padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;font-family:inherit;width:220px;max-width:100%}
+.ls-msg{padding:26px 10px;text-align:center;color:#64748b;font-size:14px}
+.ls-msg.err{color:#b91c1c;text-align:left;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px 16px}
+.ls-spin{display:inline-block;width:18px;height:18px;border:3px solid #c7d2fe;border-top-color:#1e3a8a;border-radius:50%;animation:lsr .8s linear infinite;vertical-align:-4px;margin-right:8px}
+@keyframes lsr{to{transform:rotate(360deg)}}
+
+.ls-item{border:1px solid #e2e8f0;border-radius:8px;padding:11px 13px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;background:#fff}
+.ls-item:hover{border-color:#93c5fd;background:#f8fbff}
+.ls-item .main{flex:1;min-width:0;cursor:pointer}
+.ls-item .ttl{font-size:15px;font-weight:700;color:#0f172a;word-break:keep-all;overflow-wrap:anywhere}
+.ls-item .meta{font-size:12.5px;color:#64748b;margin-top:3px;display:flex;gap:4px 10px;flex-wrap:wrap}
+.ls-item .acts{display:flex;gap:5px;flex-shrink:0;align-items:center}
+.ls-badge{display:inline-block;font-size:11.5px;font-weight:700;border-radius:4px;padding:1px 7px;margin-right:6px;background:#e0e7ff;color:#1e3a8a;vertical-align:1px}
+.ls-badge.g{background:#dcfce7;color:#166534}.ls-badge.o{background:#ffedd5;color:#9a3412}.ls-badge.p{background:#f3e8ff;color:#6b21a8}.ls-badge.r{background:#fee2e2;color:#991b1b}.ls-badge.t{background:#ccfbf1;color:#115e59}
+.ls-star{background:none;border:0;font-size:20px;cursor:pointer;line-height:1;padding:2px 4px;color:#cbd5e1}
+.ls-star.on{color:#f59e0b}
+mark{background:#fef08a;color:inherit;padding:0 1px;border-radius:2px}
+.ls-pager{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.ls-pager button{min-width:36px;padding:6px 9px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px}
+.ls-pager button.on{background:#1e3a8a;color:#fff;border-color:#1e3a8a;font-weight:700}
+.ls-pager button:disabled{opacity:.4;cursor:default}
+.ls-group h3{margin:16px 0 8px;font-size:15px;color:#1e3a8a;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ls-group h3 .n{font-size:13px;color:#64748b;font-weight:400}
+.ls-memo{font-size:12.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:4px 8px;margin-top:5px;white-space:pre-wrap}
+
+/* 본문 보기 창 */
+.ls-back{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:900;display:none}
+.ls-back.on{display:block}
+.ls-panel{position:fixed;top:0;right:0;bottom:0;width:min(900px,100%);background:#fff;z-index:901;display:none;flex-direction:column;box-shadow:-8px 0 30px rgba(0,0,0,.2)}
+.ls-panel.on{display:flex}
+.ls-phead{background:#1e3a8a;color:#fff;padding:12px 16px;display:flex;gap:10px;align-items:flex-start}
+.ls-phead .t{flex:1;min-width:0}
+.ls-phead .t b{display:block;font-size:16px;word-break:keep-all;overflow-wrap:anywhere}
+.ls-phead .t span{font-size:12.5px;opacity:.9}
+.ls-phead .x{background:rgba(255,255,255,.18);border:0;color:#fff;font-size:20px;width:34px;height:34px;border-radius:8px;cursor:pointer;flex-shrink:0}
+.ls-ptools{display:flex;gap:6px;flex-wrap:wrap;padding:9px 16px;border-bottom:1px solid #e2e8f0;background:#f8fafc;align-items:center}
+.ls-ptools input,.ls-ptools select{padding:5px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;font-family:inherit;max-width:220px}
+.ls-pbody{flex:1;overflow:auto;padding:16px 20px 60px;font-size:15px;line-height:1.75}
+.ls-sec{margin-bottom:18px}
+.ls-sec h4{margin:0 0 6px;font-size:15px;color:#1e3a8a;border-left:4px solid #1e3a8a;padding-left:8px}
+.ls-sec .tx{white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere}
+.ls-info{display:grid;grid-template-columns:110px 1fr;gap:4px 10px;font-size:13.5px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;margin-bottom:16px}
+.ls-info dt{color:#64748b;font-weight:700}.ls-info dd{margin:0}
+.ls-art{white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;padding:7px 0;border-bottom:1px solid #f1f5f9}
+.ls-art.head{font-weight:700;color:#1e3a8a;background:#eef2ff;padding:6px 10px;border-radius:6px;margin-top:12px;border:0;text-align:center}
+.ls-art.hide{display:none}
+.ls-art .no{font-weight:700;color:#0f172a}
+.ls-mybox textarea{width:100%;min-height:64px;border:1px solid #fde68a;background:#fffbeb;border-radius:6px;padding:8px;font-family:inherit;font-size:13.5px}
+details.ls-more{margin-top:12px;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px}
+details.ls-more summary{cursor:pointer;font-weight:700;color:#1e3a8a}
+.ls-help li{margin-bottom:5px}
+.ls-toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;z-index:999;display:none}
+.ls-foot{font-size:12px;color:#94a3b8;text-align:center;padding:10px 0 30px}
+@media (max-width:640px){.ls-item{flex-direction:column}.ls-item .acts{align-self:flex-end}.ls-info{grid-template-columns:86px 1fr}}
+@media print{
+  body *{visibility:hidden}
+  .ls-panel,.ls-panel *{visibility:visible}
+  .ls-panel{position:static;width:100%;box-shadow:none;display:block}
+  .ls-ptools,.ls-phead .x,.ls-mybox{display:none!important}
+  .ls-phead{background:#fff;color:#000;border-bottom:2px solid #000}
+  .ls-pbody{overflow:visible;padding:10px 0}
+  .ls-art.hide{display:block}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-left">
+    <span data-hub-home></span>
+    <div>
+      <h1>⚖️ 법령ㆍ판례 검색</h1>
+      <div class="sub">법제처 국가법령정보 OPEN API · 법령, 행정규칙, 자치법규, 판례, 헌재결정례, 법령해석례, 행정심판례, 노동위원회 결정문</div>
+    </div>
+  </div>
+  <div class="nav">
+    <div class="visit-box" id="visitBox" title="허브 사이트 전체 접속자 수" hidden>
+      <span>오늘 접속자 <b id="vToday">…</b></span><span class="sep">|</span><span>누적 접속자 <b id="vTotal">…</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="ls-wrap">
+  <div class="ls-views">
+    <button type="button" class="ls-view on" data-view="search">🔎 검색</button>
+    <button type="button" class="ls-view" data-view="fav">⭐ 즐겨찾기 <span id="favCnt"></span></button>
+    <button type="button" class="ls-view" data-view="help">❔ 사용법</button>
+  </div>
+
+  <!-- ===================== 검색 화면 ===================== -->
+  <div id="viewSearch">
+    <div class="ls-card">
+      <div class="ls-tabs" id="tabs"></div>
+      <div class="ls-bar">
+        <input type="text" id="q" placeholder="검색어를 입력하세요 (예: 부당해고, 연차휴가, 근로기준법)" autocomplete="off">
+        <button type="button" class="ls-btn" id="btnSearch">🔎 검색</button>
+        <button type="button" class="ls-btn light" id="btnShare" title="지금 검색 조건을 주소로 복사합니다">🔗 주소 복사</button>
+      </div>
+      <div class="ls-opts">
+        <label class="ls-f">어디에서 찾을까요?
+          <select id="scope"><option value="1">제목(이름)에서</option><option value="2">본문 내용에서</option></select></label>
+        <label class="ls-f">정렬
+          <select id="sort"><option value="">기본 순서</option><option value="ddes">최신순</option><option value="dasc">오래된순</option><option value="lasc">이름순(가나다)</option></select></label>
+        <label class="ls-f">한 번에 보기
+          <select id="display"><option>10</option><option selected>20</option><option>50</option><option>100</option></select></label>
+      </div>
+      <details class="ls-adv" id="advBox">
+        <summary>⚙️ 상세 조건 (기간 · 법원 · 사건번호)</summary>
+        <div class="ls-opts">
+          <label class="ls-f"><span id="dateLab">기간</span> 시작<input type="date" id="d1"></label>
+          <label class="ls-f">끝<input type="date" id="d2"></label>
+          <label class="ls-f" id="orgWrap">법원
+            <select id="org"><option value="">전체</option><option value="400201">대법원만</option><option value="400202">하급심만</option></select></label>
+          <label class="ls-f" id="nbWrap">사건번호<input type="text" id="nb" placeholder="예: 2023두54914" style="width:170px"></label>
+          <button type="button" class="ls-btn light sm" id="btnAdvClear">조건 지우기</button>
+        </div>
+        <div style="font-size:12px;color:#64748b;margin-top:6px">※ 기간은 자료 종류에 따라 기준 날짜가 다릅니다(판례=선고일, 법령=시행일 등). 노동위원회 결정문과 통합검색에는 기간 조건이 적용되지 않습니다.</div>
+      </details>
+      <div class="ls-chips" id="quick"></div>
+      <div class="ls-chips" id="recent"></div>
+    </div>
+
+    <div class="ls-card" id="resultCard">
+      <div class="ls-status" id="status" hidden>
+        <div class="tot" id="tot"></div>
+        <input type="text" id="refine" placeholder="결과 안에서 다시 찾기" autocomplete="off">
+      </div>
+      <div id="results"><div class="ls-msg">검색어를 넣고 [검색]을 누르면 결과가 여기에 나옵니다.<br>자료 종류를 모르면 <b>통합검색</b>을 그대로 두세요.</div></div>
+      <div class="ls-pager" id="pager"></div>
+    </div>
+  </div>
+
+  <!-- ===================== 즐겨찾기 화면 ===================== -->
+  <div id="viewFav" hidden>
+    <div class="ls-card">
+      <div class="ls-status">
+        <div class="tot">⭐ 즐겨찾기</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button type="button" class="ls-btn light sm" id="btnFavExport">💾 파일로 내보내기</button>
+          <button type="button" class="ls-btn light sm" id="btnFavImport">📂 파일에서 불러오기</button>
+          <button type="button" class="ls-btn warn sm" id="btnFavClear">전체 삭제</button>
+          <input type="file" id="favFile" accept=".json,application/json" hidden>
+        </div>
+      </div>
+      <div style="font-size:12.5px;color:#64748b;margin-bottom:10px">즐겨찾기와 메모는 지금 쓰는 PC의 이 브라우저에만 저장됩니다. 다른 PC에서도 보려면 [파일로 내보내기] 후 그 PC에서 [파일에서 불러오기]를 하세요.</div>
+      <div id="favList"></div>
+    </div>
+  </div>
+
+  <!-- ===================== 사용법 화면 ===================== -->
+  <div id="viewHelp" hidden>
+    <div class="ls-card ls-help">
+      <h3 style="margin-top:0;color:#1e3a8a">처음 쓰는 분을 위한 사용법</h3>
+      <ol>
+        <li><b>검색어를 넣고 Enter</b> 또는 [검색]을 누릅니다. 처음에는 <b>통합검색</b>이 선택되어 있어 8가지 자료를 한꺼번에 찾아 줍니다.</li>
+        <li>결과에서 <b>제목을 누르면</b> 오른쪽에 본문 창이 열립니다. 닫을 때는 ✕ 또는 키보드 Esc를 누릅니다.</li>
+        <li>특정 자료만 보려면 위쪽의 <b>법령 / 판례 / 노동위 결정문</b> 같은 단추를 누릅니다.</li>
+        <li>제목에 검색어가 없어도 찾으려면 "어디에서 찾을까요?"를 <b>본문 내용에서</b>로 바꿉니다. 결과가 훨씬 많아집니다.</li>
+        <li><b>⚙️ 상세 조건</b>에서 기간, 대법원만, 사건번호로 좁힐 수 있습니다.</li>
+        <li>본문 창의 <b>[📋 전체 복사]</b>를 누른 뒤 한글(HWP)에 붙여 넣으면 본문이 그대로 들어갑니다. <b>[인용 표기 복사]</b>는 "대법원 2026. 1. 29. 선고 ○○ 판결" 같은 한 줄을 복사합니다.</li>
+        <li>법령 본문 창에서는 <b>조문 바로가기</b>로 원하는 조로 이동하고, <b>조문 안에서 찾기</b>로 해당 단어가 있는 조문만 볼 수 있습니다.</li>
+        <li><b>☆</b>를 누르면 즐겨찾기에 담기고, 본문 창에서 메모를 적어 둘 수 있습니다.</li>
+      </ol>
+      <h3 style="color:#1e3a8a">자료 종류 설명</h3>
+      <ul>
+        <li><b>법령</b>: 법률, 시행령, 시행규칙 (예: 근로기준법)</li>
+        <li><b>행정규칙</b>: 각 부처의 훈령, 예규, 고시, 지침</li>
+        <li><b>자치법규</b>: 시·도와 교육청의 조례, 규칙 (예: 전라남도교육청 ○○ 조례)</li>
+        <li><b>판례</b>: 대법원과 각급 법원의 판결</li>
+        <li><b>헌재결정례</b>: 헌법재판소 결정</li>
+        <li><b>법령해석례</b>: 법제처가 법령의 뜻을 풀이해 회신한 사례</li>
+        <li><b>행정심판례</b>: 행정심판위원회의 재결</li>
+        <li><b>노동위 결정문</b>: 노동위원회의 부당해고, 부당노동행위 등 판정 요지</li>
+      </ul>
+      <p style="font-size:12.5px;color:#64748b">※ 이 화면의 자료는 법제처 국가법령정보센터(law.go.kr)에서 실시간으로 받아 옵니다. 중요한 업무에 인용할 때는 본문 창의 [원문 새 창]으로 원문을 한 번 더 확인하세요.</p>
+    </div>
+  </div>
+
+  <div class="ls-foot">자료 출처: 법제처 국가법령정보센터 · 국가법령정보 공동활용(open.law.go.kr)</div>
+</div>
+
+<!-- ===================== 본문 보기 창 ===================== -->
+<div class="ls-back" id="back"></div>
+<aside class="ls-panel" id="panel" aria-label="본문 보기">
+  <div class="ls-phead">
+    <div class="t"><b id="pTitle"></b><span id="pSub"></span></div>
+    <button type="button" class="x" id="pClose" title="닫기 (Esc)">✕</button>
+  </div>
+  <div class="ls-ptools">
+    <button type="button" class="ls-btn light sm" id="pFav">☆ 즐겨찾기</button>
+    <button type="button" class="ls-btn light sm" id="pCopy">📋 전체 복사</button>
+    <button type="button" class="ls-btn light sm" id="pCite">인용 표기 복사</button>
+    <button type="button" class="ls-btn light sm" id="pPrint">🖨️ 인쇄</button>
+    <button type="button" class="ls-btn light sm" id="pOrig">원문 새 창 ↗</button>
+    <button type="button" class="ls-btn light sm" id="pMinus" title="글자 작게">가−</button>
+    <button type="button" class="ls-btn light sm" id="pPlus" title="글자 크게">가+</button>
+    <select id="pToc" hidden title="조문 바로가기"></select>
+    <input type="text" id="pFind" placeholder="조문 안에서 찾기" hidden autocomplete="off">
+  </div>
+  <div class="ls-pbody" id="pBody"></div>
+</aside>
+<div class="ls-toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =====================================================================
+     1. 기본 설정
+     ---------------------------------------------------------------------
+     OC : 국가법령정보 공동활용(open.law.go.kr) 마이페이지의 'API인증키(OC)'
+          인증키를 바꾸면 아래 한 줄만 고치면 됩니다.
+     ===================================================================== */
+  var OC = 'prolinu73';
+  var BASE = 'https://www.law.go.kr/DRF/';
+  var SITE = 'https://www.law.go.kr';
+
+  /* 자료 종류별 설정
+     title: 목록에서 제목으로 쓸 칸 / idKey: 본문을 부를 때 쓰는 번호 칸 / idParam: 그 번호를 보낼 이름
+     date: 목록에 보일 날짜 칸 / dateParam: 기간 검색에 쓰는 이름 / secs: 본문에서 보여 줄 칸(순서대로) */
+  var T = {
+    law:    { name: '법령', icon: '📘', badge: '', title: '법령명한글', idKey: '법령일련번호', idParam: 'MST', link: '법령상세링크',
+              date: '시행일자', dateLab: '시행', dateParam: 'efYd', dateName: '시행일', meta: ['법령구분명', '소관부처명', '제개정구분명', '현행연혁코드'], kind: 'law' },
+    admrul: { name: '행정규칙', icon: '📗', badge: 'g', title: '행정규칙명', idKey: '행정규칙일련번호', idParam: 'ID', link: '행정규칙상세링크',
+              date: '발령일자', dateLab: '발령', dateParam: 'prmlYd', dateName: '발령일', meta: ['행정규칙종류', '소관부처명', '제개정구분명', '현행연혁구분'], kind: 'law' },
+    ordin:  { name: '자치법규', icon: '📙', badge: 'o', title: '자치법규명', idKey: '자치법규일련번호', idParam: 'MST', link: '자치법규상세링크',
+              date: '시행일자', dateLab: '시행', dateParam: 'ancYd', dateName: '공포일', meta: ['자치법규종류', '지자체기관명', '제개정구분명'], kind: 'law' },
+    prec:   { name: '판례', icon: '⚖️', badge: 'p', title: '사건명', idKey: '판례일련번호', idParam: 'ID', link: '판례상세링크',
+              date: '선고일자', dateLab: '선고', dateParam: 'prncYd', dateName: '선고일', meta: ['법원명', '사건번호', '사건종류명', '판결유형'], kind: 'case',
+              secs: ['판시사항', '판결요지', '참조조문', '참조판례', '판례내용'] },
+    detc:   { name: '헌재결정례', icon: '🏛️', badge: 'r', title: '사건명', idKey: '헌재결정례일련번호', idParam: 'ID', link: '헌재결정례상세링크',
+              date: '종국일자', dateLab: '종국', dateParam: 'edYd', dateName: '종국일', meta: ['사건번호'], kind: 'case',
+              secs: ['판시사항', '결정요지', '심판대상조문', '참조조문', '참조판례', '전문'] },
+    expc:   { name: '법령해석례', icon: '📝', badge: 't', title: '안건명', idKey: '법령해석례일련번호', idParam: 'ID', link: '법령해석례상세링크',
+              date: '회신일자', dateLab: '회신', dateParam: 'explYd', dateName: '해석일', meta: ['회신기관명', '안건번호', '질의기관명'], kind: 'case',
+              secs: ['질의요지', '회답', '이유'] },
+    decc:   { name: '행정심판례', icon: '📑', badge: 'o', title: '사건명', idKey: '행정심판재결례일련번호', idParam: 'ID', link: '행정심판례상세링크',
+              date: '의결일자', dateLab: '의결', dateParam: 'rslYd', dateName: '의결일', meta: ['재결청', '사건번호', '재결구분명'], kind: 'case',
+              secs: ['주문', '청구취지', '재결요지', '이유'] },
+    nlrc:   { name: '노동위 결정문', icon: '🤝', badge: 'g', title: '제목', idKey: '결정문일련번호', idParam: 'ID', link: '결정문상세링크',
+              date: '등록일', dateLab: '등록', dateParam: '', dateName: '', meta: ['사건번호'], kind: 'case',
+              secs: ['판정사항', '판정요지', '판정결과', '내용'] }
+  };
+  var ORDER = ['law', 'admrul', 'ordin', 'prec', 'detc', 'expc', 'decc', 'nlrc'];
+  var QUICK = ['부당해고', '연차휴가', '통상임금', '휴업수당', '기간제 근로자', '징계해고', '육아휴직', '직장 내 괴롭힘', '근로기준법', '지방공무원법', '공무직'];
+  var FAV_KEY = 'lawsearch_fav_v1', REC_KEY = 'lawsearch_recent_v1', FONT_KEY = 'lawsearch_font_v1';
+
+  /* =====================================================================
+     2. 작은 도구
+     ===================================================================== */
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function toArr(v) { return v == null || v === '' ? [] : (Array.isArray(v) ? v : [v]); }
+  function str(v) { return v == null ? '' : (typeof v === 'object' ? (v.content != null ? String(v.content) : '') : String(v)); }
+  /* 법제처가 준 글(HTML 조각)을 순수한 글자로 바꿈: <br>은 줄바꿈으로, 나머지 꼬리표는 지움 */
+  var _ta = document.createElement('textarea');
+  function plain(s) {
+    s = str(s); if (!s) return '';
+    /* ※ 법령에는 <개정 2020. 3. 31.> 같은 꺾쇠 글자가 많으므로, 진짜 HTML 꼬리표만 골라서 지움 */
+    s = s.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|tr|li)>/gi, '\n')
+         .replace(/<\/?(p|div|span|a|b|i|u|img|table|tbody|thead|tr|td|th|font|strong|em|ul|ol|li|sup|sub|h[1-6]|pre|center|script|style)(\s[^>]*)?\/?>/gi, '');
+    _ta.innerHTML = s; s = _ta.value;
+    return s.replace(/ /g, ' ').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  /* 날짜를 '2026. 1. 29.' 모양으로 */
+  function fmtDate(s) {
+    s = str(s); var m = s.replace(/[^0-9]/g, '');
+    if (m.length !== 8) return s;
+    return m.slice(0, 4) + '. ' + Number(m.slice(4, 6)) + '. ' + Number(m.slice(6, 8)) + '.';
+  }
+  function words(q) { return String(q || '').trim().split(/\s+/).filter(function (w) { return w.length > 0; }); }
+  /* 검색어에 노란 형광펜 */
+  function hi(text, ws) {
+    var h = esc(text); if (!ws || !ws.length) return h;
+    var parts = ws.map(function (w) { return esc(w).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).filter(Boolean);
+    if (!parts.length) return h;
+    try { return h.replace(new RegExp('(' + parts.join('|') + ')', 'g'), '<mark>$1</mark>'); } catch (e) { return h; }
+  }
+  var toastTimer = null;
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.style.display = 'block';
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.style.display = 'none'; }, 2200);
+  }
+  function copyText(text, okMsg) {
+    function fallback() {
+      var a = document.createElement('textarea'); a.value = text; a.style.position = 'fixed'; a.style.opacity = '0';
+      document.body.appendChild(a); a.select();
+      try { document.execCommand('copy'); toast(okMsg); } catch (e) { toast('복사하지 못했습니다. 직접 선택해서 복사해 주세요.'); }
+      document.body.removeChild(a);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast(okMsg); }, fallback);
+    else fallback();
+  }
+  function load(key, def) { try { var v = JSON.parse(localStorage.getItem(key)); return v == null ? def : v; } catch (e) { return def; } }
+  function save(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) { } }
+
+  /* =====================================================================
+     3. 법제처 API 부르기
+     ===================================================================== */
+  /* XML로 온 답을 JSON과 같은 모양으로 바꿈 (일부 자료는 XML로만 올 수 있어 대비) */
+  function xmlToObj(node) {
+    var kids = node.children;
+    if (!kids || !kids.length) return node.textContent;
+    var o = {};
+    for (var i = 0; i < kids.length; i++) {
+      var k = kids[i].nodeName, v = xmlToObj(kids[i]);
+      if (o[k] === undefined) o[k] = v; else { if (!Array.isArray(o[k])) o[k] = [o[k]]; o[k].push(v); }
+    }
+    return o;
+  }
+  function api(path, params) {
+    var qs = ['OC=' + encodeURIComponent(OC)];
+    Object.keys(params).forEach(function (k) { if (params[k] !== '' && params[k] != null) qs.push(k + '=' + encodeURIComponent(params[k])); });
+    var url = BASE + path + '?' + qs.join('&');
+    var limit = new Promise(function (_, rej) { setTimeout(function () { rej(new Error('법제처 서버가 20초 동안 응답하지 않았습니다. 잠시 후 다시 시도해 주세요.')); }, 20000); });
+    return Promise.race([fetch(url), limit]).then(function (r) {
+      return r.text().then(function (tx) {
+        var t = tx.trim();
+        if (!r.ok && !t) throw new Error('법제처 서버 오류 (HTTP ' + r.status + ')');
+        try { return JSON.parse(t); } catch (e) { }
+        if (t.charAt(0) === '<') {
+          var doc = new DOMParser().parseFromString(t, 'text/xml');
+          if (!doc.getElementsByTagName('parsererror').length && doc.documentElement) {
+            var o = {}; o[doc.documentElement.nodeName] = xmlToObj(doc.documentElement); return o;
+          }
+        }
+        throw new Error(plain(t).slice(0, 300) || '법제처에서 알 수 없는 답이 왔습니다.');
+      });
+    }, function (e) {
+      if (e && /응답하지/.test(e.message)) throw e;
+      throw new Error('법제처 서버에 연결하지 못했습니다. 인터넷 연결을 확인하거나, 업무망에서 law.go.kr 접속이 막혀 있지 않은지 확인해 주세요.');
+    });
+  }
+  /* 목록 답에서 '전체 건수'와 '자료 목록'을 꺼냄 (자료가 1건이면 목록이 아니라 낱개로 오므로 목록으로 통일) */
+  function pickList(data) {
+    var root = data && typeof data === 'object' ? data[Object.keys(data)[0]] : null;
+    if (!root || typeof root !== 'object') throw new Error(typeof root === 'string' ? plain(root) : '법제처에서 알 수 없는 답이 왔습니다.');
+    var list = [];
+    Object.keys(root).some(function (k) {
+      var v = root[k];
+      if (Array.isArray(v) && v.length && typeof v[0] === 'object') { list = v; return true; }
+      if (v && typeof v === 'object' && !Array.isArray(v)) { list = [v]; return true; }
+      return false;
+    });
+    var total = Number(root.totalCnt); if (!(total >= 0)) total = list.length;
+    if (!list.length && !('totalCnt' in root)) {
+      var msg = str(root.result || root.msg || root.resultMsg);
+      if (msg && msg !== 'success') throw new Error(msg);
+    }
+    return { total: total, list: list };
+  }
+  function ymd(v) { return v ? v.replace(/-/g, '') : ''; }
+  function listParams(t, st, display, page) {
+    var p = { target: t, type: 'JSON', query: st.q, search: st.scope, display: display, page: page || 1, sort: st.sort };
+    var conf = T[t];
+    if (conf.dateParam && (st.d1 || st.d2)) p[conf.dateParam] = (ymd(st.d1) || '19000101') + '~' + (ymd(st.d2) || '20991231');
+    if (t === 'prec') { p.org = st.org; p.nb = st.nb; }
+    return p;
+  }
+  function idOf(t, it) { return str(it[T[t].idKey]); }
+  function linkOf(t, it) {
+    var l = str(it[T[t].link]);
+    if (l) return SITE + l;
+    return BASE + 'lawService.do?OC=' + encodeURIComponent(OC) + '&target=' + t + '&' + T[t].idParam + '=' + encodeURIComponent(idOf(t, it)) + '&type=HTML';
+  }
+  /* 목록 한 줄에서 화면에 쓸 정보만 뽑음 */
+  function brief(t, it) {
+    var c = T[t];
+    var meta = c.meta.map(function (k) { return str(it[k]); }).filter(Boolean);
+    var date = fmtDate(it[c.date]);
+    if (date) meta.push(c.dateLab + ' ' + date);
+    if (t === 'law' && it['공포일자']) meta.push('공포 ' + fmtDate(it['공포일자']));
+    if (t === 'prec' && str(it['데이터출처명']) && str(it['데이터출처명']) !== '대법원') meta.push('출처: ' + str(it['데이터출처명']));
+    return { t: t, id: idOf(t, it), title: plain(it[c.title]) || '(제목 없음)', meta: meta.join(' · '), link: linkOf(t, it), cite: citeOf(t, it) };
+  }
+  /* 문서에 인용할 때 쓰는 한 줄 */
+  function citeOf(t, it) {
+    var d = fmtDate(it[T[t].date] || it['해석일자'] || it['의결일자'] || it['종국일자']);
+    if (t === 'prec') return [str(it['법원명']), d, str(it['선고']) || '선고', str(it['사건번호']), str(it['판결유형']) || '판결'].filter(Boolean).join(' ');
+    if (t === 'detc') return ['헌법재판소', d, str(it['사건번호']), '결정'].filter(Boolean).join(' ');
+    if (t === 'expc') return [str(it['회신기관명'] || it['해석기관명']) || '법제처', d, '회신', str(it['안건번호']), '해석례'].filter(Boolean).join(' ');
+    if (t === 'decc') return [str(it['재결청']), d, '의결', str(it['사건번호']), '재결'].filter(Boolean).join(' ');
+    if (t === 'nlrc') return [str(it['담당부서']) || '노동위원회', d, str(it['사건번호']), '판정'].filter(Boolean).join(' ');
+    var nm = plain(it[T[t].title] || it['법령명_한글']);
+    return '「' + nm + '」' + (d ? '(' + T[t].dateLab + ' ' + d + ')' : '');
+  }
+
+  /* =====================================================================
+     4. 즐겨찾기 · 최근 검색어
+     ===================================================================== */
+  var favs = load(FAV_KEY, {});            // { 'prec:616245': {t,id,title,meta,link,cite,memo,ts} }
+  if (!favs || typeof favs !== 'object' || Array.isArray(favs)) favs = {};
+  function fkey(t, id) { return t + ':' + id; }
+  function isFav(t, id) { return !!favs[fkey(t, id)]; }
+  function toggleFav(b) {
+    var k = fkey(b.t, b.id);
+    if (favs[k]) { delete favs[k]; toast('즐겨찾기에서 뺐습니다.'); }
+    else { favs[k] = { t: b.t, id: b.id, title: b.title, meta: b.meta, link: b.link, cite: b.cite, memo: '', ts: Date.now() }; toast('즐겨찾기에 담았습니다.'); }
+    save(FAV_KEY, favs); paintFavCnt();
+    return !!favs[k];
+  }
+  function paintFavCnt() { var n = Object.keys(favs).length; $('favCnt').textContent = n ? '(' + n + ')' : ''; }
+  function pushRecent(q) {
+    var r = load(REC_KEY, []); if (!Array.isArray(r)) r = [];
+    r = r.filter(function (x) { return x !== q; }); r.unshift(q); r = r.slice(0, 12);
+    save(REC_KEY, r); paintRecent();
+  }
+  function paintRecent() {
+    var r = load(REC_KEY, []); if (!Array.isArray(r)) r = [];
+    var box = $('recent');
+    if (!r.length) { box.innerHTML = ''; return; }
+    box.innerHTML = '<span class="lab">최근 검색</span>' + r.map(function (x) { return '<button type="button" class="ls-chip" data-q="' + esc(x) + '">' + esc(x) + '</button>'; }).join('') +
+      '<button type="button" class="ls-chip" data-clear="1" title="최근 검색어 지우기">✕ 지우기</button>';
+  }
+
+  /* =====================================================================
+     5. 검색 화면
+     ===================================================================== */
+  var cur = { t: 'all', page: 1 };         // 지금 고른 자료 종류와 쪽
+  var lastState = null;                     // 마지막으로 검색한 조건
+  var shown = [];                           // 지금 화면에 보이는 목록(요약 정보)
+  var reqNo = 0;                            // 늦게 도착한 옛 답을 버리기 위한 번호
+  var counts = {};                          // 통합검색에서 얻은 자료별 건수
+
+  function paintTabs() {
+    var h = '<button type="button" class="ls-tab' + (cur.t === 'all' ? ' on' : '') + '" data-t="all">🔎 통합검색</button>';
+    ORDER.forEach(function (t) {
+      var c = counts[t];
+      h += '<button type="button" class="ls-tab' + (cur.t === t ? ' on' : '') + '" data-t="' + t + '">' + T[t].icon + ' ' + T[t].name +
+        (c != null ? '<span class="cnt">' + Number(c).toLocaleString() + '</span>' : '') + '</button>';
+    });
+    $('tabs').innerHTML = h;
+    var c2 = T[cur.t];
+    $('dateLab').textContent = c2 && c2.dateName ? c2.dateName : '기간';
+    $('orgWrap').style.display = (cur.t === 'prec') ? '' : 'none';
+    $('nbWrap').style.display = (cur.t === 'prec') ? '' : 'none';
+    $('d1').disabled = $('d2').disabled = (cur.t === 'all' || (c2 && !c2.dateParam));
+  }
+  function readState() {
+    return { q: $('q').value.trim(), scope: $('scope').value, sort: $('sort').value, display: Number($('display').value) || 20,
+             d1: $('d1').value, d2: $('d2').value, org: $('org').value, nb: $('nb').value.trim() };
+  }
+  function itemHTML(b, ws) {
+    var c = T[b.t], on = isFav(b.t, b.id), memo = favs[fkey(b.t, b.id)] && favs[fkey(b.t, b.id)].memo;
+    return '<div class="ls-item" data-k="' + esc(fkey(b.t, b.id)) + '">' +
+      '<div class="main" data-open="1" tabindex="0" role="button">' +
+        '<div class="ttl"><span class="ls-badge ' + c.badge + '">' + c.name + '</span>' + hi(b.title, ws) + '</div>' +
+        '<div class="meta">' + esc(b.meta) + '</div>' +
+        (memo ? '<div class="ls-memo">📝 ' + esc(memo) + '</div>' : '') +
+      '</div>' +
+      '<div class="acts">' +
+        '<button type="button" class="ls-btn light sm" data-open="1">본문 보기</button>' +
+        '<button type="button" class="ls-star' + (on ? ' on' : '') + '" data-star="1" title="즐겨찾기">' + (on ? '★' : '☆') + '</button>' +
+      '</div></div>';
+  }
+  function loading(msg) { $('results').innerHTML = '<div class="ls-msg"><span class="ls-spin"></span>' + esc(msg || '법제처에서 자료를 찾는 중입니다…') + '</div>'; $('pager').innerHTML = ''; }
+  function showError(e) {
+    var m = (e && e.message) || String(e);
+    var tip = /검증|인증|OC|IP|도메인/.test(m)
+      ? '<br><br>👉 국가법령정보 공동활용(open.law.go.kr) → 마이페이지에서 <b>도메인주소</b>에 이 홈페이지 주소(' + esc(location.hostname || 'prolinu73-maker.github.io') + ')를 등록했는지, 사용할 <b>법령종류</b>가 체크되어 있는지 확인해 주세요.'
+      : '';
+    $('results').innerHTML = '<div class="ls-msg err"><b>자료를 가져오지 못했습니다.</b><br>' + esc(m) + tip + '</div>';
+    $('pager').innerHTML = ''; $('status').hidden = true;
+  }
+
+  function search(page) {
+    var st = readState();
+    if (!st.q && !(cur.t === 'prec' && st.nb)) { toast('검색어를 입력해 주세요.'); $('q').focus(); return; }
+    lastState = st; cur.page = page || 1;
+    if (st.q) pushRecent(st.q);
+    $('refine').value = '';
+    if (cur.t === 'all') return searchAll(st);
+    var no = ++reqNo, t = cur.t;
+    loading();
+    api('lawSearch.do', listParams(t, st, st.display, cur.page)).then(function (data) {
+      if (no !== reqNo) return;
+      var r = pickList(data);
+      counts[t] = r.total; paintTabs();
+      shown = r.list.map(function (it) { return brief(t, it); });
+      $('status').hidden = false;
+      $('tot').innerHTML = T[t].icon + ' ' + T[t].name + ' <span style="color:#0f172a">' + r.total.toLocaleString() + '</span>건' +
+        (r.total > st.display ? ' <span style="font-size:13px;color:#64748b;font-weight:400">(' + cur.page + '쪽)</span>' : '');
+      if (!shown.length) {
+        $('results').innerHTML = '<div class="ls-msg">찾은 자료가 없습니다.<br>' +
+          (st.scope === '1' ? '👉 "어디에서 찾을까요?"를 <b>본문 내용에서</b>로 바꾸면 더 많이 찾을 수 있습니다.' : '👉 검색어를 줄이거나 다른 낱말로 바꿔 보세요.') + '</div>';
+      } else {
+        $('results').innerHTML = shown.map(function (b) { return itemHTML(b, words(st.q)); }).join('');
+      }
+      paintPager(r.total, st.display);
+      window.scrollTo({ top: $('resultCard').offsetTop - 10, behavior: 'smooth' });
+    }).catch(function (e) { if (no === reqNo) showError(e); });
+  }
+  function searchAll(st) {
+    var no = ++reqNo;
+    loading('8가지 자료를 한꺼번에 찾는 중입니다…');
+    counts = {};
+    Promise.all(ORDER.map(function (t) {
+      var s2 = Object.assign({}, st, { d1: '', d2: '', org: '', nb: '' });
+      return api('lawSearch.do', listParams(t, s2, 5, 1)).then(pickList).then(function (r) { return { t: t, r: r }; }, function (e) { return { t: t, err: e }; });
+    })).then(function (all) {
+      if (no !== reqNo) return;
+      var okAny = all.some(function (x) { return !x.err; });
+      if (!okAny) { showError(all[0].err); return; }
+      var h = '', sum = 0; shown = [];
+      all.forEach(function (x) {
+        var c = T[x.t];
+        if (x.err) { h += '<div class="ls-group"><h3>' + c.icon + ' ' + c.name + ' <span class="n">가져오지 못함</span></h3></div>'; return; }
+        counts[x.t] = x.r.total; sum += x.r.total;
+        if (!x.r.list.length) return;
+        var bs = x.r.list.map(function (it) { return brief(x.t, it); });
+        shown = shown.concat(bs);
+        h += '<div class="ls-group"><h3>' + c.icon + ' ' + c.name + ' <span class="n">' + x.r.total.toLocaleString() + '건</span>' +
+          (x.r.total > bs.length ? '<button type="button" class="ls-btn light sm" data-more="' + x.t + '">전체 보기 →</button>' : '') + '</h3>' +
+          bs.map(function (b) { return itemHTML(b, words(st.q)); }).join('') + '</div>';
+      });
+      paintTabs();
+      $('status').hidden = false;
+      $('tot').innerHTML = '🔎 통합검색 <span style="color:#0f172a">' + sum.toLocaleString() + '</span>건 <span style="font-size:13px;color:#64748b;font-weight:400">(자료별 앞 5건씩)</span>';
+      $('results').innerHTML = h || '<div class="ls-msg">찾은 자료가 없습니다.<br>👉 "어디에서 찾을까요?"를 <b>본문 내용에서</b>로 바꾸거나 다른 낱말로 찾아보세요.</div>';
+      $('pager').innerHTML = '';
+    });
+  }
+  function paintPager(total, display) {
+    var pages = Math.ceil(total / display), p = cur.page, h = '';
+    if (pages <= 1) { $('pager').innerHTML = ''; return; }
+    var from = Math.max(1, p - 4), to = Math.min(pages, from + 9); from = Math.max(1, to - 9);
+    h += '<button type="button" data-p="1"' + (p === 1 ? ' disabled' : '') + '>« 처음</button>';
+    h += '<button type="button" data-p="' + (p - 1) + '"' + (p === 1 ? ' disabled' : '') + '>‹ 이전</button>';
+    for (var i = from; i <= to; i++) h += '<button type="button" data-p="' + i + '"' + (i === p ? ' class="on"' : '') + '>' + i + '</button>';
+    h += '<button type="button" data-p="' + (p + 1) + '"' + (p >= pages ? ' disabled' : '') + '>다음 ›</button>';
+    h += '<button type="button" data-p="' + pages + '"' + (p >= pages ? ' disabled' : '') + '>끝 »</button>';
+    $('pager').innerHTML = h;
+  }
+  function findShown(k, pool) {
+    for (var i = 0; i < pool.length; i++) if (fkey(pool[i].t, pool[i].id) === k) return pool[i];
+    return favs[k] || null;
+  }
+  /* 목록(검색 결과·즐겨찾기 공통)에서 누른 것 처리 */
+  function onListClick(ev, pool, repaint) {
+    var row = ev.target.closest('.ls-item'); if (!row) return;
+    var b = findShown(row.getAttribute('data-k'), pool); if (!b) return;
+    if (ev.target.closest('[data-star]')) {
+      var on = toggleFav(b);
+      if (repaint) repaint(); else { var s = row.querySelector('[data-star]'); s.classList.toggle('on', on); s.textContent = on ? '★' : '☆'; }
+      return;
+    }
+    if (ev.target.closest('[data-open]')) openDetail(b);
+  }
+
+  /* =====================================================================
+     6. 본문 보기 창
+     ===================================================================== */
+  var det = null;       // 지금 열린 자료 { b, text(복사용), cite }
+  var fontPx = Number(load(FONT_KEY, 15)) || 15;
+  function openDetail(b) {
+    det = { b: b, text: '', cite: b.cite || b.title };
+    $('pTitle').textContent = b.title;
+    $('pSub').textContent = T[b.t].name + (b.meta ? ' · ' + b.meta : '');
+    $('pToc').hidden = true; $('pFind').hidden = true; $('pFind').value = '';
+    $('pBody').style.fontSize = fontPx + 'px';
+    $('pBody').innerHTML = '<div class="ls-msg"><span class="ls-spin"></span>본문을 불러오는 중입니다…</div>';
+    paintPFav();
+    $('back').classList.add('on'); $('panel').classList.add('on');
+    document.body.style.overflow = 'hidden';
+    var p = { target: b.t, type: 'JSON' }; p[T[b.t].idParam] = b.id;
+    var my = b;
+    api('lawService.do', p).then(function (data) {
+      if (!det || det.b !== my) return;
+      var root = data && typeof data === 'object' ? data[Object.keys(data)[0]] : null;
+      if (!root || typeof root !== 'object') throw new Error(typeof root === 'string' ? plain(root) : '본문이 비어 있습니다.');
+      if (T[b.t].kind === 'law') renderLaw(b, root); else renderCase(b, root);
+    }).catch(function (e) {
+      if (!det || det.b !== my) return;
+      $('pBody').innerHTML = '<div class="ls-msg err"><b>본문을 가져오지 못했습니다.</b><br>' + esc((e && e.message) || e) +
+        '<br><br>👉 위의 <b>[원문 새 창 ↗]</b>을 눌러 국가법령정보센터에서 직접 볼 수 있습니다.</div>' + memoHTML(b);
+    });
+  }
+  function closeDetail() {
+    $('back').classList.remove('on'); $('panel').classList.remove('on');
+    document.body.style.overflow = ''; det = null;
+  }
+  function paintPFav() {
+    if (!det) return; var on = isFav(det.b.t, det.b.id);
+    $('pFav').textContent = on ? '★ 즐겨찾기 됨' : '☆ 즐겨찾기';
+  }
+  function memoHTML(b) {
+    var f = favs[fkey(b.t, b.id)];
+    return '<div class="ls-sec ls-mybox"><h4>📝 내 메모</h4><textarea id="pMemo" placeholder="이 자료에 대한 메모를 적어 두세요. 적으면 즐겨찾기에 자동으로 담깁니다.">' + esc(f && f.memo || '') + '</textarea></div>';
+  }
+  function infoHTML(rows) {
+    var h = rows.filter(function (r) { return r[1]; }).map(function (r) { return '<dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('');
+    return h ? '<dl class="ls-info">' + h + '</dl>' : '';
+  }
+  /* --- 판례·결정례·해석례·심판례·노동위 --- */
+  function renderCase(b, root) {
+    var c = T[b.t], ws = words(lastState && lastState.q);
+    var rows = [];
+    if (b.t === 'prec') rows = [['법원', str(root['법원명'])], ['선고일', fmtDate(root['선고일자'])], ['사건번호', str(root['사건번호'])], ['사건종류', str(root['사건종류명'])], ['판결유형', str(root['판결유형'])]];
+    if (b.t === 'detc') rows = [['종국일', fmtDate(root['종국일자'])], ['사건번호', str(root['사건번호'])], ['사건종류', str(root['사건종류명'])]];
+    if (b.t === 'expc') rows = [['해석기관', str(root['해석기관명'])], ['질의기관', str(root['질의기관명'])], ['안건번호', str(root['안건번호'])], ['해석일', fmtDate(root['해석일자'])]];
+    if (b.t === 'decc') rows = [['재결청', str(root['재결청'])], ['처분청', str(root['처분청'])], ['사건번호', str(root['사건번호'])], ['의결일', fmtDate(root['의결일자'])], ['유형', str(root['재결례유형명'])]];
+    if (b.t === 'nlrc') rows = [['담당', str(root['담당부서'])], ['사건번호', str(root['사건번호'])], ['자료구분', str(root['자료구분'])], ['등록일', fmtDate(root['등록일'])]];
+    var title = plain(root[c.title] || root['사건명'] || root['안건명'] || root['제목']) || b.title;
+    det.cite = citeOf(b.t, root) || det.cite;
+    var h = infoHTML(rows), txt = [title, rows.filter(function (r) { return r[1]; }).map(function (r) { return r[0] + ': ' + r[1]; }).join(' / ')];
+    var any = false;
+    c.secs.forEach(function (k) {
+      var v = plain(root[k]); if (!v) return; any = true;
+      h += '<div class="ls-sec"><h4>' + esc(k) + '</h4><div class="tx">' + hi(v, ws) + '</div></div>';
+      txt.push('', '【' + k + '】', v);
+    });
+    if (!any) h += '<div class="ls-msg">이 자료는 법제처 API에 본문이 실려 있지 않습니다.<br>👉 위의 <b>[원문 새 창 ↗]</b>을 눌러 원문을 확인하세요.</div>';
+    $('pBody').innerHTML = h + memoHTML(b);
+    det.text = txt.join('\n');
+    $('pBody').scrollTop = 0;
+  }
+  /* --- 법령·행정규칙·자치법규 --- */
+  function walk(n, out) {                 // 조 → 항 → 호 → 목 순서로 글자만 모음
+    if (n == null) return;
+    if (typeof n === 'string') { var s = plain(n); if (s) out.push(s); return; }
+    if (Array.isArray(n)) { n.forEach(function (x) { walk(x, out); }); return; }
+    if (typeof n === 'object') {
+      Object.keys(n).forEach(function (k) { if (/내용$/.test(k)) walk(n[k], out); });
+      ['항', '호', '목'].forEach(function (k) { if (n[k]) walk(n[k], out); });
+    }
+  }
+  function isHeadText(s) { return /^제\s*\d+\s*(편|장|절|관)/.test(s.trim()) && !/^제\s*\d+\s*조/.test(s.trim()); }
+  function renderLaw(b, root) {
+    var ws = words(lastState && lastState.q), arts = [], rows = [], extra = '', name = b.title;
+    if (b.t === 'law') {
+      var bi = root['기본정보'] || {};
+      name = plain(bi['법령명_한글']) || name;
+      rows = [['법령 종류', str(bi['법종구분'])], ['소관부처', str(bi['소관부처'])], ['공포', [fmtDate(bi['공포일자']), bi['공포번호'] ? '제' + str(bi['공포번호']) + '호' : ''].filter(Boolean).join(' ')],
+              ['시행일', fmtDate(bi['시행일자'])], ['제개정', str(bi['제개정구분'])], ['전화', str(bi['전화번호'])]];
+      toArr(root['조문'] && root['조문']['조문단위']).forEach(function (u) {
+        var o = []; walk(u, o); var tx = o.join('\n'); if (!tx) return;
+        arts.push({ head: str(u['조문여부']) === '전문', text: tx });
+      });
+    } else if (b.t === 'admrul') {
+      var ai = root['행정규칙기본정보'] || {};
+      name = plain(ai['행정규칙명']) || name;
+      rows = [['종류', str(ai['행정규칙종류'])], ['소관부처', str(ai['소관부처명'])], ['발령', [fmtDate(ai['발령일자']), ai['발령번호'] ? '제' + str(ai['발령번호']) + '호' : ''].filter(Boolean).join(' ')],
+              ['시행일', fmtDate(ai['시행일자'])], ['제개정', str(ai['제개정구분명'])], ['담당', [str(ai['담당부서기관명']), str(ai['전화번호'])].filter(Boolean).join(' ')]];
+      toArr(root['조문내용']).forEach(function (s) { var tx = plain(s); if (tx) arts.push({ head: isHeadText(tx), text: tx }); });
+      var fl = toArr(root['첨부파일'] && root['첨부파일']['첨부파일링크']), fn = toArr(root['첨부파일'] && root['첨부파일']['첨부파일명']);
+      if (fl.length) extra += '<details class="ls-more"><summary>📎 첨부파일 (' + fl.length + ')</summary><ul>' + fl.map(function (l, i) {
+        return '<li><a href="' + esc(absUrl(l)) + '" target="_blank" rel="noopener">' + esc(plain(fn[i]) || '첨부파일 ' + (i + 1)) + '</a></li>'; }).join('') + '</ul></details>';
+    } else {
+      var oi = root['자치법규기본정보'] || {};
+      name = plain(oi['자치법규명']) || name;
+      rows = [['종류', str(oi['자치법규종류'])], ['기관', str(oi['지자체기관명'])], ['공포', [fmtDate(oi['공포일자']), oi['공포번호'] ? '제' + str(oi['공포번호']) + '호' : ''].filter(Boolean).join(' ')],
+              ['시행일', fmtDate(oi['시행일자'])], ['제개정', str(oi['제개정정보'])], ['담당', toArr(oi['담당부서명']).map(str).join(', ')]];
+      toArr(root['조문'] && root['조문']['조']).forEach(function (u) {
+        var tx = plain(u['조내용']) || plain(u['조제목']); if (!tx) return;
+        arts.push({ head: isHeadText(tx), text: tx });
+      });
+    }
+    det.cite = '「' + name + '」' + (rows[3] && rows[3][1] ? '(시행 ' + rows[3][1] + ')' : '');
+    /* 별표·서식 */
+    var bp = toArr(root['별표'] && root['별표']['별표단위']);
+    if (bp.length) extra += '<details class="ls-more"><summary>📋 별표·서식 (' + bp.length + ')</summary><ul>' + bp.map(function (x) {
+      var l = str(x['별표서식파일링크']) || str(x['별표서식PDF파일링크']);
+      var nm = plain(x['별표제목']) || '별표';
+      return '<li>' + (l ? '<a href="' + esc(absUrl(l)) + '" target="_blank" rel="noopener">' + esc(nm) + '</a>' : esc(nm)) + '</li>'; }).join('') + '</ul></details>';
+    /* 부칙 */
+    var bu = [], bsrc = root['부칙'] ? (root['부칙']['부칙단위'] || root['부칙']) : null;
+    toArr(bsrc).forEach(function (x) { var o = []; walk(x, o); if (o.length) bu.push(o.join('\n')); });
+    if (bu.length) extra += '<details class="ls-more"><summary>📜 부칙 (' + bu.length + ')</summary>' + bu.map(function (s) { return '<div class="ls-art">' + esc(s) + '</div>'; }).join('') + '</details>';
+    /* 제·개정 이유 */
+    var why = []; walk(root['제개정이유'], why);
+    if (why.length) extra += '<details class="ls-more"><summary>💡 제·개정 이유</summary><div class="ls-art">' + esc(why.join('\n')) + '</div></details>';
+
+    var toc = '<option value="">조문 바로가기</option>', h = infoHTML(rows);
+    if (!arts.length) h += '<div class="ls-msg">조문 내용이 API에 실려 있지 않습니다.<br>👉 위의 <b>[원문 새 창 ↗]</b>을 눌러 원문을 확인하세요.</div>';
+    arts.forEach(function (a, i) {
+      if (a.head) { h += '<div class="ls-art head" id="art' + i + '">' + esc(a.text) + '</div>'; toc += '<option value="art' + i + '" disabled>── ' + esc(a.text.split('\n')[0].slice(0, 30)) + ' ──</option>'; return; }
+      var m = a.text.match(/^제\s*\d+\s*조(?:의\s*\d+)?\s*(?:\([^)\n]*\))?/);
+      var body = hi(a.text, ws);
+      if (m) {
+        var hm = hi(m[0], ws);                                   // 조 번호와 제목(예: 제60조(연차 유급휴가))은 굵게
+        if (body.slice(0, hm.length) === hm) body = '<span class="no">' + hm + '</span>' + body.slice(hm.length);
+        toc += '<option value="art' + i + '">' + esc(m[0].replace(/\s+/g, '')) + '</option>';
+      }
+      h += '<div class="ls-art" id="art' + i + '">' + body + '</div>';
+    });
+    $('pBody').innerHTML = h + extra + memoHTML(b);
+    $('pToc').innerHTML = toc; $('pToc').hidden = arts.length < 3; $('pFind').hidden = arts.length < 3;
+    det.text = [name, rows.filter(function (r) { return r[1]; }).map(function (r) { return r[0] + ': ' + r[1]; }).join(' / '), ''].concat(arts.map(function (a) { return a.head ? '\n' + a.text : a.text; })).join('\n') +
+      (bu.length ? '\n\n【부칙】\n' + bu.join('\n\n') : '');
+    $('pBody').scrollTop = 0;
+  }
+  function absUrl(l) { l = str(l); return /^https?:/i.test(l) ? l : SITE + (l.charAt(0) === '/' ? '' : '/') + l; }
+
+  /* =====================================================================
+     7. 즐겨찾기 화면
+     ===================================================================== */
+  function paintFavList() {
+    var arr = Object.keys(favs).map(function (k) { return favs[k]; }).sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+    if (!arr.length) { $('favList').innerHTML = '<div class="ls-msg">아직 담은 자료가 없습니다.<br>검색 결과에서 <b>☆</b>를 누르면 여기에 모입니다.</div>'; return; }
+    var h = '';
+    ORDER.forEach(function (t) {
+      var g = arr.filter(function (x) { return x.t === t; }); if (!g.length) return;
+      h += '<div class="ls-group"><h3>' + T[t].icon + ' ' + T[t].name + ' <span class="n">' + g.length + '건</span></h3>' + g.map(function (b) { return itemHTML(b, null); }).join('') + '</div>';
+    });
+    $('favList').innerHTML = h;
+  }
+  function showView(v) {
+    $('viewSearch').hidden = v !== 'search'; $('viewFav').hidden = v !== 'fav'; $('viewHelp').hidden = v !== 'help';
+    Array.prototype.forEach.call(document.querySelectorAll('.ls-view'), function (b) { b.classList.toggle('on', b.getAttribute('data-view') === v); });
+    if (v === 'fav') paintFavList();
+  }
+
+  /* =====================================================================
+     8. 단추 연결
+     ===================================================================== */
+  $('tabs').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-t]'); if (!b) return;
+    cur.t = b.getAttribute('data-t'); cur.page = 1; paintTabs();
+    if ($('q').value.trim()) search(1);
+  });
+  $('btnSearch').addEventListener('click', function () { search(1); });
+  $('q').addEventListener('keydown', function (e) { if (e.key === 'Enter') search(1); });
+  $('nb').addEventListener('keydown', function (e) { if (e.key === 'Enter') search(1); });
+  ['scope', 'sort', 'display', 'org'].forEach(function (id) { $(id).addEventListener('change', function () { if (lastState) search(1); }); });
+  $('btnAdvClear').addEventListener('click', function () { $('d1').value = $('d2').value = $('nb').value = ''; $('org').value = ''; if (lastState) search(1); });
+  $('pager').addEventListener('click', function (e) { var b = e.target.closest('[data-p]'); if (b && !b.disabled) search(Number(b.getAttribute('data-p'))); });
+  $('results').addEventListener('click', function (e) {
+    var m = e.target.closest('[data-more]');
+    if (m) { cur.t = m.getAttribute('data-more'); paintTabs(); search(1); return; }
+    onListClick(e, shown, null);
+  });
+  $('results').addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.matches('.main')) onListClick(e, shown, null); });
+  $('favList').addEventListener('click', function (e) { onListClick(e, [], paintFavList); });
+  $('refine').addEventListener('input', function () {
+    var w = this.value.trim().toLowerCase();
+    Array.prototype.forEach.call($('results').querySelectorAll('.ls-item'), function (el) { el.style.display = (!w || el.textContent.toLowerCase().indexOf(w) > -1) ? '' : 'none'; });
+  });
+  function chipClick(e) {
+    var b = e.target.closest('.ls-chip'); if (!b) return;
+    if (b.getAttribute('data-clear')) { save(REC_KEY, []); paintRecent(); return; }
+    $('q').value = b.getAttribute('data-q'); search(1);
+  }
+  $('quick').addEventListener('click', chipClick); $('recent').addEventListener('click', chipClick);
+  Array.prototype.forEach.call(document.querySelectorAll('.ls-view'), function (b) { b.addEventListener('click', function () { showView(b.getAttribute('data-view')); }); });
+  $('btnShare').addEventListener('click', function () {
+    var st = readState(); if (!st.q) { toast('먼저 검색어를 입력해 주세요.'); return; }
+    var u = location.origin + location.pathname + '?t=' + cur.t + '&q=' + encodeURIComponent(st.q) + (st.scope === '2' ? '&s=2' : '');
+    copyText(u, '이 검색의 주소를 복사했습니다. 붙여 넣어 공유하세요.');
+  });
+
+  /* 본문 창 */
+  $('pClose').addEventListener('click', closeDetail); $('back').addEventListener('click', closeDetail);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && det) closeDetail(); });
+  $('pFav').addEventListener('click', function () { if (!det) return; toggleFav(det.b); paintPFav(); refreshStars(); });
+  $('pCopy').addEventListener('click', function () { if (!det) return; if (!det.text) { toast('아직 본문을 불러오는 중입니다.'); return; } copyText(det.text + '\n\n(출처: 법제처 국가법령정보센터)', '본문 전체를 복사했습니다. 한글에 붙여 넣으세요.'); });
+  $('pCite').addEventListener('click', function () { if (det) copyText(det.cite, '인용 표기를 복사했습니다: ' + det.cite); });
+  $('pPrint').addEventListener('click', function () { window.print(); });
+  $('pOrig').addEventListener('click', function () { if (det) window.open(det.b.link, '_blank', 'noopener'); });
+  function setFont(d) { fontPx = Math.max(12, Math.min(24, fontPx + d)); $('pBody').style.fontSize = fontPx + 'px'; save(FONT_KEY, fontPx); }
+  $('pMinus').addEventListener('click', function () { setFont(-1); }); $('pPlus').addEventListener('click', function () { setFont(1); });
+  $('pToc').addEventListener('change', function () {
+    var el = this.value && document.getElementById(this.value);
+    if (el) { $('pFind').value = ''; filterArts(''); el.scrollIntoView({ block: 'start' }); }
+    this.value = '';
+  });
+  function filterArts(w) {
+    w = w.trim().toLowerCase();
+    Array.prototype.forEach.call($('pBody').querySelectorAll('.ls-art[id]'), function (el) { el.classList.toggle('hide', !!w && el.textContent.toLowerCase().indexOf(w) === -1); });
+  }
+  $('pFind').addEventListener('input', function () { filterArts(this.value); });
+  $('pBody').addEventListener('input', function (e) {
+    if (e.target.id !== 'pMemo' || !det) return;
+    var k = fkey(det.b.t, det.b.id), v = e.target.value;
+    if (!favs[k]) { if (!v.trim()) return; var b = det.b; favs[k] = { t: b.t, id: b.id, title: b.title, meta: b.meta, link: b.link, cite: det.cite, memo: '', ts: Date.now() }; paintPFav(); paintFavCnt(); refreshStars(); }
+    favs[k].memo = v; save(FAV_KEY, favs);
+  });
+  function refreshStars() {
+    Array.prototype.forEach.call(document.querySelectorAll('.ls-item'), function (row) {
+      var k = row.getAttribute('data-k'), s = row.querySelector('[data-star]'); if (!s) return;
+      s.classList.toggle('on', !!favs[k]); s.textContent = favs[k] ? '★' : '☆';
+    });
+    if (!$('viewFav').hidden) paintFavList();
+  }
+
+  /* 즐겨찾기 내보내기·불러오기·전체 삭제 */
+  $('btnFavExport').addEventListener('click', function () {
+    if (!Object.keys(favs).length) { toast('내보낼 즐겨찾기가 없습니다.'); return; }
+    var blob = new Blob([JSON.stringify(favs, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = '법령판례_즐겨찾기_' + new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  });
+  $('btnFavImport').addEventListener('click', function () { $('favFile').click(); });
+  $('favFile').addEventListener('change', function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      try {
+        var o = JSON.parse(rd.result), n = 0;
+        if (!o || typeof o !== 'object' || Array.isArray(o)) throw 0;
+        Object.keys(o).forEach(function (k) {
+          var x = o[k];
+          if (x && T[x.t] && x.id != null && fkey(x.t, x.id) === k && !favs[k]) {
+            favs[k] = { t: x.t, id: String(x.id), title: String(x.title || ''), meta: String(x.meta || ''), link: linkOf(x.t, (function () { var q = {}; q[T[x.t].idKey] = x.id; return q; })()), cite: String(x.cite || ''), memo: String(x.memo || ''), ts: Number(x.ts) || Date.now() };
+            n++;
+          }
+        });
+        save(FAV_KEY, favs); paintFavCnt(); paintFavList(); toast(n + '건을 불러왔습니다.');
+      } catch (e) { toast('즐겨찾기 파일이 아니거나 내용이 깨졌습니다.'); }
+    };
+    rd.readAsText(f); this.value = '';
+  });
+  var clearArmed = false;
+  $('btnFavClear').addEventListener('click', function () {
+    if (!Object.keys(favs).length) { toast('삭제할 즐겨찾기가 없습니다.'); return; }
+    if (!clearArmed) { clearArmed = true; this.textContent = '정말 삭제? 한 번 더 누르세요'; var me = this; setTimeout(function () { clearArmed = false; me.textContent = '전체 삭제'; }, 4000); return; }
+    clearArmed = false; this.textContent = '전체 삭제';
+    favs = {}; save(FAV_KEY, favs); paintFavCnt(); paintFavList(); toast('즐겨찾기를 모두 지웠습니다.');
+  });
+
+  /* =====================================================================
+     9. 처음 열릴 때
+     ===================================================================== */
+  try { window.HUB.mountHomeButton(); } catch (e) { }
+  /* 접속자 수: 허브 사이트 전체 숫자를 읽어서 보여 줌 (common.js가 있을 때만) */
+  try {
+    if (window.HUB && HUB.visitors && typeof HUB.visitors.read === 'function') {
+      HUB.visitors.read().then(function (v) {
+        $('vToday').textContent = Number(v.todayCount || 0).toLocaleString();
+        $('vTotal').textContent = Number(v.total || 0).toLocaleString();
+        $('visitBox').hidden = false;
+      }).catch(function () { });
+    }
+  } catch (e) { }
+
+  $('quick').innerHTML = '<span class="lab">자주 찾는 낱말</span>' + QUICK.map(function (x) { return '<button type="button" class="ls-chip" data-q="' + esc(x) + '">' + esc(x) + '</button>'; }).join('');
+  paintTabs(); paintRecent(); paintFavCnt();
+
+  /* 주소에 검색 조건이 들어 있으면 바로 검색 (예: lawsearch.html?t=prec&q=부당해고) */
+  try {
+    var sp = new URLSearchParams(location.search), q0 = sp.get('q'), t0 = sp.get('t');
+    if (t0 && (t0 === 'all' || T[t0])) cur.t = t0;
+    if (sp.get('s') === '2') $('scope').value = '2';
+    paintTabs();
+    if (q0) { $('q').value = q0; search(1); } else { $('q').focus(); }
+  } catch (e) { }
+
+  /* 점검용(화면에는 영향 없음) */
+  window.__LS = { pickList: pickList, brief: brief, citeOf: citeOf, plain: plain, fmtDate: fmtDate, walk: walk };
+})();
+</script>
+</body>
+</html>

@@ -103,6 +103,8 @@
             { file: "facility.html", label: "시설공사 공고문 작성",
               icon: '<path d="M2 20h20"/><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M8 10h8"/>' }
           ] },
+        { file: "lawsearch.html", label: "법령ㆍ판례",
+          icon: '<path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/>' },
         { file: "apps.html", label: "스마트 업무도구",
           icon: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>' },
         { file: "index.html#community", label: "커뮤니티 라운지",
@@ -123,7 +125,8 @@
         "summary_minutes.html": "학교운영위원회 회의록 작성",
         "hobong.html": "교원 호봉획정",
         "geunmu_search.html": "복무 통계 작성",
-        "facility.html": "시설공사 공고문 작성"
+        "facility.html": "시설공사 공고문 작성",
+        "lawsearch.html": "법령ㆍ판례 검색"
     };
 
     // 프로필 그림으로 고를 수 있는 이모지·색 (내 페이지와 같아야 함)
