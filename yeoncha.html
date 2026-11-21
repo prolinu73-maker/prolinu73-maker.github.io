@@ -71,12 +71,20 @@ table.rep{width:100%;border-collapse:collapse;margin-bottom:10px}
 table.rep th{background:#eef2ff;color:#1e3a8a;text-align:left;padding:5px 8px;border:1px solid #cbd5e1;font-size:13px}
 table.rep td{padding:5px 8px;border:1px solid #cbd5e1;font-size:13px;vertical-align:top}
 table.rep td.k{width:34%;background:#f8fafc;font-weight:700;color:#334155}
-.tl{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-@media (max-width:700px){.tl{grid-template-columns:repeat(2,1fr)}}
+.tl{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:1250px){.tl{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:980px){.tl{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:760px){.tl{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:480px){.tl{grid-template-columns:1fr}}
 .tl .m{border:1px solid #dbe1ea;border-radius:8px;padding:6px}
 .tl .m .mh{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;margin-bottom:4px;gap:4px}
-.tl .cells{display:flex;flex-wrap:wrap;gap:2px}
-.tl .cells i{width:11px;height:11px;border-radius:2px;display:block}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal span.wd{font-size:11px;font-weight:700;text-align:center;color:#64748b;padding:1px 0}
+.cal span.wd.sun{color:#b91c1c}.cal span.wd.sat{color:#1d4ed8}
+.cal i{display:block;font-style:normal;text-align:center;font-size:11.5px;line-height:22px;height:22px;border-radius:4px;font-variant-numeric:tabular-nums;cursor:default}
+.cal i.blank{background:none}
+.cal i.cW{color:#14532d}.cal i.cA{color:#fff}.cal i.cE{color:#78350f}.cal i.cX{color:#fff}.cal i.cH{color:#fff;font-weight:700}.cal i.cN{color:#cbd5e1;line-height:20px}
+.cal i.m1{box-shadow:inset 0 0 0 2px #0f172a}
 i.cH{background:#b91c1c}i.cW{background:#86efac}i.cA{background:#60a5fa}i.cE{background:#fbbf24}i.cX{background:#7c3aed}i.cN{background:#fff;border:1px dashed #cbd5e1}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin-bottom:8px;color:#475569}
 .legend i{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:3px}
@@ -97,7 +105,8 @@ i.cH{background:#b91c1c}i.cW{background:#86efac}i.cA{background:#60a5fa}i.cE{bac
   .card{border:0;padding:0;margin-bottom:10px;break-inside:avoid}
   .hero{background:#fff !important;color:#000;border:2px solid #000}
   .print-title{display:block;text-align:center;font-size:20px;font-weight:800;margin:0 0 12px}
-  .tl{grid-template-columns:repeat(4,1fr)}
+  .tl{grid-template-columns:repeat(3,1fr)}
+  .tl .m{break-inside:avoid}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
@@ -719,7 +728,14 @@ if (typeof module !== 'undefined') module.exports = YC;
 
   /* ---------- 결과 그리기 ---------- */
   function cellsHtml(cells) {
-    return '<div class="cells">' + cells.map(function (c) { return '<i class="c' + c.st + '" title="' + YC.fmt(c.n) + ' ' + esc(c.note || (c.st === 'W' ? '출근' : '')) + '"></i>'; }).join('') + '</div>';
+    /* 달력 모양: 일~토 7칸, 첫 주는 시작 요일만큼 빈칸. 기간이 두 달에 걸치면 1일 칸에 '월/1'로 표시 */
+    var o = '<div class="cal"><span class="wd sun">일</span><span class="wd">월</span><span class="wd">화</span><span class="wd">수</span><span class="wd">목</span><span class="wd">금</span><span class="wd sat">토</span>';
+    if (cells.length) for (var b = 0; b < YC.P(cells[0].n).w; b++) o += '<i class="blank"></i>';
+    cells.forEach(function (c, i) {
+      var p = YC.P(c.n), cross = p.d === 1 && i > 0;
+      o += '<i class="c' + c.st + (cross ? ' m1' : '') + '" title="' + YC.fmt(c.n) + ' ' + esc(c.note || (c.st === 'W' ? '출근' : '')) + '">' + (cross ? p.m + '/1' : p.d) + '</i>';
+    });
+    return o + '</div>';
   }
   function render(R) {
     var o = '';
@@ -745,7 +761,7 @@ if (typeof module !== 'undefined') module.exports = YC;
       : R.first.list.map(function (x) { return { label: x.m + '개월차 (' + YC.fmt(x.s) + '~)', cells: x.cells, info: x.info }; });
     o += '<div class="card"><h2>월별 현황표 (' + (c ? '산정 대상 12개월' : '입사 후 1년') + ')</h2><div class="legend"><span><i class="cW"></i>출근</span><span><i class="cA"></i>출근간주</span><span><i class="cE"></i>제외</span><span><i class="cX"></i>결근</span><span><i class="cH"></i>토·일·공휴일</span><span><i class="cN"></i>재직 아님</span></div><div class="tl">';
     months.forEach(function (m) { o += '<div class="m"><div class="mh"><span>' + esc(m.label) + '</span><span class="tag ' + m.info.cls + '">' + esc(m.info.reason) + '</span></div>' + cellsHtml(m.cells) + '</div>'; });
-    o += '</div><div class="small" style="margin-top:6px">네모 한 칸이 하루입니다. 마우스를 올리면 날짜와 사유가 보입니다.</div></div>';
+    o += '</div><div class="small" style="margin-top:6px">달력의 숫자는 날짜입니다. 칸의 색으로 그날의 처리 구분을 보여 주며, 마우스를 올리면 날짜와 사유(공휴일 이름 등)가 보입니다.</div></div>';
     /* 내역서 */
     o += '<div class="card"><h2>연차 산출 내역서</h2>';
     R.sections.forEach(function (s) {
