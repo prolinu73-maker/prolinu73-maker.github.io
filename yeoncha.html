@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>교육공무직원 연차 산정기 (yeoncha)</title>
-<link rel="stylesheet" href="common.css?v=7">
-<script src="common.js?v=8"></script>
+<link rel="stylesheet" href="common.css?v=10">
+<script src="common.js?v=22"></script>
 <script>
 if (!window.HUB) {
   window.HUB = {
@@ -23,7 +23,11 @@ body{font-family:"맑은 고딕","Malgun Gothic","Apple SD Gothic Neo",sans-seri
 header.top{background:#1e3a8a;color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 header.top h1{margin:0;font-size:19px;font-weight:700}
 header.top .sub{font-size:12px;opacity:.85;margin-top:2px}
-header.top .nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+header.top .nav{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;margin-left:auto}
+.visit-box{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:6px 14px;font-size:13px;color:#e0e7ff;white-space:nowrap}
+.visit-box[hidden]{display:none}
+.visit-box b{color:#fff;font-size:14px;font-variant-numeric:tabular-nums}
+.visit-box .sep{opacity:.5}
 .hub-btn{background:#fff;color:#1e3a8a;border:0;border-radius:6px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
 .hub-btn:hover{background:#dbeafe}
 .layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:16px;padding:16px;max-width:1500px;margin:0 auto}
@@ -76,12 +80,15 @@ table.rep td.k{width:34%;background:#f8fafc;font-weight:700;color:#334155}
 i.cH{background:#d1d5db}i.cW{background:#86efac}i.cA{background:#60a5fa}i.cE{background:#fbbf24}i.cX{background:#ef4444}i.cN{background:#fff;border:1px dashed #cbd5e1}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin-bottom:8px;color:#475569}
 .legend i{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:3px}
+.q{display:inline-flex;width:16px;height:16px;border-radius:50%;background:#1e3a8a;color:#fff;font-size:11px;font-weight:700;align-items:center;justify-content:center;cursor:help;margin-left:4px;vertical-align:1px;user-select:none;font-style:normal}
+.q:hover,.q:focus{background:#2563eb;outline:2px solid #bfdbfe}
+#helpPop{position:absolute;z-index:100;max-width:330px;background:#1f2937;color:#fff;padding:10px 12px;border-radius:8px;font-size:12.5px;line-height:1.65;box-shadow:0 6px 18px rgba(0,0,0,.25);display:none;white-space:pre-line;font-weight:400}
 .print-title{display:none}
 .small{font-size:12px;color:#64748b}
 @media print{
   @page{size:A4;margin:15mm}
   body{background:#fff;font-size:12px}
-  header.top,.panel-input,.no-print{display:none !important}
+  header.top,.panel-input,.no-print,.q,#helpPop{display:none !important}
   .layout{display:block;padding:0}
   .card{border:0;padding:0;margin-bottom:10px;break-inside:avoid}
   .hero{background:#fff !important;color:#000;border:2px solid #000}
@@ -98,8 +105,10 @@ i.cH{background:#d1d5db}i.cW{background:#86efac}i.cA{background:#60a5fa}i.cE{bac
     <div class="sub">근로기준법 제60조 + 전라남도교육청 지침 기준 · 입력 내용은 이 PC 브라우저에만 저장됩니다</div>
   </div>
   <div class="nav">
-    <div data-hub-home></div>
-    <button class="hub-btn" onclick="location.href='labor.html'">⚖️ 노무관리 정보마당</button>
+    <div class="visit-box" id="visitBox" hidden title="사이트 모든 페이지 기준 · 한 사람(브라우저)은 하루 1번만 셉니다">
+      <span>오늘 접속자 <b id="vToday">-</b></span><span class="sep">|</span><span>누적 접속자 <b id="vTotal">-</b></span>
+    </div>
+    <span data-hub-home></span>
   </div>
 </header>
 
@@ -137,7 +146,11 @@ i.cH{background:#d1d5db}i.cW{background:#86efac}i.cA{background:#60a5fa}i.cE{bac
   </div>
 
   <div class="card">
-    <h2>② 인사 변동 이력</h2>
+    <h2>② 인사 변동 이력<span class="q" tabindex="0" data-help="산정 대상 기간(전년도 1년) 중에 있었던 휴직·병가·결근·방학 등을 한 건씩 넣는 곳입니다.
+
+• 아무것도 넣지 않으면 1년 내내 정상 출근한 것으로 계산합니다.
+• 여러 건을 넣을 수 있고, 날짜가 겹쳐도 하루는 한 번만 셉니다.
+• 가산연차(근속) 계산을 위해 질병휴직·약정 육아휴직은 과거 것도 넣어 두면 근속에서 자동으로 빠집니다.">?</span></h2>
     <div class="row">
       <button class="btn" id="btnAddEv">+ 인사 변동 기간 추가</button>
       <span class="small">원클릭:</span>
@@ -148,7 +161,13 @@ i.cH{background:#d1d5db}i.cW{background:#86efac}i.cA{background:#60a5fa}i.cE{bac
       <button class="btn light sm" data-preset="paidsick">유급병가</button>
     </div>
     <table class="ev">
-      <thead><tr><th style="width:40%">사유</th><th>시작일</th><th>종료일</th><th>일수</th><th></th></tr></thead>
+      <thead><tr><th style="width:40%">사유<span class="q" tabindex="0" data-help="휴직·휴가·결근의 종류를 고릅니다. 종류에 따라 계산이 달라집니다.
+
+• [출근 간주] 출근한 것으로 봅니다. 연차가 줄지 않습니다. (법정 육아휴직, 출산휴가, 산재, 유급병가 등)
+• [소정근로일수 제외] 일해야 하는 날에서 아예 뺍니다. 남은 기간 비율만큼 연차가 줄어듭니다. (질병휴직, 가족돌봄휴직, 방학 등)
+• [결근 간주] 결근으로 봅니다. 출근율이 내려가고, 80% 미만이면 개근한 달 수만큼만 연차가 생깁니다. (무단결근, 무급병가, 정직 등)
+• [근속 제외] 표시가 있는 사유는 가산연차용 근속기간에서도 빠집니다.">?</span></th><th>시작일<span class="q" tabindex="0" data-help="그 사유가 시작된 첫날입니다. 토·일요일이나 공휴일이 끼어 있어도 그대로 넣으면 됩니다. 휴일은 계산에서 자동으로 빠집니다.">?</span></th><th>종료일<span class="q" tabindex="0" data-help="그 사유의 마지막 날입니다(복직 전날). 하루짜리면 시작일과 같은 날짜를 넣습니다.">?</span></th><th>일수<span class="q" tabindex="0" data-help="시작일부터 종료일까지의 달력상 날수(휴일 포함)입니다. 실제 계산에는 이 중 평일 근무일만 반영됩니다.
+색깔 표시는 그 사유가 어떤 분류로 처리되는지를 보여 줍니다.">?</span></th><th></th></tr></thead>
       <tbody id="evBody"></tbody>
     </table>
     <div class="small" style="margin-top:6px">
@@ -160,7 +179,11 @@ i.cH{background:#d1d5db}i.cW{background:#86efac}i.cA{background:#60a5fa}i.cE{bac
   </div>
 
   <div class="card">
-    <h2>③ 근로자별 임시저장 (이 PC 브라우저 전용)</h2>
+    <h2>③ 근로자별 임시저장 (이 PC 브라우저 전용)<span class="q" tabindex="0" data-help="지금 입력한 내용을 직원 이름으로 저장해 두었다가 나중에 다시 불러올 수 있습니다.
+
+• 이 컴퓨터의 이 브라우저에만 저장됩니다. 다른 PC나 다른 브라우저에서는 보이지 않습니다.
+• 인터넷으로 전송되지 않습니다.
+• 브라우저 인터넷 사용 기록(쿠키·사이트 데이터)을 지우면 함께 지워지니 중요한 것은 내역서를 인쇄해 두세요.">?</span></h2>
     <div class="row">
       <select id="savedList" style="flex:1;min-width:160px;margin:0"></select>
       <button class="btn light" id="btnLoad">불러오기</button>
@@ -183,7 +206,10 @@ i.cH{background:#d1d5db}i.cW{background:#86efac}i.cA{background:#60a5fa}i.cE{bac
       <button class="btn" id="btnPrint">🖨️ 산출내역서 인쇄</button>
       <button class="btn light" id="btnCopy">📋 계산근거 복사</button>
       <span style="flex:1"></span>
-      <span class="small">소수점:</span>
+      <span class="small">소수점<span class="q" tabindex="0" data-help="계산 결과에 소수점이 나올 때 처리하는 방법입니다.
+
+• 올림(전남교육청): 소수점 이하를 무조건 올려 하루 단위로 줍니다. 예) 5.63일 → 6일
+• 소수 둘째자리 표기: 올리지 않고 5.63일처럼 그대로 보여 줍니다. 다른 기관 기준과 비교할 때 참고용입니다.">?</span>:</span>
       <label class="chk"><input type="radio" name="rnd" value="ceil" checked> 올림(전남교육청)</label>
       <label class="chk"><input type="radio" name="rnd" value="dec2"> 소수 둘째자리 표기</label>
     </div>
@@ -590,6 +616,23 @@ if (typeof module !== 'undefined') module.exports = YC;
 
   try { window.HUB.mountHomeButton(); } catch (e) { }
 
+  /* ---------- 접속자 수 (오늘 · 누적) ----------
+     세는 일은 common.js가 모든 페이지에서 자동으로 함(한 브라우저 하루 1번, 관리자 제외).
+     여기서는 숫자를 읽어 보여 주기만 함. common.js가 없거나 인터넷이 안 되면 칸을 숨김. */
+  (function () {
+    var V = window.HUB && window.HUB.visitors;
+    if (!V || typeof V.read !== 'function') return;
+    function show() {
+      V.read().then(function (v) {
+        $('vToday').textContent = (v.todayCount || 0).toLocaleString('ko-KR');
+        $('vTotal').textContent = (v.total || 0).toLocaleString('ko-KR');
+        $('visitBox').hidden = false;
+      }).catch(function () { });
+    }
+    (V.ready && V.ready.then ? V.ready : Promise.resolve()).then(show, show);
+    setInterval(function () { if (!document.hidden) show(); }, 60000);
+  })();
+
   /* ---------- 입력 수집 ---------- */
   function num(id, def) { var v = parseFloat($(id).value); return isNaN(v) ? def : v; }
   function getState() {
@@ -746,6 +789,49 @@ if (typeof module !== 'undefined') module.exports = YC;
     delete all[k]; saveAll(all); refreshList(); msg('삭제했습니다.');
   });
   $('btnReset').addEventListener('click', function () { setState({}); });
+
+  /* ---------- 물음표 도움말 ---------- */
+  var HELP = {
+    f_name: '누구의 계산인지 알아보기 위한 메모입니다. 계산에는 영향이 없습니다.\n\n• 내역서 맨 위와 인쇄물에 표시됩니다.\n• "현재 내용 저장"을 누르면 이 칸의 내용이 저장 이름이 됩니다.\n예) 홍길동 / 교무행정사',
+    f_hire: '교육공무직원으로 처음 채용된 날(최초 임용일)입니다. 현재 부서 발령일이 아닙니다.\n\n• 근속연수(가산연차), 1년 미만 월차, 중도입사 비례연차가 모두 이 날짜를 기준으로 계산됩니다.\n• 이 칸을 넣어야 계산이 시작됩니다.',
+    f_year: '연차를 "받는" 해를 넣습니다. 근무한 해가 아닙니다.\n\n예) 2026을 넣고 교육장 채용이면 → 2026.1.1.에 부여하는 연차를 계산하며, 출근율은 그 전 1년(2025.1.1.~12.31.)을 봅니다.\n\n• 입사한 해를 넣으면 1년 미만 월차만 나옵니다. 다음 해로 바꾸면 비례연차가 계산됩니다.',
+    f_emp: '누가 채용했는지에 따라 연차를 주는 기준일이 다릅니다.\n\n• 교육장 채용: 매년 1월 1일에 부여 (전년도 1.1.~12.31. 근무 기준)\n• 학교장 채용: 매년 3월 1일에 부여 (전년도 3.1.~당해 2월 말 근무 기준)\n• 입사일 기준: 매년 입사한 날짜에 부여 (법 원칙 그대로 계산해 볼 때)',
+    f_work: '• 상시근로자: 방학에도 근무하는 직원입니다. 기본연차 15일.\n• 방학 중 비근무자(방중비): 방학에는 근무하지 않는 직원입니다. 기본연차가 연도별로 다릅니다(2026년부터 15일, 2019~2025년 12일, 2016~2018년 11일).\n\n방중비를 고르면 아래 인사 변동 이력에 여름·겨울방학 기간을 넣어 주세요. 방학은 출근율 계산에서 빠지지만 연차를 비례로 깎지는 않습니다.',
+    f_base: '가산연차를 더하기 전, 1년 근무에 대해 기본으로 주는 연차 일수입니다.\n\n• "자동 적용"에 체크하면 근무 형태와 기준연도에 맞춰 자동으로 들어갑니다(보통은 그대로 두세요).\n• 단체협약이 바뀌는 등 다른 일수를 써야 하면 체크를 풀고 직접 숫자를 넣습니다.',
+    f_hours: '근로계약서에 적힌 1주일 근무시간입니다. 전일제는 40을 그대로 둡니다.\n\n• 40시간 미만(단시간 근로자)이면 연차를 시간으로 환산해 함께 보여 줍니다.\n  산식: 연차일수 × (주 근로시간 ÷ 40) × 8시간\n  예) 주 20시간, 15일 → 60시간\n• 15시간 미만(초단시간 근로자)은 법적으로 연차가 생기지 않아 경고가 표시됩니다.',
+    f_retire: '퇴직하는 직원의 연차를 정산할 때만 넣습니다. 재직 중인 직원은 비워 두세요.\n\n• 실제로 마지막으로 근무하는 날(계약 종료일)을 넣습니다.\n• 넣으면 [회계연도 기준으로 준 연차 합계]와 [입사일 기준으로 다시 계산한 합계]를 비교해, 더 줘야 할 연차가 있는지 알려 줍니다.\n• 딱 1년(예: 1.1.~12.31.) 근무 후 퇴직이면 월차 11일만 생기고, 하루라도 더 근무해야 15일이 추가로 생깁니다.',
+    f_pastExcl: '예전에 사용한 질병휴직·약정 육아휴직(1년 초과분) 가운데, 아래 인사 변동 이력 표에 넣지 않은 기간의 날수(달력일)를 넣습니다.\n\n• 이 날수만큼 근속기간에서 빼고 가산연차를 계산합니다(취업규칙 제88조).\n• 표에 이미 넣은 휴직은 자동으로 빠지므로 여기에 또 넣으면 두 번 빠집니다.\n• 해당 사항이 없으면 0으로 둡니다.',
+    f_manualN: '가산연차 계산에 쓰는 근속 햇수를 직접 정하고 싶을 때만 넣습니다. 보통은 비워 두세요.\n\n• 비워 두면 입사일부터 기준일까지 꽉 채운 햇수(근속 제외기간은 뺌)를 자동으로 계산합니다.\n• 가산연차 = (만근연수 − 1) ÷ 2, 소수점 버림\n  예) 3~4년 → 1일, 5~6년 → 2일, 7~8년 → 3일\n• 기관에서 근속연수를 다르게 세는 경우 여기에 숫자를 넣으면 그 값이 우선합니다.',
+    f_holAdj: '달력의 공휴일 말고 우리 기관만 쉬는 날(개교기념일, 재량휴업일, 단체협약상 약정휴일 등)이 평일에 있으면 그 날수를 넣습니다.\n\n• 넣은 숫자만큼 "총 소정근로일수"에서 뺍니다.\n• 반대로 프로그램이 휴일로 본 날에 실제로는 근무했다면 음수(예: -1)를 넣습니다.\n• 잘 모르겠으면 0으로 둡니다. 결과 차이는 크지 않습니다.',
+    f_sickAuto: '유급병가는 1년에 30일까지만 출근한 것으로 봅니다.\n\n• 체크(기본): 유급병가를 30일 넘게 입력하면, 31일째부터는 자동으로 무급병가(결근)로 계산하고 경고를 띄웁니다.\n• 체크 해제: 입력한 대로 전부 출근으로 봅니다. 이때는 초과분을 "무급병가"로 따로 입력해야 정확합니다.\n\n30일은 휴일을 뺀 근무일 기준으로 셉니다.'
+  };
+  Object.keys(HELP).forEach(function (id) {
+    var lab = $(id).closest('label.f'); if (!lab) return;
+    var q = document.createElement('span'); q.className = 'q'; q.tabIndex = 0; q.textContent = '?'; q.setAttribute('data-help', HELP[id]);
+    var ref = null;
+    for (var i = 0; i < lab.children.length; i++) { if (!lab.children[i].classList.contains('h')) { ref = lab.children[i]; break; } }
+    lab.insertBefore(q, ref);
+  });
+  var pop = document.createElement('div'); pop.id = 'helpPop'; document.body.appendChild(pop);
+  var pinned = null;
+  function showHelp(q) {
+    pop.textContent = q.getAttribute('data-help'); pop.style.display = 'block';
+    var r = q.getBoundingClientRect(), sx = window.pageXOffset, sy = window.pageYOffset, vw = document.documentElement.clientWidth;
+    var left = Math.max(sx + 8, Math.min(r.left + sx - 10, sx + vw - pop.offsetWidth - 8));
+    pop.style.left = left + 'px'; pop.style.top = (r.bottom + sy + 6) + 'px';
+  }
+  function hideHelp() { pop.style.display = 'none'; pinned = null; }
+  function isQ(t) { return t && t.classList && t.classList.contains('q'); }
+  document.addEventListener('click', function (ev) {
+    if (isQ(ev.target)) { ev.preventDefault(); ev.stopPropagation(); if (pinned === ev.target) hideHelp(); else { pinned = ev.target; showHelp(ev.target); } }
+    else if (ev.target !== pop) hideHelp();
+  }, true);
+  document.addEventListener('mouseover', function (ev) { if (isQ(ev.target) && !pinned) showHelp(ev.target); });
+  document.addEventListener('mouseout', function (ev) { if (isQ(ev.target) && !pinned) pop.style.display = 'none'; });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') hideHelp();
+    else if ((ev.key === 'Enter' || ev.key === ' ') && isQ(ev.target)) { ev.preventDefault(); pinned = ev.target; showHelp(ev.target); }
+  });
 
   /* ---------- 시작 ---------- */
   ['f_name', 'f_hire', 'f_year', 'f_emp', 'f_work', 'f_baseAuto', 'f_base', 'f_hours', 'f_retire', 'f_pastExcl', 'f_manualN', 'f_holAdj', 'f_sickAuto'].forEach(function (id) {
