@@ -24,7 +24,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.6.3';
+    HUB.VERSION = '1.7.0';
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
@@ -60,55 +60,51 @@
     // 상단 메뉴 (순서대로 표시). 메뉴를 추가하려면 여기에 한 줄을 넣으세요.
     //   file: 이동할 파일, label: 메뉴 이름, icon: 그림(24×24 SVG 안쪽 모양)
     HUB.MENU = [
+        // ※ 메뉴 구성: 큰 분류 5개만 상단에 보이고, 마우스를 올리면 하위 메뉴가 펼쳐집니다
+        //   - 하위 메뉴를 추가하려면 해당 분류의 children 안에 한 줄을 넣으세요
+        //   - soon: true → 아직 페이지가 없는 메뉴 ('준비 중' 표시). 페이지를 만들면 file 이름을 넣고 soon 을 지우세요
         { file: "lawsearch.html", label: "법령ㆍ판례",
           icon: '<path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/>' },
-        // 하위 메뉴가 있는 묶음: children 에 넣으면 마우스를 올렸을 때 아래로 펼쳐집니다
-        { label: "인사ㆍ복무",
+        { label: "인사ㆍ노무",
           icon: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 11h5"/><path d="M16 15h5"/><path d="M16 7h5"/>',
           children: [
             { file: "hobong.html", label: "교원 호봉획정",
               icon: '<path d="M4 20V14"/><path d="M9 20V10"/><path d="M14 20V6"/><path d="M19 20V3"/><path d="M2 20h20"/>' },
             { file: "geunmu_search.html", label: "복무 통계 작성",
-              icon: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>' }
+              icon: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>' },
+            { file: "labor.html", label: "노무 정보마당",
+              icon: '<path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/>' },
+            { file: "yeoncha.html", label: "연차 계산",
+              icon: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 2v4"/><path d="M16 2v4"/><path d="M8 14h3"/><path d="M8 17h6"/>' }
           ] },
-        { label: "예산관리",
+        { label: "재무ㆍ계약",
           icon: '<rect x="2.5" y="6" width="19" height="13" rx="2"/><path d="M2.5 10h19"/><path d="M16 15h2"/>',
           children: [
             { file: "budget.html", label: "교특회계",
               icon: '<path d="M3 21h18"/><path d="M4 10h16"/><path d="M12 3 3 8v2h18V8z"/><path d="M6 10v8"/><path d="M10 10v8"/><path d="M14 10v8"/><path d="M18 10v8"/>' },
-            // soon: true → 아직 페이지가 없는 메뉴 ('준비 중' 표시, 누르면 안내만 함). 페이지를 만들면 file 이름을 넣고 soon 줄을 지우세요
             { file: "", label: "학교회계", soon: true,
-              icon: '<path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M10 21v-5h4v5"/><path d="M12 5V2h3"/>' }
-          ] },
-        { label: "노무관리",
-          icon: '<path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/>',
-          children: [
-            { file: "labor.html", label: "정보마당",
-              icon: '<path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h8"/><path d="M8 11h6"/>' },
-            { file: "yeoncha.html", label: "연차 계산",
-              icon: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 2v4"/><path d="M16 2v4"/><path d="M8 14h3"/><path d="M8 17h6"/>' }
-            // ※ 하위 메뉴 안에 children 을 또 넣으면 오른쪽으로 한 번 더 펼쳐지는 3단계 메뉴도 만들 수 있습니다
-          ] },
-        { file: "Per_diem.html", label: "여비관리",
-          icon: '<path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v2H3z"/><circle cx="7.5" cy="13" r="0.8"/><circle cx="16.5" cy="13" r="0.8"/><path d="M5 11h14"/>' },
-        { file: "mulpum_sys.html", label: "물품관리",
-          icon: '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/>' },
-        { label: "학교운영위원회",
-          icon: '<circle cx="12" cy="7" r="2.6"/><circle cx="5" cy="9.5" r="2.1"/><circle cx="19" cy="9.5" r="2.1"/><path d="M7.5 20a4.5 4.5 0 0 1 9 0"/><path d="M1.8 19a3.3 3.3 0 0 1 5.4-2.5"/><path d="M22.2 19a3.3 3.3 0 0 0-5.4-2.5"/>',
-          children: [
-            { file: "summary_minutes.html", label: "회의 관리",
-              icon: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/>' }
-          ] },
-        { label: "계약",
-          icon: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 17l2.5-2.5L12 16l4-4"/>',
-          children: [
+              icon: '<path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M10 21v-5h4v5"/><path d="M12 5V2h3"/>' },
+            { file: "Per_diem.html", label: "여비관리",
+              icon: '<path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v2H3z"/><circle cx="7.5" cy="13" r="0.8"/><circle cx="16.5" cy="13" r="0.8"/><path d="M5 11h14"/>' },
+            { file: "mulpum_sys.html", label: "물품관리",
+              icon: '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/>' },
             { file: "facility.html", label: "시설공사 공고문 작성",
               icon: '<path d="M2 20h20"/><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M8 10h8"/>' }
           ] },
-        { file: "apps.html", label: "스마트 업무도구",
-          icon: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>' },
-        { file: "index.html#community", label: "커뮤니티 라운지",
-          icon: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01"/><path d="M12 11h.01"/><path d="M15.5 11h.01"/>' }
+        { label: "학교운영",
+          icon: '<circle cx="12" cy="7" r="2.6"/><circle cx="5" cy="9.5" r="2.1"/><circle cx="19" cy="9.5" r="2.1"/><path d="M7.5 20a4.5 4.5 0 0 1 9 0"/><path d="M1.8 19a3.3 3.3 0 0 1 5.4-2.5"/><path d="M22.2 19a3.3 3.3 0 0 0-5.4-2.5"/>',
+          children: [
+            { file: "summary_minutes.html", label: "학교운영위원회 회의 관리",
+              icon: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/>' }
+          ] },
+        { label: "소통ㆍ도구",
+          icon: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01"/><path d="M12 11h.01"/><path d="M15.5 11h.01"/>',
+          children: [
+            { file: "apps.html", label: "스마트 업무도구",
+              icon: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>' },
+            { file: "index.html#community", label: "커뮤니티 라운지",
+              icon: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01"/><path d="M12 11h.01"/><path d="M15.5 11h.01"/>' }
+          ] }
     ];
     const HOME_ICON = '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/>';
 

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css?v=10">
-<script src="common.js?v=22"></script>
+<script src="common.js?v=24"></script>
 <style>
   /* 색(칠판 테마)은 common.css에 있음 */
   * { box-sizing: border-box; }
@@ -235,12 +235,6 @@
   /* 관리자 페이지 버튼 */
   .hdr-btn.admin-page { background: #0F172A; color: #fff; text-decoration: none; display: inline-flex; align-items: center; }
   .hdr-btn.admin-page:hover { background: #1E293B; filter: none; }
-  /* 상단 메뉴가 9개로 늘어 넓은 화면이 아니면 메뉴줄을 아래 줄로 내림 (로그인 버튼과 겹치지 않게) */
-  @media (max-width: 1800px) {
-    header.hub-top { flex-wrap: wrap; }
-    header.hub-top .nav-wrap { order: 3; flex-basis: 100%; }
-    header.hub-top .hub-right { margin-left: auto; }
-  }
   /* ───────── 커뮤니티 라운지 (apps.html에서 옮겨 옴) ───────── */
   .cm-wrap { max-width: 1180px; margin: 0 auto; padding: 10px 28px 56px; scroll-margin-top: 140px; }
   .cm-tabs { display: flex; gap: 6px; margin: 0 0 12px; padding: 5px; background: #fff; border: 1px solid var(--line2); border-radius: 14px; width: max-content; max-width: 100%; overflow-x: auto; }
