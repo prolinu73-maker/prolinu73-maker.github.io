@@ -534,7 +534,7 @@ var YC = (function () {
   function buildMap(inp, s, e, asOf) {
     var af = typeof asOf === 'function' ? asOf : function () { return asOf; };
     var cells = [], isVacW = inp.work === 'vac', sick = 0, over = 0, oldX = 0, n, i;
-    var sickYear = {};   /* 유급병가 사용일수(소정근로일)를 사용한 해(달력 연도)별로 셈 → 2026년 이후 사용분은 연 60일, 2025년 이전 사용분은 연 30일 한도 */
+    /* 유급병가: 이 산정기간(1년) 안에서 누적한 사용일수(sick)를 그날의 한도(2026년 이후 사용분 60일, 2025년 이전 사용분 30일)와 비교 */
     for (n = s; n <= e; n++) {
       var c = { n: n, st: 'W', type: null, vac: false, note: '' };
       if (n < inp.hire || (inp.retire != null && n > inp.retire)) { c.st = 'N'; c.note = '재직기간 아님'; }
@@ -556,9 +556,8 @@ var YC = (function () {
             if (best === 'vacation' && isVacW) c.vac = true;
             if (best === 'paidSick') {
               sick++;
-              var sy = P(n).y, lim = sickLimit(sy);
-              sickYear[sy] = (sickYear[sy] || 0) + 1;
-              if (sickYear[sy] > lim) { over++; if (inp.sickAuto) {
+              var lim = sickLimit(P(n).y);
+              if (sick > lim) { over++; if (inp.sickAuto) {
                 if (ao != null && ao < CUT2021) { c.st = 'X'; oldX++; c.note = '유급병가 연 ' + lim + '일 초과 → 무급병가(결근 처리, 2021.8.4. 이전 기준)'; }
                 else { c.st = 'E'; c.note = '유급병가 연 ' + lim + '일 초과 → 무급병가(소정근로일 제외·비례 산정)'; }
               } }
@@ -1154,7 +1153,7 @@ if (typeof module !== 'undefined') module.exports = YC;
     else if (c.mode === 'ratio') s += '원래는 ' + c.full + '일이지만, 휴직 등으로 일하지 않은 기간이 있어 실제 일한 날의 비율(' + c.eff + '÷' + c.den + ')만큼만 받습니다.';
     else if (c.mode === 'prop') s += '지난해 도중에 입사해서, 입사일부터 연말(기준일 전날)까지 근무한 ' + c.days + '일만큼 비례해서 받습니다. 이와 별도로 매달 1일씩 생기는 월차가 있습니다.';
     else if (c.mode === 'propRatio') s += '지난해 도중에 입사했고 휴직 등으로 일하지 않은 기간도 있어, 두 가지를 모두 반영해 비례로 받습니다.';
-    else if (c.mode === 'monthly') s += '지난 1년 출근율이 ' + c.rate.toFixed(1) + '%로 80%에 못 미쳐서, 기본 연차 대신 빠짐없이 근무한 달 수(' + c.perfect + '개월)만큼만 받습니다.';
+    else if (c.mode === 'monthly') s += '지난 1년 출근율이 ' + c.rate.toFixed(1) + '%로 80%에 못 미쳐서, 기본 연차 대신 ' + (c.monthSum !== c.perfect ? '빠짐없이 근무한 달 수(' + c.perfect + '개월) 기준 비례 산정값(' + f2(c.monthSum) + '일)만큼 받습니다.' : '빠짐없이 근무한 달 수(' + c.perfect + '개월)만큼만 받습니다.');
     else s += '지난 1년 동안 실제로 근무한 날이 없어 연차가 생기지 않습니다.';
     if (R.short) s += ' 다만 주 15시간 미만 근무자는 법적으로 연차가 생기지 않습니다.';
     return s;
