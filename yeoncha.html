@@ -54,7 +54,7 @@ table.ev td{padding:4px;border:1px solid #dbe1ea;vertical-align:middle}
 table.ev td input,table.ev td select{margin:0;padding:4px 5px;font-size:12px}
 table.ev td.c{text-align:center;font-size:12px;white-space:nowrap}
 .tag{display:inline-block;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700}
-.tag.A{background:#dbeafe;color:#1d4ed8}.tag.E{background:#fef3c7;color:#b45309}.tag.X{background:#fee2e2;color:#b91c1c}.tag.ok{background:#dcfce7;color:#15803d}.tag.no{background:#e5e7eb;color:#475569}
+.tag.A{background:#dbeafe;color:#1d4ed8}.tag.E{background:#fef3c7;color:#b45309}.tag.X{background:#ede9fe;color:#6d28d9}.tag.ok{background:#dcfce7;color:#15803d}.tag.no{background:#e5e7eb;color:#475569}
 .hero{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border-radius:10px;padding:16px 18px;margin-bottom:14px}
 .hero .t{font-size:13px;opacity:.9}
 .hero .v{font-size:38px;font-weight:800;line-height:1.2}
@@ -77,7 +77,7 @@ table.rep td.k{width:34%;background:#f8fafc;font-weight:700;color:#334155}
 .tl .m .mh{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;margin-bottom:4px;gap:4px}
 .tl .cells{display:flex;flex-wrap:wrap;gap:2px}
 .tl .cells i{width:11px;height:11px;border-radius:2px;display:block}
-i.cH{background:#d1d5db}i.cW{background:#86efac}i.cA{background:#60a5fa}i.cE{background:#fbbf24}i.cX{background:#ef4444}i.cN{background:#fff;border:1px dashed #cbd5e1}
+i.cH{background:#b91c1c}i.cW{background:#86efac}i.cA{background:#60a5fa}i.cE{background:#fbbf24}i.cX{background:#7c3aed}i.cN{background:#fff;border:1px dashed #cbd5e1}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;margin-bottom:8px;color:#475569}
 .legend i{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:3px}
 .q{display:inline-flex;width:16px;height:16px;border-radius:50%;background:#1e3a8a;color:#fff;font-size:11px;font-weight:700;align-items:center;justify-content:center;cursor:help;margin-left:4px;vertical-align:1px;user-select:none;font-style:normal}
@@ -743,7 +743,7 @@ if (typeof module !== 'undefined') module.exports = YC;
     /* 타임라인 */
     var months = c ? c.months.map(function (m) { var p = YC.P(m.s); return { label: (inp.emp === 'hire' ? YC.fmt(m.s) + '~' : p.y + '년 ' + p.m + '월'), cells: m.cells, info: m.info }; })
       : R.first.list.map(function (x) { return { label: x.m + '개월차 (' + YC.fmt(x.s) + '~)', cells: x.cells, info: x.info }; });
-    o += '<div class="card"><h2>월별 현황표 (' + (c ? '산정 대상 12개월' : '입사 후 1년') + ')</h2><div class="legend"><span><i class="cW"></i>출근</span><span><i class="cA"></i>출근간주</span><span><i class="cE"></i>제외</span><span><i class="cX"></i>결근</span><span><i class="cH"></i>휴일</span><span><i class="cN"></i>재직 아님</span></div><div class="tl">';
+    o += '<div class="card"><h2>월별 현황표 (' + (c ? '산정 대상 12개월' : '입사 후 1년') + ')</h2><div class="legend"><span><i class="cW"></i>출근</span><span><i class="cA"></i>출근간주</span><span><i class="cE"></i>제외</span><span><i class="cX"></i>결근</span><span><i class="cH"></i>토·일·공휴일</span><span><i class="cN"></i>재직 아님</span></div><div class="tl">';
     months.forEach(function (m) { o += '<div class="m"><div class="mh"><span>' + esc(m.label) + '</span><span class="tag ' + m.info.cls + '">' + esc(m.info.reason) + '</span></div>' + cellsHtml(m.cells) + '</div>'; });
     o += '</div><div class="small" style="margin-top:6px">네모 한 칸이 하루입니다. 마우스를 올리면 날짜와 사유가 보입니다.</div></div>';
     /* 내역서 */
