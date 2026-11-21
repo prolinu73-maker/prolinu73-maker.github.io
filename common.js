@@ -24,7 +24,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.5.5';
+    HUB.VERSION = '1.6.0';
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
@@ -78,8 +78,17 @@
             { file: "", label: "학교회계", soon: true,
               icon: '<path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M10 21v-5h4v5"/><path d="M12 5V2h3"/>' }
           ] },
-        { file: "labor.html", label: "노무관리",
-          icon: '<path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/>' },
+        { label: "노무관리",
+          icon: '<path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/>',
+          children: [
+            // 하위 메뉴 안에 children 을 또 넣으면 마우스를 올렸을 때 오른쪽으로 한 번 더 펼쳐집니다 (3단계)
+            { file: "labor.html", label: "정보마당",
+              icon: '<path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h8"/><path d="M8 11h6"/>',
+              children: [
+                { file: "", label: "연차 계산", soon: true,
+                  icon: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 2v4"/><path d="M16 2v4"/><path d="M8 14h3"/><path d="M8 17h6"/>' }
+              ] }
+          ] },
         { file: "Per_diem.html", label: "여비관리",
           icon: '<path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v2H3z"/><circle cx="7.5" cy="13" r="0.8"/><circle cx="16.5" cy="13" r="0.8"/><path d="M5 11h14"/>' },
         { file: "mulpum_sys.html", label: "물품관리",
@@ -393,7 +402,7 @@
         h.className = "top hub-top wrap-" + (opt.wrapAt || 1500);
         const items = HUB.MENU.map((m, i) => {
             if (m.children) {   // 하위 메뉴 묶음 → 단추 + 펼침 메뉴
-                const on = !!opt.active && m.children.some(c => c.file && c.file === opt.active);
+                const on = !!opt.active && hasFile(m.children, opt.active);
                 return `<button type="button" class="nav-item nav-group${on ? " active" : ""}" data-dd="${i}" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24">${m.icon}</svg>${m.label}<span class="nav-caret" aria-hidden="true"></span></button>`;
             }
             const on = m.file === opt.active;
@@ -406,6 +415,9 @@
         setupDropdowns(h, opt.active);
         return h;
     };
+
+    // 하위 메뉴(몇 단계든) 안에 이 파일이 있는지
+    function hasFile(list, file) { return (list || []).some(c => (c.file && c.file === file) || hasFile(c.children, file)); }
 
     // ── 상단 메뉴의 펼침(드롭다운) 메뉴 ──
     //  메뉴판은 화면 맨 위(body)에 따로 띄워서, 상단바 모양(넘침 숨김 등)에 가려지지 않게 함
@@ -427,6 +439,14 @@
 .hub-dd a.soon{color:#94A3B8}
 .hub-dd a.soon:hover,.hub-dd a.soon:focus{background:#F8FAFC;color:#64748B}
 .hub-dd .dd-soon{margin-left:auto;padding-left:12px;font-size:11.5px;font-weight:800;color:#94A3B8}
+.hub-dd .dd-sub{position:relative;display:flex;align-items:stretch}
+.hub-dd .dd-sub>a{flex:1}
+.hub-dd .dd-arrow{border:none;background:none;border-radius:8px;padding:0 10px;cursor:pointer;color:#94A3B8;font-size:12px;font-family:inherit}
+.hub-dd .dd-arrow:hover,.hub-dd .dd-sub.open>.dd-arrow{background:#EEF4FF;color:#1D4ED8}
+.hub-dd .dd-fly{position:absolute;top:-7px;left:100%;margin-left:4px;min-width:190px;background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:6px;box-shadow:0 14px 34px rgba(15,23,42,.16);display:none}
+.hub-dd .dd-sub.flip>.dd-fly{left:auto;right:100%;margin-left:0;margin-right:4px}
+.hub-dd .dd-sub:hover>.dd-fly,.hub-dd .dd-sub:focus-within>.dd-fly,.hub-dd .dd-sub.open>.dd-fly{display:block}
+.hub-dd .dd-sub::after{content:"";position:absolute;top:0;bottom:0;left:100%;width:8px}
 .hub-dd svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 @media (prefers-reduced-motion: reduce){.hub-dd,.nav-group .nav-caret{transition:none}}`;
         d.head.appendChild(st);
@@ -436,6 +456,7 @@
         clearTimeout(ddTimer);
         if (!ddOpen) return;
         ddOpen.menu.classList.remove("open");
+        ddOpen.menu.querySelectorAll(".dd-sub.open").forEach(x => x.classList.remove("open"));
         ddOpen.btn.setAttribute("aria-expanded", "false");
         ddOpen = null;
     }
@@ -458,11 +479,31 @@
             if (!m || !m.children) return;
             const menu = d.createElement("div");
             menu.className = "hub-dd"; menu.setAttribute("role", "menu");
-            menu.innerHTML = m.children.map(c => {
-                if (c.soon || !c.file) return `<a href="#" role="menuitem" class="soon" aria-disabled="true" data-soon="${HUB.esc(c.label)}"><svg viewBox="0 0 24 24">${c.icon}</svg>${HUB.esc(c.label)}<span class="dd-soon">준비 중</span></a>`;
-                const on = c.file === active;
-                return `<a href="${c.file}" role="menuitem"${on ? ' class="active" aria-current="page"' : ""}><svg viewBox="0 0 24 24">${c.icon}</svg>${HUB.esc(c.label)}</a>`;
-            }).join("");
+            const item = c => {
+                const link = (c.soon || !c.file)
+                    ? `<a href="#" role="menuitem" class="soon" aria-disabled="true" data-soon="${HUB.esc(c.label)}"><svg viewBox="0 0 24 24">${c.icon}</svg>${HUB.esc(c.label)}<span class="dd-soon">준비 중</span></a>`
+                    : `<a href="${c.file}" role="menuitem"${c.file === active ? ' class="active" aria-current="page"' : ""}><svg viewBox="0 0 24 24">${c.icon}</svg>${HUB.esc(c.label)}</a>`;
+                if (!c.children || !c.children.length) return link;
+                // 하위 메뉴가 또 있으면: 이름(누르면 이동) + ▶ 단추(누르면 펼침) + 오른쪽 펼침판
+                return `<div class="dd-sub">${link}<button type="button" class="dd-arrow" aria-label="${HUB.esc(c.label)} 하위 메뉴 펼치기" aria-haspopup="true">▶</button><div class="dd-fly" role="menu">${c.children.map(item).join("")}</div></div>`;
+            };
+            menu.innerHTML = m.children.map(item).join("");
+            menu.querySelectorAll(".dd-sub").forEach(sub => {
+                const place = () => {   // 화면 오른쪽 끝에 걸리면 왼쪽으로 펼침
+                    sub.classList.remove("flip");
+                    const fly = sub.querySelector(".dd-fly"); const prev = fly.style.display; fly.style.display = "block";
+                    if (fly.getBoundingClientRect().right > w.innerWidth - 8) sub.classList.add("flip");
+                    fly.style.display = prev;
+                };
+                sub.addEventListener("mouseenter", place);
+                sub.querySelector(".dd-arrow").addEventListener("click", e => {   // 터치 화면·키보드용
+                    e.preventDefault(); e.stopPropagation(); place();
+                    const open = !sub.classList.contains("open");
+                    menu.querySelectorAll(".dd-sub.open").forEach(x => x.classList.remove("open"));
+                    sub.classList.toggle("open", open);
+                    if (open) { const f = sub.querySelector(".dd-fly a"); if (f && e.detail === 0) f.focus(); }
+                });
+            });
             menu.querySelectorAll("a.soon").forEach(a => a.addEventListener("click", e => {
                 e.preventDefault(); ddClose();
                 HUB.toast("'" + a.dataset.soon + "' 메뉴는 준비 중입니다. 조금만 기다려 주세요.");
