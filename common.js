@@ -24,7 +24,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.6.0';
+    HUB.VERSION = '1.6.1';
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
@@ -81,13 +81,11 @@
         { label: "노무관리",
           icon: '<path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/>',
           children: [
-            // 하위 메뉴 안에 children 을 또 넣으면 마우스를 올렸을 때 오른쪽으로 한 번 더 펼쳐집니다 (3단계)
             { file: "labor.html", label: "정보마당",
-              icon: '<path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h8"/><path d="M8 11h6"/>',
-              children: [
-                { file: "", label: "연차 계산", soon: true,
-                  icon: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 2v4"/><path d="M16 2v4"/><path d="M8 14h3"/><path d="M8 17h6"/>' }
-              ] }
+              icon: '<path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h8"/><path d="M8 11h6"/>' },
+            { file: "", label: "연차 계산", soon: true,
+              icon: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 2v4"/><path d="M16 2v4"/><path d="M8 14h3"/><path d="M8 17h6"/>' }
+            // ※ 하위 메뉴 안에 children 을 또 넣으면 오른쪽으로 한 번 더 펼쳐지는 3단계 메뉴도 만들 수 있습니다
           ] },
         { file: "Per_diem.html", label: "여비관리",
           icon: '<path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v2H3z"/><circle cx="7.5" cy="13" r="0.8"/><circle cx="16.5" cy="13" r="0.8"/><path d="M5 11h14"/>' },
