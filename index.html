@@ -251,7 +251,23 @@
   .cm-form { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; padding-bottom: 22px; border-bottom: 1px dashed var(--line2); }
   .cm-form input, .cm-form textarea { padding: 11px 14px; border: 1.5px solid var(--line2); border-radius: 8px; font-family: inherit; font-size: 15px; background: #fff; }
   .cm-form input:focus, .cm-form textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
-  .cm-text { flex: 1 1 100%; height: 90px; resize: vertical; line-height: 1.5; }
+  .cm-text { flex: 1 1 100%; height: 180px; resize: vertical; line-height: 1.5; }
+  .cm-text.cm-drop { border-color: var(--accent); background: #F5F8FF; }
+  .cm-imgbar { flex: 1 1 100%; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: -4px; }
+  .cm-imgbtn { border: 1.5px solid var(--line2); background: #fff; border-radius: 8px; padding: 8px 13px; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--sub); cursor: pointer; }
+  .cm-imgbtn:hover { border-color: var(--accent); color: var(--accent); }
+  .cm-thumbs { flex: 1 1 100%; display: flex; gap: 10px; flex-wrap: wrap; }
+  .cm-thumbs:empty { display: none; }
+  .cm-thumb { position: relative; width: 120px; height: 90px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line2); background: #F1F5F9; }
+  .cm-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cm-thumb button { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; border: none; background: rgba(15,23,42,.75); color: #fff; font-size: 11px; cursor: pointer; }
+  .cm-thumb .sz { position: absolute; left: 4px; bottom: 4px; font-size: 10.5px; font-weight: 700; color: #fff; background: rgba(15,23,42,.6); border-radius: 4px; padding: 1px 5px; }
+  .cm-pimgs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .cm-pimgs img { max-width: 240px; max-height: 180px; border-radius: 8px; border: 1px solid var(--line2); cursor: zoom-in; object-fit: cover; }
+  .cm-lightbox { position: fixed; inset: 0; z-index: 3000; background: rgba(15,23,42,.85); display: flex; align-items: center; justify-content: center; padding: 24px; cursor: zoom-out; }
+  .cm-lightbox[hidden] { display: none; }
+  .cm-lightbox img { max-width: 100%; max-height: 100%; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,.5); background: #fff; }
+  .cm-lb-x { position: absolute; top: 16px; right: 20px; color: #fff; font-weight: 800; font-size: 14px; }
   #cmLinkGroup { flex: 1 1 100%; }
   #cmPostLink { width: 100%; background: #F5F8FF; font-weight: 600; }
   .cm-hint { display: block; margin-top: 6px; font-size: 12.5px; color: #64748b; line-height: 1.5; }
@@ -283,6 +299,7 @@
   .cm-fav.on { background: #FEF3C7; color: #92400E; }
   .cm-file { display: inline-block; margin: 10px 5px 0 0; padding: 5px 12px; background: var(--accent-soft); color: #1E3A8A; font-size: 13px; border-radius: 8px; text-decoration: none; font-weight: 800; border: 1px solid #BFD3FB; }
   .cm-file:hover { background: var(--accent); color: #fff; }
+  #cmEditModal .cm-thumbs { margin-bottom: 8px; }
   .cm-img { max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--line2); display: block; cursor: zoom-in; }
   .cm-admin { background: #fef08a; color: #854d0e; padding: 2px 7px; border-radius: 12px; font-size: 10.5px; font-weight: 900; margin-left: 4px; vertical-align: middle; }
   .cm-q { color: #ec4899; font-weight: 900; margin-right: 5px; }
@@ -469,7 +486,13 @@
   </div>
   <div class="cm-box">
     <div class="cm-form" id="cmForm">
-      <textarea id="cmPostText" class="cm-text" placeholder="새로운 업무 노하우나 질문을 자유롭게 작성해주세요!" autocomplete="off" maxlength="5000"></textarea>
+      <textarea id="cmPostText" class="cm-text" placeholder="새로운 업무 노하우나 질문을 자유롭게 작성해주세요!&#10;🖼️ 캡처한 화면은 여기에 Ctrl+V로 바로 붙여 넣을 수 있어요 (회원 · 최대 3장)" autocomplete="off" maxlength="5000"></textarea>
+      <div class="cm-imgbar">
+        <button type="button" class="cm-imgbtn" onclick="CM.pickImages('new')">🖼️ 이미지 넣기</button>
+        <span class="cm-hint" style="margin:0">또는 글 입력칸에 <b>Ctrl+V</b>로 붙여 넣기 · 최대 3장 · 자동으로 줄여서 올려요</span>
+        <input type="file" id="cmImgFile" accept="image/*" multiple hidden onchange="CM.onFiles(event)">
+      </div>
+      <div id="cmImgPreview" class="cm-thumbs"></div>
       <div id="cmLinkGroup" class="cm-member-only">
         <input type="text" id="cmPostLink" placeholder="🔗 파일 공유 링크 (구글드라이브·네이버 MYBOX 등) 붙여넣기 — 첨부할 파일이 없으면 비워 두세요" autocomplete="off">
         <small class="cm-hint">📎 파일 올리는 법: 구글드라이브에 파일 올리기 → 파일에서 마우스 오른쪽 <b>[공유] → [링크 복사]</b> (일반 액세스를 <b>'링크가 있는 모든 사용자'</b>로 바꿔야 다른 사람이 열 수 있어요) → 위 칸에 붙여넣기</small>
@@ -491,6 +514,9 @@
   </div>
 </section>
 
+<!-- 이미지 크게 보기 -->
+<div id="cmLightbox" class="cm-lightbox" hidden onclick="this.hidden=true" role="dialog" aria-label="이미지 크게 보기"><img id="cmLightImg" alt="첨부 이미지 크게 보기"><span class="cm-lb-x">✖ 닫기</span></div>
+
 <!-- 커뮤니티 글 수정 창 -->
 <div id="cmEditModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cmEditTitle">
   <div class="modal-content cm-edit">
@@ -498,6 +524,9 @@
     <label class="ct-label" for="cmEditText">내용</label>
     <textarea id="cmEditText" rows="6" maxlength="5000"></textarea>
     <div id="cmEditLinkWrap"><label class="ct-label" for="cmEditLink">파일 공유 링크 <small>없으면 비워 두세요</small></label><input id="cmEditLink" placeholder="https://..."></div>
+    <span class="ct-label">이미지 <small>최대 3장 · 아래 버튼 또는 내용 칸에 Ctrl+V</small></span>
+    <div id="cmEditImgs" class="cm-thumbs"></div>
+    <button type="button" class="cm-imgbtn" style="margin:0 0 12px" onclick="CM.pickImages('edit')">🖼️ 이미지 넣기</button>
     <div id="cmEditFilesWrap" hidden><span class="ct-label">예전 첨부파일 <small>'빼기'를 누른 파일은 저장할 때 목록에서 지워져요</small></span><div id="cmEditFiles" class="cm-efiles"></div></div>
     <p class="ct-msg" id="cmEditMsg" role="alert"></p>
     <div class="ct-row"><button type="button" class="ct-send" id="cmEditSave" onclick="CM.saveEdit()">수정 저장</button><button type="button" class="ct-close" onclick="CM.closeEdit()">취소</button></div>
@@ -1736,6 +1765,10 @@ window.CM = (function () {
   const FAV_LINK = { freeBoard: 'index.html#free', qaBoard: 'index.html#qa', dataBoard: 'index.html#data' };
   const ROWS = {};
   let db = null, tab = 'freeBoard', favs = [], editing = null;
+  // 글에 넣을 이미지 (회원 전용): 브라우저에서 줄이고 압축해 글과 함께 저장 (무료 요금제용, 파일 저장소 안 씀)
+  const MAX_IMGS = 3, MAX_BYTES = 250 * 1024, MAX_SIDE = 1280;
+  let newImgs = [];   // 새 글에 넣을 이미지 (data URL)
+  const okImg = u => /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/]+=*$/.test(u || '') && u.length <= 400000;
   const $ = id => document.getElementById(id);
   const E = s => HUB.esc(s == null ? '' : s);
   const me = () => HUB.getUser();
@@ -1807,6 +1840,63 @@ window.CM = (function () {
     } catch (e) { console.error(e); alert('즐겨찾기를 저장하지 못했습니다.'); }
   }
 
+  // ── 이미지 넣기 (Ctrl+V · 끌어 놓기 · 버튼) ──
+  function loadImg(file) {
+    return new Promise((res, rej) => { const url = URL.createObjectURL(file), im = new Image();
+      im.onload = () => { URL.revokeObjectURL(url); res(im); }; im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('이미지를 읽지 못했습니다')); }; im.src = url; });
+  }
+  async function shrink(file) {
+    const im = await loadImg(file);
+    let w = im.naturalWidth, h = im.naturalHeight, side = MAX_SIDE, q = 0.82, out = '';
+    for (let tries = 0; tries < 8; tries++) {
+      const r = Math.min(1, side / Math.max(w, h)), cw = Math.max(1, Math.round(w * r)), ch = Math.max(1, Math.round(h * r));
+      const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+      const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cw, ch); g.drawImage(im, 0, 0, cw, ch);
+      out = c.toDataURL('image/jpeg', q);
+      if (out.length * 0.75 <= MAX_BYTES) return out;
+      if (q > 0.6) q -= 0.1; else side = Math.round(side * 0.8);
+    }
+    return out.length * 0.75 <= MAX_BYTES * 1.4 ? out : '';
+  }
+  let pickTarget = 'new';
+  function pickImages(target) {
+    if (memberOnly('이미지 넣기는')) return;
+    pickTarget = target; $('cmImgFile').value = ''; $('cmImgFile').click();
+  }
+  async function addImageFiles(files, target) {
+    files = [...files].filter(f => f && /^image\//.test(f.type));
+    if (!files.length) return false;
+    if (memberOnly('이미지 넣기는')) return true;
+    const list = target === 'edit' ? editing.images : newImgs;
+    let added = 0;
+    for (const f of files) {
+      if (list.length >= MAX_IMGS) { alert(`이미지는 글 1개에 ${MAX_IMGS}장까지 넣을 수 있어요.`); break; }
+      if (f.size > 20 * 1024 * 1024) { alert(`${f.name || '이미지'}가 너무 큽니다 (20MB 넘음).`); continue; }
+      try { const d = await shrink(f); if (d) { list.push(d); added++; } else alert('이미지를 충분히 줄이지 못했어요. 더 작은 이미지를 써 주세요.'); }
+      catch (e) { alert('이미지를 읽지 못했습니다. 다른 이미지를 써 주세요.'); }
+    }
+    drawThumbs(target);
+    return true;
+  }
+  function onFiles(ev) { addImageFiles(ev.target.files, pickTarget); ev.target.value = ''; }
+  function drawThumbs(target) {
+    const list = target === 'edit' ? (editing ? editing.images : []) : newImgs;
+    const box = $(target === 'edit' ? 'cmEditImgs' : 'cmImgPreview');
+    box.innerHTML = list.map((d, i) => `<div class="cm-thumb"><img src="${d}" alt="넣은 이미지 ${i + 1}"><span class="sz">${Math.round(d.length * 0.75 / 1024)}KB</span><button type="button" title="이 이미지 빼기" onclick="CM.dropImg('${target}',${i})">✖</button></div>`).join('');
+  }
+  function dropImg(target, i) { (target === 'edit' ? editing.images : newImgs).splice(i, 1); drawThumbs(target); }
+  // 붙여 넣기(Ctrl+V)와 끌어 놓기를 입력칸에 연결
+  function wireImageInput(el, target) {
+    el.addEventListener('paste', ev => {
+      const files = [...((ev.clipboardData && ev.clipboardData.items) || [])].filter(it => it.kind === 'file' && /^image\//.test(it.type)).map(it => it.getAsFile());
+      if (files.length) { ev.preventDefault(); addImageFiles(files, target); }   // 글자는 그대로 붙여 넣어짐
+    });
+    el.addEventListener('dragover', ev => { if ([...ev.dataTransfer.types].includes('Files')) { ev.preventDefault(); el.classList.add('cm-drop'); } });
+    el.addEventListener('dragleave', () => el.classList.remove('cm-drop'));
+    el.addEventListener('drop', ev => { el.classList.remove('cm-drop'); if (ev.dataTransfer.files.length) { ev.preventDefault(); addImageFiles(ev.dataTransfer.files, target); } });
+  }
+  function zoom(img) { $('cmLightImg').src = img.src; $('cmLightbox').hidden = false; }
+
   // ── 게시판 고르기 ──
   function switchTab(name, keepForm) {
     const target = BOARDS[name] || 'freeBoard';
@@ -1837,9 +1927,11 @@ window.CM = (function () {
       const fl = safeUrl(p.fileLink); if (fl) files += `<br><a href="${E(fl)}" target="_blank" rel="noopener" class="cm-file">🔗 첨부 파일 열기</a>`;
       (p.attachments || []).forEach(a => {
         const au = safeUrl(a.url); if (!au) return;
-        files += a.type === 'image' ? `<br><img src="${E(au)}" class="cm-img" alt="첨부 이미지" onclick="window.open(this.src,'_blank','noopener')">`
+        files += a.type === 'image' ? `<br><img src="${E(au)}" class="cm-img" alt="첨부 이미지" onclick="CM.zoom(this)">`
                                     : `<br><a href="${E(au)}" target="_blank" rel="noopener" class="cm-file" download>📎 ${E(a.name)} 다운로드</a>`;
       });
+      const imgs = (p.images || []).filter(okImg);
+      if (imgs.length) files += `<div class="cm-pimgs">${imgs.map((d, k) => `<img src="${d}" alt="첨부 이미지 ${k + 1}" loading="lazy" onclick="CM.zoom(this)">`).join('')}</div>`;
       const can = admin || isMine(p) || p.authorPhone === 'guest';
       const guestInputs = u ? '' : `<input type="text" id="cm-ca-${id}" class="cm-c-small" placeholder="이름" autocomplete="off" maxlength="30"><input type="password" id="cm-cp-${id}" class="cm-c-small" placeholder="🔒 비번" autocomplete="new-password">`;
       return `<tr>
@@ -1870,17 +1962,24 @@ window.CM = (function () {
     const t = $('cmPostText'), l = $('cmPostLink'), a = $('cmAuthor'), pw = $('cmGuestPw'), btn = $('cmSubmit'), st = $('cmStatus');
     const u = me();
     if (!db) return alert('서버에 연결하는 중입니다. 잠시 후 다시 눌러 주세요.');
-    if (!t.value.trim()) { t.focus(); return alert('내용을 입력해주세요!'); }
+    if (!t.value.trim() && !newImgs.length) { t.focus(); return alert('내용을 입력해주세요!'); }
+    if (newImgs.length && memberOnly('이미지 넣기는')) return;
     if (!u && !pw.value.trim()) { pw.focus(); return alert('게스트로 쓸 때는 삭제용 비밀번호를 넣어 주세요.'); }
     if (l.value.trim() && memberOnly('파일 공유 링크는')) return;
     if (l.value.trim() && !safeUrl(l.value)) return alert('파일 공유 링크 주소를 확인해 주세요.');
     btn.disabled = true; st.hidden = false;
     const d = new Date();
-    const data = Object.assign({ title: t.value, author: (u ? u.name : a.value.trim()) || '익명', date: `${d.getMonth() + 1}.${d.getDate()}`, likes: 0, attachments: [],
+    const data = Object.assign({ title: t.value.trim() ? t.value : '(이미지)', author: (u ? u.name : a.value.trim()) || '익명', date: `${d.getMonth() + 1}.${d.getDate()}`, likes: 0, attachments: [],
       createdAt: firebase.firestore.FieldValue.serverTimestamp() }, await authorFields(pw.value.trim()));
     if (l.value.trim()) { const f = safeUrl(l.value); if (f) data.fileLink = f; }
-    try { await db.collection(tab).add(data); t.value = ''; l.value = ''; pw.value = ''; loadPosts(); }
-    catch (e) { console.error('게시물 등록 오류:', e); alert('등록 중 오류가 발생했습니다. (' + (e.code || e.message) + ')'); }
+    if (newImgs.length) data.images = newImgs.slice(0, MAX_IMGS);
+    try { await db.collection(tab).add(data); t.value = ''; l.value = ''; pw.value = ''; newImgs = []; drawThumbs('new'); loadPosts(); }
+    catch (e) {
+      console.error('게시물 등록 오류:', e);
+      alert(/permission/i.test(String(e.code || e.message)) && data.images
+        ? '등록하지 못했습니다. Firebase 보안 규칙이 이미지(images) 항목을 막고 있을 수 있어요. 관리자에게 알려 주세요. (' + (e.code || e.message) + ')'
+        : '등록 중 오류가 발생했습니다. (' + (e.code || e.message) + ')');
+    }
     finally { btn.disabled = false; st.hidden = true; }
   }
 
@@ -1954,13 +2053,13 @@ window.CM = (function () {
   async function editPost(id) {
     const right = await canTouch(ROWS[tab + '/' + id], '글'); if (!right) return;
     const s = await db.collection(tab).doc(id).get(); if (!s.exists) return alert('글을 찾을 수 없습니다. 이미 지워졌을 수 있어요.');
-    editing = { col: tab, id, data: s.data(), right, removed: new Set() };
+    editing = { col: tab, id, data: s.data(), right, removed: new Set(), images: (s.data().images || []).filter(okImg) };
     $('cmEditTitle').textContent = `${NAMES[tab]} 글 수정`;
     $('cmEditText').value = editing.data.title || '';
     $('cmEditLink').value = editing.data.fileLink || '';
     $('cmEditLinkWrap').hidden = right === 'guest';   // 링크는 회원 전용
     $('cmEditFilesWrap').hidden = !(editing.data.attachments && editing.data.attachments.length);
-    drawFiles(); $('cmEditMsg').textContent = '';
+    drawFiles(); drawThumbs('edit'); $('cmEditMsg').textContent = '';
     $('cmEditModal').style.display = 'flex'; setTimeout(() => $('cmEditText').focus(), 50);
   }
   function drawFiles() {
@@ -1972,8 +2071,13 @@ window.CM = (function () {
   function closeEdit() { $('cmEditModal').style.display = 'none'; editing = null; }
   async function saveEdit() {
     const e = editing; if (!e) return; const msg = t => { $('cmEditMsg').textContent = t; }, btn = $('cmEditSave');
-    const text = $('cmEditText').value.trim(); if (!text) return msg('내용을 입력해 주세요.');
-    const upd = { title: text };
+    const text = $('cmEditText').value.trim(); if (!text && !e.images.length) return msg('내용을 입력해 주세요.');
+    const upd = { title: text || '(이미지)' };
+    const oldImgs = (e.data.images || []).filter(okImg);
+    if (JSON.stringify(oldImgs) !== JSON.stringify(e.images)) {
+      if (e.right === 'guest' && e.images.length > oldImgs.length) return msg('이미지 넣기는 회원만 할 수 있어요.');
+      upd.images = e.images.slice(0, MAX_IMGS);
+    }
     if (e.right !== 'guest') {
       const raw = $('cmEditLink').value.trim();
       if (raw && !safeUrl(raw)) return msg('파일 공유 링크 주소를 확인해 주세요.');
@@ -2003,6 +2107,9 @@ window.CM = (function () {
   document.addEventListener('DOMContentLoaded', async () => {
     updateForm();
     $('cmEditModal').addEventListener('mousedown', ev => { if (ev.target.id === 'cmEditModal') closeEdit(); });
+    wireImageInput($('cmPostText'), 'new');
+    wireImageInput($('cmEditText'), 'edit');
+    document.addEventListener('keydown', ev => { if (ev.key === 'Escape') $('cmLightbox').hidden = true; });
     if (!(await HUB.firebaseReady())) { $('cmBody').innerHTML = `<tr><td colspan="5" class="center cm-empty">서버에 연결하지 못했습니다. 새로고침해 주세요.</td></tr>`; return; }
     db = HUB.db();
     await loadFavs();
@@ -2012,7 +2119,7 @@ window.CM = (function () {
   });
   HUB.onUserChange(async () => { updateForm(); if (db) { await loadFavs(); loadPosts(); } });
 
-  return { switchTab, addPost, likePost, deletePost, editPost, saveEdit, closeEdit, toggleFile, toggleComments, addComment, editComment, deleteComment, toggleFav, reload: loadPosts };
+  return { pickImages, onFiles, dropImg, zoom, switchTab, addPost, likePost, deletePost, editPost, saveEdit, closeEdit, toggleFile, toggleComments, addComment, editComment, deleteComment, toggleFav, reload: loadPosts };
 })();
 </script>
 
