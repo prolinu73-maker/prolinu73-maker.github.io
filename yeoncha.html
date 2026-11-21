@@ -125,7 +125,7 @@ i.cH{background:#b91c1c}i.cW{background:#86efac}i.cA{background:#60a5fa}i.cE{bac
     </div>
   </div>
   <div class="nav">
-    <div class="visit-box" id="visitBox" title="사이트 모든 페이지 기준 · 한 사람(브라우저)은 하루 1번만 셉니다">
+    <div class="visit-box" id="visitBox" title="연차 계산 페이지를 방문한 사람 수 · 한 사람(브라우저)은 하루 1번만 셉니다">
       <span>오늘 접속자 <b id="vToday">…</b></span><span class="sep">|</span><span>누적 접속자 <b id="vTotal">…</b></span>
       <span class="vmsg" id="vMsg" hidden></span>
     </div>
@@ -637,59 +637,86 @@ if (typeof module !== 'undefined') module.exports = YC;
 
   try { window.HUB.mountHomeButton(); } catch (e) { }
 
-  /* ---------- 접속자 수 (오늘 · 누적) ----------
-     · 세는 일: common.js(HUB.visitors)가 모든 페이지에서 자동으로 함 (한 브라우저 하루 1번, 관리자 브라우저 제외)
-     · 여기서는 저장된 숫자를 읽어 보여 줌
-       - 페이지를 열자마자 바로 한 번 읽고, 세기가 끝나면 다시 읽음 (세기가 늦어져도 숫자는 먼저 보임)
-       - 8초 안에 답이 없으면 실패로 보고 3초·10초 뒤 다시 시도
-       - common.js의 읽기 기능이 없으면 같은 주소(HUB.FIREBASE_CONFIG)로 직접 읽음
-       - 끝내 못 읽으면 칸을 숨기지 않고 이유를 보여 줌 */
+  /* ---------- 이 페이지(연차 계산)만의 접속자 수 (오늘 · 누적) ----------
+     · 저장 위치: Firebase  stats / page_yeoncha  { total, todayCount, todayDate }
+       → 사이트 전체 숫자(index.html 첫 화면, stats/visitors)와 따로 셈
+     · 한 브라우저는 이 페이지를 하루 1번만 셈 (새로고침·다시 열기는 세지 않음). 날짜(한국 시간)가 바뀌면 오늘 숫자는 1부터
+     · 관리자로 로그인한 적이 있는 브라우저는 세지 않음
+     · 페이지를 열자마자 숫자를 먼저 보여 주고, 세기가 끝나면 새 숫자로 바꿈. 1분마다 다시 읽음
+     · 못 읽으면 칸을 숨기지 않고 이유를 보여 줌 (403 = Firebase 보안 규칙에 page_yeoncha 허용 필요)
+     ※ Firebase 보안 규칙의 페이지별 접속자 칸 목록(page_perdiem, page_hobong …)에 'page_yeoncha'를 추가해야 동작함 */
   (function () {
-    var box = $('visitBox'), msgEl = $('vMsg'), tries = 0, okOnce = false, timer = null;
-    var H = window.HUB || {}, V = H.visitors, C = H.FIREBASE_CONFIG;
-    function say(t, retryBtn) {
+    var PAGE_DOC = 'page_yeoncha', DAY_KEY = 'hubVisitDay_yeoncha';
+    var box = $('visitBox'), msgEl = $('vMsg'), okOnce = false, why = '';
+    var BASE_TITLE = '연차 계산 페이지를 방문한 사람 수 · 한 사람(브라우저)은 하루 1번만 셉니다';
+    var H = window.HUB || {}, C = H.FIREBASE_CONFIG;
+    function say(t, retry) {
       msgEl.hidden = !t; msgEl.textContent = t || '';
-      if (t && retryBtn) { var b = document.createElement('button'); b.type = 'button'; b.textContent = '다시 시도'; b.onclick = function () { tries = 0; load(); }; msgEl.appendChild(document.createTextNode(' ')); msgEl.appendChild(b); }
+      if (t && retry) { var b = document.createElement('button'); b.type = 'button'; b.textContent = '다시 시도'; b.onclick = function () { say(''); show(); }; msgEl.appendChild(document.createTextNode(' ')); msgEl.appendChild(b); }
     }
-    function put(v) {
-      okOnce = true;
-      $('vToday').textContent = (Number(v.todayCount) || 0).toLocaleString('ko-KR');
-      $('vTotal').textContent = (Number(v.total) || 0).toLocaleString('ko-KR');
-      say('');
-    }
-    function kstToday() { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }
-    function num(x) { return x ? Number(x.integerValue != null ? x.integerValue : (x.doubleValue || 0)) : 0; }
-    function directRead() {   /* common.js에 읽기 기능이 없을 때 */
-      var url = 'https://firestore.googleapis.com/v1/projects/' + C.projectId + '/databases/(default)/documents/stats/visitors?key=' + C.apiKey;
-      return fetch(url).then(function (r) { if (r.status === 404) return { fields: {} }; if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .then(function (j) { var f = j.fields || {}, td = f.todayDate ? f.todayDate.stringValue : ''; return { total: num(f.total), todayCount: td === kstToday() ? num(f.todayCount) : 0 }; });
-    }
-    function readOnce() {
-      var p = (V && typeof V.read === 'function') ? V.read() : directRead();
-      var limit = new Promise(function (_, rej) { setTimeout(function () { rej(new Error('응답 없음(8초)')); }, 8000); });
-      return Promise.race([p, limit]);
-    }
-    function load() {
-      clearTimeout(timer);
-      readOnce().then(put).catch(function (err) {
-        try { console.log('접속자 수 불러오기 실패:', err); } catch (e) { }
-        tries++;
-        if (tries < 3) { timer = setTimeout(load, tries === 1 ? 3000 : 10000); return; }
-        if (!okOnce) { $('vToday').textContent = '-'; $('vTotal').textContent = '-'; }
-        box.title = '접속자 수를 불러오지 못했습니다: ' + (err && err.message ? err.message : err);
-        say(navigator.onLine === false ? '(인터넷 연결 안 됨)' : '(불러오지 못함)', true);
-      });
-    }
-    if (!C || typeof fetch !== 'function') {
-      /* common.js를 못 불러온 경우: 파일만 따로 열었거나, common.js가 같은 폴더에 없음 */
+    if (!C || !C.projectId || typeof fetch !== 'function') {
+      /* common.js를 못 불러온 경우: 파일만 따로 열었거나, common.js가 같은 폴더에 없음 → 세지도 읽지도 않음 */
       $('vToday').textContent = '-'; $('vTotal').textContent = '-';
       box.title = 'common.js를 불러오지 못해 접속자 수를 알 수 없습니다. yeoncha.html을 common.js·index.html과 같은 폴더(허브 사이트)에 올려서 열어 주세요.';
       say(location.protocol === 'file:' ? '(허브 사이트에서 열면 표시됩니다)' : '(common.js를 찾지 못했습니다)');
       return;
     }
-    load();                                                           /* 바로 한 번 */
-    if (V && V.ready && V.ready.then) V.ready.then(function (counted) { if (counted) { tries = 0; load(); } }, function () { });   /* 방금 세었으면 새 숫자로 */
-    setInterval(function () { if (!document.hidden && okOnce) { tries = 2; load(); } }, 60000);
+    var API = 'https://firestore.googleapis.com/v1/', ROOT = 'projects/' + C.projectId + '/databases/(default)/documents', DOC = ROOT + '/stats/' + PAGE_DOC;
+    function today() { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }   /* 한국 시간 기준 */
+    function num(x) { return x ? Number(x.integerValue != null ? x.integerValue : (x.doubleValue || 0)) : 0; }
+    function isAdmin() { try { if (H.isAdminDevice) return !!H.isAdminDevice(); return localStorage.getItem('hubAdminDevice') === '1'; } catch (e) { return false; } }
+    function withLimit(p) { return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { rej(new Error('응답 없음(8초)')); }, 8000); })]); }
+    function getDoc() {
+      return withLimit(fetch(API + DOC + '?key=' + C.apiKey).then(function (r) {
+        if (r.status === 404) return { fields: {} };                       /* 아직 아무도 안 세어 칸이 없음 → 0명 */
+        if (!r.ok) { var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
+        return r.json();
+      }));
+    }
+    function put(f) {
+      var td = f.todayDate ? f.todayDate.stringValue : '';
+      okOnce = true;
+      $('vToday').textContent = (td === today() ? num(f.todayCount) : 0).toLocaleString('ko-KR');
+      $('vTotal').textContent = num(f.total).toLocaleString('ko-KR');
+      box.title = BASE_TITLE + (why ? '\n' + why : '');
+      say('');
+    }
+    function fail(e) {
+      try { console.log('접속자 수 오류:', e); } catch (x) { }
+      if (!okOnce) { $('vToday').textContent = '-'; $('vTotal').textContent = '-'; }
+      if (e && e.status === 403) {
+        box.title = "접속자 수를 표시할 수 없습니다: Firebase 보안 규칙에 stats/page_yeoncha 허용이 필요합니다 (규칙의 page_perdiem·page_hobong 옆에 'page_yeoncha' 추가)";
+        say('(Firebase 규칙에 page_yeoncha 추가 필요)');
+      } else {
+        box.title = '접속자 수를 불러오지 못했습니다: ' + (e && e.message ? e.message : e);
+        say(navigator.onLine === false ? '(인터넷 연결 안 됨)' : '(불러오지 못함)', true);
+      }
+    }
+    function show() { return getDoc().then(function (j) { put(j.fields || {}); }).catch(fail); }
+    function count() {
+      var t = today();
+      if (isAdmin()) { why = '※ 관리자로 로그인한 적이 있는 브라우저라서 이 접속은 세지 않습니다.'; return Promise.resolve(false); }
+      try { if (localStorage.getItem(DAY_KEY) === t) { why = '※ 이 브라우저는 오늘 이미 세었습니다(하루 1번).'; return Promise.resolve(false); } } catch (e) { return Promise.resolve(false); }
+      try { localStorage.setItem(DAY_KEY, t); } catch (e) { }              /* 먼저 표시 → 창을 여러 개 열어도 한 번만 */
+      return getDoc().then(function (j) {
+        var f = j.fields || {}, saved = f.todayDate ? f.todayDate.stringValue : '', newDay = !saved || t > saved;
+        var fields = { todayDate: { stringValue: newDay ? t : saved } }, mask = ['todayDate'];
+        var tr = [{ fieldPath: 'total', increment: { integerValue: '1' } }];   /* 서버에서 1을 더함 (동시 접속에도 안 빠짐) */
+        if (newDay) { fields.todayCount = { integerValue: '1' }; mask.push('todayCount'); }
+        else tr.push({ fieldPath: 'todayCount', increment: { integerValue: '1' } });
+        return withLimit(fetch(API + ROOT + ':commit?key=' + C.apiKey, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ writes: [{ update: { name: DOC, fields: fields }, updateMask: { fieldPaths: mask }, updateTransforms: tr }] }) }))
+          .then(function (r) { if (!r.ok) { var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; } why = '✔ 방금 이 접속을 1명으로 셌습니다.'; return true; });
+      }).catch(function (e) {
+        try { localStorage.removeItem(DAY_KEY); } catch (x) { }            /* 실패하면 다음에 다시 세도록 */
+        why = '※ 이 접속을 세지 못했습니다' + (e && e.status === 403 ? ' (Firebase 보안 규칙 확인 필요).' : '.');
+        try { console.log('접속자 수 저장 실패:', e); } catch (x) { }
+        return false;
+      });
+    }
+    show();                                                                /* 숫자를 먼저 보여 주고 */
+    count().then(function (counted) { if (counted || !okOnce) show(); else box.title = BASE_TITLE + (why ? '\n' + why : ''); });   /* 세었으면 새 숫자로 */
+    setInterval(function () { if (!document.hidden) show(); }, 60000);
   })();
 
   /* ---------- 입력 수집 ---------- */
