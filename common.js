@@ -24,7 +24,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = '1.6.2';
+    HUB.VERSION = '1.6.3';
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
@@ -60,6 +60,8 @@
     // 상단 메뉴 (순서대로 표시). 메뉴를 추가하려면 여기에 한 줄을 넣으세요.
     //   file: 이동할 파일, label: 메뉴 이름, icon: 그림(24×24 SVG 안쪽 모양)
     HUB.MENU = [
+        { file: "lawsearch.html", label: "법령ㆍ판례",
+          icon: '<path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/>' },
         // 하위 메뉴가 있는 묶음: children 에 넣으면 마우스를 올렸을 때 아래로 펼쳐집니다
         { label: "인사ㆍ복무",
           icon: '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 11h5"/><path d="M16 15h5"/><path d="M16 7h5"/>',
@@ -103,8 +105,6 @@
             { file: "facility.html", label: "시설공사 공고문 작성",
               icon: '<path d="M2 20h20"/><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M8 10h8"/>' }
           ] },
-        { file: "lawsearch.html", label: "법령ㆍ판례",
-          icon: '<path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h5"/>' },
         { file: "apps.html", label: "스마트 업무도구",
           icon: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>' },
         { file: "index.html#community", label: "커뮤니티 라운지",

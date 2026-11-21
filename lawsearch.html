@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>법령ㆍ판례 검색 (lawsearch)</title>
 <link rel="stylesheet" href="common.css?v=10">
-<script src="common.js?v=22"></script>
+<script src="common.js?v=23"></script>
 <script>
 /* common.js를 못 불러온 경우(파일만 따로 열었을 때)에도 '메인 허브' 버튼은 보이게 함 */
 if (!window.HUB) {
@@ -144,7 +144,7 @@ details.ls-more summary{cursor:pointer;font-weight:700;color:#1e3a8a}
     </div>
   </div>
   <div class="nav">
-    <div class="visit-box" id="visitBox" title="허브 사이트 전체 접속자 수" hidden>
+    <div class="visit-box" id="visitBox" title="법령ㆍ판례 검색 페이지 기준 · 한 사람(브라우저)은 하루 1번만 셉니다">
       <span>오늘 접속자 <b id="vToday">…</b></span><span class="sep">|</span><span>누적 접속자 <b id="vTotal">…</b></span>
     </div>
   </div>
@@ -893,16 +893,52 @@ details.ls-more summary{cursor:pointer;font-weight:700;color:#1e3a8a}
      9. 처음 열릴 때
      ===================================================================== */
   try { window.HUB.mountHomeButton(); } catch (e) { }
-  /* 접속자 수: 허브 사이트 전체 숫자를 읽어서 보여 줌 (common.js가 있을 때만) */
-  try {
-    if (window.HUB && HUB.visitors && typeof HUB.visitors.read === 'function') {
-      HUB.visitors.read().then(function (v) {
-        $('vToday').textContent = Number(v.todayCount || 0).toLocaleString();
-        $('vTotal').textContent = Number(v.total || 0).toLocaleString();
-        $('visitBox').hidden = false;
-      }).catch(function () { });
+  /* 접속자 수: 이 페이지(법령ㆍ판례 검색)만의 오늘·누적 접속자 수
+     - 저장 위치: Firebase stats/page_lawsearch { total, todayCount, todayDate } (사이트 전체 숫자와 따로 셈)
+     - 한 사람(브라우저)은 이 페이지를 하루 1번만 셈 (새로고침·재방문해도 1명), 관리자 브라우저는 세지 않음
+     - 숫자를 못 읽으면 '-'로 두고 마우스를 올리면 이유를 알려 줌
+     - 사이트 전체 접속자 수는 common.js가 따로 셈 (첫 화면 index.html에 표시) */
+  (function () {
+    var C = (window.HUB && HUB.FIREBASE_CONFIG) || { apiKey: 'AIzaSyCRmZ-OJKGhw0gOmTT63CE2T9e8kSD9dYw', projectId: 'prolinu73-6c409' };
+    var BASE = 'projects/' + C.projectId + '/databases/(default)/documents';
+    var DOC = BASE + '/stats/page_lawsearch';
+    var API = 'https://firestore.googleapis.com/v1/';
+    var DAY_KEY = 'hubVisitDay_lawsearch';
+    var today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);   // 한국 시간 기준 오늘
+    var num = function (x) { return x ? Number(x.integerValue != null ? x.integerValue : (x.doubleValue || 0)) : 0; };
+    function put(t, n) { $('vToday').textContent = Number(t || 0).toLocaleString(); $('vTotal').textContent = Number(n || 0).toLocaleString(); }
+    function fail(e) {
+      $('vToday').textContent = '-'; $('vTotal').textContent = '-';
+      $('visitBox').title = '접속자 수를 불러오지 못했습니다 (인터넷 또는 Firebase 보안 규칙 확인)';
+      try { console.log('접속자 수 불러오기 실패', e); } catch (x) { }
     }
-  } catch (e) { }
+    function readDoc() {
+      return fetch(API + DOC + '?key=' + C.apiKey)
+        .then(function (r) { return r.status === 404 ? { fields: {} } : (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))); })
+        .then(function (j) { return j.fields || {}; });
+    }
+    function isAdminDevice() { try { return (window.HUB && HUB.isAdminDevice) ? HUB.isAdminDevice() : localStorage.getItem('hubAdminDevice') === '1'; } catch (e) { return true; } }
+    // 하루 1번 세기: 서버에서 1을 더함(동시 접속에도 빠지지 않음), 날짜가 바뀌었으면 오늘 수를 1부터
+    function count(f) {
+      var done = false; try { done = localStorage.getItem(DAY_KEY) === today; } catch (e) { done = true; }
+      if (done || isAdminDevice()) return Promise.resolve(f);
+      try { localStorage.setItem(DAY_KEY, today); } catch (e) { }
+      var saved = f.todayDate ? f.todayDate.stringValue : '';
+      var newDay = !saved || today > saved;
+      var fields = { todayDate: { stringValue: newDay ? today : saved } }, mask = ['todayDate'];
+      var tr = [{ fieldPath: 'total', increment: { integerValue: '1' } }];
+      if (newDay) { fields.todayCount = { integerValue: '1' }; mask.push('todayCount'); }
+      else tr.push({ fieldPath: 'todayCount', increment: { integerValue: '1' } });
+      var body = { writes: [{ update: { name: DOC, fields: fields }, updateMask: { fieldPaths: mask }, updateTransforms: tr }] };
+      return fetch(API + BASE + ':commit?key=' + C.apiKey, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .then(function (r) { if (!r.ok) return r.text().then(function (t) { throw new Error(r.status + ' ' + t); }); return readDoc(); })
+        .catch(function (e) { try { localStorage.removeItem(DAY_KEY); } catch (x) { } try { console.log('접속자 수 저장 실패', e); } catch (x) { } return f; });
+    }
+    readDoc().then(count).then(function (f) {
+      var sameDay = f.todayDate && f.todayDate.stringValue === today;
+      put(sameDay ? num(f.todayCount) : 0, num(f.total));
+    }).catch(fail);
+  })();
 
   $('quick').innerHTML = '<span class="lab">자주 찾는 낱말</span>' + QUICK.map(function (x) { return '<button type="button" class="ls-chip" data-q="' + esc(x) + '">' + esc(x) + '</button>'; }).join('');
   paintTabs(); paintRecent(); paintFavCnt();
