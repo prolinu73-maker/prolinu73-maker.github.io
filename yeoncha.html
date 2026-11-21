@@ -118,12 +118,50 @@ details.adv[open]>summary{margin-bottom:10px}
 .cal i[data-n]:hover{outline:2px solid #0f172a;outline-offset:-1px}
 .cal i.cu{box-shadow:inset 0 0 0 2px #facc15}
 .hero .sum{font-size:14.5px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.35);line-height:1.6}
+.mode-tabs{display:flex;gap:6px;max-width:1500px;margin:0 auto;padding:12px 16px 0}
+.mode-tab{border:1px solid #cbd5e1;border-bottom:0;background:#e2e8f0;color:#475569;font-family:inherit;font-size:14.5px;font-weight:700;padding:9px 18px;border-radius:10px 10px 0 0;cursor:pointer}
+.mode-tab:hover{background:#eef2ff;color:#1e3a8a}
+.mode-tab.active{background:#1e3a8a;color:#fff;border-color:#1e3a8a}
+.mode-line{max-width:1500px;margin:0 auto;padding:0 16px}
+.mode-line div{border-top:3px solid #1e3a8a}
+#modeRetire{display:none}
+body.mode-retire #modeRetire{display:grid}
+body.mode-retire #modeNormal{display:none}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+@media (max-width:560px){.two{grid-template-columns:1fr}}
+.two>div{border-radius:8px;padding:9px 11px;font-size:12.5px;line-height:1.6}
+.two .must{background:#ecfdf5;border:1px solid #6ee7b7}
+.two .skip{background:#f1f5f9;border:1px solid #cbd5e1;color:#475569}
+.two b.h{display:block;font-size:13.5px;margin-bottom:3px}
+.two ul{margin:0;padding-left:16px}
+table.hist{width:100%;border-collapse:collapse;margin-top:8px}
+table.hist th{background:#f1f5f9;font-size:11.5px;padding:5px 3px;border:1px solid #dbe1ea;line-height:1.3}
+table.hist td{padding:3px;border:1px solid #dbe1ea;font-size:12.5px;text-align:center}
+table.hist td.l{text-align:left;white-space:nowrap;font-weight:700}
+table.hist input{width:100%;min-width:48px;margin:0;padding:4px 3px;font-size:12.5px;text-align:right}
+table.hist tfoot td{background:#eef2ff;font-weight:800}
+.tblwrap{overflow-x:auto}
+table.cmp{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:12.5px}
+table.cmp th{background:#eef2ff;color:#1e3a8a;padding:5px 6px;border:1px solid #cbd5e1;font-size:12px;white-space:nowrap}
+table.cmp td{padding:5px 6px;border:1px solid #cbd5e1;text-align:center;vertical-align:top}
+table.cmp td.l{text-align:left}
+table.cmp tr.sum td{background:#f8fafc;font-weight:800}
+.hero.pay{background:linear-gradient(135deg,#9f1239,#e11d48)}
+.hero.nopay{background:linear-gradient(135deg,#065f46,#059669)}
+.hero .cmpline{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.hero .cmpline div{background:rgba(255,255,255,.16);border-radius:8px;padding:7px 12px;font-size:13px}
+.hero .cmpline b{font-size:19px;display:block}
+.okbanner{background:#ecfdf5;border:1px solid #6ee7b7;color:#065f46;border-radius:8px;padding:8px 10px;margin-top:10px;font-size:13px}
+.okbanner[hidden]{display:none}
 .print-title{display:none}
 .small{font-size:12px;color:#64748b}
 @media print{
   @page{size:A4;margin:15mm}
   body{background:#fff;font-size:12px}
-  header.top,.panel-input,.no-print,.q,#helpPop{display:none !important}
+  header.top,.panel-input,.no-print,.q,#helpPop,.mode-tabs,.mode-line{display:none !important}
+  body.mode-retire #modeRetire{display:block}
+  .hero.pay,.hero.nopay{background:#fff !important}
+  .hero .cmpline div{border:1px solid #999}
   .layout{display:block;padding:0}
   .card{border:0;padding:0;margin-bottom:10px;break-inside:avoid}
   .hero{background:#fff !important;color:#000;border:2px solid #000}
@@ -153,7 +191,13 @@ details.adv[open]>summary{margin-bottom:10px}
   </div>
 </header>
 
-<div class="layout">
+<div class="mode-tabs" role="tablist" aria-label="화면 고르기">
+  <button type="button" class="mode-tab active" data-mode="normal" role="tab" aria-selected="true">📅 일반 연차 산정</button>
+  <button type="button" class="mode-tab" data-mode="retire" role="tab" aria-selected="false">🏁 퇴직 시 연차 정산</button>
+</div>
+<div class="mode-line"><div></div></div>
+
+<div class="layout" id="modeNormal">
 <!-- ===================== 좌측: 입력 ===================== -->
 <div class="panel-input">
   <div class="easy">
@@ -299,6 +343,112 @@ details.adv[open]>summary{margin-bottom:10px}
 </div>
 </div>
 
+<!-- ===================== 퇴직 시 연차 정산 ===================== -->
+<div class="layout" id="modeRetire">
+<div class="panel-input">
+  <div class="easy">
+    <b class="t">🏁 퇴직자의 연차를 입사일 기준으로 다시 계산해 정산합니다</b>
+    <ol>
+      <li><b>입사일</b>과 <b>퇴직일(마지막 근무일)</b>을 넣으면 오른쪽에 정산 결과가 바로 나옵니다.</li>
+      <li>재직 중 <b>질병휴직·결근·정직 등</b>이 있었다면 정산 2단계에 넣습니다. (나이스 복무 기록 기준)</li>
+      <li>실제로 준 연차·쓴 연차·수당 준 일수를 알면 정산 3단계 대조표에 넣어 <b>최종 미사용 일수</b>까지 볼 수 있습니다.</li>
+    </ol>
+    <span class="small">이 화면의 기본 정보와 인사 변동 이력은 "일반 연차 산정" 화면과 서로 연결되어 있어, 한쪽에서 고치면 다른 쪽도 같이 바뀝니다.</span>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">정산 1단계</span>퇴직자 기본 정보</h2>
+    <div class="grid2">
+      <label class="f">성명 / 직종 메모 <span class="h">(선택)</span><input type="text" id="r_name" placeholder="예: 홍길동 / 교무행정사"></label>
+      <label class="f">입사일(최초 임용일) <span class="h">★필수</span><input type="date" id="r_hire"></label>
+      <label class="f">퇴직일 = 마지막 근무일 <span class="h">★필수</span><input type="date" id="r_retire"><span class="small" style="display:block;margin-top:3px;font-weight:400">예) 2025.3.1.~2026.2.28. 계약 종료 시 2026-02-28 입력</span></label>
+      <label class="f">누가 채용했나요? <span class="h">(연차를 주는 날)</span>
+        <select id="r_emp">
+          <option value="edu">교육장 채용 — 매년 1월 1일에 부여</option>
+          <option value="school">학교장 채용 — 매년 3월 1일에 부여</option>
+          <option value="hire">입사일 기준으로 부여해 옴</option>
+        </select></label>
+      <label class="f">방학에도 근무하나요?
+        <select id="r_work">
+          <option value="regular">예 — 상시근로자</option>
+          <option value="vac">아니오 — 방학 중 비근무자(방중비)</option>
+        </select></label>
+      <label class="f">1주일 근무시간 <span class="h">(전일제는 40 그대로)</span><input type="number" id="r_hours" min="1" max="40" step="0.5" value="40"></label>
+    </div>
+    <div class="okbanner" id="rBanner" hidden>✅ 입사일과 회계연도 시작일이 같아 구간 차이에 따른 오차가 없습니다. 마지막 해 연차 발생 여부와 근속 제외 휴직 이력만 확인하세요.</div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">정산 2단계</span>전 재직기간 복무·인사 변동 이력 <span class="opt">(나이스 기록 기준)</span></h2>
+    <div class="two">
+      <div class="must"><b class="h">✅ 반드시 입력할 자료</b>
+        <ul>
+          <li><b>근속·출근율 모두 영향:</b> 질병휴직, 약정 육아휴직(1년 초과분)</li>
+          <li><b>해당 연도 출근율·비례 영향:</b> 결근, 징계(정직·출근정지), 무급병가, 가족돌봄휴직</li>
+        </ul></div>
+      <div class="skip"><b class="h">⏭️ 입력하지 않아도 되는 자료 (출근 간주)</b>
+        <ul>
+          <li>출산전후휴가, 법정 육아휴직(1년 이내), 산재 휴업, 유급병가(연 30일 이내)</li>
+          <li>정상 출근과 똑같이 계산되므로, 한도 이내라면 생략해도 결과가 같습니다.</li>
+        </ul></div>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:#334155">해당하는 버튼을 누르면 아래 표에 한 줄이 생깁니다. 날짜를 실제 날짜로 고쳐 주세요.</div>
+    <div class="addbtns">
+      <button class="btn light" data-radd="sickLeave">🩺 질병휴직</button>
+      <button class="btn light" data-radd="parentalExt">👶 약정 육아휴직(1년 초과)</button>
+      <button class="btn light" data-radd="unpaidSick">🏥 무급병가</button>
+      <button class="btn light" data-radd="absent">❌ 결근</button>
+      <button class="btn light" data-radd="suspension">⚠️ 정직</button>
+      <button class="btn light" data-radd="familyCare">👪 가족돌봄휴직</button>
+      <button class="btn light" data-radd="vacation">🏖 방학(방중비)</button>
+    </div>
+    <table class="ev">
+      <thead><tr><th style="width:40%">사유</th><th>시작일</th><th>종료일</th><th>일수</th><th></th></tr></thead>
+      <tbody id="evBody2"></tbody>
+    </table>
+    <div class="small" style="margin-top:6px">연차가 생기는 날이 <b>2021. 8. 4. 이전</b>인 해는 질병휴직·무급병가를 <b>결근</b>으로, 그 뒤는 <b>소정근로일 제외(비례)</b>로 자동 구분해 계산합니다. 방중비는 해마다 여름·겨울방학 기간을 넣어야 출근율이 정확합니다.</div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">정산 3단계</span>연도별 연차 부여·사용·수당 지급 대조표 <span class="opt">(선택)</span></h2>
+    <div class="row">
+      <button class="btn" id="btnGenHist">📋 연도별 대조표 자동 생성/초기화</button>
+      <button class="btn red sm" id="btnClearHist">대조표 지우기</button>
+    </div>
+    <div class="tblwrap">
+    <table class="hist">
+      <thead><tr><th>구분<br>(연도/기준일)</th><th>계산된<br>부여일수</th><th>실제<br>부여일수</th><th>사용일수</th><th>미사용수당<br>지급일수</th><th>미정산<br>잔여</th></tr></thead>
+      <tbody id="histBody"></tbody>
+      <tfoot id="histFoot"></tfoot>
+    </table>
+    </div>
+    <div class="small" style="margin-top:6px" id="histNote">버튼을 누르면 입사일부터 퇴직일까지 연차를 준 날마다 한 줄씩 만들어집니다. "실제 부여일수"는 계산값으로 미리 채워지니, 실제로 준 일수와 다르면 고치고, 그해에 쓴 일수와 수당으로 준 일수를 넣으세요. 미정산 잔여 = 실제 부여 − 사용 − 수당 지급.</div>
+  </div>
+
+  <div class="card">
+    <h2>저장해 두기 <span class="opt">(선택 · 이 PC 브라우저 전용)</span></h2>
+    <div class="row">
+      <button class="btn" id="btnSave2">💾 현재 내용 저장</button>
+      <span class="small" id="saveMsg2"></span>
+    </div>
+    <div class="small" style="margin-top:6px">성명/직종 메모가 저장 이름이 됩니다. 대조표도 함께 저장되며, 불러오기·삭제는 "일반 연차 산정" 화면의 4단계에서 합니다.</div>
+  </div>
+</div>
+
+<div class="panel-result">
+  <div class="print-title">퇴직 시 연차유급휴가 정산 내역서</div>
+  <div class="card no-print">
+    <div class="row">
+      <button class="btn" id="btnPrint2">🖨️ 퇴직 정산 내역서 인쇄</button>
+      <button class="btn light" id="btnCopy2">📋 정산 근거 복사</button>
+      <span style="flex:1"></span>
+      <span class="small">소수점 처리(올림/소수 표기)는 "일반 연차 산정" 화면의 설정을 따릅니다.</span>
+    </div>
+  </div>
+  <div id="outR"></div>
+</div>
+</div>
+
 <script>
 /*ENGINE-START*/
 var YC = (function () {
@@ -370,8 +520,17 @@ var YC = (function () {
   var PRI = { E: 3, X: 2, A: 1 };
 
   /* ---------- 일자별 매핑 ---------- */
-  function buildMap(inp, s, e) {
-    var cells = [], isVacW = inp.work === 'vac', sick = 0, over = 0, n, i;
+  /* 법령·해석 변경 시점 */
+  var CUT2021 = D(2021, 8, 4);    /* 이 날 전에 발생하는 연차: 질병휴직·무급병가 = 결근 / 이후: 소정근로일수 제외 */
+  var CUT2017 = D(2017, 5, 30);   /* 이 날 전 입사: 구법(1년 미만 월차를 별도로 더하지 않음) */
+  function catAt(type, asOf) {
+    if ((type === 'sickLeave' || type === 'unpaidSick') && asOf != null && asOf < CUT2021) return 'X';
+    return TYPES[type].cat;
+  }
+  /* asOf: 이 기간으로 산정하는 연차의 발생 기준일(숫자) 또는 날짜별로 기준일을 돌려주는 함수 */
+  function buildMap(inp, s, e, asOf) {
+    var af = typeof asOf === 'function' ? asOf : function () { return asOf; };
+    var cells = [], isVacW = inp.work === 'vac', sick = 0, over = 0, oldX = 0, n, i;
     for (n = s; n <= e; n++) {
       var c = { n: n, st: 'W', type: null, vac: false, note: '' };
       if (n < inp.hire || (inp.retire != null && n > inp.retire)) { c.st = 'N'; c.note = '재직기간 아님'; }
@@ -379,26 +538,31 @@ var YC = (function () {
         var hn = holName(n);
         if (hn) { c.st = 'H'; c.note = hn; if (CUSTOM[n]) c.custom = true; }
         else {
-          var best = null;
+          var best = null, bestCat = null, ao = af(n);
           for (i = 0; i < inp.events.length; i++) {
             var ev = inp.events[i];
             if (ev.s == null || ev.e == null || n < ev.s || n > ev.e) continue;
             var t = TYPES[ev.type]; if (!t) continue;
-            if (!best || PRI[t.cat] > PRI[TYPES[best].cat]) best = ev.type;
+            var cat = catAt(ev.type, ao);
+            if (!best || PRI[cat] > PRI[bestCat]) { best = ev.type; bestCat = cat; }
           }
           if (best) {
-            c.type = best; c.st = TYPES[best].cat; c.note = TYPES[best].label;
+            c.type = best; c.st = bestCat; c.note = TYPES[best].label;
+            if (bestCat !== TYPES[best].cat) { oldX++; c.note += ' → 결근 처리(2021.8.4. 이전 기준)'; }
             if (best === 'vacation' && isVacW) c.vac = true;
             if (best === 'paidSick') {
               sick++;
-              if (sick > 30) { over++; if (inp.sickAuto) { c.st = 'E'; c.note = '유급병가 30일 초과 → 무급병가(소정근로일 제외·비례 산정)'; } }
+              if (sick > 30) { over++; if (inp.sickAuto) {
+                if (ao != null && ao < CUT2021) { c.st = 'X'; oldX++; c.note = '유급병가 30일 초과 → 무급병가(결근 처리, 2021.8.4. 이전 기준)'; }
+                else { c.st = 'E'; c.note = '유급병가 30일 초과 → 무급병가(소정근로일 제외·비례 산정)'; }
+              } }
             }
           }
         }
       }
       cells.push(c);
     }
-    return { cells: cells, sick: sick, over: over };
+    return { cells: cells, sick: sick, over: over, oldX: oldX };
   }
   function stats(cells) {
     var r = { total: 0, excl: 0, vac: 0, absent: 0, deemed: 0, normal: 0 };
@@ -432,7 +596,8 @@ var YC = (function () {
     if (work !== 'vac') return 15;
     if (year >= 2026) return 15;
     if (year >= 2019) return 12;
-    return 11;
+    if (year >= 2016) return 11;
+    return 10;                       /* 2015년 이하 */
   }
   function baseFor(inp, year) { return (!inp.baseAuto && inp.base > 0) ? inp.base : autoBase(inp.work, year); }
   function serviceYears(inp, B) {
@@ -450,10 +615,10 @@ var YC = (function () {
 
   /* ---------- 3년차 이상(정상 산정) ---------- */
   function calcFull(inp, B, ps, pe, main) {
-    var mp = buildMap(inp, ps, pe), st = stats(mp.cells), isVacW = inp.work === 'vac';
+    var mp = buildMap(inp, ps, pe, B), st = stats(mp.cells), isVacW = inp.work === 'vac';
     var adj = main ? (inp.holAdj || 0) : 0;
     var r = { kind: 'full', B: B, ps: ps, pe: pe, rawTotal: st.total, adj: adj, total: st.total - adj, excl: st.excl,
-      vacEx: isVacW ? st.vac : 0, absent: st.absent, deemed: st.deemed, sick: mp.sick, sickOver: mp.over };
+      vacEx: isVacW ? st.vac : 0, absent: st.absent, deemed: st.deemed, sick: mp.sick, sickOver: mp.over, oldX: mp.oldX };
     r.otherEx = r.excl - r.vacEx; r.eff = r.total - r.excl;
     r.rate = r.eff > 0 ? (r.eff - r.absent) / r.eff * 100 : 0;
     r.base = baseFor(inp, P(B).y);
@@ -477,10 +642,10 @@ var YC = (function () {
 
   /* ---------- 2년차(중도입사 후 첫 회계연도 기준일) ---------- */
   function calcProp(inp, B, ps, pe, main) {
-    var H = inp.hire, mp = buildMap(inp, ps, pe), isVacW = inp.work === 'vac';
+    var H = inp.hire, mp = buildMap(inp, ps, pe, B), isVacW = inp.work === 'vac';
     var st = stats(mp.cells), adj = main ? (inp.holAdj || 0) : 0;
     var r = { kind: 'prop', B: B, ps: ps, pe: pe, rawTotal: st.total, adj: adj, total: st.total - adj, excl: st.excl,
-      vacEx: isVacW ? st.vac : 0, absent: st.absent, deemed: st.deemed, sick: mp.sick, sickOver: mp.over };
+      vacEx: isVacW ? st.vac : 0, absent: st.absent, deemed: st.deemed, sick: mp.sick, sickOver: mp.over, oldX: mp.oldX };
     r.otherEx = r.excl - r.vacEx; r.eff = r.total - r.excl;
     r.rate = r.eff > 0 ? (r.eff - r.absent) / r.eff * 100 : 0;
     r.base = baseFor(inp, P(B).y); r.days = pe - H + 1;
@@ -508,7 +673,9 @@ var YC = (function () {
 
   /* ---------- 1년 미만 월차 ---------- */
   function firstYear(inp) {
-    var H = inp.hire, end = addYears(H, 1) - 1, mp = buildMap(inp, H, end), isVacW = inp.work === 'vac';
+    var H = inp.hire, end = addYears(H, 1) - 1, isVacW = inp.work === 'vac';
+    /* 월차는 달마다 발생일이 다르므로, 각 날짜가 속한 1개월 단위의 발생일을 기준일로 씀 */
+    var mp = buildMap(inp, H, end, function (n) { for (var q = 1; q <= 12; q++) if (n <= addMonths(H, q) - 1) return addMonths(H, q); return end + 1; });
     var list = [], total = 0;
     for (var m = 1; m <= 12; m++) {
       var us = addMonths(H, m - 1), ue = addMonths(H, m) - 1, cs = slice(mp.cells, H, us, ue);
@@ -532,16 +699,19 @@ var YC = (function () {
   /* ---------- 퇴직 정산 시뮬레이터 ---------- */
   function simulate(inp) {
     var H = inp.hire, R = inp.retire, o = { hireRows: [], fisRows: [], monthly: 0 };
-    var fy = firstYear(inp); o.monthly = fy.total;
-    var k, c, g, hs = fy.total, fs = fy.total;
+    var fy = firstYear(inp);
+    o.days = R - H + 1;
+    o.oneYear = addYears(H, 1) <= R;
+    o.oldLaw = H < CUT2017;                       /* 2017.5.30. 전 입사: 구 근로기준법 */
+    o.monthlyRaw = fy.total;
+    o.monthly = (o.oldLaw && o.oneYear) ? 0 : fy.total;   /* 구법: 1년차 월차는 1년 근무 대가 15일에 포함 → 별도 합산하지 않음 */
+    var k, c, g, hs = o.monthly, fs = o.monthly;
     for (k = 1; k <= 60; k++) {
       var A = addYears(H, k); if (A > R) break;
       c = calcFull(inp, A, addYears(H, k - 1), A - 1, false); g = rnd(c.raw, inp.rnd); hs += g;
       o.hireRows.push({ date: A, raw: c.raw, g: g, c: c });
     }
     o.hireTotal = Math.round(hs * 100) / 100;
-    o.days = R - H + 1;
-    o.oneYear = addYears(H, 1) <= R;
     if (inp.emp !== 'hire') {
       var fm = inp.emp === 'school' ? 3 : 1, y = P(H).y, B = D(y, fm, 1);
       while (B <= H) { y++; B = D(y, fm, 1); }
@@ -556,6 +726,15 @@ var YC = (function () {
       o.diff = Math.round((o.hireTotal - o.fisTotal) * 100) / 100;
     }
     return o;
+  }
+
+  /* 연도별 산정 사유를 짧게 */
+  function reasonOf(c) {
+    var t = { fullGrant: '80% 이상 출근 → 전액', ratio: '제외기간 비례 (' + c.eff + '÷' + c.den + ')', prop: '중도입사 비례 (' + c.days + '÷365)',
+      propRatio: '중도입사 비례 (' + c.days + '÷365) × 제외기간 비례 (' + c.eff + '÷' + c.den + ')', monthly: '출근율 80% 미만 → 개근 ' + c.perfect + '개월 × 1일', zero: '근무한 날 없음 → 0일' }[c.mode] || '';
+    if (c.oldX > 0) t += ' · 질병휴직·무급병가 ' + c.oldX + '일 결근 처리(2021.8.4. 이전 기준일)';
+    if (c.sickOver > 0) t += ' · 유급병가 30일 초과 ' + c.sickOver + '일';
+    return t;
   }
 
   /* ---------- 메인 ---------- */
@@ -626,6 +805,7 @@ var YC = (function () {
       var cu = [];
       c.months.forEach(function (m) { m.cells.forEach(function (x) { var w = P(x.n).w; if (x.custom && w !== 0 && w !== 6) cu.push(fmt(x.n)); }); });
       if (cu.length) rows.splice(1, 0, ['직접 지정한 휴일', cu.length + '일 (' + cu.join(', ') + ') — 위 총 소정근로일수에서 이미 뺀 날입니다']);
+      if (c.oldX > 0) rows.push(['과거 기준 적용', '연차 발생 기준일(' + fmt(c.B) + ')이 2021. 8. 4. 이전이므로 질병휴직·무급병가 ' + c.oldX + '일을 결근으로 처리했습니다(변경 전 행정해석).']);
       S.push({ h: '2. 소정근로일수 및 출근율', rows: rows });
 
       if (R.stage === 3) {
@@ -671,14 +851,14 @@ var YC = (function () {
     if (R.sim) {
       var s = R.sim; rows = [];
       rows.push(['재직기간', fmt(inp.hire) + ' ~ ' + fmt(inp.retire) + ' (' + s.days + '일) — ' + (s.oneYear ? '1년 + 1일 이상 근로관계 존속 → 1년 근무 대가 연차 발생' : '만 1년 이하(1년 되는 날 다음 날 근로관계 없음) → 1년 근무 대가 15일 미발생, 월차만 발생')]);
-      rows.push(['1년 미만 월차', s.monthly + '일']);
+      rows.push(['1년 미만 월차', s.oldLaw && s.oneYear ? '2017.5.30. 이전 입사(구법 적용) — 1년차 월차는 1년 근무 대가 15일에 포함되어 별도로 더하지 않음' : f2(s.monthly) + '일']);
       rows.push(['입사일 기준 누적', s.hireRows.map(function (x) { return fmt(x.date) + ' ' + f2(x.g) + '일'; }).join(', ') + (s.hireRows.length ? ' + ' : '') + '월차 ' + s.monthly + '일 = ' + f2(s.hireTotal) + '일']);
       if (s.fisTotal != null) {
         rows.push(['회계연도 기준 누적', s.fisRows.map(function (x) { return fmt(x.date) + ' ' + f2(x.g) + '일'; }).join(', ') + (s.fisRows.length ? ' + ' : '') + '월차 ' + s.monthly + '일 = ' + f2(s.fisTotal) + '일']);
         rows.push(['비교 결과', s.diff > 0 ? '입사일 기준이 ' + f2(s.diff) + '일 더 많음 → ' + f2(s.diff) + '일 추가 정산 필요' : (s.diff < 0 ? '회계연도 기준이 ' + f2(-s.diff) + '일 더 많음 → 추가 정산 없음' : '두 기준이 같음 → 추가 정산 없음')]);
       }
       rows.push(['유의', '누적 "부여"일수 비교이며 사용한 연차는 반영하지 않았습니다. 각 연도는 입력된 인사 변동 이력으로 다시 계산했습니다(만근연수 직접 입력·추가 휴일 조정은 미반영).']);
-      rows.push(['유의(장기근속자)', '※ 2021.8.4. 이전 질병휴직·무급병가(당시 결근 처리) 및 2017.5.30. 이전 입사자의 1년차 월차(구법 적용)는 과거 시점 규정을 별도 확인하세요.']);
+      rows.push(['유의(장기근속자)', '기준일이 2021.8.4. 이전인 연차는 질병휴직·무급병가를 결근으로, 2017.5.30. 이전 입사자는 구법(1년차 월차 별도 합산 없음)으로 자동 계산했습니다. ※ 2021.8.4. 이전 질병휴직·무급병가(당시 결근 처리) 및 2017.5.30. 이전 입사자의 1년차 월차(구법 적용)는 과거 시점 규정을 별도 확인하세요.']);
       S.push({ h: '퇴직 시 입사일 기준 재산정(정산)', rows: rows });
     }
 
@@ -691,7 +871,7 @@ var YC = (function () {
   }
 
   return { D: D, P: P, iso: iso, fmt: fmt, parse: parse, addMonths: addMonths, addYears: addYears, f2: f2,
-    TYPES: TYPES, CAT: CAT, autoBase: autoBase, compute: compute, holName: holName, setCustom: setCustom };
+    TYPES: TYPES, CAT: CAT, autoBase: autoBase, compute: compute, holName: holName, setCustom: setCustom, reasonOf: reasonOf, CUT2017: CUT2017, CUT2021: CUT2021 };
 })();
 if (typeof module !== 'undefined') module.exports = YC;
 /*ENGINE-END*/
@@ -705,6 +885,8 @@ if (typeof module !== 'undefined') module.exports = YC;
   var holidays = [];   // 직접 지정한 휴일 [{d:'YYYY-MM-DD', name}] — 이 PC 브라우저에 저장, 모든 직원 공통
   var events = [];   // {type, s:'YYYY-MM-DD', e:'YYYY-MM-DD'}
   var last = null;
+  var retireHistory = [];   // 퇴직 정산 대조표 [{key:'monthly'|'YYYY-MM-DD', actual, used, paid}]
+  var PAIRS = [['f_name', 'r_name'], ['f_hire', 'r_hire'], ['f_retire', 'r_retire'], ['f_emp', 'r_emp'], ['f_work', 'r_work'], ['f_hours', 'r_hours']];   // 두 화면이 함께 쓰는 칸
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
   try { window.HUB.mountHomeButton(); } catch (e) { }
@@ -797,7 +979,8 @@ if (typeof module !== 'undefined') module.exports = YC;
     return { name: $('f_name').value, hire: $('f_hire').value, year: $('f_year').value, emp: $('f_emp').value, work: $('f_work').value,
       baseAuto: $('f_baseAuto').checked, base: $('f_base').value, hours: $('f_hours').value, retire: $('f_retire').value,
       pastExcl: $('f_pastExcl').value, manualN: $('f_manualN').value, holAdj: $('f_holAdj').value, sickAuto: $('f_sickAuto').checked,
-      rnd: document.querySelector('input[name=rnd]:checked').value, events: events.map(function (e) { return { type: e.type, s: e.s, e: e.e }; }) };
+      rnd: document.querySelector('input[name=rnd]:checked').value, events: events.map(function (e) { return { type: e.type, s: e.s, e: e.e }; }),
+      retireHistory: retireHistory.map(function (r) { return { key: r.key, actual: r.actual, used: r.used, paid: r.paid }; }) };
   }
   function setState(s) {
     $('f_name').value = s.name || ''; $('f_hire').value = s.hire || ''; $('f_year').value = s.year || new Date().getFullYear();
@@ -807,6 +990,8 @@ if (typeof module !== 'undefined') module.exports = YC;
     $('f_sickAuto').checked = s.sickAuto !== false;
     var r = document.querySelector('input[name=rnd][value=' + (s.rnd || 'ceil') + ']'); if (r) r.checked = true;
     events = (s.events || []).map(function (e) { return { type: e.type, s: e.s, e: e.e }; });
+    /* 퇴직 정산 대조표 (예전에 저장한 사례에는 없음 → 빈 표) */
+    retireHistory = Array.isArray(s.retireHistory) ? s.retireHistory.filter(function (r) { return r && typeof r.key === 'string'; }).map(function (r) { return { key: r.key, actual: r.actual == null ? '' : String(r.actual), used: r.used == null ? '' : String(r.used), paid: r.paid == null ? '' : String(r.paid) }; }) : [];
     /* 상세 설정에 기본값이 아닌 것이 있으면 펼쳐서 보여 줌 */
     $('advBox').open = !!(s.retire || Number(s.pastExcl) || s.manualN || Number(s.holAdj) || s.baseAuto === false || s.sickAuto === false);
     renderEvents(); calc();
@@ -830,29 +1015,36 @@ if (typeof module !== 'undefined') module.exports = YC;
   var HINT = { A: '→ 출근한 것으로 봅니다 (연차가 줄지 않아요)', E: '→ 일해야 하는 날에서 뺍니다 (기간이 길면 연차가 비례로 줄어요)', X: '→ 결근으로 봅니다 (출근율이 내려가요)' };
   function hintOf(type) { var t = YC.TYPES[type]; return HINT[t.cat] + (t.svc ? ' · 근속기간에서도 빠져요' : ''); }
   function dayCount(e) { var s = YC.parse(e.s), x = YC.parse(e.e); return (s == null || x == null) ? '-' : (Math.abs(x - s) + 1) + '일'; }
-  function renderEvents() {
-    var tb = $('evBody');
-    if (!events.length) { tb.innerHTML = '<tr><td colspan="5" class="c" style="color:#94a3b8;padding:12px">쉬었던 기간이 없으면 비워 두세요. 1년 내내 정상 출근한 것으로 계산합니다.</td></tr>'; return; }
-    tb.innerHTML = events.map(function (e, i) {
-      var cat = YC.TYPES[e.type].cat;
-      return '<tr><td><select data-i="' + i + '" data-k="type">' + typeOptions(e.type) + '</select><span class="evhint" id="evhint' + i + '">' + esc(hintOf(e.type)) + '</span></td>' +
-        '<td><input type="date" data-i="' + i + '" data-k="s" value="' + esc(e.s || '') + '"></td>' +
-        '<td><input type="date" data-i="' + i + '" data-k="e" value="' + esc(e.e || '') + '"></td>' +
-        '<td class="c"><span class="tag ' + cat + '" id="evtag' + i + '">' + YC.CAT[cat] + '</span><br><span id="evcnt' + i + '">' + dayCount(e) + '</span></td>' +
-        '<td class="c"><button class="btn red sm" data-del="' + i + '">삭제</button></td></tr>';
-    }).join('');
+  var EVT = [{ body: 'evBody', px: 'a' }, { body: 'evBody2', px: 'b' }];   // 일반 화면 표 / 퇴직 정산 화면 표 (같은 events를 보여 줌)
+  function renderEvents(skip) {
+    EVT.forEach(function (T) {
+      if (T.body === skip) return;
+      var tb = $(T.body);
+      if (!events.length) { tb.innerHTML = '<tr><td colspan="5" class="c" style="color:#94a3b8;padding:12px">' + (T.px === 'a' ? '쉬었던 기간이 없으면 비워 두세요. 1년 내내 정상 출근한 것으로 계산합니다.' : '입력한 이력이 없습니다. 없으면 재직기간 내내 정상 출근한 것으로 계산합니다.') + '</td></tr>'; return; }
+      tb.innerHTML = events.map(function (e, i) {
+        var cat = YC.TYPES[e.type].cat;
+        return '<tr><td><select data-i="' + i + '" data-k="type">' + typeOptions(e.type) + '</select><span class="evhint" id="' + T.px + 'evhint' + i + '">' + esc(hintOf(e.type)) + '</span></td>' +
+          '<td><input type="date" data-i="' + i + '" data-k="s" value="' + esc(e.s || '') + '"></td>' +
+          '<td><input type="date" data-i="' + i + '" data-k="e" value="' + esc(e.e || '') + '"></td>' +
+          '<td class="c"><span class="tag ' + cat + '" id="' + T.px + 'evtag' + i + '">' + YC.CAT[cat] + '</span><br><span id="' + T.px + 'evcnt' + i + '">' + dayCount(e) + '</span></td>' +
+          '<td class="c"><button class="btn red sm" data-del="' + i + '">삭제</button></td></tr>';
+      }).join('');
+    });
   }
-  $('evBody').addEventListener('change', function (ev) {
-    var t = ev.target, i = t.getAttribute('data-i'); if (i == null) return;
-    events[+i][t.getAttribute('data-k')] = t.value;
-    var cat = YC.TYPES[events[+i].type].cat, tag = $('evtag' + i);
-    tag.className = 'tag ' + cat; tag.textContent = YC.CAT[cat]; $('evcnt' + i).textContent = dayCount(events[+i]);
-    $('evhint' + i).textContent = hintOf(events[+i].type);
-    calc();
-  });
-  $('evBody').addEventListener('click', function (ev) {
-    var d = ev.target.getAttribute('data-del'); if (d == null) return;
-    events.splice(+d, 1); renderEvents(); calc();
+  EVT.forEach(function (T) {
+    $(T.body).addEventListener('change', function (ev) {
+      var t = ev.target, i = t.getAttribute('data-i'); if (i == null) return;
+      events[+i][t.getAttribute('data-k')] = t.value;
+      var cat = YC.TYPES[events[+i].type].cat, tag = $(T.px + 'evtag' + i);
+      tag.className = 'tag ' + cat; tag.textContent = YC.CAT[cat]; $(T.px + 'evcnt' + i).textContent = dayCount(events[+i]);
+      $(T.px + 'evhint' + i).textContent = hintOf(events[+i].type);
+      renderEvents(T.body);   /* 다른 화면의 표도 같은 내용으로 */
+      calc();
+    });
+    $(T.body).addEventListener('click', function (ev) {
+      var d = ev.target.getAttribute('data-del'); if (d == null) return;
+      events.splice(+d, 1); renderEvents(); calc();
+    });
   });
   function periodStart() {
     if (last && last.ps != null) return last.ps;
@@ -1011,8 +1203,13 @@ if (typeof module !== 'undefined') module.exports = YC;
     $('evGuide').innerHTML = o;
   }
   function calc() {
-    try { last = YC.compute(toInput()); renderGuide(last); render(last); }
-    catch (e) { $('out').innerHTML = '<div class="warn">계산 중 오류: ' + esc(e.message) + '</div>'; }
+    try {
+      PAIRS.forEach(function (p) { if (document.activeElement !== $(p[1]) && $(p[1]).value !== $(p[0]).value) $(p[1]).value = $(p[0]).value; });   /* 일반 화면 → 퇴직 정산 화면 */
+      last = YC.compute(toInput()); renderGuide(last); render(last);
+      if (!$('histBody').contains(document.activeElement)) renderHist();
+      renderRetire(last);
+    }
+    catch (e) { $('out').innerHTML = '<div class="warn">계산 중 오류: ' + esc(e.message) + '</div>'; $('outR').innerHTML = $('out').innerHTML; }
   }
   function reportText() {
     if (!last || last.error) return '';
@@ -1024,12 +1221,204 @@ if (typeof module !== 'undefined') module.exports = YC;
 
   /* ---------- 버튼 ---------- */
   $('btnPrint').addEventListener('click', function () { window.print(); });
-  $('btnCopy').addEventListener('click', function () {
-    var txt = reportText(), b = $('btnCopy'); if (!txt) return;
-    function done() { b.textContent = '✅ 복사됨'; setTimeout(function () { b.textContent = '📋 계산근거 복사'; }, 1500); }
+  function copyText(txt, b, label) {
+    if (!txt) return;
+    function done() { b.textContent = '✅ 복사됨'; setTimeout(function () { b.textContent = label; }, 1500); }
     function fallback() { var ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) { window.prompt('아래 내용을 복사하세요', txt); } document.body.removeChild(ta); }
     if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(done, fallback); else fallback();
+  }
+  $('btnCopy').addEventListener('click', function () { copyText(reportText(), $('btnCopy'), '📋 계산근거 복사'); });
+  $('btnPrint2').addEventListener('click', function () { window.print(); });
+  $('btnCopy2').addEventListener('click', function () { copyText(retireText, $('btnCopy2'), '📋 정산 근거 복사'); });
+
+  /* =====================================================================
+     퇴직 시 연차 정산 화면
+     ===================================================================== */
+  /* ---------- 화면(탭) 전환 ---------- */
+  function setMode(m) {
+    var r = m === 'retire';
+    document.body.classList.toggle('mode-retire', r);
+    Array.prototype.forEach.call(document.querySelectorAll('.mode-tab'), function (b) { var on = b.getAttribute('data-mode') === m; b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on)); });
+    try { history.replaceState(null, '', r ? '#retire' : location.pathname + location.search); } catch (e) { }
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.mode-tab'), function (b) { b.addEventListener('click', function () { setMode(b.getAttribute('data-mode')); }); });
+
+  /* ---------- 함께 쓰는 칸: 퇴직 정산 화면에서 고치면 일반 화면 칸에 넣고 다시 계산 ---------- */
+  PAIRS.forEach(function (p) {
+    ['input', 'change'].forEach(function (evn) { $(p[1]).addEventListener(evn, function () { $(p[0]).value = $(p[1]).value; calc(); }); });
   });
+
+  /* ---------- 정산 2단계: 필수 이력 추가 버튼 ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-radd]'), function (b) {
+    b.addEventListener('click', function () {
+      var st = toInput(), k = b.getAttribute('data-radd'), I = YC.iso;
+      /* 예시 날짜: 퇴직 전 마지막 1년의 첫날(입사일보다 빠르면 입사일) */
+      var base = st.retire != null ? Math.max(st.hire != null ? st.hire : -1e9, YC.addYears(st.retire, -1) + 1) : (st.hire != null ? st.hire : periodStart());
+      var y = YC.P(base).y;
+      var ev = { sickLeave: [base, YC.addMonths(base, 3) - 1], parentalExt: [base, YC.addMonths(base, 3) - 1], unpaidSick: [base, base + 13], absent: [base, base],
+        suspension: [base, YC.addMonths(base, 1) - 1], familyCare: [base, YC.addMonths(base, 1) - 1], vacation: [YC.D(y, 7, 25), YC.D(y, 8, 20)] }[k];
+      if (!ev) return;
+      if (k === 'vacation') { $('f_work').value = 'vac'; }
+      events.push({ type: k, s: I(ev[0]), e: I(ev[1]) });
+      renderEvents(); calc();
+      var rows = $('evBody2').querySelectorAll('tr'), inp = rows[rows.length - 1] && rows[rows.length - 1].querySelector('input[type=date]');
+      if (inp) try { inp.focus(); } catch (e) { }
+    });
+  });
+
+  /* ---------- 정산 3단계: 연도별 대조표 ---------- */
+  function nv(x) { var v = parseFloat(x); return isNaN(v) ? 0 : v; }
+  function simRows(R) { return R && R.sim ? (R.inp.emp === 'hire' ? R.sim.hireRows : R.sim.fisRows) : []; }
+  function computedMap(R) {   /* 대조표 줄 이름(key) → 계산된 부여일수 */
+    var m = {}; if (!R || !R.sim) return m;
+    if (!(R.sim.oldLaw && R.sim.oneYear)) m.monthly = R.sim.monthly;
+    simRows(R).forEach(function (x) { m[YC.iso(x.date)] = x.g; });
+    return m;
+  }
+  function histTotals(R) {
+    var cm = computedMap(R), t = { has: retireHistory.length > 0, actual: 0, used: 0, paid: 0, anyUse: false };
+    retireHistory.forEach(function (r) {
+      t.actual += (r.actual === '' ? (cm[r.key] || 0) : nv(r.actual)); t.used += nv(r.used); t.paid += nv(r.paid);
+      if (r.used !== '' || r.paid !== '') t.anyUse = true;
+    });
+    ['actual', 'used', 'paid'].forEach(function (k) { t[k] = Math.round(t[k] * 100) / 100; });
+    t.remain = Math.round((t.actual - t.used - t.paid) * 100) / 100;
+    return t;
+  }
+  function histLabel(key) { return key === 'monthly' ? '1년 미만 월차' : YC.fmt(YC.parse(key)) + ' 부여'; }
+  function histRemain(r, cm) { return Math.round(((r.actual === '' ? (cm[r.key] || 0) : nv(r.actual)) - nv(r.used) - nv(r.paid)) * 100) / 100; }
+  function renderHistFoot() {
+    var t = histTotals(last), f2 = YC.f2;
+    $('histFoot').innerHTML = retireHistory.length ? '<tr><td class="l">합계</td><td>' + f2(Object.keys(computedMap(last)).reduce(function (a, k) { return a + (retireHistory.some(function (r) { return r.key === k; }) ? computedMap(last)[k] : 0); }, 0)) + '</td><td>' + f2(t.actual) + '</td><td>' + f2(t.used) + '</td><td>' + f2(t.paid) + '</td><td>' + f2(t.remain) + '</td></tr>' : '';
+  }
+  function renderHist() {
+    var cm = computedMap(last), f2 = YC.f2;
+    if (!retireHistory.length) { $('histBody').innerHTML = '<tr><td colspan="6" style="color:#94a3b8;padding:12px">대조표가 없습니다. 위 [📋 연도별 대조표 자동 생성/초기화]를 누르세요. (없어도 정산 결과는 나옵니다)</td></tr>'; $('histFoot').innerHTML = ''; return; }
+    var stale = retireHistory.some(function (r) { return cm[r.key] == null; }) || Object.keys(cm).some(function (k) { return !retireHistory.some(function (r) { return r.key === k; }); });
+    $('histBody').innerHTML = retireHistory.map(function (r, i) {
+      var c = cm[r.key];
+      return '<tr><td class="l">' + esc(histLabel(r.key)) + '</td><td>' + (c == null ? '<span title="입사일·퇴직일·채용권자가 바뀌어 지금 계산에는 없는 줄입니다">— (해당 없음)</span>' : f2(c)) + '</td>' +
+        ['actual', 'used', 'paid'].map(function (k) { return '<td><input type="number" min="0" step="0.5" data-hi="' + i + '" data-hf="' + k + '" value="' + esc(r[k]) + '" aria-label="' + esc(histLabel(r.key)) + ' ' + { actual: '실제 부여일수', used: '사용일수', paid: '미사용수당 지급일수' }[k] + '"></td>'; }).join('') +
+        '<td id="hrem' + i + '">' + f2(histRemain(r, cm)) + '</td></tr>';
+    }).join('');
+    renderHistFoot();
+    $('histNote').innerHTML = (stale ? '<b style="color:#b45309">⚠️ 입사일·퇴직일·채용권자가 바뀌어 대조표의 줄이 지금 계산과 맞지 않습니다. [자동 생성/초기화]를 다시 눌러 주세요(입력한 숫자는 지워집니다).</b><br>' : '') +
+      '"실제 부여일수"가 계산값과 다르면 고치고, 그해에 쓴 일수와 수당으로 준 일수를 넣으세요. 미정산 잔여 = 실제 부여 − 사용 − 수당 지급.';
+  }
+  $('btnGenHist').addEventListener('click', function () {
+    if (!last || !last.sim) { window.alert('입사일과 퇴직일을 먼저 넣어 주세요.'); return; }
+    if (retireHistory.some(function (r) { return r.used !== '' || r.paid !== ''; }) && !window.confirm('대조표를 새로 만들면 지금 입력한 사용일수·수당 지급일수가 지워집니다. 계속할까요?')) return;
+    var cm = computedMap(last), keys = [];
+    if (cm.monthly != null) keys.push('monthly');
+    simRows(last).forEach(function (x) { keys.push(YC.iso(x.date)); });
+    retireHistory = keys.map(function (k) { return { key: k, actual: String(cm[k]), used: '', paid: '' }; });
+    renderHist(); renderRetire(last);
+  });
+  $('btnClearHist').addEventListener('click', function () {
+    if (retireHistory.length && !window.confirm('대조표를 모두 지울까요?')) return;
+    retireHistory = []; renderHist(); renderRetire(last);
+  });
+  $('histBody').addEventListener('input', function (ev) {
+    var t = ev.target, i = t.getAttribute('data-hi'); if (i == null || !retireHistory[+i]) return;
+    retireHistory[+i][t.getAttribute('data-hf')] = t.value;
+    $('hrem' + i).textContent = YC.f2(histRemain(retireHistory[+i], computedMap(last)));
+    renderHistFoot(); renderRetire(last);
+  });
+
+  /* ---------- 퇴직 정산 결과 ---------- */
+  var retireText = '';
+  function renderRetire(R) {
+    var inp = R.inp, F = YC.fmt, f2 = YC.f2, o = '', T = [];
+    /* 입사일 = 회계연도 시작일 안내 */
+    var ban = false;
+    if (inp.hire != null && inp.emp !== 'hire') { var hp = YC.P(inp.hire); ban = hp.d === 1 && hp.m === (inp.emp === 'school' ? 3 : 1); }
+    $('rBanner').hidden = !ban;
+    retireText = '';
+    if (inp.hire == null || inp.retire == null) { $('outR').innerHTML = '<div class="info">입사일과 퇴직일(마지막 근무일)을 넣으면 정산 결과가 바로 나옵니다.<br>왼쪽 <b>정산 1단계</b>의 ★필수 두 칸을 먼저 채워 주세요.</div>'; return; }
+    if (R.error || !R.sim) { $('outR').innerHTML = '<div class="warn">⚠️ ' + esc(R.error || '계산할 수 없습니다.') + '</div>'; return; }
+    var s = R.sim, H = histTotals(R), fiscal = inp.emp !== 'hire';
+    var empTxt = { edu: '교육장 채용(매년 1.1. 부여)', school: '학교장 채용(매년 3.1. 부여)', hire: '입사일 기준 부여' }[inp.emp];
+    /* 비교 대상: 대조표가 있으면 실제 부여 합계, 없으면 회계연도 기준 계산값 */
+    var cmpVal = H.has ? H.actual : (fiscal ? s.fisTotal : null);
+    var cmpName = H.has ? '실제 부여 합계(대조표)' : '회계연도 기준 총 부여일수(계산)';
+    var diff = cmpVal == null ? null : Math.round((s.hireTotal - cmpVal) * 100) / 100;
+    var fin = H.anyUse ? Math.round((s.hireTotal - H.used - H.paid) * 100) / 100 : null;
+    R.warn.forEach(function (w) { if (/공휴일 자료|초단시간|유급병가/.test(w)) o += '<div class="warn">⚠️ ' + esc(w) + '</div>'; });
+
+    /* 핵심 요약 카드 */
+    var verdict, sub;
+    if (diff == null) { verdict = '입사일 기준 총 발생 ' + f2(s.hireTotal) + '일'; sub = '입사일 기준으로 부여해 온 경우입니다. 실제 부여·사용 내역을 대조표에 넣으면 차이와 미사용 일수를 계산합니다.'; }
+    else if (diff > 0) { verdict = '추가 정산(지급) 필요: +' + f2(diff) + '일'; sub = '입사일 기준으로 다시 계산한 일수가 ' + f2(diff) + '일 더 많습니다. 차이만큼 추가로 부여하거나 미사용 수당으로 정산해야 합니다.'; }
+    else { verdict = '추가 지급 없음'; sub = (diff < 0 ? cmpName + '이(가) ' + f2(-diff) + '일 더 많습니다. ' : '두 기준의 일수가 같습니다. ') + '초과 부여분의 정산·회수 여부는 취업규칙·단체협약을 확인하세요.'; }
+    o += '<div class="hero ' + (diff != null && diff > 0 ? 'pay' : 'nopay') + '"><div class="t">' + esc(inp.name || '성명 미입력') + ' · 재직 ' + F(inp.hire) + ' ~ ' + F(inp.retire) + ' (' + s.days.toLocaleString('ko-KR') + '일)</div>' +
+      '<div class="v" style="font-size:30px">' + esc(verdict) + '</div><div class="s">' + esc(sub) + '</div><div class="cmpline">' +
+      '<div>입사일 기준 총 발생일수<b>' + f2(s.hireTotal) + '일</b></div>' + (cmpVal != null ? '<div>' + esc(cmpName) + '<b>' + f2(cmpVal) + '일</b></div>' : '') +
+      (fin != null ? '<div>최종 미사용 정산일수<b>' + f2(fin) + '일</b></div>' : '') + '</div>' +
+      (fin != null ? '<div class="sum">🧮 입사일 기준 총 발생 ' + f2(s.hireTotal) + '일 − (사용 ' + f2(H.used) + '일 + 수당 기지급 ' + f2(H.paid) + '일) = <b>최종 미사용 정산일수 ' + f2(fin) + '일</b>' + (fin < 0 ? ' (발생한 것보다 ' + f2(-fin) + '일 더 쓰거나 지급함)' : '') + '</div>' : '') + '</div>';
+
+    /* 1. 기본 사항 */
+    var rows = [['성명 / 직종', inp.name || '-'], ['재직기간', F(inp.hire) + ' ~ ' + F(inp.retire) + ' (' + s.days + '일)'], ['채용권자·부여 방식', empTxt],
+      ['근무 형태', (inp.work === 'vac' ? '방학 중 비근무자' : '상시근로자') + ' · 주 ' + inp.hours + '시간' + (inp.hours < 40 ? ' (1일 = ' + f2(inp.hours / 40 * 8) + '시간으로 환산)' : '')],
+      ['1년 근무 대가 연차', s.oneYear ? '입사 1년이 되는 날의 다음 날(' + F(YC.addYears(inp.hire, 1)) + ')에도 근로관계가 있어 발생 (2021. 12. 16. 변경 행정해석)' : '퇴직일이 입사 후 만 1년 이내 → 1년 근무 대가 15일은 생기지 않고 월 단위 연차만 발생 (2021. 12. 16. 변경 행정해석)'],
+      ['1년 미만 월차', s.oldLaw && s.oneYear ? '2017.5.30. 이전 입사(구법 적용) — 1년차 월차는 1년 근무 대가 15일에 포함되므로 따로 더하지 않음 (참고: 신법이면 ' + f2(s.monthlyRaw) + '일)' : f2(s.monthly) + '일 (1개월 개근 시 1일, 최대 11일)'],
+      ['소수점 처리', inp.rnd === 'dec2' ? '소수 둘째자리 표기' : '소수점 이하 올림(전남교육청 기준)']];
+    if (ban) rows.push(['자동 점검', '입사일과 회계연도 시작일이 같아 구간 차이에 따른 오차가 없습니다.']);
+    T.push({ h: '1. 기본 사항', kv: rows });
+
+    /* 2·3. 연도별 비교표 */
+    var head = ['발생 기준일', '산정 대상 기간', '기본', '가산', '출근율', '산정 사유', '근속 제외(누적)', '계산값', '부여'];
+    function tbl(list, monthly) {
+      var b = [], sum = 0;
+      if (!(s.oldLaw && s.oneYear)) { b.push(['입사 후 1년', F(inp.hire) + '~' + F(Math.min(YC.addYears(inp.hire, 1) - 1, inp.retire)), '-', '-', '-', '1년 미만 월차 (1개월 개근 시 1일)', '-', f2(s.monthly), f2(s.monthly) + '일']); sum += s.monthly; }
+      list.forEach(function (x) { var c = x.c; sum += x.g;
+        b.push([F(x.date), F(c.ps) + '~' + F(c.pe), c.base + '일', c.add + '일', c.eff > 0 ? c.rate.toFixed(1) + '%' : '-', YC.reasonOf(c), c.svc.excl + '일' + (c.kind === 'full' ? ' (만근 ' + c.svc.N + '년)' : ''), f2(c.raw), f2(x.g) + '일']); });
+      return { head: head, body: b, sum: Math.round(sum * 100) / 100 };
+    }
+    var th = tbl(s.hireRows); T.push({ h: '2. 입사일 기준 연도별 발생 내역 (법정 기준)', table: th, sumLabel: '입사일 기준 총 발생일수' });
+    if (fiscal) { var tf = tbl(s.fisRows); T.push({ h: '3. 회계연도 기준 연도별 부여 내역 (' + (inp.emp === 'school' ? '매년 3.1.' : '매년 1.1.') + ' 계산값)', table: tf, sumLabel: '회계연도 기준 총 부여일수' }); }
+
+    /* 4. 대조표 */
+    if (H.has) {
+      var cm = computedMap(R);
+      T.push({ h: (fiscal ? '4' : '3') + '. 연도별 부여·사용·수당 지급 대조표 (입력값)', table: { head: ['구분', '계산된 부여일수', '실제 부여일수', '사용일수', '미사용수당 지급일수', '미정산 잔여'],
+        body: retireHistory.map(function (r) { return [histLabel(r.key), cm[r.key] == null ? '-' : f2(cm[r.key]), r.actual === '' ? f2(cm[r.key] || 0) : f2(nv(r.actual)), f2(nv(r.used)), f2(nv(r.paid)), f2(histRemain(r, cm))]; }),
+        sumRow: ['합계', '', f2(H.actual), f2(H.used), f2(H.paid), f2(H.remain)] } });
+    }
+
+    /* 정산 결과·유의 */
+    rows = [['입사일 기준 총 발생일수', f2(s.hireTotal) + '일']];
+    if (cmpVal != null) { rows.push([cmpName, f2(cmpVal) + '일']); rows.push(['비교 결과', diff > 0 ? '입사일 기준이 ' + f2(diff) + '일 더 많음 → 추가 정산(지급) 필요: +' + f2(diff) + '일' : '추가 지급 없음 (' + (diff < 0 ? cmpName + '이(가) ' + f2(-diff) + '일 더 많음' : '두 기준 같음') + ') — 초과 부여분의 정산·회수 여부는 취업규칙·단체협약 확인']); }
+    if (fin != null) rows.push(['최종 미사용 정산일수', f2(s.hireTotal) + ' − (' + f2(H.used) + ' + ' + f2(H.paid) + ') = ' + f2(fin) + '일' + (inp.hours < 40 ? ' (' + f2(fin * inp.hours / 40 * 8) + '시간)' : '')]);
+    T.push({ h: '정산 결과', kv: rows });
+    T.push({ h: '적용 기준 및 유의사항', kv: [
+      ['2017. 5. 30. 기준', '이 날 전에 입사한 사람은 구 근로기준법을 적용해 1년 미만 월차를 따로 더하지 않습니다. → ' + (s.oldLaw ? '이 직원은 구법 적용 대상' : '이 직원은 해당 없음(신법)')],
+      ['2021. 8. 4. 기준', '연차 발생 기준일이 이 날 전이면 질병휴직·무급병가를 결근으로, 이후이면 소정근로일수 제외(비례 산정)로 계산합니다(임금근로시간과-1736). 무급병가는 근속 제외 대상이 아닙니다.'],
+      ['2021. 12. 16. 기준', '1년 근무 대가 15일은 1년 근로를 마친 다음 날에도 근로관계가 있어야 발생합니다.'],
+      ['방중비 기본연차', '2015년 이하 10일, 2016~2018년 11일, 2019~2025년 12일, 2026년 이후 15일 (기본연차를 직접 입력한 경우 모든 해에 그 값을 씀)'],
+      ['유의', '입력한 인사 변동 이력으로 해마다 다시 계산한 값입니다. 과거 시점의 취업규칙·단체협약·지침은 원문을 별도로 확인하세요. 2023년 이전 공휴일은 양력 고정 공휴일만 반영되어 출근율에 작은 오차가 있을 수 있습니다.']] });
+
+    /* 화면·복사용 글로 바꾸기 */
+    var txt = ['[퇴직 시 연차유급휴가 정산 내역]', '', '■ 결론: ' + verdict, ' - ' + sub];
+    if (fin != null) txt.push(' - 입사일 기준 총 발생 ' + f2(s.hireTotal) + '일 − (사용 ' + f2(H.used) + '일 + 수당 기지급 ' + f2(H.paid) + '일) = 최종 미사용 정산일수 ' + f2(fin) + '일');
+    o += '<div class="card"><h2>퇴직 정산 내역서</h2>';
+    T.forEach(function (sec) {
+      txt.push('', '■ ' + sec.h);
+      if (sec.kv) {
+        o += '<table class="rep"><tr><th colspan="2">' + esc(sec.h) + '</th></tr>' + sec.kv.map(function (r) { return '<tr><td class="k">' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td></tr>'; }).join('') + '</table>';
+        sec.kv.forEach(function (r) { txt.push(' - ' + r[0] + ': ' + r[1]); });
+      } else {
+        var t = sec.table, n = t.head.length;
+        o += '<div class="tblwrap"><table class="cmp"><tr><th colspan="' + n + '" style="text-align:left;font-size:13px">' + esc(sec.h) + '</th></tr><tr>' + t.head.map(function (x) { return '<th>' + esc(x) + '</th>'; }).join('') + '</tr>' +
+          t.body.map(function (r) { return '<tr>' + r.map(function (x, i) { return '<td' + (i === 5 && n === 9 || i === 0 ? ' class="l"' : '') + '>' + esc(x) + '</td>'; }).join('') + '</tr>'; }).join('') +
+          (t.sumRow ? '<tr class="sum">' + t.sumRow.map(function (x) { return '<td>' + esc(x) + '</td>'; }).join('') + '</tr>' : '<tr class="sum"><td colspan="' + (n - 1) + '" style="text-align:right">' + esc(sec.sumLabel) + '</td><td>' + f2(t.sum) + '일</td></tr>') + '</table></div>';
+        txt.push(' (' + t.head.join(' | ') + ')');
+        t.body.forEach(function (r) { txt.push(' - ' + r.join(' | ')); });
+        txt.push(t.sumRow ? ' - ' + t.sumRow.filter(function (x) { return x !== ''; }).join(' | ') : ' - ' + sec.sumLabel + ': ' + f2(t.sum) + '일');
+      }
+    });
+    o += '<div class="small">본 내역서는 업무 참고용 계산 결과입니다. 최종 정산 전 취업규칙·단체협약 및 최신 지침, 실제 부여·사용 기록과 대조하시기 바랍니다.</div></div>';
+    $('outR').innerHTML = o; retireText = txt.join('\n');
+  }
 
   /* ---------- 임시저장 ---------- */
   function loadAll() { try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { return {}; } }
@@ -1038,7 +1427,7 @@ if (typeof module !== 'undefined') module.exports = YC;
     var all = loadAll(), keys = Object.keys(all).sort();
     $('savedList').innerHTML = keys.length ? keys.map(function (k) { return '<option' + (k === sel ? ' selected' : '') + '>' + esc(k) + '</option>'; }).join('') : '<option value="">(저장된 사례 없음)</option>';
   }
-  function msg(t) { $('saveMsg').textContent = t; setTimeout(function () { $('saveMsg').textContent = ''; }, 2500); }
+  function msg(t) { ['saveMsg', 'saveMsg2'].forEach(function (id) { $(id).textContent = t; }); setTimeout(function () { ['saveMsg', 'saveMsg2'].forEach(function (id) { $(id).textContent = ''; }); }, 2500); }
   $('btnSave').addEventListener('click', function () {
     var name = $('f_name').value.trim(); if (!name) { msg('성명/직종 메모를 먼저 입력하세요.'); $('f_name').focus(); return; }
     var all = loadAll(); all[name] = getState(); msg(saveAll(all) ? '저장했습니다.' : '저장 실패(브라우저 저장소 사용 불가)'); refreshList(name);
@@ -1050,6 +1439,7 @@ if (typeof module !== 'undefined') module.exports = YC;
     delete all[k]; saveAll(all); refreshList(); msg('삭제했습니다.');
   });
   $('btnReset').addEventListener('click', function () { setState({}); });
+  $('btnSave2').addEventListener('click', function () { $('btnSave').click(); if (!$('f_name').value.trim()) $('r_name').focus(); });
 
   /* ---------- 물음표 도움말 ---------- */
   var HELP = {
@@ -1101,6 +1491,7 @@ if (typeof module !== 'undefined') module.exports = YC;
   Array.prototype.forEach.call(document.querySelectorAll('input[name=rnd]'), function (r) { r.addEventListener('change', calc); });
   $('f_year').value = new Date().getFullYear();
   holidays = loadHolidays(); applyHolidays();
+  if (location.hash === '#retire') setMode('retire');
   refreshList(); renderEvents(); calc();
 })();
 </script>
