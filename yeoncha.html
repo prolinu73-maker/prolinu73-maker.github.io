@@ -83,6 +83,10 @@ i.cH{background:#d1d5db}i.cW{background:#86efac}i.cA{background:#60a5fa}i.cE{bac
 .q{display:inline-flex;width:16px;height:16px;border-radius:50%;background:#1e3a8a;color:#fff;font-size:11px;font-weight:700;align-items:center;justify-content:center;cursor:help;margin-left:4px;vertical-align:1px;user-select:none;font-style:normal}
 .q:hover,.q:focus{background:#2563eb;outline:2px solid #bfdbfe}
 #helpPop{position:absolute;z-index:100;max-width:330px;background:#1f2937;color:#fff;padding:10px 12px;border-radius:8px;font-size:12.5px;line-height:1.65;box-shadow:0 6px 18px rgba(0,0,0,.25);display:none;white-space:pre-line;font-weight:400}
+.ev-guide{background:#eff6ff;border:1px solid #bfdbfe;border-left:5px solid #2563eb;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:13px;color:#1e293b;line-height:1.65}
+.ev-guide .big{font-size:15px;font-weight:800;color:#1e3a8a}
+.ev-guide ul{margin:6px 0 0;padding-left:18px}
+.ev-guide li{margin:2px 0}
 .print-title{display:none}
 .small{font-size:12px;color:#64748b}
 @media print{
@@ -151,6 +155,7 @@ i.cH{background:#d1d5db}i.cW{background:#86efac}i.cA{background:#60a5fa}i.cE{bac
 • 아무것도 넣지 않으면 1년 내내 정상 출근한 것으로 계산합니다.
 • 여러 건을 넣을 수 있고, 날짜가 겹쳐도 하루는 한 번만 셉니다.
 • 가산연차(근속) 계산을 위해 질병휴직·약정 육아휴직은 과거 것도 넣어 두면 근속에서 자동으로 빠집니다.">?</span></h2>
+    <div class="ev-guide" id="evGuide"></div>
     <div class="row">
       <button class="btn" id="btnAddEv">+ 인사 변동 기간 추가</button>
       <span class="small">원클릭:</span>
@@ -749,8 +754,35 @@ if (typeof module !== 'undefined') module.exports = YC;
     o += '<div class="small">본 내역서는 업무 참고용 계산 결과입니다. 최종 부여 전 취업규칙·단체협약 및 최신 지침과 대조하시기 바랍니다.</div></div>';
     $('out').innerHTML = o;
   }
+  /* ---------- 어느 기간의 인사 변동을 넣어야 하는지 안내 ---------- */
+  function renderGuide(R) {
+    var inp = R.inp, F = YC.fmt, o = '', y = inp.year || new Date().getFullYear();
+    var empName = { edu: '교육장 채용(1.1. 기준)', school: '학교장 채용(3.1. 기준)', hire: '입사일 기준' }[inp.emp];
+    if (R.error || R.stage == null) {
+      /* 입사일을 아직 안 넣었을 때: 기준연도·채용권자만으로 안내 */
+      if (inp.emp === 'hire') o = '📌 <b>입사일 기준</b>은 입사일을 넣어야 기간이 정해집니다. ' + y + '년의 입사 기념일 <b>직전 1년</b> 동안 있었던 변동을 넣게 됩니다.';
+      else {
+        var fm = inp.emp === 'school' ? 3 : 1, ps = YC.D(y - 1, fm, 1), pe = YC.D(y, fm, 1) - 1;
+        o = '📌 기준연도 <b>' + y + '년</b> · ' + empName + '이면<br><span class="big">' + F(ps) + ' ~ ' + F(pe) + '</span> 사이에 있었던 인사 변동을 넣습니다.' +
+          '<ul><li>' + F(pe + 1) + '에 주는 연차는 <b>그 전 1년</b>의 근무 실적으로 계산하기 때문입니다. (' + y + '년에 생긴 변동이 아닙니다)</li><li>입사일을 넣으면 그 직원에게 맞는 기간으로 다시 안내합니다.</li></ul>';
+      }
+    } else if (R.stage === 3) {
+      o = '📌 기준연도 <b>' + y + '년</b> · ' + empName + ' → ' + F(R.B) + '에 주는 연차를 계산합니다.<br>아래 표에는 <span class="big">' + F(R.ps) + ' ~ ' + F(R.pe) + '</span> 사이에 있었던 인사 변동을 넣습니다.' +
+        '<ul><li>연차는 <b>부여일 직전 1년</b>의 출근 실적으로 정해지므로, ' + F(R.B) + ' 이후에 생긴 변동은 이번 계산과 관계없습니다. (다음 해 계산 때 넣습니다)</li>' +
+        '<li>기간이 위 날짜 밖으로 걸쳐 있어도 실제 날짜 그대로 넣으면 됩니다. 위 기간에 해당하는 날만 자동으로 반영합니다.</li>' +
+        '<li><b>예외:</b> 질병휴직·약정 육아휴직(1년 초과분)은 <b>더 예전 것도</b> 넣어 주세요. 가산연차를 정하는 근속기간에서 빠집니다. (표에 넣기 번거로우면 ① "과거 누적 근속제외 일수"에 날수만 넣어도 됩니다)</li></ul>';
+    } else if (R.stage === 2) {
+      o = '📌 이 직원은 ' + F(inp.hire) + ' 중도입사자라서 ' + F(R.B) + '에는 <b>비례연차</b>를 받습니다.<br>아래 표에는 <span class="big">' + F(inp.hire) + '(입사일) ~ ' + F(R.pe) + '</span> 사이의 인사 변동을 넣습니다.' +
+        '<ul><li>1년 미만 월차(매월 1일씩, 최대 11일)까지 정확히 보려면 <b>입사 후 1년인 ' + F(YC.addYears(inp.hire, 1) - 1) + '까지</b>의 변동도 함께 넣어 주세요.</li></ul>';
+    } else {
+      o = '📌 ' + y + '년 기준일에는 아직 입사 전이거나 입사 첫해라서 <b>1년 미만 월차</b>만 계산합니다.<br>아래 표에는 <span class="big">' + F(inp.hire) + '(입사일) ~ ' + F(YC.addYears(inp.hire, 1) - 1) + '</span>(입사 후 1년) 사이의 인사 변동을 넣습니다.' +
+        '<ul><li>회계연도 비례연차를 보려면 ① 산정 기준연도를 입사 다음 해로 바꾸세요.</li></ul>';
+    }
+    if (!R.error && inp.retire != null) o += '<ul><li><b>퇴직 정산:</b> 퇴직(예정)일을 넣었으므로, 정산표를 정확히 보려면 <b>' + F(inp.hire) + ' ~ ' + F(inp.retire) + '</b> 재직 기간 전체의 인사 변동을 모두 넣어 주세요.</li></ul>';
+    $('evGuide').innerHTML = o;
+  }
   function calc() {
-    try { last = YC.compute(toInput()); render(last); }
+    try { last = YC.compute(toInput()); renderGuide(last); render(last); }
     catch (e) { $('out').innerHTML = '<div class="warn">계산 중 오류: ' + esc(e.message) + '</div>'; }
   }
   function reportText() {
