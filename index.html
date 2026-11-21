@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css?v=10">
-<script src="common.js?v=18"></script>
+<script src="common.js?v=19"></script>
 <style>
   /* 색(칠판 테마)은 common.css에 있음 */
   * { box-sizing: border-box; }
@@ -234,6 +234,82 @@
   /* 관리자 페이지 버튼 */
   .hdr-btn.admin-page { background: #0F172A; color: #fff; text-decoration: none; display: inline-flex; align-items: center; }
   .hdr-btn.admin-page:hover { background: #1E293B; filter: none; }
+  /* 상단 메뉴가 9개로 늘어 넓은 화면이 아니면 메뉴줄을 아래 줄로 내림 (로그인 버튼과 겹치지 않게) */
+  @media (max-width: 1800px) {
+    header.hub-top { flex-wrap: wrap; }
+    header.hub-top .nav-wrap { order: 3; flex-basis: 100%; }
+    header.hub-top .hub-right { margin-left: auto; }
+  }
+  /* ───────── 커뮤니티 라운지 (apps.html에서 옮겨 옴) ───────── */
+  .cm-wrap { max-width: 1180px; margin: 0 auto; padding: 10px 28px 56px; scroll-margin-top: 140px; }
+  .cm-tabs { display: flex; gap: 6px; margin: 0 0 12px; padding: 5px; background: #fff; border: 1px solid var(--line2); border-radius: 14px; width: max-content; max-width: 100%; overflow-x: auto; }
+  .cm-tab { padding: 10px 20px; font-size: 15px; font-weight: 800; border: none; background: transparent; color: var(--sub); border-radius: 10px; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background .2s, color .2s; }
+  .cm-tab:hover { background: #EEF2F7; color: var(--text); }
+  .cm-tab.active { background: var(--accent); color: #fff; }
+  .cm-box { background: #fff; padding: 26px; border: 1px solid var(--line2); border-radius: 16px; }
+  .cm-form { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; padding-bottom: 22px; border-bottom: 1px dashed var(--line2); }
+  .cm-form input, .cm-form textarea { padding: 11px 14px; border: 1.5px solid var(--line2); border-radius: 8px; font-family: inherit; font-size: 15px; background: #fff; }
+  .cm-form input:focus, .cm-form textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+  .cm-text { flex: 1 1 100%; height: 90px; resize: vertical; line-height: 1.5; }
+  #cmLinkGroup { flex: 1 1 100%; }
+  #cmPostLink { width: 100%; background: #F5F8FF; font-weight: 600; }
+  .cm-hint { display: block; margin-top: 6px; font-size: 12.5px; color: #64748b; line-height: 1.5; }
+  .cm-note { flex: 1 1 100%; margin: 0; padding: 10px 14px; border-radius: 10px; background: #FFFBEB; border: 1px solid #F7E2A0; color: #6B5B2E; font-size: 13px; line-height: 1.5; }
+  .cm-note a { color: var(--accent); font-weight: 800; }
+  body.cm-guest .cm-member-only { display: none !important; }
+  .cm-form-row { display: flex; gap: 10px; width: 100%; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
+  .cm-form-row #cmAuthor, .cm-form-row #cmGuestPw { width: 150px; text-align: center; }
+  .cm-status { color: var(--accent); font-size: 13px; font-weight: 800; margin-right: auto; }
+  .cm-submit { background: var(--accent); color: #fff; border: none; padding: 12px 22px; border-radius: 8px; font-weight: 800; font-size: 15px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .cm-submit:hover { filter: brightness(1.08); }
+  .cm-submit:disabled { background: #94a3b8; cursor: wait; }
+  .cm-table-wrap { overflow-x: auto; }
+  .cm-table { width: 100%; border-collapse: collapse; }
+  .cm-table th, .cm-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #E2E8F0; font-size: 15px; word-break: break-word; vertical-align: middle; }
+  .cm-table th { background: #EEF2F7; font-weight: 800; color: var(--sub); font-size: 13.5px; }
+  .cm-table thead th:first-child { border-radius: 10px 0 0 10px; }
+  .cm-table thead th:last-child { border-radius: 0 10px 10px 0; }
+  .cm-table tbody tr:hover > td { background: #F8FAFF; }
+  .cm-table .center { text-align: center; }
+  .cm-empty { padding: 40px !important; color: #94a3b8; }
+  .cm-title { font-weight: 700; color: #1e293b; line-height: 1.55; font-size: 14px; }
+  .cm-btns { display: flex; gap: 3px; justify-content: center; align-items: center; flex-wrap: wrap; }
+  .cm-mb { padding: 4px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; border: none; white-space: nowrap; font-family: inherit; color: #fff; }
+  .cm-mb:hover { filter: brightness(.9); }
+  .cm-like { background: #1A9C7B; } .cm-like.on { background: #0F6E52; box-shadow: inset 0 0 0 2px #FACC15; }
+  .cm-cmt { background: #64748b; } .cm-edit-b { background: #2F6FDE; } .cm-del { background: #ef4444; }
+  .cm-fav { background: #fff; color: #9A6B00; border: 1px solid #F2D27A; }
+  .cm-fav.on { background: #FEF3C7; color: #92400E; }
+  .cm-file { display: inline-block; margin: 10px 5px 0 0; padding: 5px 12px; background: var(--accent-soft); color: #1E3A8A; font-size: 13px; border-radius: 8px; text-decoration: none; font-weight: 800; border: 1px solid #BFD3FB; }
+  .cm-file:hover { background: var(--accent); color: #fff; }
+  .cm-img { max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--line2); display: block; cursor: zoom-in; }
+  .cm-admin { background: #fef08a; color: #854d0e; padding: 2px 7px; border-radius: 12px; font-size: 10.5px; font-weight: 900; margin-left: 4px; vertical-align: middle; }
+  .cm-q { color: #ec4899; font-weight: 900; margin-right: 5px; }
+  .cm-cbox { padding: 18px 22px; border-left: 4px solid #FACC15; background: #f8fafc; }
+  .cm-c { padding: 12px; background: #fff; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
+  .cm-c-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .cm-c-head strong { font-size: 13px; color: #334155; }
+  .cm-c-date { font-size: 11px; color: #94a3b8; margin-left: 8px; }
+  .cm-c-act { font-size: 12px; font-weight: 700; cursor: pointer; margin-left: 10px; border: none; background: none; font-family: inherit; padding: 0; }
+  .cm-c-body { font-size: 14px; color: #1e293b; margin-top: 6px; white-space: pre-wrap; line-height: 1.5; }
+  .cm-c-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .cm-c-form input { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: inherit; min-width: 0; }
+  .cm-c-form .cm-c-text { flex: 1 1 220px; }
+  .cm-c-form .cm-c-small { width: 80px; flex-shrink: 0; }
+  .cm-c-form button { background: var(--accent); color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; font-family: inherit; }
+  #cmEditModal .modal-content { width: 520px; max-width: 94%; max-height: 92vh; overflow-y: auto; }
+  #cmEditModal textarea, #cmEditModal input { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1.5px solid var(--line2); border-radius: 8px; font-family: inherit; font-size: 15px; margin-bottom: 10px; }
+  .cm-efiles { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .cm-efile { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; background: #EEF2F7; border-radius: 8px; font-size: 13.5px; }
+  .cm-efile.gone { opacity: .5; text-decoration: line-through; }
+  .cm-efile button { border: 1px solid var(--line2); background: #fff; border-radius: 6px; padding: 4px 10px; font-family: inherit; font-weight: 700; cursor: pointer; }
+  @media (max-width: 760px) {
+    .cm-wrap { padding: 10px 16px 40px; }
+    .cm-box { padding: 16px; }
+    .cm-table { min-width: 640px; }
+    .cm-table th, .cm-table td { padding: 12px 10px; }
+    .cm-tab { padding: 9px 14px; font-size: 14px; }
+  }
   /* 문의하기 */
   .hdr-btn.contact { background: #fff; color: #334155; border: 1.5px solid #CBD5E1; }
   .hdr-btn.contact:hover { border-color: var(--accent); color: var(--accent); filter: none; }
@@ -439,16 +515,67 @@
   <a class="commons" href="apps.html">
     <div class="commons-text">
       <h3>스마트 업무도구 · 커뮤니티</h3>
-      <p>동료들이 만든 업무 도구를 내려받고, 유용한 사이트와 업무 노하우를 함께 나눕니다. 로그인과 회원 관리도 이곳에서 합니다.</p>
+      <p>동료들이 만든 업무 도구를 내려받고, 유용한 사이트를 함께 모읍니다. 게시판은 아래 '커뮤니티 라운지'에 있습니다.</p>
       <span class="go">스마트업무도구ㆍ커뮤니티</span>
     </div>
     <div class="commons-list">
       <div><span>💡</span>스마트 업무 도구 공유</div>
       <div><span>🔗</span>유용한 사이트 모음</div>
-      <div><span>💬</span>자유게시판 · 묻고 답하기 · 자료 공유방</div>
+      <div><span>👍</span>좋아요 · 즐겨찾기 · 쪽지</div>
     </div>
   </a>
 </main>
+
+<!-- ===================== 커뮤니티 라운지 (자유게시판 · 묻고 답하기 · 자료 공유방) =====================
+     apps.html에서 옮겨 옴. 저장 위치(Firebase freeBoard · qaBoard · dataBoard)는 그대로라 예전 글이 모두 보입니다. -->
+<section id="community" class="cm-wrap" aria-labelledby="cmTitle">
+  <div class="sec-head">
+    <div>
+      <h2 id="cmTitle">💬 커뮤니티 라운지</h2>
+      <p>업무 노하우를 나누고, 궁금한 점을 묻고, 자료를 함께 쓰는 공간입니다.</p>
+    </div>
+  </div>
+  <div class="cm-tabs" role="tablist" aria-label="게시판 고르기">
+    <button class="cm-tab active" id="cm-tab-free" role="tab" aria-selected="true" onclick="CM.switchTab('free')">🎈 자유게시판</button>
+    <button class="cm-tab" id="cm-tab-qa" role="tab" aria-selected="false" onclick="CM.switchTab('qa')">❓ 묻고 답하기</button>
+    <button class="cm-tab" id="cm-tab-data" role="tab" aria-selected="false" onclick="CM.switchTab('data')">💾 자료 공유방</button>
+  </div>
+  <div class="cm-box">
+    <div class="cm-form" id="cmForm">
+      <textarea id="cmPostText" class="cm-text" placeholder="새로운 업무 노하우나 질문을 자유롭게 작성해주세요!" autocomplete="off" maxlength="5000"></textarea>
+      <div id="cmLinkGroup" class="cm-member-only">
+        <input type="text" id="cmPostLink" placeholder="🔗 파일 공유 링크 (구글드라이브·네이버 MYBOX 등) 붙여넣기 — 첨부할 파일이 없으면 비워 두세요" autocomplete="off">
+        <small class="cm-hint">📎 파일 올리는 법: 구글드라이브에 파일 올리기 → 파일에서 마우스 오른쪽 <b>[공유] → [링크 복사]</b> (일반 액세스를 <b>'링크가 있는 모든 사용자'</b>로 바꿔야 다른 사람이 열 수 있어요) → 위 칸에 붙여넣기</small>
+      </div>
+      <p class="cm-note" id="cmGuestNote" hidden>✏️ 글쓰기는 누구나 할 수 있어요. 🔒 <b>파일 공유 링크</b>는 회원만 올릴 수 있어요. <a href="#" onclick="openModal('signup');return false;">30초 만에 회원가입</a> · <a href="#" onclick="openModal('login');return false;">로그인</a></p>
+      <div class="cm-form-row">
+        <span id="cmStatus" class="cm-status" hidden>등록하는 중입니다... ⏳</span>
+        <input type="text" id="cmAuthor" value="게스트" placeholder="이름" autocomplete="off" maxlength="30">
+        <input type="password" id="cmGuestPw" placeholder="🔒 게스트 비번" autocomplete="new-password">
+        <button class="cm-submit" id="cmSubmit" onclick="CM.addPost()">✨ 등록하기</button>
+      </div>
+    </div>
+    <div class="cm-table-wrap">
+      <table class="cm-table">
+        <thead><tr><th style="width:8%" class="center">번호</th><th>제목 및 내용</th><th style="width:14%" class="center">작성자</th><th style="width:10%" class="center">날짜</th><th style="width:24%" class="center">반응 / 관리</th></tr></thead>
+        <tbody id="cmBody"><tr><td colspan="5" class="center cm-empty">불러오는 중입니다...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 커뮤니티 글 수정 창 -->
+<div id="cmEditModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cmEditTitle">
+  <div class="modal-content cm-edit">
+    <h3 id="cmEditTitle">글 수정</h3>
+    <label class="ct-label" for="cmEditText">내용</label>
+    <textarea id="cmEditText" rows="6" maxlength="5000"></textarea>
+    <div id="cmEditLinkWrap"><label class="ct-label" for="cmEditLink">파일 공유 링크 <small>없으면 비워 두세요</small></label><input id="cmEditLink" placeholder="https://..."></div>
+    <div id="cmEditFilesWrap" hidden><span class="ct-label">예전 첨부파일 <small>'빼기'를 누른 파일은 저장할 때 목록에서 지워져요</small></span><div id="cmEditFiles" class="cm-efiles"></div></div>
+    <p class="ct-msg" id="cmEditMsg" role="alert"></p>
+    <div class="ct-row"><button type="button" class="ct-send" id="cmEditSave" onclick="CM.saveEdit()">수정 저장</button><button type="button" class="ct-close" onclick="CM.closeEdit()">취소</button></div>
+  </div>
+</div>
 
 <footer>
   <span class="chalk-sign" id="scFootTitle">조효식 허브 PRO</span>
@@ -1668,6 +1795,300 @@
         });
 </script>
 <!-- 방문 기록은 common.js가 자동으로 남깁니다 -->
+<script>
+/* =====================================================================
+   커뮤니티 라운지 (자유게시판 · 묻고 답하기 · 자료 공유방) — apps.html에서 옮겨 옴
+   - Firebase 보관함 이름(freeBoard · qaBoard · dataBoard)은 그대로 → 예전 글·댓글·좋아요가 그대로 보임
+   - 권한: 관리자 → 모든 글 / 회원 → 자기 글 / 게스트 글 → 등록할 때 넣은 비밀번호
+   - 파일 공유 링크는 회원만, 글·댓글은 누구나
+   - 다른 코드와 이름이 겹치지 않도록 CM 안에 모두 넣음
+   ===================================================================== */
+window.CM = (function () {
+  const BOARDS = { free: 'freeBoard', qa: 'qaBoard', data: 'dataBoard' };
+  const NAMES = { freeBoard: '자유게시판', qaBoard: '묻고 답하기', dataBoard: '자료 공유방' };
+  const FAV_LINK = { freeBoard: 'index.html#free', qaBoard: 'index.html#qa', dataBoard: 'index.html#data' };
+  const ROWS = {};
+  let db = null, tab = 'freeBoard', favs = [], editing = null;
+  const $ = id => document.getElementById(id);
+  const E = s => HUB.esc(s == null ? '' : s);
+  const me = () => HUB.getUser();
+  const isAdmin = () => HUB.isAdmin(me());
+  function safeUrl(u) {
+    u = String(u || '').trim(); if (!u) return '';
+    if (!/^https?:\/\//i.test(u)) u = 'http://' + u;
+    try { const x = new URL(u); return (x.protocol === 'http:' || x.protocol === 'https:') ? x.href : ''; } catch (e) { return ''; }
+  }
+  const multiline = s => E(s).replace(/\n/g, '<br>');
+  const isMine = d => { const u = me(); return !!(u && u.phone && d && d.authorPhone === u.phone); };
+  const liked = () => { try { return JSON.parse(localStorage.getItem('likedPosts')) || {}; } catch (e) { return {}; } };
+
+  async function canTouch(d, what) {
+    if (isAdmin()) return 'admin';
+    if (isMine(d)) return 'owner';
+    if (d && d.authorPhone === 'guest') {
+      const pw = prompt(`게스트가 등록한 ${what}입니다. 등록할 때 넣은 비밀번호를 입력하세요.`);
+      if (pw === null) return '';
+      if (await HUB.verifySecret(pw, d.guestPwHash, d.guestPw)) return 'guest';
+      alert('비밀번호가 일치하지 않습니다.'); return '';
+    }
+    alert(`본인이 등록한 ${what}만 고치거나 지울 수 있습니다.`); return '';
+  }
+  // 게스트가 지우면 '숨김' 처리(관리자가 되살릴 수 있음), 회원·관리자는 완전 삭제
+  async function removeDoc(ref, right) { if (right === 'guest') await ref.update({ deleted: true, deletedAt: Date.now() }); else await ref.delete(); }
+  async function authorFields(pw) {
+    const u = me(), f = { authorPhone: u ? u.phone : 'guest' };
+    if (!u) f.guestPwHash = await HUB.hashSecret(pw);
+    if (HUB.isAdmin(u)) f.byAdmin = true;
+    return f;
+  }
+  function memberOnly(what) {
+    const u = me(); if (u && u.uid) return false;
+    if (confirm(`🔒 ${what} 회원만 할 수 있어요.\n회원가입은 30초면 끝나요. 지금 가입할까요?\n(이미 회원이면 '취소'를 누른 뒤 오른쪽 위 [로그인]을 눌러 주세요)`)) { if (typeof openModal === 'function') openModal('signup'); }
+    return true;
+  }
+
+  // ── 로그인 상태에 맞춰 입력칸 바꾸기 ──
+  function updateForm() {
+    const u = me(), a = $('cmAuthor'), pw = $('cmGuestPw');
+    if (u) { a.value = u.name || ''; a.readOnly = true; a.style.background = '#f1f5f9'; pw.hidden = true; pw.value = ''; }
+    else { if (a.readOnly) a.value = '게스트'; a.readOnly = false; a.style.background = '#fff'; pw.hidden = false; }
+    const guest = !(u && u.uid);
+    document.body.classList.toggle('cm-guest', guest);
+    $('cmGuestNote').hidden = !guest;
+  }
+
+  // ── 즐겨찾기 (회원) ──
+  async function loadFavs() {
+    favs = []; const u = me(); if (!u || !u.uid || !db) return;
+    try { const s = await db.collection('users').doc(u.uid).get(); if (s.exists) favs = s.data().favorites || []; } catch (e) { console.log('즐겨찾기 불러오기 실패', e); }
+  }
+  function favButton(col, id, title) {
+    const u = me(); if (!u || !u.uid) return '';
+    const on = favs.some(f => f.key === col + '/' + id);
+    return `<button class="cm-mb cm-fav ${on ? 'on' : ''}" data-cmfav="${col}/${id}" data-title="${E(String(title || '').slice(0, 80))}" title="${on ? '즐겨찾기에서 빼기' : '즐겨찾기에 담기 (내 페이지에서 모아 봄)'}" aria-pressed="${on}" onclick="CM.toggleFav(this)">${on ? '★' : '☆'}</button>`;
+  }
+  async function toggleFav(btn) {
+    const u = me(); if (!u || !u.uid) return alert('즐겨찾기는 로그인한 회원만 쓸 수 있어요.');
+    const key = btn.dataset.cmfav, [col, id] = key.split('/');
+    const ref = db.collection('users').doc(u.uid);
+    try {
+      const s = await ref.get(); let list = (s.exists && s.data().favorites) || [];
+      const had = list.some(f => f.key === key);
+      list = had ? list.filter(f => f.key !== key) : list.concat([{ key, col, id, title: btn.dataset.title || '', link: FAV_LINK[col] || 'index.html#community', where: NAMES[col] || '', at: Date.now() }]);
+      await ref.update({ favorites: list }); favs = list;
+      document.querySelectorAll(`[data-cmfav="${key}"]`).forEach(b => { b.classList.toggle('on', !had); b.textContent = had ? '☆' : '★'; b.setAttribute('aria-pressed', String(!had)); });
+    } catch (e) { console.error(e); alert('즐겨찾기를 저장하지 못했습니다.'); }
+  }
+
+  // ── 게시판 고르기 ──
+  function switchTab(name, keepForm) {
+    const target = BOARDS[name] || 'freeBoard';
+    const form = $('cmForm');
+    if (tab === target && !keepForm) { form.style.display = form.style.display === 'none' ? 'flex' : 'none'; return; }
+    form.style.display = 'flex';
+    tab = target;
+    Object.keys(BOARDS).forEach(k => { const b = $('cm-tab-' + k); b.classList.toggle('active', k === name); b.setAttribute('aria-selected', String(k === name)); });
+    $('cmPostLink').value = '';
+    $('cmPostText').placeholder = name === 'data' ? '자료의 이름과 설명, 사용 노하우 등을 작성해주세요.' : '새로운 업무 노하우나 질문을 자유롭게 작성해주세요!';
+    loadPosts();
+  }
+
+  // ── 글 목록 ──
+  async function loadPosts() {
+    const body = $('cmBody'); if (!db) return;
+    body.innerHTML = `<tr><td colspan="5" class="center cm-empty">불러오는 중입니다...</td></tr>`;
+    let snap;
+    try { snap = await db.collection(tab).orderBy('createdAt', 'desc').limit(30).get(); }
+    catch (e) { console.error(e); body.innerHTML = `<tr><td colspan="5" class="center cm-empty">글을 불러오지 못했습니다. (${E(e.code || e.message)})</td></tr>`; return; }
+    const docs = []; snap.forEach(d => { if (HUB.okId(d.id) && !d.data().deleted) docs.push(d); });
+    if (!docs.length) { body.innerHTML = `<tr><td colspan="5" class="center cm-empty">등록된 글이 없습니다. 첫 글을 남겨 보세요!</td></tr>`; return; }
+    const L = liked(), u = me(), admin = isAdmin();
+    let n = docs.length;
+    body.innerHTML = docs.map(doc => {
+      const p = doc.data(), id = doc.id; ROWS[tab + '/' + id] = p;
+      let files = '';
+      const fl = safeUrl(p.fileLink); if (fl) files += `<br><a href="${E(fl)}" target="_blank" rel="noopener" class="cm-file">🔗 첨부 파일 열기</a>`;
+      (p.attachments || []).forEach(a => {
+        const au = safeUrl(a.url); if (!au) return;
+        files += a.type === 'image' ? `<br><img src="${E(au)}" class="cm-img" alt="첨부 이미지" onclick="window.open(this.src,'_blank','noopener')">`
+                                    : `<br><a href="${E(au)}" target="_blank" rel="noopener" class="cm-file" download>📎 ${E(a.name)} 다운로드</a>`;
+      });
+      const can = admin || isMine(p) || p.authorPhone === 'guest';
+      const guestInputs = u ? '' : `<input type="text" id="cm-ca-${id}" class="cm-c-small" placeholder="이름" autocomplete="off" maxlength="30"><input type="password" id="cm-cp-${id}" class="cm-c-small" placeholder="🔒 비번" autocomplete="new-password">`;
+      return `<tr>
+        <td class="center">${n--}</td>
+        <td class="cm-title">${tab === 'qaBoard' ? '<span class="cm-q">Q.</span>' : ''}${multiline(p.title)}${files}</td>
+        <td class="center" style="font-weight:600;font-size:12.5px">${E(p.author)}${HUB.msg ? HUB.msg.button(p.authorPhone, p.author) : ''}${p.byAdmin ? '<span class="cm-admin">A</span>' : ''}</td>
+        <td class="center" style="font-size:12px;color:#64748b">${E(p.date)}</td>
+        <td class="center"><div class="cm-btns">
+          ${favButton(tab, id, p.title)}
+          <button class="cm-mb cm-like ${L[id] ? 'on' : ''}" aria-pressed="${!!L[id]}" title="${L[id] ? '다시 누르면 좋아요 취소' : '좋아요'}" onclick="CM.likePost('${id}')">👍 ${Math.max(0, p.likes || 0)}</button>
+          <button class="cm-mb cm-cmt" id="cm-cb-${id}" onclick="CM.toggleComments('${id}')">💬 0</button>
+          ${can ? `<button class="cm-mb cm-edit-b" onclick="CM.editPost('${id}')">수정</button><button class="cm-mb cm-del" onclick="CM.deletePost('${id}')">삭제</button>` : ''}
+        </div></td></tr>
+        <tr id="cm-cr-${id}" style="display:none"><td colspan="5" style="padding:0;border-bottom:2px solid #e2e8f0"><div class="cm-cbox">
+          <div id="cm-cl-${id}" style="margin-bottom:14px"></div>
+          <div class="cm-c-form">${guestInputs}<input type="text" id="cm-ct-${id}" class="cm-c-text" placeholder="따뜻한 댓글을 남겨주세요..." autocomplete="off" maxlength="1000" onkeydown="if(event.key==='Enter')CM.addComment('${id}')"><button onclick="CM.addComment('${id}')">등록</button></div>
+        </div></td></tr>`;
+    }).join('');
+    // 댓글 수는 한꺼번에 가져옴
+    const curTab = tab;
+    docs.forEach(doc => db.collection(curTab).doc(doc.id).collection('comments').get().then(s => {
+      let c = 0; s.forEach(x => { if (!x.data().deleted) c++; });
+      const b = $('cm-cb-' + doc.id); if (b && curTab === tab) b.textContent = `💬 ${c}`;
+    }).catch(() => {}));
+  }
+
+  async function addPost() {
+    const t = $('cmPostText'), l = $('cmPostLink'), a = $('cmAuthor'), pw = $('cmGuestPw'), btn = $('cmSubmit'), st = $('cmStatus');
+    const u = me();
+    if (!db) return alert('서버에 연결하는 중입니다. 잠시 후 다시 눌러 주세요.');
+    if (!t.value.trim()) { t.focus(); return alert('내용을 입력해주세요!'); }
+    if (!u && !pw.value.trim()) { pw.focus(); return alert('게스트로 쓸 때는 삭제용 비밀번호를 넣어 주세요.'); }
+    if (l.value.trim() && memberOnly('파일 공유 링크는')) return;
+    if (l.value.trim() && !safeUrl(l.value)) return alert('파일 공유 링크 주소를 확인해 주세요.');
+    btn.disabled = true; st.hidden = false;
+    const d = new Date();
+    const data = Object.assign({ title: t.value, author: (u ? u.name : a.value.trim()) || '익명', date: `${d.getMonth() + 1}.${d.getDate()}`, likes: 0, attachments: [],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp() }, await authorFields(pw.value.trim()));
+    if (l.value.trim()) { const f = safeUrl(l.value); if (f) data.fileLink = f; }
+    try { await db.collection(tab).add(data); t.value = ''; l.value = ''; pw.value = ''; loadPosts(); }
+    catch (e) { console.error('게시물 등록 오류:', e); alert('등록 중 오류가 발생했습니다. (' + (e.code || e.message) + ')'); }
+    finally { btn.disabled = false; st.hidden = true; }
+  }
+
+  async function likePost(id) {
+    const L = liked(), had = !!L[id];
+    try {
+      await db.collection(tab).doc(id).update({ likes: firebase.firestore.FieldValue.increment(had ? -1 : 1) });
+      if (had) delete L[id]; else L[id] = true;
+      localStorage.setItem('likedPosts', JSON.stringify(L)); loadPosts();
+    } catch (e) { console.error(e); alert('좋아요를 저장하지 못했습니다.'); }
+  }
+
+  async function deletePost(id) {
+    const p = ROWS[tab + '/' + id], right = await canTouch(p, '글'); if (!right) return;
+    if (right !== 'guest' && !confirm('이 게시글을 삭제하시겠습니까?')) return;
+    try {
+      const st = HUB.storage && HUB.storage();
+      if (right !== 'guest' && st) for (const f of ((p && p.attachments) || [])) { try { await st.refFromURL(f.url).delete(); } catch (e) {} }
+      await removeDoc(db.collection(tab).doc(id), right); loadPosts();
+    } catch (e) { console.error(e); alert('삭제 중 오류가 발생했습니다. (' + (e.code || e.message) + ')'); }
+  }
+
+  // ── 댓글 ──
+  function toggleComments(id) {
+    const r = $('cm-cr-' + id); const open = r.style.display === 'none' || !r.style.display;
+    r.style.display = open ? 'table-row' : 'none'; if (open) loadComments(id);
+  }
+  async function loadComments(id) {
+    const box = $('cm-cl-' + id); box.innerHTML = '<div style="padding:8px;color:#64748b;font-size:13px">댓글 불러오는 중...</div>';
+    let s; try { s = await db.collection(tab).doc(id).collection('comments').orderBy('createdAt', 'asc').get(); }
+    catch (e) { box.innerHTML = '<div style="padding:8px;color:#dc2626;font-size:13px">댓글을 불러오지 못했습니다.</div>'; return; }
+    const admin = isAdmin(); let shown = 0, html = '';
+    s.forEach(cs => {
+      if (!HUB.okId(cs.id)) return; const c = cs.data(); if (c.deleted) return;
+      shown++; ROWS[`${tab}/${id}/c/${cs.id}`] = c;
+      const can = admin || isMine(c) || c.authorPhone === 'guest';
+      html += `<div class="cm-c"><div class="cm-c-head"><div><strong>${E(c.author)}</strong>${HUB.msg ? HUB.msg.button(c.authorPhone, c.author) : ''}${c.byAdmin ? '<span class="cm-admin">ADMIN</span>' : ''}<span class="cm-c-date">${E(c.date)}</span></div>
+        <div>${can ? `<button class="cm-c-act" style="color:#2F6FDE" onclick="CM.editComment('${id}','${cs.id}')">수정</button><button class="cm-c-act" style="color:#ef4444" onclick="CM.deleteComment('${id}','${cs.id}')">삭제</button>` : ''}</div></div>
+        <div class="cm-c-body">${E(c.text)}</div></div>`;
+    });
+    box.innerHTML = html || '<div style="padding:8px;color:#94a3b8;font-size:13px">아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!</div>';
+    const b = $('cm-cb-' + id); if (b) b.textContent = `💬 ${shown}`;
+  }
+  async function addComment(id) {
+    const t = $('cm-ct-' + id), a = $('cm-ca-' + id), pw = $('cm-cp-' + id), u = me();
+    if (!t.value.trim()) return alert('댓글 내용을 입력해주세요!');
+    if (!u && (!a || !a.value.trim() || !pw || !pw.value.trim())) return alert('게스트로 쓸 때는 이름과 삭제용 비밀번호를 모두 넣어 주세요.');
+    const d = new Date();
+    try {
+      await db.collection(tab).doc(id).collection('comments').add(Object.assign({ text: t.value.trim(), author: u ? u.name : a.value.trim(),
+        date: `${d.getMonth() + 1}.${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp() }, await authorFields(u ? '' : pw.value.trim())));
+      t.value = ''; if (pw) pw.value = ''; loadComments(id);
+    } catch (e) { console.error(e); alert('댓글을 등록하지 못했습니다. (' + (e.code || e.message) + ')'); }
+  }
+  async function editComment(pid, cid) {
+    const c = ROWS[`${tab}/${pid}/c/${cid}`]; if (!(await canTouch(c, '댓글'))) return;
+    const v = prompt('수정할 댓글 내용을 입력하세요:', (c && c.text) || ''); if (v === null) return;
+    if (!v.trim()) return alert('댓글 내용을 입력해주세요!');
+    try { await db.collection(tab).doc(pid).collection('comments').doc(cid).update({ text: v.trim() }); loadComments(pid); }
+    catch (e) { console.error(e); alert('수정하지 못했습니다. (' + (e.code || e.message) + ')'); }
+  }
+  async function deleteComment(pid, cid) {
+    const right = await canTouch(ROWS[`${tab}/${pid}/c/${cid}`], '댓글'); if (!right) return;
+    if (right !== 'guest' && !confirm('이 댓글을 삭제하시겠습니까?')) return;
+    try { await removeDoc(db.collection(tab).doc(pid).collection('comments').doc(cid), right); loadComments(pid); }
+    catch (e) { console.error(e); alert('삭제하지 못했습니다. (' + (e.code || e.message) + ')'); }
+  }
+
+  // ── 글 수정 창 ──
+  async function editPost(id) {
+    const right = await canTouch(ROWS[tab + '/' + id], '글'); if (!right) return;
+    const s = await db.collection(tab).doc(id).get(); if (!s.exists) return alert('글을 찾을 수 없습니다. 이미 지워졌을 수 있어요.');
+    editing = { col: tab, id, data: s.data(), right, removed: new Set() };
+    $('cmEditTitle').textContent = `${NAMES[tab]} 글 수정`;
+    $('cmEditText').value = editing.data.title || '';
+    $('cmEditLink').value = editing.data.fileLink || '';
+    $('cmEditLinkWrap').hidden = right === 'guest';   // 링크는 회원 전용
+    $('cmEditFilesWrap').hidden = !(editing.data.attachments && editing.data.attachments.length);
+    drawFiles(); $('cmEditMsg').textContent = '';
+    $('cmEditModal').style.display = 'flex'; setTimeout(() => $('cmEditText').focus(), 50);
+  }
+  function drawFiles() {
+    const e = editing; if (!e) return;
+    $('cmEditFiles').innerHTML = (e.data.attachments || []).map((a, i) => { const g = e.removed.has(i);
+      return `<div class="cm-efile ${g ? 'gone' : ''}"><span>${a.type === 'image' ? '🖼️' : '📎'} ${E(a.name || '파일')}${g ? ' (지워질 예정)' : ''}</span>${e.right === 'guest' ? '' : `<button type="button" onclick="CM.toggleFile(${i})">${g ? '되살리기' : '빼기'}</button>`}</div>`; }).join('');
+  }
+  function toggleFile(i) { editing.removed.has(i) ? editing.removed.delete(i) : editing.removed.add(i); drawFiles(); }
+  function closeEdit() { $('cmEditModal').style.display = 'none'; editing = null; }
+  async function saveEdit() {
+    const e = editing; if (!e) return; const msg = t => { $('cmEditMsg').textContent = t; }, btn = $('cmEditSave');
+    const text = $('cmEditText').value.trim(); if (!text) return msg('내용을 입력해 주세요.');
+    const upd = { title: text };
+    if (e.right !== 'guest') {
+      const raw = $('cmEditLink').value.trim();
+      if (raw && !safeUrl(raw)) return msg('파일 공유 링크 주소를 확인해 주세요.');
+      upd.fileLink = safeUrl(raw);
+      const old = e.data.attachments || [];
+      if (old.length) upd.attachments = old.filter((a, i) => !e.removed.has(i));
+    }
+    btn.disabled = true; msg('저장하는 중입니다...');
+    try {
+      await db.collection(e.col).doc(e.id).update(upd);
+      const st = HUB.storage && HUB.storage();
+      if (st) for (const i of e.removed) { try { await st.refFromURL(e.data.attachments[i].url).delete(); } catch (x) {} }
+      closeEdit(); loadPosts();
+    } catch (err) { console.error(err); msg('저장하지 못했습니다. (' + (err.code || err.message) + ')'); }
+    finally { btn.disabled = false; }
+  }
+
+  // ── 주소 끝 #community · #free · #qa · #data → 해당 게시판으로 이동 ──
+  function fromHash() {
+    const h = location.hash.replace('#', '');
+    if (['free', 'qa', 'data'].includes(h)) switchTab(h, true);
+    if (['community', 'free', 'qa', 'data'].includes(h)) setTimeout(() => $('community').scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+  }
+  window.addEventListener('hashchange', fromHash);
+
+  // ── 시작 ──
+  document.addEventListener('DOMContentLoaded', async () => {
+    updateForm();
+    $('cmEditModal').addEventListener('mousedown', ev => { if (ev.target.id === 'cmEditModal') closeEdit(); });
+    if (!(await HUB.firebaseReady())) { $('cmBody').innerHTML = `<tr><td colspan="5" class="center cm-empty">서버에 연결하지 못했습니다. 새로고침해 주세요.</td></tr>`; return; }
+    db = HUB.db();
+    await loadFavs();
+    const h = location.hash.replace('#', '');
+    if (['free', 'qa', 'data'].includes(h)) { tab = BOARDS[h]; Object.keys(BOARDS).forEach(k => { $('cm-tab-' + k).classList.toggle('active', k === h); }); }
+    loadPosts(); fromHash();
+  });
+  HUB.onUserChange(async () => { updateForm(); if (db) { await loadFavs(); loadPosts(); } });
+
+  return { switchTab, addPost, likePost, deletePost, editPost, saveEdit, closeEdit, toggleFile, toggleComments, addComment, editComment, deleteComment, toggleFav, reload: loadPosts };
+})();
+</script>
+
 <script>
 /* =====================================================================
    관리자 설정 연동 (data/site-config.json)
