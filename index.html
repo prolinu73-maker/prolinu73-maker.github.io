@@ -751,6 +751,24 @@
   .board { padding: 24px 28px 70px; }
   .snow-hills { height: 52px; }
   .board-corner::before { content: none; display: none; }   /* '오늘' 카드 위 하얀 눈 막대 없앰 */
+
+  /* ───── 🚙 눈 언덕 + 지프차 ───── */
+  .board { padding-bottom: 100px; }
+  .snow-hills { height: 76px; }
+  .snow-hills.back { z-index: 1; }   /* 뒤 언덕은 차 뒤에 */
+  .jeep { position: absolute; left: 0; top: 0; width: 84px; height: 46px; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .4s; will-change: transform; }
+  .jeep.on { opacity: 1; }
+  .jeep-body { width: 100%; height: 100%; transform-origin: 50% 100%; position: relative; }
+  .jeep-body svg { display: block; overflow: visible; filter: drop-shadow(0 3px 3px rgba(10,35,75,.25)); }
+  .jeep.left .jeep-body { transform: scaleX(-1); }
+  .jeep-spray { position: absolute; left: -4px; bottom: 2px; width: 20px; height: 14px; opacity: 0; transition: opacity .3s; }
+  .jeep.moving .jeep-spray { opacity: 1; }
+  .jeep-spray i { position: absolute; left: 10px; bottom: 0; width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: jeepSpray .7s linear infinite; }
+  .jeep-spray i:nth-child(2) { animation-delay: .23s; width: 5px; height: 5px; }
+  .jeep-spray i:nth-child(3) { animation-delay: .46s; width: 4px; height: 4px; }
+  @keyframes jeepSpray { 0% { transform: translate(0,0) scale(1); opacity: .95; } 100% { transform: translate(-18px,-12px) scale(.3); opacity: 0; } }
+  @media (max-width: 760px) { .board { padding-bottom: 92px; } .snow-hills { height: 64px; } }
+  @media (prefers-reduced-motion: reduce) { .jeep-spray { display: none; } }
   .snow-toggle { position: absolute; top: auto; bottom: 12px; right: max(18px, calc(50% - 590px)); left: auto; transform: none; z-index: 3; padding: 5px 12px; font-size: 12px; box-shadow: 0 2px 8px rgba(10,35,75,.15); }
   .hm-dash { margin: 22px auto 0; align-items: stretch; }
   .hm-panel { box-shadow: 0 8px 26px rgba(15,50,95,.09); display: flex; flex-direction: column; }
@@ -770,6 +788,45 @@
 <section class="board-wrap" aria-label="포털 소개">
   <div class="aurora" aria-hidden="true"></div>
   <canvas id="snowCanvas" aria-hidden="true"></canvas>
+  <div class="snow-hills back" aria-hidden="true">
+    <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+      <path d="M-200 60 L0 50 C 160 14, 330 20, 470 44 S 760 70, 900 34 S 1180 0, 1300 30 S 1420 44, 1440 38 L1640 30 L1640 120 L-200 120 Z" fill="#C7DBEE" opacity=".85"/>
+      <path d="M-200 60 L0 50 C 160 14, 330 20, 470 44 S 760 70, 900 34 S 1180 0, 1300 30 S 1420 44, 1440 38 L1640 30" fill="none" stroke="#FFFFFF" stroke-width="3" opacity=".55" vector-effect="non-scaling-stroke"/>
+    </svg>
+  </div>
+  <!-- 🚙 눈 언덕을 오가는 지프차 (장식 · 클릭 안 됨) -->
+  <div class="jeep" id="jeep" aria-hidden="true">
+    <div class="jeep-body">
+      <span class="jeep-spray"><i></i><i></i><i></i></span>
+      <svg viewBox="0 0 84 46" width="84" height="46">
+        <!-- 예비 타이어 -->
+        <rect x="1" y="16" width="8" height="16" rx="4" fill="#2B2F36"/>
+        <rect x="3" y="19" width="4" height="10" rx="2" fill="#59606B"/>
+        <!-- 차체 -->
+        <path d="M8 34 L8 19 Q8 16 11 16 L20 16 L24 6 Q25 4 28 4 L54 4 Q57 4 58 6 L63 16 L74 17 Q79 18 79 22 L79 34 Z" fill="#C8382F"/>
+        <path d="M8 27 L79 27 L79 34 L8 34 Z" fill="#A82D25"/>
+        <!-- 지붕 위 눈 · 짐받이 -->
+        <path d="M24 4 Q24 0.5 29 0.5 L54 0.5 Q59 0.5 58 4 Z" fill="#FFFFFF"/>
+        <rect x="27" y="1.8" width="28" height="1.4" rx=".7" fill="#DCE8F5"/>
+        <!-- 창문 -->
+        <path d="M26.5 7 L40 7 L40 15.5 L23.5 15.5 Z" fill="#BFE3FF"/>
+        <path d="M43 7 L55.5 7 L60 15.5 L43 15.5 Z" fill="#BFE3FF"/>
+        <path d="M45 8.5 L49 8.5 L46 14 L44 14 Z" fill="#FFFFFF" opacity=".7"/>
+        <!-- 문 선 · 손잡이 -->
+        <path d="M41.5 6 L41.5 27" stroke="#8E241D" stroke-width="1"/>
+        <rect x="33" y="18.5" width="5" height="1.6" rx=".8" fill="#8E241D"/>
+        <rect x="47" y="18.5" width="5" height="1.6" rx=".8" fill="#8E241D"/>
+        <!-- 전조등 · 후미등 · 범퍼 -->
+        <circle cx="76.5" cy="21.5" r="2.4" fill="#FFE27A"/>
+        <rect x="8" y="19" width="2.5" height="4" rx="1" fill="#FF6B5E"/>
+        <rect x="74" y="31.5" width="8" height="3.5" rx="1.5" fill="#2B2F36"/>
+        <rect x="5" y="31.5" width="7" height="3.5" rx="1.5" fill="#2B2F36"/>
+        <!-- 바퀴 -->
+        <g class="jw" style="transform-origin:22px 36px"><circle cx="22" cy="36" r="9" fill="#23262C"/><circle cx="22" cy="36" r="4.2" fill="#9AA3AF"/><path d="M22 31.8 V40.2 M17.8 36 H26.2" stroke="#23262C" stroke-width="1.6"/></g>
+        <g class="jw" style="transform-origin:64px 36px"><circle cx="64" cy="36" r="9" fill="#23262C"/><circle cx="64" cy="36" r="4.2" fill="#9AA3AF"/><path d="M64 31.8 V40.2 M59.8 36 H68.2" stroke="#23262C" stroke-width="1.6"/></g>
+      </svg>
+    </div>
+  </div>
   <div class="board">
     <div class="board-main">
       <p class="board-tagline"><span id="typeText">현장을 가장 잘 아는 사람이, 현장을 바꿉니다</span><span class="type-cursor" aria-hidden="true"></span></p>
@@ -805,12 +862,102 @@
   <div class="ledge" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <button type="button" class="snow-toggle" id="snowToggle" aria-pressed="true">❄ 눈 끄기</button>
   <div class="snow-hills" aria-hidden="true">
-    <svg viewBox="0 0 1440 90" preserveAspectRatio="none">
-      <path d="M0 52 C 180 18, 360 70, 560 40 S 900 10, 1100 44 S 1340 30, 1440 40 L1440 90 L0 90 Z" fill="#DCEAF6"/>
-      <path d="M0 66 C 220 40, 420 86, 680 60 S 1060 38, 1260 62 S 1400 58, 1440 60 L1440 90 L0 90 Z" fill="#E3EDF7"/>
+    <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+      <path d="M-200 82 L0 78 C 110 50, 230 46, 340 70 S 560 104, 720 74 S 960 30, 1120 60 S 1330 100, 1440 70 L1640 64 L1640 120 L-200 120 Z" fill="#E3EDF7"/>
+      <path id="hillRoad" d="M-200 82 L0 78 C 110 50, 230 46, 340 70 S 560 104, 720 74 S 960 30, 1120 60 S 1330 100, 1440 70 L1640 64" fill="none" stroke="#FFFFFF" stroke-width="2.5" vector-effect="non-scaling-stroke"/>
     </svg>
   </div>
 </section>
+<script>
+/* =====================================================================
+   🚙 눈 언덕을 오가는 지프차 (장식)
+   - 언덕 길(#hillRoad)을 따라 기울기에 맞춰 달립니다.
+   - 왼쪽→오른쪽, 오른쪽→왼쪽을 무작위로 고르고, 가끔 중간에 멈췄다가 되돌아갑니다.
+   - 속도·쉬는 시간도 매번 달라집니다. 화면을 안 보고 있으면 멈춥니다.
+   - 윈도우 '애니메이션 효과'가 꺼진 컴퓨터에서는 언덕 위에 멈춰 서 있습니다.
+   ===================================================================== */
+(function () {
+  const car = document.getElementById('jeep'), road = document.getElementById('hillRoad');
+  const wrap = car && car.closest('.board-wrap'), hills = wrap && wrap.querySelector('.snow-hills:not(.back)');
+  if (!car || !road || !road.getTotalLength) return;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const body = car.querySelector('.jeep-body'), wheels = car.querySelectorAll('.jw');
+  const VBW = 1440, VBH = 120, L = road.getTotalLength();
+  let W = 0, H = 0, top0 = 0, scale = 1, raf = 0, s = 0, dir = 1, spin = 0;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  // 화면 폭에 따라 차 크기 조절
+  function measure() {
+    const wr = wrap.getBoundingClientRect(), hr = hills.getBoundingClientRect();
+    W = hr.width; H = hr.height; top0 = hr.top - wr.top;
+    scale = W < 760 ? .72 : W < 1200 ? .86 : 1;
+  }
+  // 길 위 s 지점에 차를 놓기 (뒤·앞바퀴가 길에 닿도록 기울임)
+  function place(bounce) {
+    // 화면 높이가 바뀌어도(글꼴·접속자 수 등) 언덕 위치를 매번 다시 잼
+    W = hills.clientWidth; H = hills.clientHeight; top0 = wrap.clientHeight - H + 1;
+    const half = 30 / (W / VBW) * scale;            // 바퀴 사이 거리의 절반 (길 좌표)
+    const p = road.getPointAtLength(s);
+    const a = road.getPointAtLength(Math.max(0, s - half)), b = road.getPointAtLength(Math.min(L, s + half));
+    const px = p.x * W / VBW, py = top0 + p.y * H / VBH;
+    const ang = Math.atan2((b.y - a.y) * H / VBH, (b.x - a.x) * W / VBW) * 180 / Math.PI;
+    car.style.transform = `translate(${px - 42}px, ${py - 46 + 2 + (bounce || 0)}px) rotate(${ang}deg) scale(${scale})`;
+    car.style.transformOrigin = '42px 44px';
+  }
+  function setDir(d) { dir = d; car.classList.toggle('left', d < 0); }
+  // 한 구간 달리기: from → to (길 좌표), 속도 px/s
+  function drive(to, speed) {
+    return new Promise(res => {
+      let last = performance.now(), t = 0;
+      car.classList.add('moving');
+      function step(now) {
+        const dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
+        const ds = speed * dt * (VBW / Math.max(W, 1));   // 화면 픽셀 속도 → 길 좌표
+        const left = to - s;
+        if (Math.abs(left) <= ds) { s = to; place(0); car.classList.remove('moving'); res(); return; }
+        s += Math.sign(left) * ds;
+        spin += ds * W / VBW / 9 * 57.3;   // 앞으로 굴러가는 방향 (뒤집힌 차도 같은 식)
+        wheels.forEach(w => w.style.transform = `rotate(${spin}deg)`);
+        place(Math.sin(t * 14) * .8);
+        raf = requestAnimationFrame(step);
+      }
+      raf = requestAnimationFrame(step);
+    });
+  }
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const visible = () => new Promise(r => { if (!document.hidden) return r(); const f = () => { if (!document.hidden) { document.removeEventListener('visibilitychange', f); r(); } }; document.addEventListener('visibilitychange', f); });
+  async function loop() {
+    // 길 좌표: 0 = 왼쪽 화면 밖, L = 오른쪽 화면 밖
+    const startL = 0, endL = L;
+    await wait(rnd(800, 2500));
+    for (;;) {
+      await visible();
+      const goRight = Math.random() < .5;
+      setDir(goRight ? 1 : -1);
+      s = goRight ? startL : endL; place(0); car.classList.add('on');
+      const speed = rnd(90, 170);                      // 화면 기준 초당 픽셀
+      if (Math.random() < .3) {
+        // 중간까지 갔다가 잠깐 쉬고 되돌아가기
+        const mid = L * rnd(.3, .7);
+        await drive(mid, speed);
+        await wait(rnd(700, 1800));
+        setDir(-dir);
+        await drive(goRight ? startL : endL, speed * rnd(1, 1.3));
+      } else {
+        await drive(goRight ? endL : startL, speed);
+      }
+      car.classList.remove('on');
+      await wait(rnd(2500, 7000));                     // 다음 출발까지 쉬기
+    }
+  }
+  function start() {
+    measure();
+    window.addEventListener('resize', () => { measure(); place(0); });
+    if (reduce) { setDir(1); s = L * .62; place(0); car.classList.add('on'); return; }
+    loop();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
 <script>
 /* ❄ 첫 화면 눈 내림 (디자인 효과 · 끄면 이 브라우저에서 기억) */
 (function () {
