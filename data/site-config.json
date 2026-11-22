@@ -1,8 +1,8 @@
 {
   "meta": {
-    "version": "1.0.0",
-    "updatedAt": "2026-11-20T09:00:00+09:00",
-    "updatedBy": "admin"
+    "version": "1.0.1",
+    "updatedAt": "2026-11-22T10:36:05+09:00",
+    "updatedBy": "prolinu73-maker"
   },
   "site": {
     "title": "조효식 허브 PRO",
@@ -41,15 +41,35 @@
       "link": "",
       "startDate": "2026-11-20",
       "endDate": "2026-12-31",
-      "active": true,
+      "active": false,
       "dismissKey": "v20261120"
     }
   ],
   "categories": [
-    { "id": "cat-1", "name": "주요 업무", "order": 1, "visible": true },
-    { "id": "cat-2", "name": "인사·복무", "order": 2, "visible": true },
-    { "id": "cat-3", "name": "예산·재무", "order": 3, "visible": true },
-    { "id": "cat-4", "name": "시설·학교운영", "order": 4, "visible": true }
+    {
+      "id": "cat-1",
+      "name": "주요 업무",
+      "order": 1,
+      "visible": true
+    },
+    {
+      "id": "cat-2",
+      "name": "인사·복무",
+      "order": 2,
+      "visible": true
+    },
+    {
+      "id": "cat-3",
+      "name": "예산·재무",
+      "order": 3,
+      "visible": true
+    },
+    {
+      "id": "cat-4",
+      "name": "시설·학교운영",
+      "order": 4,
+      "visible": true
+    }
   ],
   "items": [
     {
@@ -64,9 +84,19 @@
       "status": "active",
       "version": "1.0.0",
       "order": 1,
-      "tags": ["AI 노무상담", "질문·답변", "정보·자료실", "핵심 노무 FAQ", "노무 계산기", "업무 체크리스트"],
+      "tags": [
+        "AI 노무상담",
+        "질문·답변",
+        "정보·자료실",
+        "핵심 노무 FAQ",
+        "노무 계산기",
+        "업무 체크리스트"
+      ],
       "changelog": [
-        { "date": "2026-11-15", "note": "질문·답변, 정보·자료 게시판 추가" }
+        {
+          "date": "2026-11-15",
+          "note": "질문·답변, 정보·자료 게시판 추가"
+        }
       ]
     },
     {
@@ -81,9 +111,15 @@
       "status": "active",
       "version": "1.0.0",
       "order": 2,
-      "tags": ["출장 여비 계산", "교통비 조회"],
+      "tags": [
+        "출장 여비 계산",
+        "교통비 조회"
+      ],
       "changelog": [
-        { "date": "2026-11-11", "note": "최초 배포" }
+        {
+          "date": "2026-11-11",
+          "note": "최초 배포"
+        }
       ]
     },
     {
@@ -98,9 +134,15 @@
       "status": "active",
       "version": "1.0.0",
       "order": 3,
-      "tags": ["엑셀 불러오기", "물품 검색"],
+      "tags": [
+        "엑셀 불러오기",
+        "물품 검색"
+      ],
       "changelog": [
-        { "date": "2026-11-12", "note": "최초 배포" }
+        {
+          "date": "2026-11-12",
+          "note": "최초 배포"
+        }
       ]
     },
     {
@@ -115,9 +157,15 @@
       "status": "active",
       "version": "1.0.0",
       "order": 1,
-      "tags": ["호봉 계산", "호봉획정표"],
+      "tags": [
+        "호봉 계산",
+        "호봉획정표"
+      ],
       "changelog": [
-        { "date": "2026-11-18", "note": "최초 배포" }
+        {
+          "date": "2026-11-18",
+          "note": "최초 배포"
+        }
       ]
     },
     {
@@ -132,9 +180,16 @@
       "status": "active",
       "version": "1.0.0",
       "order": 2,
-      "tags": ["엑셀 불러오기", "검색", "집계"],
+      "tags": [
+        "엑셀 불러오기",
+        "검색",
+        "집계"
+      ],
       "changelog": [
-        { "date": "2026-11-12", "note": "최초 배포" }
+        {
+          "date": "2026-11-12",
+          "note": "최초 배포"
+        }
       ]
     },
     {
@@ -149,9 +204,15 @@
       "status": "active",
       "version": "1.0.0",
       "order": 1,
-      "tags": ["연도별 보기", "항목 검색"],
+      "tags": [
+        "연도별 보기",
+        "항목 검색"
+      ],
       "changelog": [
-        { "date": "2026-11-16", "note": "최초 배포" }
+        {
+          "date": "2026-11-16",
+          "note": "최초 배포"
+        }
       ]
     },
     {
@@ -166,9 +227,15 @@
       "status": "active",
       "version": "1.0.0",
       "order": 1,
-      "tags": ["단계별 입력", "공고문 자동 작성"],
+      "tags": [
+        "단계별 입력",
+        "공고문 자동 작성"
+      ],
       "changelog": [
-        { "date": "2026-11-13", "note": "최초 배포" }
+        {
+          "date": "2026-11-13",
+          "note": "최초 배포"
+        }
       ]
     },
     {
@@ -183,10 +250,129 @@
       "status": "active",
       "version": "1.0.0",
       "order": 2,
-      "tags": ["녹음 분석", "회의록 서식", "한글 다운로드"],
+      "tags": [
+        "녹음 분석",
+        "회의록 서식",
+        "한글 다운로드"
+      ],
       "changelog": [
-        { "date": "2026-11-19", "note": "최초 배포" }
+        {
+          "date": "2026-11-19",
+          "note": "최초 배포"
+        }
       ]
+    }
+  ],
+  "events": [
+    {
+      "id": "ev-wht",
+      "title": "원천세·지방소득세 신고·납부 기한",
+      "date": "2026-01-10",
+      "repeat": "monthly",
+      "category": "세무",
+      "memo": "전월 지급분 원천징수이행상황신고",
+      "link": "",
+      "active": true
+    },
+    {
+      "id": "ev-ys",
+      "title": "연말정산 간소화 자료 제공 시작",
+      "date": "2026-01-15",
+      "repeat": "yearly",
+      "category": "세무",
+      "memo": "국세청 홈택스",
+      "link": "https://www.hometax.go.kr",
+      "active": true
+    },
+    {
+      "id": "ev-bud",
+      "title": "학교회계 예산안 학교운영위원회 제출 기한",
+      "date": "2026-01-30",
+      "repeat": "yearly",
+      "category": "회계",
+      "memo": "회계연도 시작 30일 전까지",
+      "link": "",
+      "active": true
+    },
+    {
+      "id": "ev-sfy",
+      "title": "학교회계연도 시작",
+      "date": "2026-03-01",
+      "repeat": "yearly",
+      "category": "회계",
+      "memo": "3월 1일 ~ 다음 해 2월 말일",
+      "link": "",
+      "active": true
+    },
+    {
+      "id": "ev-wage",
+      "title": "근로소득 지급명세서 제출 기한",
+      "date": "2026-03-10",
+      "repeat": "yearly",
+      "category": "세무",
+      "memo": "전년도 연말정산 결과 제출",
+      "link": "",
+      "active": true
+    },
+    {
+      "id": "ev-nhis",
+      "title": "건강보험 보수총액 통보 기한",
+      "date": "2026-03-10",
+      "repeat": "yearly",
+      "category": "보험",
+      "memo": "직장가입자 전년도 보수총액",
+      "link": "",
+      "active": true
+    },
+    {
+      "id": "ev-ei",
+      "title": "고용·산재보험 보수총액 신고 기한",
+      "date": "2026-03-15",
+      "repeat": "yearly",
+      "category": "보험",
+      "memo": "전년도 보수총액",
+      "link": "",
+      "active": true
+    },
+    {
+      "id": "ev-set",
+      "title": "학교회계 결산서 학교운영위원회 제출 기한",
+      "date": "2026-04-30",
+      "repeat": "yearly",
+      "category": "회계",
+      "memo": "회계연도 끝난 뒤 2개월 이내",
+      "link": "",
+      "active": true
+    },
+    {
+      "id": "ev-ev1",
+      "title": "근무성적평정 기준일 (상반기)",
+      "date": "2026-06-30",
+      "repeat": "yearly",
+      "category": "인사",
+      "memo": "",
+      "link": "",
+      "active": true
+    },
+    {
+      "id": "ev-ev2",
+      "title": "근무성적평정 기준일 (하반기)",
+      "date": "2026-12-31",
+      "repeat": "yearly",
+      "category": "인사",
+      "memo": "",
+      "link": "",
+      "active": true
+    },
+    {
+      "id": "ev-tfy",
+      "title": "교육비특별회계 회계연도 종료",
+      "date": "2026-12-31",
+      "repeat": "yearly",
+      "category": "회계",
+      "memo": "1월 1일 ~ 12월 31일",
+      "link": "",
+      "active": true
     }
   ]
 }
