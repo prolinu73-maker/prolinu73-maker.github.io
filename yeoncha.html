@@ -132,6 +132,25 @@ details.adv[open]>summary{margin-bottom:10px}
 #modeRetire{display:none}
 body.mode-retire #modeRetire{display:grid}
 body.mode-retire #modeNormal{display:none}
+#modeDetail{display:none;max-width:1180px;margin:0 auto;padding:16px}
+body.mode-detail #modeDetail{display:block}
+body.mode-detail #modeNormal{display:none}
+.dhead{text-align:center;font-size:21px;font-weight:800;margin:4px 0 12px;color:#111}
+.dsec{background:#fff;border:1px solid #dbe1ea;border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.dsec h3{margin:0 0 8px;font-size:16px;color:#1e3a8a;border-bottom:2px solid #1e3a8a;padding-bottom:6px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.dsec h3 .res{font-size:15px;background:#1e3a8a;color:#fff;border-radius:6px;padding:2px 12px;white-space:nowrap}
+.dsec h4{margin:14px 0 5px;font-size:13.5px;color:#0f172a}
+.dsec h4 small{font-weight:400;color:#64748b}
+table.dt{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:4px}
+table.dt th{background:#eef2ff;color:#1e3a8a;border:1px solid #94a3b8;padding:4px 6px;font-size:12px}
+table.dt td{border:1px solid #94a3b8;padding:4px 6px;text-align:center;vertical-align:top}
+table.dt td.l{text-align:left}
+table.dt td.k{text-align:left;background:#f8fafc;font-weight:700;width:26%}
+table.dt tr.sum td{background:#f1f5f9;font-weight:800}
+table.dt td.hl{background:#fef9c3;font-weight:800}
+.dnote{font-size:12px;color:#475569;margin:2px 0 0}
+.sign{display:flex;justify-content:flex-end;gap:40px;margin-top:18px;font-size:13.5px}
+.sign div{min-width:230px;border-bottom:1px solid #111;padding-bottom:16px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
 @media (max-width:560px){.two{grid-template-columns:1fr}}
 .two>div{border-radius:8px;padding:9px 11px;font-size:12.5px;line-height:1.6}
@@ -158,6 +177,16 @@ table.cmp tr.sum td{background:#f8fafc;font-weight:800}
 .hero .cmpline b{font-size:19px;display:block}
 .okbanner{background:#ecfdf5;border:1px solid #6ee7b7;color:#065f46;border-radius:8px;padding:8px 10px;margin-top:10px;font-size:13px}
 .okbanner[hidden]{display:none}
+.dwrap{display:flex;gap:4px;align-items:stretch;position:relative;margin-top:3px}
+.dwrap .dt-in{flex:1;min-width:0;margin:0;font-variant-numeric:tabular-nums}
+.dwrap .dt-in.bad{border-color:#dc2626;background:#fef2f2}
+.dwrap .dcal{flex:none;width:32px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;cursor:pointer;font-size:14px;padding:0;line-height:1}
+.dwrap .dcal:hover{background:#e0e7ff;border-color:#818cf8}
+.dwrap .dnative{position:absolute;right:0;bottom:0;width:32px;height:1px;opacity:0;pointer-events:none;border:0;padding:0;margin:0}
+table.ev td .dwrap{margin-top:0}
+table.ev tr.r1 td .dcal{width:28px;height:30px;font-size:13px}
+.dfmt{font-size:12px;color:#475569;background:#f1f5f9;border-radius:6px;padding:5px 9px;margin-top:8px}
+.dfmt b{color:#1e3a8a}
 .print-title{display:none}
 .small{font-size:12px;color:#64748b}
 @media print{
@@ -165,6 +194,13 @@ table.cmp tr.sum td{background:#f8fafc;font-weight:800}
   body{background:#fff;font-size:12px}
   header.top,.panel-input,.no-print,.q,#helpPop,.mode-tabs,.mode-line{display:none !important}
   body.mode-retire #modeRetire{display:block}
+  #modeDetail{padding:0;max-width:none}
+  .dsec{border:0;padding:0;margin-bottom:8px}
+  .dsec.year{break-before:page}
+  table.dt{font-size:10.5px} table.dt th{font-size:10px;padding:3px 4px} table.dt td{padding:2.5px 5px}
+  .dsec h4{margin:8px 0 3px;font-size:12px} .dsec h3{font-size:14px;margin-bottom:5px} .dhead{font-size:18px;margin-bottom:8px}
+  table.dt tr,.sign{break-inside:avoid}
+  .dsec h4{break-after:avoid}
   .hero.pay,.hero.nopay{background:#fff !important}
   .hero .cmpline div{border:1px solid #999}
   .layout{display:block;padding:0}
@@ -198,6 +234,7 @@ table.cmp tr.sum td{background:#f8fafc;font-weight:800}
 
 <div class="mode-tabs" role="tablist" aria-label="화면 고르기">
   <button type="button" class="mode-tab active" data-mode="normal" role="tab" aria-selected="true">📅 일반 연차 산정</button>
+  <button type="button" class="mode-tab" data-mode="detail" role="tab" aria-selected="false">📊 연도별 상세 내역</button>
   <button type="button" class="mode-tab" data-mode="retire" role="tab" aria-selected="false">🏁 퇴직 시 연차 정산</button>
 </div>
 <div class="mode-line"><div></div></div>
@@ -220,7 +257,7 @@ table.cmp tr.sum td{background:#f8fafc;font-weight:800}
     <h2><span class="step">1단계</span>누구의 연차를 계산하나요?</h2>
     <div class="grid2">
       <label class="f">성명 / 직종 메모 <span class="h">(선택)</span><input type="text" id="f_name" placeholder="예: 홍길동 / 교무행정사"></label>
-      <label class="f">입사일(최초 임용일) <span class="h">★필수</span><input type="date" id="f_hire"></label>
+      <label class="f">입사일(최초 임용일) <span class="h">★필수</span><input type="text" class="dt-in" id="f_hire" placeholder="YYYY-MM-DD" title="날짜를 2024-03-01 형식으로 입력하세요. 숫자 8자리(20240301)만 쳐도 자동으로 바뀝니다. 오른쪽 📅를 누르면 달력에서 고를 수 있습니다." inputmode="numeric" maxlength="12" autocomplete="off"></label>
       <label class="f">몇 년도 연차인가요? <span class="h">(연차를 받는 해)</span><input type="number" id="f_year" min="2017" max="2035"></label>
       <label class="f">누가 채용했나요? <span class="h">(연차를 주는 날)</span>
         <select id="f_emp">
@@ -235,10 +272,11 @@ table.cmp tr.sum td{background:#f8fafc;font-weight:800}
         </select></label>
       <label class="f">1주일 근무시간 <span class="h">(전일제는 40 그대로)</span><input type="number" id="f_hours" min="1" max="40" step="0.5" value="40"></label>
     </div>
+    <div class="dfmt">📅 <b>날짜 입력 형식: 2024-03-01</b> (연도 4자리-월 2자리-일 2자리). 숫자 8자리 <b>20240301</b>만 쳐도 자동으로 바뀌고, 2024.3.1.처럼 써도 됩니다. 칸 오른쪽 📅를 누르면 달력에서 고를 수 있습니다.</div>
     <details class="adv" id="advBox">
       <summary>⚙️ 상세 설정 — 퇴직 정산·특수한 경우에만 (잘 모르면 열지 않아도 됩니다)</summary>
       <div class="grid2">
-        <label class="f">퇴직(예정)일 = 마지막 근무일 <span class="h">(퇴직 정산할 때만)</span><input type="date" id="f_retire"><span class="small" style="display:block;margin-top:3px;font-weight:400">예) 2025.3.1.~2026.2.28. 계약 종료 시 2026-02-28 입력 (마지막 근무일 기준)</span></label>
+        <label class="f">퇴직(예정)일 = 마지막 근무일 <span class="h">(퇴직 정산할 때만)</span><input type="text" class="dt-in" id="f_retire" placeholder="YYYY-MM-DD" title="날짜를 2024-03-01 형식으로 입력하세요. 숫자 8자리(20240301)만 쳐도 자동으로 바뀝니다. 오른쪽 📅를 누르면 달력에서 고를 수 있습니다." inputmode="numeric" maxlength="12" autocomplete="off"><span class="small" style="display:block;margin-top:3px;font-weight:400">예) 2025.3.1.~2026.2.28. 계약 종료 시 2026-02-28 입력 (마지막 근무일 기준)</span></label>
         <label class="f">기본연차 일수
           <input type="number" id="f_base" min="1" max="25" step="1">
           <span class="chk"><input type="checkbox" id="f_baseAuto" checked> 자동 적용(연도·근무형태별)</span></label>
@@ -272,7 +310,7 @@ table.cmp tr.sum td{background:#f8fafc;font-weight:800}
       <button class="btn light" data-add="suspension" title="징계로 인한 정직·출근정지. 결근으로 봅니다.">⚠️ 정직</button>
       <button class="btn" id="btnAddEv" title="위에 없는 사유(가족돌봄휴직, 공가, 예비군, 파업 등)는 줄을 추가한 뒤 사유 칸에서 고릅니다.">➕ 그 밖의 사유</button>
     </div>
-    <div class="small" style="margin-bottom:4px">줄이 생기면 <b>시작일·종료일을 실제 날짜로</b> 고쳐 주세요. 잘못 넣은 줄은 오른쪽 [삭제]로 지웁니다.</div>
+    <div class="small" style="margin-bottom:4px">줄이 생기면 <b>시작일·종료일을 실제 날짜로</b> 고쳐 주세요. 날짜는 <b>2024-03-01</b> 형식으로 직접 치거나(숫자 8자리 20240301도 됨) 📅를 눌러 달력에서 고릅니다. 잘못 넣은 줄은 오른쪽 [삭제]로 지웁니다.</div>
     <table class="ev">
       <thead><tr><th style="width:40%">사유<span class="q" tabindex="0" data-help="휴직·휴가·결근의 종류를 고릅니다. 종류에 따라 계산이 달라집니다.
 
@@ -301,7 +339,7 @@ table.cmp tr.sum td{background:#f8fafc;font-weight:800}
 • 토·일요일이나 이미 들어 있는 공휴일은 넣을 필요가 없습니다.">?</span></h2>
     <div class="ev-guide" id="hdGuide"></div>
     <div class="row">
-      <input type="date" id="hd_date" style="width:150px;margin:0" aria-label="휴일 날짜">
+      <input type="text" class="dt-in" id="hd_date" style="width:170px;margin:0" aria-label="휴일 날짜" placeholder="YYYY-MM-DD" title="날짜를 2024-03-01 형식으로 입력하세요. 숫자 8자리(20240301)만 쳐도 자동으로 바뀝니다. 오른쪽 📅를 누르면 달력에서 고를 수 있습니다." inputmode="numeric" maxlength="12" autocomplete="off">
       <input type="text" id="hd_name" style="flex:1;min-width:120px;margin:0" maxlength="20" placeholder="이름 (예: 임시공휴일, 개교기념일)" aria-label="휴일 이름">
       <button class="btn" id="btnAddHd">+ 휴일 추가</button>
     </div>
@@ -349,6 +387,25 @@ table.cmp tr.sum td{background:#f8fafc;font-weight:800}
 </div>
 </div>
 
+<!-- ===================== 연도별 상세 내역 (감사·결재 첨부용) ===================== -->
+<div id="modeDetail">
+  <div class="card no-print">
+    <h2>📊 연도별 상세 내역 <span class="opt">여러 해의 계산 과정을 한 번에 자세히 보여 주는 출력용 화면</span></h2>
+    <div class="info" style="margin-bottom:10px">기본 정보와 인사 변동 이력은 <b>"일반 연차 산정" 탭에서 입력한 내용</b>을 그대로 씁니다. 여기서는 보고 싶은 연도 범위만 정하면, 해마다 ① 반영된 인사 변동 ② 월별 근무일 집계 ③ 출근율 ④ 근속·가산 ⑤ 산식과 결과를 표로 풀어 보여 줍니다.</div>
+    <div class="row">
+      <label class="f" style="width:150px">시작 연도 <span class="h">(연차 받는 해)</span><input type="number" id="d_from" min="2010" max="2040" placeholder="자동"></label>
+      <label class="f" style="width:150px">끝 연도<input type="number" id="d_to" min="2010" max="2040" placeholder="자동"></label>
+      <button class="btn light" id="btnDAuto" style="align-self:flex-end">연도 자동 맞춤</button>
+      <label class="chk" style="align-self:flex-end;margin-bottom:6px"><input type="checkbox" id="d_cal"> 월별 달력도 함께 넣기</label>
+      <span style="flex:1"></span>
+      <button class="btn" id="btnPrintD" style="align-self:flex-end">🖨️ 상세 내역서 인쇄</button>
+      <button class="btn light" id="btnCopyD" style="align-self:flex-end">📋 내용 복사</button>
+    </div>
+    <div class="small" style="margin-top:6px" id="dRangeNote"></div>
+  </div>
+  <div id="outD"></div>
+</div>
+
 <!-- ===================== 퇴직 시 연차 정산 ===================== -->
 <div class="layout" id="modeRetire">
 <div class="panel-input">
@@ -366,8 +423,8 @@ table.cmp tr.sum td{background:#f8fafc;font-weight:800}
     <h2><span class="step">정산 1단계</span>퇴직자 기본 정보</h2>
     <div class="grid2">
       <label class="f">성명 / 직종 메모 <span class="h">(선택)</span><input type="text" id="r_name" placeholder="예: 홍길동 / 교무행정사"></label>
-      <label class="f">입사일(최초 임용일) <span class="h">★필수</span><input type="date" id="r_hire"></label>
-      <label class="f">퇴직일 = 마지막 근무일 <span class="h">★필수</span><input type="date" id="r_retire"><span class="small" style="display:block;margin-top:3px;font-weight:400">예) 2025.3.1.~2026.2.28. 계약 종료 시 2026-02-28 입력</span></label>
+      <label class="f">입사일(최초 임용일) <span class="h">★필수</span><input type="text" class="dt-in" id="r_hire" placeholder="YYYY-MM-DD" title="날짜를 2024-03-01 형식으로 입력하세요. 숫자 8자리(20240301)만 쳐도 자동으로 바뀝니다. 오른쪽 📅를 누르면 달력에서 고를 수 있습니다." inputmode="numeric" maxlength="12" autocomplete="off"></label>
+      <label class="f">퇴직일 = 마지막 근무일 <span class="h">★필수</span><input type="text" class="dt-in" id="r_retire" placeholder="YYYY-MM-DD" title="날짜를 2024-03-01 형식으로 입력하세요. 숫자 8자리(20240301)만 쳐도 자동으로 바뀝니다. 오른쪽 📅를 누르면 달력에서 고를 수 있습니다." inputmode="numeric" maxlength="12" autocomplete="off"><span class="small" style="display:block;margin-top:3px;font-weight:400">예) 2025.3.1.~2026.2.28. 계약 종료 시 2026-02-28 입력</span></label>
       <label class="f">누가 채용했나요? <span class="h">(연차를 주는 날)</span>
         <select id="r_emp">
           <option value="edu">교육장 채용 — 매년 1월 1일에 부여</option>
@@ -381,6 +438,7 @@ table.cmp tr.sum td{background:#f8fafc;font-weight:800}
         </select></label>
       <label class="f">1주일 근무시간 <span class="h">(전일제는 40 그대로)</span><input type="number" id="r_hours" min="1" max="40" step="0.5" value="40"></label>
     </div>
+    <div class="dfmt">📅 <b>날짜 입력 형식: 2024-03-01</b> (연도 4자리-월 2자리-일 2자리). 숫자 8자리 <b>20240301</b>만 쳐도 자동으로 바뀌고, 2024.3.1.처럼 써도 됩니다. 칸 오른쪽 📅를 누르면 달력에서 고를 수 있습니다.</div>
     <div class="okbanner" id="rBanner" hidden>✅ 입사일과 회계연도 시작일이 같아 구간 차이에 따른 오차가 없습니다. 마지막 해 연차 발생 여부와 근속 제외 휴직 이력만 확인하세요.</div>
   </div>
 
@@ -398,7 +456,7 @@ table.cmp tr.sum td{background:#f8fafc;font-weight:800}
           <li>정상 출근과 똑같이 계산되므로, 한도 이내라면 생략해도 결과가 같습니다.</li>
         </ul></div>
     </div>
-    <div style="font-size:13px;font-weight:700;color:#334155">해당하는 버튼을 누르면 아래 표에 한 줄이 생깁니다. 날짜를 실제 날짜로 고쳐 주세요.</div>
+    <div style="font-size:13px;font-weight:700;color:#334155">해당하는 버튼을 누르면 아래 표에 한 줄이 생깁니다. 날짜를 실제 날짜로 고쳐 주세요. (형식: 2024-03-01 · 숫자 8자리 20240301도 됨 · 📅는 달력)</div>
     <div class="addbtns">
       <button class="btn light" data-radd="sickLeave">🩺 질병휴직</button>
       <button class="btn light" data-radd="parentalExt">👶 약정 육아휴직(1년 초과)</button>
@@ -465,7 +523,11 @@ var YC = (function () {
   function P(n) { var t = new Date(n * DAY); return { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate(), w: t.getUTCDay() }; }
   function iso(n) { var p = P(n); return p.y + '-' + pad(p.m) + '-' + pad(p.d); }
   function fmt(n) { var p = P(n); return p.y + '.' + p.m + '.' + p.d + '.'; }
-  function parse(s) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? D(+m[1], +m[2], +m[3]) : null; }
+  function parse(s) {   /* 'YYYY-MM-DD'만 읽음. 2월 30일처럼 없는 날짜는 null */
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); if (!m) return null;
+    var n = D(+m[1], +m[2], +m[3]), p = P(n);
+    return (p.y === +m[1] && p.m === +m[2] && p.d === +m[3]) ? n : null;
+  }
   function dim(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
   function addMonths(n, k) { var p = P(n), t = p.y * 12 + (p.m - 1) + k, y = Math.floor(t / 12), m = t % 12 + 1; return D(y, m, Math.min(p.d, dim(y, m))); }
   function addYears(n, k) { return addMonths(n, 12 * k); }
@@ -943,6 +1005,65 @@ if (typeof module !== 'undefined') module.exports = YC;
 
   try { window.HUB.mountHomeButton(); } catch (e) { }
 
+  /* ---------- 날짜 칸: 직접 타이핑 + 달력 버튼 ----------
+     · 칸의 값은 항상 'YYYY-MM-DD' 글자 (계산 쪽은 이 형식만 읽음)
+     · 20240301, 2024.3.1., 2024/3/1, 2024-3-1 처럼 써도 칸을 벗어날 때 2024-03-01 로 바꿔 줌. 숫자만 치면 치는 동안 '-'를 자동으로 넣음
+     · 📅 버튼: 숨겨 둔 브라우저 달력(type=date)을 열고, 고른 날짜를 칸에 넣음 */
+  var DATE_ATTR = 'placeholder="YYYY-MM-DD" title="날짜를 2024-03-01 형식으로 입력하세요. 숫자 8자리(20240301)만 쳐도 자동으로 바뀝니다. 오른쪽 📅를 누르면 달력에서 고를 수 있습니다." inputmode="numeric" maxlength="12" autocomplete="off"';
+  var DATE_TAIL = '<button type="button" class="dcal" tabindex="-1" title="달력에서 고르기" aria-label="달력에서 고르기">📅</button><input type="date" class="dnative" tabindex="-1" aria-hidden="true">';
+  function dateBox(attrs, val) { return '<span class="dwrap"><input type="text" class="dt-in" ' + DATE_ATTR + ' ' + attrs + ' value="' + esc(val || '') + '">' + DATE_TAIL + '</span>'; }
+  function normDate(v) {   /* 여러 모양의 날짜 글자 → 'YYYY-MM-DD' (날짜가 아니면 null) */
+    v = String(v || '').trim(); if (!v) return '';
+    var m = /^(\d{4})(\d{2})(\d{2})$/.exec(v) || /^(\d{4})\s*[-./년]\s*(\d{1,2})\s*[-./월]\s*(\d{1,2})\s*[.일]?$/.exec(v);
+    if (!m) return null;
+    var y = +m[1], mo = +m[2], d = +m[3];
+    if (y < 1990 || y > 2100 || mo < 1 || mo > 12 || d < 1) return null;
+    var n = YC.D(y, mo, d), p = YC.P(n);
+    return (p.y === y && p.m === mo && p.d === d) ? YC.iso(n) : null;   /* 2월 30일 같은 없는 날짜는 거름 */
+  }
+  function isDateIn(t) { return t && t.classList && t.classList.contains('dt-in'); }
+  /* 미리 있는 날짜 칸(입사일·퇴직일·휴일)에 달력 버튼을 붙임 */
+  Array.prototype.forEach.call(document.querySelectorAll('input.dt-in'), function (inp) {
+    var w = document.createElement('span'); w.className = 'dwrap';
+    if (inp.style.width) { w.style.width = inp.style.width; w.style.marginTop = '0'; inp.style.width = ''; }
+    inp.parentNode.insertBefore(w, inp); w.appendChild(inp); w.insertAdjacentHTML('beforeend', DATE_TAIL);
+  });
+  /* 치는 동안: 숫자만 이어서 치면 '-' 자동 삽입. 아직 날짜가 다 안 된 동안에는 계산을 돌리지 않음(화면이 깜빡이지 않게) */
+  document.addEventListener('input', function (ev) {
+    var t = ev.target; if (!isDateIn(t)) return;
+    var v = t.value;
+    if (/^[\d-]*$/.test(v) && t.selectionStart === v.length) {
+      var d = v.replace(/-/g, '').slice(0, 8), f = d.slice(0, 4) + (d.length > 4 ? '-' + d.slice(4, 6) : '') + (d.length > 6 ? '-' + d.slice(6, 8) : '');
+      if (f !== v && !(ev.inputType && ev.inputType.indexOf('delete') === 0)) t.value = f;
+    }
+    var nd = normDate(t.value);
+    t.classList.toggle('bad', false);
+    if (nd === null || (nd && nd !== t.value)) ev.stopPropagation();   /* 미완성 → 다른 처리(계산)로 넘기지 않음 */
+  }, true);
+  /* 칸을 벗어날 때(change): 형식을 2024-03-01 로 맞추고, 날짜가 아니면 빨갛게 표시 */
+  document.addEventListener('change', function (ev) {
+    var t = ev.target; if (!isDateIn(t)) return;
+    var nd = normDate(t.value);
+    if (nd === null) { t.classList.add('bad'); t.title = '날짜 형식이 맞지 않습니다. 2024-03-01 처럼 입력해 주세요. (숫자 8자리 20240301도 됩니다)'; }
+    else { t.classList.remove('bad'); t.value = nd; }
+  }, true);
+  /* 📅 버튼 → 달력 열기 / 달력에서 고르면 칸에 넣고 계산 */
+  document.addEventListener('click', function (ev) {
+    var b = ev.target; if (!b.classList || !b.classList.contains('dcal')) return;
+    ev.preventDefault();
+    var w = b.parentNode, txt = w.querySelector('.dt-in'), nat = w.querySelector('.dnative'), nd = normDate(txt.value);
+    nat.value = nd || '';
+    try { if (nat.showPicker) nat.showPicker(); else { nat.style.pointerEvents = 'auto'; nat.focus(); nat.click(); } }
+    catch (e) { txt.focus(); }
+  });
+  document.addEventListener('change', function (ev) {
+    var nat = ev.target; if (!nat.classList || !nat.classList.contains('dnative')) return;
+    ev.stopPropagation();
+    var txt = nat.parentNode.querySelector('.dt-in'); if (!nat.value) return;
+    txt.value = nat.value; txt.classList.remove('bad');
+    txt.dispatchEvent(new Event('input', { bubbles: true })); txt.dispatchEvent(new Event('change', { bubbles: true }));
+  }, true);
+
   /* ---------- 이 페이지(연차 계산)만의 접속자 수 (오늘 · 누적) ----------
      · 저장 위치: Firebase  stats / page_yeoncha  { total, todayCount, todayDate }
        → 사이트 전체 숫자(index.html 첫 화면, stats/visitors)와 따로 셈
@@ -1076,8 +1197,8 @@ if (typeof module !== 'undefined') module.exports = YC;
       tb.innerHTML = events.map(function (e, i) {
         var cat = YC.TYPES[e.type].cat;
         return '<tr class="r1"><td><select data-i="' + i + '" data-k="type">' + typeOptions(e.type) + '</select></td>' +
-          '<td><input type="date" data-i="' + i + '" data-k="s" value="' + esc(e.s || '') + '"></td>' +
-          '<td><input type="date" data-i="' + i + '" data-k="e" value="' + esc(e.e || '') + '"></td>' +
+          '<td>' + dateBox('data-i="' + i + '" data-k="s" aria-label="시작일"', e.s) + '</td>' +
+          '<td>' + dateBox('data-i="' + i + '" data-k="e" aria-label="종료일"', e.e) + '</td>' +
           '<td class="c"><span id="' + T.px + 'evcnt' + i + '">' + dayCount(e) + '</span></td>' +
           '<td class="c"><button class="btn red sm" data-del="' + i + '">삭제</button></td></tr>' +
           '<tr class="r2"><td colspan="5"><span class="tag ' + cat + '" id="' + T.px + 'evtag' + i + '">' + YC.CAT[cat] + '</span><span class="evhint" id="' + T.px + 'evhint' + i + '">' + esc(hintOf(e.type)) + '</span></td></tr>';
@@ -1120,7 +1241,7 @@ if (typeof module !== 'undefined') module.exports = YC;
       if (type === 'vacation') $('f_work').value = 'vac';
       events.push({ type: type, s: I(ev[0]), e: I(ev[1]) });
       renderEvents(); calc();
-      var rows = $('evBody').querySelectorAll('tr.r1'), lastRow = rows[rows.length - 1], inp = lastRow && lastRow.querySelector('input[type=date]');
+      var rows = $('evBody').querySelectorAll('tr.r1'), lastRow = rows[rows.length - 1], inp = lastRow && lastRow.querySelector('.dt-in');
       if (inp) try { inp.focus(); } catch (e) { }
     });
   });
@@ -1283,6 +1404,7 @@ if (typeof module !== 'undefined') module.exports = YC;
       last = YC.compute(toInput()); renderGuide(last); render(last);
       if (!$('histBody').contains(document.activeElement)) renderHist();
       renderRetire(last);
+      if (curMode === 'detail') renderDetail();
     }
     catch (e) { $('out').innerHTML = '<div class="warn">계산 중 오류: ' + esc(e.message) + '</div>'; $('outR').innerHTML = $('out').innerHTML; }
   }
@@ -1309,12 +1431,167 @@ if (typeof module !== 'undefined') module.exports = YC;
   /* =====================================================================
      퇴직 시 연차 정산 화면
      ===================================================================== */
+
+  /* =====================================================================
+     연도별 상세 내역 (감사·결재 첨부용)
+     - 일반 탭과 같은 계산(YC.compute)을 연도만 바꿔 가며 돌리고, 그 과정을 표로 풀어 보여 줌
+     - 상세 설정의 '과거 누적 근속제외 일수·만근연수 직접 입력·추가 휴일 수'는 일반 탭의 기준연도에만 적용
+       (다른 해에 똑같이 넣으면 틀리므로, 다른 해는 날짜로 입력한 이력만으로 계산)
+     ===================================================================== */
+  var detailText = '';
+  function detailRange(inp) {
+    var base = inp.year || new Date().getFullYear(), from = parseInt($('d_from').value, 10), to = parseInt($('d_to').value, 10), auto = false;
+    var ev = inp.events.filter(function (e) { return e.s != null && e.e != null; });
+    var aFrom = base, aTo = base;
+    if (ev.length) {
+      aFrom = Math.min(base, YC.P(Math.min.apply(null, ev.map(function (e) { return e.s; }))).y + 1);
+      aTo = Math.max(base, YC.P(Math.max.apply(null, ev.map(function (e) { return e.e; }))).y + 1);
+    }
+    if (inp.hire != null) aFrom = Math.max(aFrom, YC.P(inp.hire).y);
+    if (isNaN(from)) { from = aFrom; auto = true; }
+    if (isNaN(to)) { to = aTo; auto = true; }
+    if (to < from) to = from;
+    var cut = false; if (to - from > 14) { to = from + 14; cut = true; }
+    return { from: from, to: to, base: base, auto: auto, cut: cut };
+  }
+  function cntCells(cells) {
+    var r = { cal: cells.length, N: 0, H: 0, W: 0, A: 0, E: 0, X: 0 };
+    cells.forEach(function (c) { r[c.st]++; });
+    r.total = r.W + r.A + r.E + r.X;
+    return r;
+  }
+  function renderDetail() {
+    var inp0 = toInput(), F = YC.fmt, f2 = YC.f2, o = '', T = [];
+    if (inp0.hire == null) { $('outD').innerHTML = '<div class="info">먼저 <b>"일반 연차 산정" 탭</b>에서 입사일과 인사 변동 이력을 넣어 주세요. 그 내용으로 연도별 상세 내역을 만듭니다.</div>'; $('dRangeNote').textContent = ''; detailText = ''; return; }
+    var rg = detailRange(inp0), empTxt = { edu: '교육장 채용(매년 1.1. 부여)', school: '학교장 채용(매년 3.1. 부여)', hire: '입사일 기준 부여' }[inp0.emp];
+    var special = inp0.pastExcl > 0 || inp0.manualN != null || inp0.holAdj !== 0;
+    $('dRangeNote').innerHTML = '지금 보여 주는 범위: <b>' + rg.from + '년 ~ ' + rg.to + '년 부여분</b>' + (rg.auto ? ' (비워 둔 칸은 인사 변동 이력에 맞춰 자동으로 정했습니다)' : '') + (rg.cut ? ' · 한 번에 15개 연도까지만 보여 줍니다' : '') +
+      (special ? '<br>※ 상세 설정의 과거 누적 근속제외 일수·만근연수 직접 입력·추가 휴일 수는 일반 탭의 기준연도(' + rg.base + '년)에만 적용하고, 다른 해는 날짜로 입력한 이력만으로 계산합니다.' : '');
+    var today = new Date(), todayTxt = today.getFullYear() + '. ' + (today.getMonth() + 1) + '. ' + today.getDate() + '.';
+    function tbl(head, rows, opt) {   /* rows: 배열의 배열. opt.left: 왼쪽 정렬할 열 번호들, opt.sum: 마지막 줄 합계 강조 */
+      opt = opt || {};
+      var left = opt.left || [0];
+      return '<table class="dt"><tr>' + head.map(function (x) { return '<th>' + esc(x) + '</th>'; }).join('') + '</tr>' + rows.map(function (r, ri) {
+        return '<tr' + (opt.sum && ri === rows.length - 1 ? ' class="sum"' : '') + '>' + r.map(function (x, i) { return '<td' + (left.indexOf(i) >= 0 ? ' class="l"' : '') + '>' + esc(x) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>';
+    }
+    function kv(rows) { return '<table class="dt">' + rows.map(function (r) { return '<tr><td class="k">' + esc(r[0]) + '</td><td class="l">' + esc(r[1]) + '</td></tr>'; }).join('') + '</table>'; }
+    function tx(title, head, rows) { T.push('', title); if (head) T.push(' (' + head.join(' | ') + ')'); rows.forEach(function (r) { T.push(' - ' + r.join(' | ')); }); }
+
+    /* ---- 표지: 대상자·전체 이력 ---- */
+    var evAll = inp0.events.map(function (e, i) { return e; }).filter(function (e) { return e.s != null && e.e != null; }).sort(function (a, b) { return a.s - b.s; });
+    var baseRows = [['성명 / 직종', inp0.name || '-'], ['입사일(최초 임용일)', F(inp0.hire)], ['채용권자·부여 방식', empTxt],
+      ['근무 형태', (inp0.work === 'vac' ? '방학 중 비근무자' : '상시근로자') + ' · 주 ' + inp0.hours + '시간'],
+      ['소수점 처리', inp0.rnd === 'dec2' ? '소수 둘째자리 표기' : '소수점 이하 올림(전남교육청 기준)'], ['작성일', todayTxt]];
+    if (inp0.retire != null) baseRows.splice(2, 0, ['퇴직(예정)일', F(inp0.retire)]);
+    var evHead = ['번호', '사유', '분류', '시작일', '종료일', '달력일수', '근속 제외'];
+    var evRows = evAll.map(function (e, i) { var t = YC.TYPES[e.type]; return [String(i + 1), t.label.replace(/ \[근속 제외\]/, ''), YC.CAT[t.cat], F(e.s), F(e.e), (e.e - e.s + 1) + '일', t.svc ? '해당' : '-']; });
+    o += '<div class="dhead">연차유급휴가 연도별 산정 내역서</div>';
+    o += '<div class="dsec"><h3>Ⅰ. 대상자 및 인사 변동 이력</h3>' + kv(baseRows) + '<h4>입력된 인사 변동 이력 (전체) <small>— 시작일 순</small></h4>' +
+      (evRows.length ? tbl(evHead, evRows, { left: [1] }) : '<div class="dnote">입력된 인사 변동이 없습니다. 전 기간 정상 출근으로 계산했습니다.</div>') +
+      '<div class="dnote">분류의 뜻 — 출근간주: 출근한 것으로 봄(감액 없음) / 소정근로일 제외: 일해야 하는 날에서 빼고 남은 비율로 비례 산정 / 결근간주: 출근율이 내려감. 질병휴직·무급병가는 연차 발생 기준일이 2021. 8. 4. 이전이면 결근으로 계산합니다.</div></div>';
+    T.push('[연차유급휴가 연도별 산정 내역서]'); tx('■ Ⅰ. 대상자', null, baseRows.map(function (r) { return [r[0] + ': ' + r[1]]; })); tx('■ 입력된 인사 변동 이력', evHead, evRows);
+
+    /* ---- 연도별 계산 ---- */
+    var sumRows = [], yearHtml = '', notes = {};
+    for (var y = rg.from; y <= rg.to; y++) {
+      var inp = toInput(); inp.year = y;
+      if (y !== rg.base) { inp.pastExcl = 0; inp.manualN = null; inp.holAdj = 0; }
+      var R = YC.compute(inp), c = R.calc;
+      if (R.error) continue;
+      var title, per, months, body = '';
+      if (R.stage === 1) { title = y + '년 — 입사 후 1년 미만(월 단위 연차)'; per = [inp.hire, YC.addYears(inp.hire, 1) - 1]; months = R.first.list.map(function (x) { return { label: x.m + '개월차 ' + F(x.s) + '~' + F(x.e), cells: x.cells, info: x.info, extra: x.m <= 11 ? (x.g ? '발생 ' + f2(x.g) + '일' : '미발생') : '-' }; }); }
+      else { title = F(R.B) + ' 부여분'; per = [R.ps, R.pe]; months = c.months.map(function (m) { var p = YC.P(m.s); return { label: inp.emp === 'hire' ? F(m.s) + '~' + F(m.e) : p.y + '년 ' + p.m + '월', cells: m.cells, info: m.info }; }); }
+      var grantTxt = R.stage === 1 ? '월차 ' + f2(R.first.total) + '일' : f2(R.grant) + '일';
+      T.push('', '━━━━━━━━━━━━━━━━━━━━', '■ ' + title + ' (산정 대상 기간 ' + F(per[0]) + ' ~ ' + F(per[1]) + ') → ' + grantTxt);
+
+      /* (가) 인사 변동 반영 내역 */
+      var cellAt = {}; months.forEach(function (m) { m.cells.forEach(function (x) { cellAt[x.n] = x; }); });
+      var eHead = ['사유', '입력한 기간', '산정기간에 걸친 기간', '달력일', '그중 토·일·공휴일', '출근간주', '소정근로일 제외', '결근간주', '비고'];
+      var eRows = [];
+      evAll.forEach(function (e) {
+        var a = Math.max(e.s, per[0]), b = Math.min(e.e, per[1]); if (a > b) return;
+        var k = { H: 0, A: 0, E: 0, X: 0, other: 0, N: 0 }, memo = [];
+        for (var n = a; n <= b; n++) { var x = cellAt[n]; if (!x || x.st === 'N') k.N++; else if (x.st === 'H') k.H++; else if (x.type === e.type) k[x.st]++; else k.other++; }
+        var t = YC.TYPES[e.type];
+        if (k.other) memo.push('다른 사유가 우선 적용된 날 ' + k.other + '일');
+        if (k.N) memo.push('재직기간 밖 ' + k.N + '일');
+        if (e.type === 'paidSick' && (k.E || k.X)) memo.push('한도 초과분 ' + (k.E + k.X) + '일은 무급병가로 처리');
+        if ((e.type === 'sickLeave' || e.type === 'unpaidSick') && k.X) memo.push('기준일이 2021. 8. 4. 이전이라 결근 처리');
+        if (t.svc) memo.push('근속에서도 제외');
+        eRows.push([t.label.replace(/ \[근속 제외\]/, ''), F(e.s) + '~' + F(e.e), F(a) + '~' + F(b), (b - a + 1) + '일', k.H + '일', k.A ? k.A + '일' : '-', k.E ? k.E + '일' : '-', k.X ? k.X + '일' : '-', memo.join(' / ') || '-']);
+      });
+      body += '<h4>(가) 산정기간 중 인사 변동 반영 내역 <small>— 근무일(평일 중 휴일 제외)만 계산에 반영</small></h4>' + (eRows.length ? tbl(eHead, eRows, { left: [0, 8] }) : '<div class="dnote">이 기간에 걸친 인사 변동이 없습니다. (전 기간 정상 출근)</div>');
+      tx('(가) 산정기간 중 인사 변동 반영 내역', eRows.length ? eHead : null, eRows.length ? eRows : [['해당 없음(전 기간 정상 출근)']]);
+
+      /* (나) 월별 근무일 집계 */
+      var hasN = false, tot = { cal: 0, N: 0, H: 0, total: 0, W: 0, A: 0, E: 0, X: 0 };
+      var mRows = months.map(function (m) { var k = cntCells(m.cells); if (k.N) hasN = true; ['cal', 'N', 'H', 'total', 'W', 'A', 'E', 'X'].forEach(function (q) { tot[q] += k[q]; }); return { k: k, m: m }; });
+      var mHead = ['구간', '달력일'].concat(hasN ? ['재직 아님'] : []).concat(['토·일·공휴일', '소정근로일', '정상 출근', '출근간주', '제외', '결근', '판정']).concat(R.stage === 1 ? ['월차'] : []);
+      var mBody = mRows.map(function (r) { var k = r.k; return [r.m.label, String(k.cal)].concat(hasN ? [String(k.N)] : []).concat([String(k.H), String(k.total), String(k.W), String(k.A), String(k.E), String(k.X), r.m.info.reason]).concat(R.stage === 1 ? [r.m.extra] : []); });
+      mBody.push(['합계', String(tot.cal)].concat(hasN ? [String(tot.N)] : []).concat([String(tot.H), String(tot.total), String(tot.W), String(tot.A), String(tot.E), String(tot.X), '']).concat(R.stage === 1 ? [f2(R.first.total) + '일'] : []));
+      body += '<h4>(나) 월별 근무일 집계 <small>— 소정근로일 = 달력일 − 토·일·공휴일' + (hasN ? ' − 재직 아님' : '') + ' = 정상 출근 + 출근간주 + 제외 + 결근</small></h4>' + tbl(mHead, mBody, { sum: true });
+      tx('(나) 월별 근무일 집계', mHead, mBody);
+
+      /* (다)~(마): 일반 탭 내역서와 같은 산식 */
+      function sec(key) { return R.sections.filter(function (s) { return s.h.indexOf(key) >= 0; })[0]; }
+      var s2 = sec('소정근로일수 및 출근율'), s4 = sec('연차 산정'), sM = sec('1년 미만 월 단위'), sP = sec('단시간');
+      if (s2) { body += '<h4>(다) 소정근로일수 및 출근율</h4>' + kv(s2.rows); tx('(다) 소정근로일수 및 출근율', null, s2.rows.map(function (r) { return [r[0] + ': ' + r[1]]; })); }
+      if (c && R.stage === 3) {
+        var sv = c.svc, svRows = [['입사일', F(inp.hire)], ['연차 발생 기준일', F(R.B)], ['재직기간', F(inp.hire) + ' ~ ' + F(R.B - 1) + ' = ' + sv.grossDays.toLocaleString('ko-KR') + '일']];
+        evAll.forEach(function (e) { if (!YC.TYPES[e.type].svc) return; var a = Math.max(e.s, inp.hire), b = Math.min(e.e, R.B - 1); if (a > b) return;
+          svRows.push(['근속 제외 — ' + YC.TYPES[e.type].label.replace(/ \[근속 제외\]/, ''), F(a) + ' ~ ' + F(b) + ' = ' + (b - a + 1) + '일 (달력일)']); });
+        if (sv.past) svRows.push(['근속 제외 — 과거 누적(직접 입력)', sv.past + '일']);
+        svRows.push(['근속 제외 합계', sv.excl + '일' + (sv.excl ? ' (기간이 서로 겹치면 한 번만 셈)' : '')]);
+        svRows.push(['근속 기산일(조정)', sv.excl ? F(inp.hire) + ' + ' + sv.excl + '일 = ' + F(inp.hire + sv.excl) : F(inp.hire) + ' (조정 없음)']);
+        svRows.push(['인정 만근연수', F(inp.hire + sv.excl) + ' ~ ' + F(R.B) + ' → 만 ' + sv.autoN + '년' + (inp.manualN != null ? ' ⇒ 직접 입력값 ' + sv.N + '년 적용' : '')]);
+        svRows.push(['가산연차', '(' + sv.N + ' − 1) ÷ 2 = ' + f2((sv.N - 1) / 2) + ' → 소수점 버림 ' + c.add + '일 (최초 1년을 넘는 매 2년마다 1일)']);
+        svRows.push(['기본 + 가산', c.base + '일 + ' + c.add + '일 = ' + (c.base + c.add) + '일' + (c.base + c.add > 25 ? ' → 한도 25일 적용' : ' (한도 25일 이내)') + ' ⇒ ' + c.full + '일']);
+        body += '<h4>(라) 근속연수 및 가산연차 <small>— 취업규칙 제88조</small></h4>' + kv(svRows); tx('(라) 근속연수 및 가산연차', null, svRows.map(function (r) { return [r[0] + ': ' + r[1]]; }));
+      }
+      if (s4) { body += '<h4>(' + (R.stage === 3 ? '마' : '라') + ') 연차 산정</h4>' + kv(s4.rows); tx('연차 산정', null, s4.rows.map(function (r) { return [r[0] + ': ' + r[1]]; })); }
+      if (sM) { body += '<h4>1년 미만 월 단위 연차 <small>— 근로기준법 제60조제2항</small></h4>' + kv(sM.rows); tx('1년 미만 월 단위 연차', null, sM.rows.map(function (r) { return [r[0] + ': ' + r[1]]; })); }
+      if (sP) { body += '<h4>단시간 근로자 시간 환산</h4>' + kv(sP.rows); tx('단시간 근로자 시간 환산', null, sP.rows.map(function (r) { return [r[0] + ': ' + r[1]]; })); }
+      var w = R.warn.filter(function (x) { return !/퇴직일이 기준일/.test(x) || true; });
+      if (w.length) { body += '<h4>유의사항</h4>' + w.map(function (x) { return '<div class="dnote">⚠️ ' + esc(x) + '</div>'; }).join(''); tx('유의사항', null, w.map(function (x) { return [x]; })); w.forEach(function (x) { if (/공휴일 자료/.test(x)) notes.hol = x; }); }
+      if ($('d_cal').checked) body += '<h4>월별 달력</h4><div class="legend"><span><i class="cW"></i>출근</span><span><i class="cA"></i>출근간주</span><span><i class="cE"></i>제외</span><span><i class="cX"></i>결근</span><span><i class="cH"></i>토·일·공휴일</span><span><i class="cN"></i>재직 아님</span></div><div class="tl">' +
+        months.map(function (m) { return '<div class="m"><div class="mh"><span>' + esc(m.label) + '</span><span class="tag ' + m.info.cls + '">' + esc(m.info.reason) + '</span></div>' + cellsHtml(m.cells) + '</div>'; }).join('') + '</div>';
+      yearHtml += '<div class="dsec year"><h3><span>Ⅲ-' + (sumRows.length + 1) + '. ' + esc(title) + ' <small style="font-weight:400;font-size:13px;color:#475569">산정 대상 기간 ' + F(per[0]) + ' ~ ' + F(per[1]) + '</small></span><span class="res">' + esc(grantTxt) + '</span></h3>' + body + '</div>';
+
+      /* 요약표 한 줄 */
+      if (c) sumRows.push([F(R.B), F(per[0]) + '~' + F(per[1]), String(c.total), String(c.deemed), String(c.excl), String(c.absent), String(c.eff), c.eff > 0 ? c.rate.toFixed(1) + '%' : '-', R.stage === 3 ? c.svc.N + '년' : '-', c.svc.excl + '일', R.stage === 3 ? c.base + '+' + c.add + '=' + c.full : c.base + '(비례)', YC.reasonOf(c), f2(R.raw), f2(R.grant) + '일' + (R.stage === 2 ? ' + 월차 ' + f2(R.first.total) : '')]);
+      else sumRows.push([y + '년', F(per[0]) + '~' + F(per[1]), String(tot.total), String(tot.A), String(tot.E), String(tot.X), String(tot.total - tot.E), '-', '-', '-', '-', '1년 미만: 1개월 개근 시 1일', f2(R.first.total), '월차 ' + f2(R.first.total) + '일']);
+    }
+    var sHead = ['부여일', '산정 대상 기간', '소정근로일', '출근간주', '제외', '결근', '유효 소정근로일', '출근율', '만근연수', '근속 제외(누적)', '기본+가산', '산정 사유', '계산값', '부여'];
+    o += '<div class="dsec"><h3>Ⅱ. 연도별 요약 (' + rg.from + '년 ~ ' + rg.to + '년 부여분)</h3><div class="tblwrap">' + tbl(sHead, sumRows, { left: [11] }) + '</div>' +
+      '<div class="dnote">유효 소정근로일 = 소정근로일 − 제외 / 출근율 = (유효 소정근로일 − 결근) ÷ 유효 소정근로일 / 출근율 80% 이상이고 제외기간이 있으면 (기본+가산) × 유효 소정근로일 ÷ 소정근로일. 해마다 자세한 계산은 Ⅲ에 있습니다.</div></div>';
+    T.splice(T.indexOf('', 3) < 0 ? T.length : T.length, 0);   /* (순서 유지) */
+    o += yearHtml;
+    /* ---- 근거·확인란 ---- */
+    var law = [['근로기준법 제60조', '1년간 80% 이상 출근 시 15일, 1년 미만·80% 미만은 1개월 개근 시 1일, 3년 이상 근속 시 최초 1년을 넘는 매 2년마다 1일 가산(한도 25일). 육아휴직·출산전후휴가·업무상 재해 휴업 기간은 출근한 것으로 봄'],
+      ['고용노동부 행정해석 (2021. 8. 4. 변경, 임금근로시간과-1736)', '업무 외 질병휴직·무급병가 등 근로제공 의무가 정지된 기간은 소정근로일수에서 제외하고, 나머지 소정근로일수 비율로 비례 산정 (그 전에 발생한 연차는 결근 처리)'],
+      ['고용노동부 행정해석 (2021. 12. 16. 변경)', '1년 근무 대가 15일은 1년 근로를 마친 다음 날 근로관계가 있어야 발생'],
+      ['전라남도교육감 소속 교육공무직원 취업규칙·2025년 단체협약', '회계연도 기준 부여, 소수점 이하 올림, 질병휴직·약정 육아휴직 근속 제외(취업규칙 제88조), 유급병가 연 60일(2025년 이전 연 30일, 단체협약 제76조·취업규칙 제64조), 방중비 기본연차'],
+      ['공휴일', '2023~2029년 공휴일·대체공휴일·임시공휴일·근로자의 날(노동절)과 직접 지정한 휴일을 반영. 그 밖의 해는 양력 고정 공휴일만 반영되어 소정근로일수에 작은 오차가 있을 수 있음']];
+    o += '<div class="dsec"><h3>Ⅳ. 적용 법령·지침 근거</h3>' + kv(law) + '<div class="dnote">본 내역서는 입력한 인사 변동 이력으로 계산한 결과입니다. 인사 발령 기록(나이스)과 입력 내용이 같은지 대조하시기 바랍니다.</div>' +
+      '<div class="sign"><div>작성자 (직·성명)</div><div>확인자 (직·성명)</div></div></div>';
+    T.push('', '━━━━━━━━━━━━━━━━━━━━'); tx('■ Ⅱ. 연도별 요약', sHead, sumRows); tx('■ Ⅳ. 적용 법령·지침 근거', null, law.map(function (r) { return [r[0] + ': ' + r[1]]; }));
+    $('outD').innerHTML = o; detailText = T.join('\n');
+  }
+  ['d_from', 'd_to', 'd_cal'].forEach(function (id) { $(id).addEventListener('input', renderDetail); $(id).addEventListener('change', renderDetail); });
+  $('btnDAuto').addEventListener('click', function () { $('d_from').value = ''; $('d_to').value = ''; renderDetail(); });
+  $('btnPrintD').addEventListener('click', function () { window.print(); });
+  $('btnCopyD').addEventListener('click', function () { copyText(detailText, $('btnCopyD'), '📋 내용 복사'); });
+
   /* ---------- 화면(탭) 전환 ---------- */
+  var curMode = 'normal';
   function setMode(m) {
     var r = m === 'retire';
+    curMode = m;
     document.body.classList.toggle('mode-retire', r);
+    document.body.classList.toggle('mode-detail', m === 'detail');
+    if (m === 'detail') renderDetail();
     Array.prototype.forEach.call(document.querySelectorAll('.mode-tab'), function (b) { var on = b.getAttribute('data-mode') === m; b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on)); });
-    try { history.replaceState(null, '', r ? '#retire' : location.pathname + location.search); } catch (e) { }
+    try { history.replaceState(null, '', r ? '#retire' : (m === 'detail' ? '#detail' : location.pathname + location.search)); } catch (e) { }
   }
   Array.prototype.forEach.call(document.querySelectorAll('.mode-tab'), function (b) { b.addEventListener('click', function () { setMode(b.getAttribute('data-mode')); }); });
 
@@ -1336,7 +1613,7 @@ if (typeof module !== 'undefined') module.exports = YC;
       if (k === 'vacation') { $('f_work').value = 'vac'; }
       events.push({ type: k, s: I(ev[0]), e: I(ev[1]) });
       renderEvents(); calc();
-      var rows = $('evBody2').querySelectorAll('tr.r1'), inp = rows[rows.length - 1] && rows[rows.length - 1].querySelector('input[type=date]');
+      var rows = $('evBody2').querySelectorAll('tr.r1'), inp = rows[rows.length - 1] && rows[rows.length - 1].querySelector('.dt-in');
       if (inp) try { inp.focus(); } catch (e) { }
     });
   });
@@ -1571,6 +1848,7 @@ if (typeof module !== 'undefined') module.exports = YC;
   $('f_year').value = new Date().getFullYear();
   holidays = loadHolidays(); applyHolidays();
   if (location.hash === '#retire') setMode('retire');
+  if (location.hash === '#detail') setMode('detail');
   refreshList(); renderEvents(); calc();
 })();
 </script>
