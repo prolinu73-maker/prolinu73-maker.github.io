@@ -752,23 +752,28 @@
   .snow-hills { height: 52px; }
   .board-corner::before { content: none; display: none; }   /* '오늘' 카드 위 하얀 눈 막대 없앰 */
 
-  /* ───── 🚙 눈 언덕 + 지프차 ───── */
+  /* ───── 🦌 눈 언덕 + 순록 썰매 ───── */
   .board { padding-bottom: 100px; }
   .snow-hills { height: 76px; }
-  .snow-hills.back { z-index: 1; }   /* 뒤 언덕은 차 뒤에 */
-  .jeep { position: absolute; left: 0; top: 0; width: 84px; height: 46px; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .4s; will-change: transform; }
-  .jeep.on { opacity: 1; }
-  .jeep-body { width: 100%; height: 100%; transform-origin: 50% 100%; position: relative; }
-  .jeep-body svg { display: block; overflow: visible; filter: drop-shadow(0 3px 3px rgba(10,35,75,.25)); }
-  .jeep.left .jeep-body { transform: scaleX(-1); }
-  .jeep-spray { position: absolute; left: -4px; bottom: 2px; width: 20px; height: 14px; opacity: 0; transition: opacity .3s; }
-  .jeep.moving .jeep-spray { opacity: 1; }
-  .jeep-spray i { position: absolute; left: 10px; bottom: 0; width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: jeepSpray .7s linear infinite; }
-  .jeep-spray i:nth-child(2) { animation-delay: .23s; width: 5px; height: 5px; }
-  .jeep-spray i:nth-child(3) { animation-delay: .46s; width: 4px; height: 4px; }
-  @keyframes jeepSpray { 0% { transform: translate(0,0) scale(1); opacity: .95; } 100% { transform: translate(-18px,-12px) scale(.3); opacity: 0; } }
+  .snow-hills.back { z-index: 1; }   /* 뒤 언덕은 썰매 뒤에 */
+  .sleigh { position: absolute; left: 0; top: 0; width: 150px; height: 64px; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .5s; will-change: transform; }
+  .sleigh.on { opacity: 1; }
+  .sleigh-body { width: 100%; height: 100%; position: relative; }
+  .sleigh-body svg { display: block; overflow: visible; filter: drop-shadow(0 3px 3px rgba(10,35,75,.25)); }
+  .sleigh.left .sleigh-body { transform: scaleX(-1); }
+  .sleigh .leg { transform-box: fill-box; transform-origin: 50% 0; }
+  .sleigh.moving .lf, .sleigh.moving .lb2 { animation: gallopA .42s ease-in-out infinite; }
+  .sleigh.moving .lb, .sleigh.moving .lf2 { animation: gallopB .42s ease-in-out infinite; }
+  @keyframes gallopA { 0%, 100% { transform: rotate(24deg); } 50% { transform: rotate(-20deg); } }
+  @keyframes gallopB { 0%, 100% { transform: rotate(-20deg); } 50% { transform: rotate(24deg); } }
+  .sleigh-spray { position: absolute; left: -2px; bottom: 3px; width: 22px; height: 16px; opacity: 0; transition: opacity .3s; }
+  .sleigh.moving .sleigh-spray { opacity: 1; }
+  .sleigh-spray i { position: absolute; left: 12px; bottom: 0; width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: sleighSpray .7s linear infinite; }
+  .sleigh-spray i:nth-child(2) { animation-delay: .23s; width: 5px; height: 5px; }
+  .sleigh-spray i:nth-child(3) { animation-delay: .46s; width: 4px; height: 4px; }
+  @keyframes sleighSpray { 0% { transform: translate(0,0) scale(1); opacity: .95; } 100% { transform: translate(-18px,-12px) scale(.3); opacity: 0; } }
   @media (max-width: 760px) { .board { padding-bottom: 92px; } .snow-hills { height: 64px; } }
-  @media (prefers-reduced-motion: reduce) { .jeep-spray { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .sleigh-spray { display: none; } .sleigh .leg { animation: none !important; } }
   .snow-toggle { position: absolute; top: auto; bottom: 12px; right: max(18px, calc(50% - 590px)); left: auto; transform: none; z-index: 3; padding: 5px 12px; font-size: 12px; box-shadow: 0 2px 8px rgba(10,35,75,.15); }
   .hm-dash { margin: 22px auto 0; align-items: stretch; }
   .hm-panel { box-shadow: 0 8px 26px rgba(15,50,95,.09); display: flex; flex-direction: column; }
@@ -794,36 +799,54 @@
       <path d="M-200 60 L0 50 C 160 14, 330 20, 470 44 S 760 70, 900 34 S 1180 0, 1300 30 S 1420 44, 1440 38 L1640 30" fill="none" stroke="#FFFFFF" stroke-width="3" opacity=".55" vector-effect="non-scaling-stroke"/>
     </svg>
   </div>
-  <!-- 🚙 눈 언덕을 오가는 지프차 (장식 · 클릭 안 됨) -->
-  <div class="jeep" id="jeep" aria-hidden="true">
-    <div class="jeep-body">
-      <span class="jeep-spray"><i></i><i></i><i></i></span>
-      <svg viewBox="0 0 84 46" width="84" height="46">
-        <!-- 예비 타이어 -->
-        <rect x="1" y="16" width="8" height="16" rx="4" fill="#2B2F36"/>
-        <rect x="3" y="19" width="4" height="10" rx="2" fill="#59606B"/>
-        <!-- 차체 -->
-        <path d="M8 34 L8 19 Q8 16 11 16 L20 16 L24 6 Q25 4 28 4 L54 4 Q57 4 58 6 L63 16 L74 17 Q79 18 79 22 L79 34 Z" fill="#C8382F"/>
-        <path d="M8 27 L79 27 L79 34 L8 34 Z" fill="#A82D25"/>
-        <!-- 지붕 위 눈 · 짐받이 -->
-        <path d="M24 4 Q24 0.5 29 0.5 L54 0.5 Q59 0.5 58 4 Z" fill="#FFFFFF"/>
-        <rect x="27" y="1.8" width="28" height="1.4" rx=".7" fill="#DCE8F5"/>
-        <!-- 창문 -->
-        <path d="M26.5 7 L40 7 L40 15.5 L23.5 15.5 Z" fill="#BFE3FF"/>
-        <path d="M43 7 L55.5 7 L60 15.5 L43 15.5 Z" fill="#BFE3FF"/>
-        <path d="M45 8.5 L49 8.5 L46 14 L44 14 Z" fill="#FFFFFF" opacity=".7"/>
-        <!-- 문 선 · 손잡이 -->
-        <path d="M41.5 6 L41.5 27" stroke="#8E241D" stroke-width="1"/>
-        <rect x="33" y="18.5" width="5" height="1.6" rx=".8" fill="#8E241D"/>
-        <rect x="47" y="18.5" width="5" height="1.6" rx=".8" fill="#8E241D"/>
-        <!-- 전조등 · 후미등 · 범퍼 -->
-        <circle cx="76.5" cy="21.5" r="2.4" fill="#FFE27A"/>
-        <rect x="8" y="19" width="2.5" height="4" rx="1" fill="#FF6B5E"/>
-        <rect x="74" y="31.5" width="8" height="3.5" rx="1.5" fill="#2B2F36"/>
-        <rect x="5" y="31.5" width="7" height="3.5" rx="1.5" fill="#2B2F36"/>
-        <!-- 바퀴 -->
-        <g class="jw" style="transform-origin:22px 36px"><circle cx="22" cy="36" r="9" fill="#23262C"/><circle cx="22" cy="36" r="4.2" fill="#9AA3AF"/><path d="M22 31.8 V40.2 M17.8 36 H26.2" stroke="#23262C" stroke-width="1.6"/></g>
-        <g class="jw" style="transform-origin:64px 36px"><circle cx="64" cy="36" r="9" fill="#23262C"/><circle cx="64" cy="36" r="4.2" fill="#9AA3AF"/><path d="M64 31.8 V40.2 M59.8 36 H68.2" stroke="#23262C" stroke-width="1.6"/></g>
+  <!-- 🦌 눈 언덕을 오가는 순록 썰매와 산타 (장식 · 클릭 안 됨) -->
+  <div class="sleigh" id="sleigh" aria-hidden="true">
+    <div class="sleigh-body">
+      <span class="sleigh-spray"><i></i><i></i><i></i></span>
+      <svg viewBox="0 0 150 64" width="150" height="64">
+        <!-- 고삐 -->
+        <path d="M57 27 Q90 34 121 25" fill="none" stroke="#7A4B25" stroke-width="1.3"/>
+        <!-- 썰매 날 -->
+        <path d="M3 59 L64 59 Q72 59 72 51" fill="none" stroke="#E8B04A" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M16 50 L16 59 M48 50 L48 59" stroke="#E8B04A" stroke-width="2"/>
+        <!-- 선물 자루 -->
+        <ellipse cx="19" cy="27" rx="9" ry="11" fill="#2F7A55"/>
+        <path d="M14 17 Q19 13 24 17" fill="none" stroke="#E8B04A" stroke-width="1.6"/>
+        <rect x="22" y="22" width="9" height="9" rx="1" fill="#3E9AD6"/><path d="M26.5 22 V31 M22 26.5 H31" stroke="#fff" stroke-width="1.2"/>
+        <!-- 산타 -->
+        <ellipse cx="41" cy="31" rx="10" ry="10" fill="#D33A2F"/>
+        <rect x="31.5" y="31" width="19" height="3" fill="#2B2F36"/><rect x="39.5" y="30.5" width="4" height="4" rx=".6" fill="#E8B04A"/>
+        <circle cx="46" cy="16" r="5.2" fill="#F6CBAA"/>
+        <path d="M41.5 17 Q46 30 51 17 Q48 20.5 46 20 Q44 20.5 41.5 17 Z" fill="#FFFFFF"/>
+        <path d="M43.5 18 Q46 16.6 48.5 18" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="48" cy="15" r=".9" fill="#2B2F36"/>
+        <path d="M40.5 12.5 L51.5 12.5 Q47 2 37.5 4 Z" fill="#D33A2F"/>
+        <rect x="40" y="11" width="12.5" height="3" rx="1.5" fill="#FFFFFF"/><circle cx="37.5" cy="4.2" r="2.2" fill="#FFFFFF"/>
+        <path d="M48 27 L57 27" stroke="#D33A2F" stroke-width="3.4" stroke-linecap="round"/><circle cx="57.5" cy="27" r="1.8" fill="#2B2F36"/>
+        <!-- 썰매 몸통 -->
+        <path d="M6 51 L6 33 Q6 26 13 26 L18 26 Q21 26 21 30 L22 39 L57 39 Q65 39 67 31 L70 31 Q72 45 61 51 Z" fill="#B9312A"/>
+        <path d="M6 51 L6 33 Q6 26 13 26 L18 26 Q21 26 21 30 L22 39 L57 39 Q65 39 67 31 L70 31 Q72 45 61 51 Z" fill="none" stroke="#E8B04A" stroke-width="1.6"/>
+        <path d="M12 44 Q20 40 28 44 Q36 48 44 44" fill="none" stroke="#E8B04A" stroke-width="1.1" opacity=".8"/>
+        <!-- 순록: 뒷다리 -->
+        <g class="leg lb"><path d="M103 38 L101 57" stroke="#6E4527" stroke-width="3.2" stroke-linecap="round"/><rect x="98.5" y="56" width="5" height="3" rx="1" fill="#2B2F36"/></g>
+        <g class="leg lf"><path d="M124 38 L126 57" stroke="#6E4527" stroke-width="3.2" stroke-linecap="round"/><rect x="123.5" y="56" width="5" height="3" rx="1" fill="#2B2F36"/></g>
+        <!-- 순록: 몸 -->
+        <path d="M95 31 Q93 27 97 27" fill="none" stroke="#8A5A36" stroke-width="3" stroke-linecap="round"/>
+        <ellipse cx="111" cy="34" rx="16" ry="8.5" fill="#8A5A36"/>
+        <path d="M120 30 Q125 22 130 15 L136 18 Q131 28 126 37 Z" fill="#8A5A36"/>
+        <ellipse cx="124" cy="35" rx="4" ry="5" fill="#E9D8C3"/>
+        <path d="M117 29 Q123 34 129 27" fill="none" stroke="#C8382F" stroke-width="2.4"/>
+        <circle cx="123" cy="32.5" r="2" fill="#E8B04A"/>
+        <!-- 순록: 앞다리 -->
+        <g class="leg lb2"><path d="M98 38 L96 57" stroke="#8A5A36" stroke-width="3.4" stroke-linecap="round"/><rect x="93.5" y="56" width="5" height="3" rx="1" fill="#2B2F36"/></g>
+        <g class="leg lf2"><path d="M120 39 L121 57" stroke="#8A5A36" stroke-width="3.4" stroke-linecap="round"/><rect x="118.5" y="56" width="5" height="3" rx="1" fill="#2B2F36"/></g>
+        <!-- 순록: 머리 · 뿔 -->
+        <path d="M130 7 L127 1 M128.6 4.2 L124.5 3.2 M134 8 L137 1.5 M135.6 4.6 L140 3.5" stroke="#6B4423" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+        <ellipse cx="134" cy="14" rx="7" ry="5.2" fill="#8A5A36"/>
+        <ellipse cx="141" cy="16" rx="4.6" ry="3.4" fill="#A97850"/>
+        <circle cx="144.6" cy="15.6" r="1.7" fill="#3B2A20"/>
+        <circle cx="135" cy="12.5" r="1" fill="#2B2F36"/>
+        <path d="M129 10 Q125 8 126 12 Z" fill="#6E4527"/>
       </svg>
     </div>
   </div>
@@ -870,20 +893,20 @@
 </section>
 <script>
 /* =====================================================================
-   🚙 눈 언덕을 오가는 지프차 (장식)
+   🦌 눈 언덕을 오가는 순록 썰매와 산타 (장식)
    - 언덕 길(#hillRoad)을 따라 기울기에 맞춰 달립니다.
    - 왼쪽→오른쪽, 오른쪽→왼쪽을 무작위로 고르고, 가끔 중간에 멈췄다가 되돌아갑니다.
    - 속도·쉬는 시간도 매번 달라집니다. 화면을 안 보고 있으면 멈춥니다.
    - 윈도우 '애니메이션 효과'가 꺼진 컴퓨터에서는 언덕 위에 멈춰 서 있습니다.
    ===================================================================== */
 (function () {
-  const car = document.getElementById('jeep'), road = document.getElementById('hillRoad');
+  const car = document.getElementById('sleigh'), road = document.getElementById('hillRoad');
   const wrap = car && car.closest('.board-wrap'), hills = wrap && wrap.querySelector('.snow-hills:not(.back)');
   if (!car || !road || !road.getTotalLength) return;
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const body = car.querySelector('.jeep-body'), wheels = car.querySelectorAll('.jw');
+  const CW = 150, CH = 64;                           // 썰매 그림 크기
   const VBW = 1440, VBH = 120, L = road.getTotalLength();
-  let W = 0, H = 0, top0 = 0, scale = 1, raf = 0, s = 0, dir = 1, spin = 0;
+  let W = 0, H = 0, top0 = 0, scale = 1, raf = 0, s = 0, dir = 1;
   const rnd = (a, b) => a + Math.random() * (b - a);
   // 화면 폭에 따라 차 크기 조절
   function measure() {
@@ -895,13 +918,13 @@
   function place(bounce) {
     // 화면 높이가 바뀌어도(글꼴·접속자 수 등) 언덕 위치를 매번 다시 잼
     W = hills.clientWidth; H = hills.clientHeight; top0 = wrap.clientHeight - H + 1;
-    const half = 30 / (W / VBW) * scale;            // 바퀴 사이 거리의 절반 (길 좌표)
+    const half = 58 / (W / VBW) * scale;            // 썰매 끝~순록 발 거리의 절반 (길 좌표)
     const p = road.getPointAtLength(s);
     const a = road.getPointAtLength(Math.max(0, s - half)), b = road.getPointAtLength(Math.min(L, s + half));
     const px = p.x * W / VBW, py = top0 + p.y * H / VBH;
     const ang = Math.atan2((b.y - a.y) * H / VBH, (b.x - a.x) * W / VBW) * 180 / Math.PI;
-    car.style.transform = `translate(${px - 42}px, ${py - 46 + 2 + (bounce || 0)}px) rotate(${ang}deg) scale(${scale})`;
-    car.style.transformOrigin = '42px 44px';
+    car.style.transform = `translate(${px - CW / 2}px, ${py - CH + 3 + (bounce || 0)}px) rotate(${ang}deg) scale(${scale})`;
+    car.style.transformOrigin = `${CW / 2}px ${CH - 3}px`;
   }
   function setDir(d) { dir = d; car.classList.toggle('left', d < 0); }
   // 한 구간 달리기: from → to (길 좌표), 속도 px/s
@@ -915,9 +938,7 @@
         const left = to - s;
         if (Math.abs(left) <= ds) { s = to; place(0); car.classList.remove('moving'); res(); return; }
         s += Math.sign(left) * ds;
-        spin += ds * W / VBW / 9 * 57.3;   // 앞으로 굴러가는 방향 (뒤집힌 차도 같은 식)
-        wheels.forEach(w => w.style.transform = `rotate(${spin}deg)`);
-        place(Math.sin(t * 14) * .8);
+        place(-Math.abs(Math.sin(t * 7.5)) * 1.6);   // 순록이 뛰는 박자에 맞춰 살짝 들썩
         raf = requestAnimationFrame(step);
       }
       raf = requestAnimationFrame(step);
@@ -934,7 +955,7 @@
       const goRight = Math.random() < .5;
       setDir(goRight ? 1 : -1);
       s = goRight ? startL : endL; place(0); car.classList.add('on');
-      const speed = rnd(90, 170);                      // 화면 기준 초당 픽셀
+      const speed = rnd(80, 150);                      // 화면 기준 초당 픽셀
       if (Math.random() < .3) {
         // 중간까지 갔다가 잠깐 쉬고 되돌아가기
         const mid = L * rnd(.3, .7);
