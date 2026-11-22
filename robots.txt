@@ -1,0 +1,7 @@
+# 조효식 허브 PRO — 검색 로봇 안내
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /data/
+
+Sitemap: https://prolinu73-maker.github.io/sitemap.xml

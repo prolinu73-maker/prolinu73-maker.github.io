@@ -24,7 +24,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = "1.7.1";
+    HUB.VERSION = "1.8.0";
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
@@ -123,6 +123,32 @@
         "geunmu_search.html": "복무 통계 작성",
         "facility.html": "시설공사 공고문 작성",
         "lawsearch.html": "법령ㆍ판례 검색"
+    };
+
+    // ── 첫 화면 '내 업무 바로가기'용: 도구 목록 · 최근 사용 기록 (이 브라우저에 저장) ──
+    //   HUB.tools()        : 상단 메뉴에서 실제 페이지가 있는 도구만 뽑은 목록
+    //   HUB.recent.list()  : 최근에 연 도구 [{ f: 파일, t: 시각 }] (최근 것이 앞)
+    //   도구 페이지를 열면 아래 '시작' 부분에서 자동으로 기록합니다.
+    HUB.tools = function () {
+        const out = [];
+        (function walk(list, group) {
+            (list || []).forEach(m => {
+                if (m.children) walk(m.children, m.label);
+                else if (m.file && !m.soon && m.file.indexOf("#") < 0) out.push({ file: m.file, label: m.label, group: group || m.label, icon: m.icon || "" });
+            });
+        })(HUB.MENU, "");
+        return out;
+    };
+    HUB.recent = {
+        KEY: "hubRecentTools", MAX: 8,
+        list() { try { const a = JSON.parse(localStorage.getItem(this.KEY) || "[]"); return Array.isArray(a) ? a.filter(x => x && typeof x.f === "string") : []; } catch (e) { return []; } },
+        add(file) {
+            if (!file) return;
+            const a = this.list().filter(x => x.f !== file);
+            a.unshift({ f: file, t: Date.now() });
+            try { localStorage.setItem(this.KEY, JSON.stringify(a.slice(0, this.MAX))); } catch (e) {}
+        },
+        clear() { try { localStorage.removeItem(this.KEY); } catch (e) {} }
     };
 
     // 프로필 그림으로 고를 수 있는 이모지·색 (내 페이지와 같아야 함)
@@ -884,6 +910,9 @@
     /* =================================================================
        시작: Firebase 프로그램을 불러온 페이지는 로그인 상태를 자동으로 맞춤
        ================================================================= */
+    // 도구 페이지를 열면 '최근 사용'에 기록
+    try { const pg = HUB.currentPage(); if (HUB.tools().some(t => t.file === pg)) HUB.recent.add(pg); } catch (e) {}
+
     d.addEventListener("DOMContentLoaded", () => {
         if (d.querySelector('script[src*="firebase-app-compat"]')) { HUB.startAuthSync(); HUB.msg.autoBadge(); }
     });
