@@ -7,7 +7,7 @@
 <title>관리자 페이지 · 조효식 허브 PRO</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 <link rel="stylesheet" href="common.css?v=10">
-<script src="common.js?v=16"></script>
+<script src="common.js?v=26"></script>
 <style>
   :root {
     --accent: #2563EB; --accent-d: #1D4ED8; --accent-soft: #EEF4FF;
@@ -200,6 +200,7 @@
   <div class="sec">내용 관리</div>
   <button data-page="site">🏠 사이트 설정·점검 모드</button>
   <button data-page="notices">📢 공지·배너·팝업 <span class="cnt" id="cntNotices">0</span></button>
+  <button data-page="events">📅 업무 달력 <span class="cnt" id="cntEvents">0</span></button>
   <button data-page="categories">🗂 카테고리 <span class="cnt" id="cntCats">0</span></button>
   <button data-page="items">🧩 콘텐츠(프로그램) <span class="cnt" id="cntItems">0</span></button>
   <div class="sec">배포·보관</div>
@@ -234,6 +235,22 @@ const API = 'https://api.github.com';
 const STATUS = { active: '사용 중', maintenance: '점검 중', hidden: '숨김' };
 const TYPES = { banner: '배너', popup: '팝업', list: '목록' };
 const LEVELS = { info: '안내', warning: '주의', danger: '긴급' };
+const EV_CATS = { '세무': '#E07A2F', '회계': '#1F6FB2', '인사': '#7C5CD6', '보험': '#1A9C7B', '학교운영': '#E0598B', '기타': '#64748B' };
+const EV_REPEAT = { none: '한 번', monthly: '매월', yearly: '매년' };
+// 첫 화면 '이달의 업무 달력' 기본 일정 (index.html의 DEFAULT_EVENTS와 같음)
+const DEFAULT_EVENTS = [
+  { id: 'ev-wht', title: '원천세·지방소득세 신고·납부 기한', date: '2026-01-10', repeat: 'monthly', category: '세무', memo: '전월 지급분 원천징수이행상황신고', link: '', active: true },
+  { id: 'ev-ys', title: '연말정산 간소화 자료 제공 시작', date: '2026-01-15', repeat: 'yearly', category: '세무', memo: '국세청 홈택스', link: 'https://www.hometax.go.kr', active: true },
+  { id: 'ev-bud', title: '학교회계 예산안 학교운영위원회 제출 기한', date: '2026-01-30', repeat: 'yearly', category: '회계', memo: '회계연도 시작 30일 전까지', link: '', active: true },
+  { id: 'ev-sfy', title: '학교회계연도 시작', date: '2026-03-01', repeat: 'yearly', category: '회계', memo: '3월 1일 ~ 다음 해 2월 말일', link: '', active: true },
+  { id: 'ev-wage', title: '근로소득 지급명세서 제출 기한', date: '2026-03-10', repeat: 'yearly', category: '세무', memo: '전년도 연말정산 결과 제출', link: '', active: true },
+  { id: 'ev-nhis', title: '건강보험 보수총액 통보 기한', date: '2026-03-10', repeat: 'yearly', category: '보험', memo: '직장가입자 전년도 보수총액', link: '', active: true },
+  { id: 'ev-ei', title: '고용·산재보험 보수총액 신고 기한', date: '2026-03-15', repeat: 'yearly', category: '보험', memo: '전년도 보수총액', link: '', active: true },
+  { id: 'ev-set', title: '학교회계 결산서 학교운영위원회 제출 기한', date: '2026-04-30', repeat: 'yearly', category: '회계', memo: '회계연도 끝난 뒤 2개월 이내', link: '', active: true },
+  { id: 'ev-ev1', title: '근무성적평정 기준일 (상반기)', date: '2026-06-30', repeat: 'yearly', category: '인사', memo: '', link: '', active: true },
+  { id: 'ev-ev2', title: '근무성적평정 기준일 (하반기)', date: '2026-12-31', repeat: 'yearly', category: '인사', memo: '', link: '', active: true },
+  { id: 'ev-tfy', title: '교육비특별회계 회계연도 종료', date: '2026-12-31', repeat: 'yearly', category: '회계', memo: '1월 1일 ~ 12월 31일', link: '', active: true }
+];
 const BADGES = ['', 'NEW', 'BETA', 'UPDATE'];
 const EMOJIS = ['🚀','⚖️','🚗','📦','📈','📊','💳','🏗️','📝','📋','📁','🧮','🗂','📅','🏫','👥','💬','🔧','🔍','📢','💡','🛠️','📚','🗳️'];
 
@@ -348,6 +365,7 @@ function normalize(c) {
   c.site.maintenance = Object.assign({ enabled: false, message: '시스템 점검 중입니다. 잠시 후 다시 접속해 주세요.', endTime: '' }, c.site.maintenance || {});
   c.site.analytics = Object.assign({ ga4Id: '', cloudflareToken: '' }, c.site.analytics || {});
   c.notices = Array.isArray(c.notices) ? c.notices : [];
+  c.events = Array.isArray(c.events) ? c.events : JSON.parse(JSON.stringify(DEFAULT_EVENTS));   // 처음엔 기본 일정을 채워 둠
   c.categories = Array.isArray(c.categories) ? c.categories : [];
   c.items = Array.isArray(c.items) ? c.items : [];
   c.items.forEach(i => { i.tags = Array.isArray(i.tags) ? i.tags : []; i.changelog = Array.isArray(i.changelog) ? i.changelog : []; });
@@ -396,6 +414,7 @@ function computeDiff() {
     if (!same(fa[k], fb[k])) out.push({ k: 'mod', t: '사이트 설정: ' + (FIELD_NAMES[k] || k), d: k === 'analytics.cloudflareToken' ? '' : `${short(fa[k])} → ${short(fb[k])}` });
   });
   out.push(...diffList(a.notices, b.notices, '공지', x => x.title || x.id));
+  out.push(...diffList(a.events, b.events, '업무 달력', x => x.title || x.id));
   out.push(...diffList(a.categories, b.categories, '카테고리', x => x.name || x.id));
   out.push(...diffList(a.items, b.items, '콘텐츠', x => x.title || x.id));
   return out;
@@ -424,6 +443,7 @@ function updateTop() {
   $('connBadge').className = 'conn' + (S.original ? ' on' : '');
   if (S.draft) {
     $('cntNotices').textContent = S.draft.notices.length;
+    $('cntEvents').textContent = S.draft.events.length;
     $('cntCats').textContent = S.draft.categories.length;
     $('cntItems').textContent = S.draft.items.length;
   }
@@ -780,6 +800,51 @@ function editNotice(i) {
   return m;
 }
 
+/* ── 11-4b. 업무 달력 (첫 화면 '이달의 업무 달력') ── */
+PAGES.events = function () {
+  const list = S.draft.events.map((e, i) => ({ e, i })).sort((a, b) => (a.e.date || '').slice(5).localeCompare((b.e.date || '').slice(5)));
+  const when = e => e.repeat === 'monthly' ? `매월 ${+e.date.slice(8)}일` : e.repeat === 'yearly' ? `매년 ${+e.date.slice(5, 7)}월 ${+e.date.slice(8)}일` : e.date;
+  return `<div class="page-h"><div><h1>📅 업무 달력</h1><p>첫 화면 '이달의 업무 달력'에 모든 방문자에게 보이는 기본 일정입니다. 반복 일정은 첫 날짜부터 매월·매년 자동으로 표시됩니다.</p></div>
+    <div class="row"><button class="btn" onclick="resetEvents()" title="기본 일정 11개로 되돌립니다">기본 일정으로 되돌리기</button> <button class="btn pri" onclick="editEvent()">+ 일정 추가</button></div></div>
+  <div class="card"><div class="tbl-wrap"><table class="t"><thead><tr><th>표시</th><th>분류</th><th>일정 이름</th><th>날짜</th><th>메모</th><th></th></tr></thead><tbody>
+  ${list.map(({ e, i }) => `<tr>
+    <td><label class="switch" title="표시/숨김"><input type="checkbox" ${e.active !== false ? 'checked' : ''} onchange="S.draft.events[${i}].active=this.checked;touched(true)"><span class="tr"></span></label></td>
+    <td><span class="pill" style="background:${EV_CATS[e.category] || EV_CATS['기타']};color:#fff">${esc(e.category || '기타')}</span></td>
+    <td><b>${esc(e.title)}</b>${e.link ? `<div class="hint ellip mono">${esc(e.link)}</div>` : ''}</td>
+    <td style="white-space:nowrap">${esc(when(e))}</td>
+    <td class="hint">${esc(e.memo || '')}</td>
+    <td style="white-space:nowrap"><button class="btn sm" onclick="editEvent(${i})">수정</button> <button class="btn sm danger" onclick="delEvent(${i})">삭제</button></td>
+  </tr>`).join('') || '<tr><td colspan="6" class="empty">일정이 없습니다. [+ 일정 추가]를 눌러 보세요.</td></tr>'}
+  </tbody></table></div></div>`;
+};
+function resetEvents() { if (!confirm('업무 달력을 기본 일정 11개로 되돌릴까요? (지금 목록은 지워집니다)')) return; S.draft.events = clone(DEFAULT_EVENTS); touched(true); toast('기본 일정으로 되돌렸습니다. (배포 전)'); }
+function delEvent(i) { if (!confirm(`'${S.draft.events[i].title}' 일정을 삭제할까요?`)) return; S.draft.events.splice(i, 1); touched(true); }
+function editEvent(i) {
+  const isNew = i == null;
+  const e = isNew ? { id: newId('ev'), title: '', date: kToday(), repeat: 'yearly', category: '회계', memo: '', link: '', active: true } : clone(S.draft.events[i]);
+  const radios = (name, map, val) => `<div class="seg">${Object.keys(map).map(k => `<label><input type="radio" name="${name}" value="${k}" ${val === k ? 'checked' : ''}><span>${typeof map[k] === 'string' && map[k][0] === '#' ? k : map[k]}</span></label>`).join('')}</div>`;
+  const m = modal(isNew ? '📅 일정 추가' : '📅 일정 수정', `
+    <div class="grid2">
+      <div class="full"><label class="f" for="eTitle">일정 이름 <small>필수</small></label><input class="in" id="eTitle" value="${esc(e.title)}" maxlength="60" placeholder="예) 성과상여금 지급 기준일"></div>
+      <div><label class="f" for="eDate">날짜 <small>반복이면 첫 날짜</small></label><input class="in" type="date" id="eDate" value="${esc(e.date)}"></div>
+      <div><label class="f">반복</label>${radios('eRepeat', EV_REPEAT, e.repeat || 'none')}</div>
+      <div class="full"><label class="f">분류</label>${radios('eCat', EV_CATS, EV_CATS[e.category] ? e.category : '기타')}</div>
+      <div class="full"><label class="f" for="eMemo">메모 <small>선택 · 한 줄 설명</small></label><input class="in" id="eMemo" value="${esc(e.memo || '')}" maxlength="80"></div>
+      <div class="full"><label class="f" for="eLink">링크 <small>선택 · 일정 이름을 누르면 이동</small></label><input class="in mono" id="eLink" value="${esc(e.link || '')}" placeholder="/budget.html 또는 https://..."></div>
+      <div><label class="switch"><input type="checkbox" id="eActive" ${e.active !== false ? 'checked' : ''}><span class="tr"></span><span>첫 화면에 표시</span></label></div>
+    </div>`, [{ t: '취소' }, { t: isNew ? '추가' : '적용', pri: true, fn: () => {
+      const v = { id: e.id, title: $('eTitle').value.trim(), date: $('eDate').value,
+        repeat: document.querySelector('input[name=eRepeat]:checked').value, category: document.querySelector('input[name=eCat]:checked').value,
+        memo: $('eMemo').value.trim(), link: $('eLink').value.trim(), active: $('eActive').checked };
+      if (!v.title) { toast('일정 이름을 적어 주세요.', true); $('eTitle').focus(); return false; }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v.date)) { toast('날짜를 골라 주세요.', true); $('eDate').focus(); return false; }
+      if (isNew) S.draft.events.push(v); else S.draft.events[i] = v;
+      touched(true); toast(isNew ? '일정을 추가했습니다. (배포 전)' : '일정을 고쳤습니다. (배포 전)');
+    } }]);
+  setTimeout(() => $('eTitle').focus(), 30);
+  return m;
+}
+
 /* ── 11-5. 카테고리 ── */
 PAGES.categories = function () {
   const cats = sortedCats();
@@ -994,7 +1059,8 @@ function downloadJson(which) {
 function validate(c) {
   const errs = [], ids = new Set();
   const dup = (arr, label) => arr.forEach(x => { if (!x.id) errs.push(`${label}에 id가 없는 항목이 있습니다.`); else if (ids.has(x.id)) errs.push(`id가 겹칩니다: ${x.id}`); else ids.add(x.id); });
-  dup(c.notices, '공지'); dup(c.categories, '카테고리'); dup(c.items, '콘텐츠');
+  dup(c.notices, '공지'); dup(c.events, '업무 달력'); dup(c.categories, '카테고리');
+  c.events.forEach(e => { if (!e.title) errs.push(`이름이 없는 달력 일정이 있습니다 (${e.id}).`); if (!/^\d{4}-\d{2}-\d{2}$/.test(e.date || '')) errs.push(`'${e.title}' 일정의 날짜가 올바르지 않습니다.`); }); dup(c.items, '콘텐츠');
   const catIds = new Set(c.categories.map(x => x.id));
   c.items.forEach(i => { if (!i.title) errs.push(`제목이 없는 콘텐츠가 있습니다 (${i.id}).`); if (!catIds.has(i.categoryId)) errs.push(`'${i.title}'의 카테고리가 없습니다.`); });
   c.notices.forEach(n => { if (!n.title) errs.push(`제목이 없는 공지가 있습니다 (${n.id}).`); });
