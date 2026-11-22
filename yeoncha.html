@@ -57,6 +57,11 @@ table.ev th{background:#f1f5f9;font-size:12px;padding:5px;border:1px solid #dbe1
 table.ev td{padding:4px;border:1px solid #dbe1ea;vertical-align:middle}
 table.ev td input,table.ev td select{margin:0;padding:4px 5px;font-size:12px}
 table.ev td.c{text-align:center;font-size:12px;white-space:nowrap}
+/* 한 건 = 두 줄: 윗줄(사유·시작일·종료일·일수·삭제가 같은 높이로 나란히) + 아랫줄(분류 꼬리표와 쉬운 설명) */
+table.ev tr.r1 td{border-bottom:0;padding-bottom:2px}
+table.ev tr.r1 td select,table.ev tr.r1 td input{height:30px;box-sizing:border-box}
+table.ev tr.r2 td{border-top:0;padding:0 6px 6px;background:#fafbfd}
+table.ev tr.r2 .evhint{display:inline;margin:0 0 0 6px}
 .tag{display:inline-block;border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700}
 .tag.A{background:#dbeafe;color:#1d4ed8}.tag.E{background:#fef3c7;color:#b45309}.tag.X{background:#ede9fe;color:#6d28d9}.tag.ok{background:#dcfce7;color:#15803d}.tag.no{background:#e5e7eb;color:#475569}
 .hero{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border-radius:10px;padding:16px 18px;margin-bottom:14px}
@@ -1070,11 +1075,12 @@ if (typeof module !== 'undefined') module.exports = YC;
       if (!events.length) { tb.innerHTML = '<tr><td colspan="5" class="c" style="color:#94a3b8;padding:12px">' + (T.px === 'a' ? '쉬었던 기간이 없으면 비워 두세요. 1년 내내 정상 출근한 것으로 계산합니다.' : '입력한 이력이 없습니다. 없으면 재직기간 내내 정상 출근한 것으로 계산합니다.') + '</td></tr>'; return; }
       tb.innerHTML = events.map(function (e, i) {
         var cat = YC.TYPES[e.type].cat;
-        return '<tr><td><select data-i="' + i + '" data-k="type">' + typeOptions(e.type) + '</select><span class="evhint" id="' + T.px + 'evhint' + i + '">' + esc(hintOf(e.type)) + '</span></td>' +
+        return '<tr class="r1"><td><select data-i="' + i + '" data-k="type">' + typeOptions(e.type) + '</select></td>' +
           '<td><input type="date" data-i="' + i + '" data-k="s" value="' + esc(e.s || '') + '"></td>' +
           '<td><input type="date" data-i="' + i + '" data-k="e" value="' + esc(e.e || '') + '"></td>' +
-          '<td class="c"><span class="tag ' + cat + '" id="' + T.px + 'evtag' + i + '">' + YC.CAT[cat] + '</span><br><span id="' + T.px + 'evcnt' + i + '">' + dayCount(e) + '</span></td>' +
-          '<td class="c"><button class="btn red sm" data-del="' + i + '">삭제</button></td></tr>';
+          '<td class="c"><span id="' + T.px + 'evcnt' + i + '">' + dayCount(e) + '</span></td>' +
+          '<td class="c"><button class="btn red sm" data-del="' + i + '">삭제</button></td></tr>' +
+          '<tr class="r2"><td colspan="5"><span class="tag ' + cat + '" id="' + T.px + 'evtag' + i + '">' + YC.CAT[cat] + '</span><span class="evhint" id="' + T.px + 'evhint' + i + '">' + esc(hintOf(e.type)) + '</span></td></tr>';
       }).join('');
     });
   }
@@ -1114,7 +1120,7 @@ if (typeof module !== 'undefined') module.exports = YC;
       if (type === 'vacation') $('f_work').value = 'vac';
       events.push({ type: type, s: I(ev[0]), e: I(ev[1]) });
       renderEvents(); calc();
-      var rows = $('evBody').querySelectorAll('tr'), lastRow = rows[rows.length - 1], inp = lastRow && lastRow.querySelector('input[type=date]');
+      var rows = $('evBody').querySelectorAll('tr.r1'), lastRow = rows[rows.length - 1], inp = lastRow && lastRow.querySelector('input[type=date]');
       if (inp) try { inp.focus(); } catch (e) { }
     });
   });
@@ -1330,7 +1336,7 @@ if (typeof module !== 'undefined') module.exports = YC;
       if (k === 'vacation') { $('f_work').value = 'vac'; }
       events.push({ type: k, s: I(ev[0]), e: I(ev[1]) });
       renderEvents(); calc();
-      var rows = $('evBody2').querySelectorAll('tr'), inp = rows[rows.length - 1] && rows[rows.length - 1].querySelector('input[type=date]');
+      var rows = $('evBody2').querySelectorAll('tr.r1'), inp = rows[rows.length - 1] && rows[rows.length - 1].querySelector('input[type=date]');
       if (inp) try { inp.focus(); } catch (e) { }
     });
   });
