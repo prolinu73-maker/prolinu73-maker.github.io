@@ -750,6 +750,7 @@
      - 두 칸의 높이를 같게 맞춤 */
   .board { padding: 24px 28px 70px; }
   .snow-hills { height: 52px; }
+  .board-corner::before { content: none; display: none; }   /* '오늘' 카드 위 하얀 눈 막대 없앰 */
   .snow-toggle { position: absolute; top: auto; bottom: 12px; right: max(18px, calc(50% - 590px)); left: auto; transform: none; z-index: 3; padding: 5px 12px; font-size: 12px; box-shadow: 0 2px 8px rgba(10,35,75,.15); }
   .hm-dash { margin: 22px auto 0; align-items: stretch; }
   .hm-panel { box-shadow: 0 8px 26px rgba(15,50,95,.09); display: flex; flex-direction: column; }
