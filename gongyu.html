@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>공유재산 사용·수익허가 및 대부 관리 시스템 (기관공용)</title>
+  <meta name="theme-color" content="#1e3a8a" />
+  <!-- 조효식 허브 PRO 공통 파일 (홈으로 버튼·접속 기록). 같은 폴더에 없으면 없는 대로 동작합니다 -->
+  <link rel="stylesheet" href="common.css?v=10" />
+  <script src="common.js?v=27"></script>
+  <!-- 엑셀(.xlsx/.xls) 파싱용 SheetJS -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    /* =====================================================================
+       조효식 허브 PRO 하위 페이지 공통 느낌에 맞춘 모양
+       - 남색 머리줄 + 초록 '홈으로' 버튼 + 접속자 수 칸 (yeoncha·hobong·labor와 같은 자리)
+       - 행정재산(사용허가) = 남색, 일반재산(대부) = 허브 초록, 강조 = 허브 노랑
+       ===================================================================== */
+    :root {
+      --navy: #1e3a8a;
+      --navy-2: #2563eb;
+      --navy-soft: #eef2ff;
+      --green: #1B5442;
+      --green-dark: #123D30;
+      --green-soft: #E3EEE8;
+      --gold: #FACC15;
+      --primary: #1e3a8a;
+      --primary-light: #eef2ff;
+      --secondary: #1B5442;
+      --secondary-light: #E3EEE8;
+      --amber: #92400e;
+      --amber-light: #fffbeb;
+      --danger: #b91c1c;
+      --danger-light: #fef2f2;
+      --bg: #f4f6f9;
+      --card-line: #dbe1ea;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-500: #64748b;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', '맑은 고딕', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+      background: var(--bg);
+      color: #1f2937;
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select, textarea { font-family: inherit; }
+    :focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+    /* ───────── 머리줄 (허브 하위 페이지 공통 배치: 왼쪽 홈으로·제목 / 오른쪽 접속자 수·버튼) ───────── */
+    header.top {
+      background: var(--navy);
+      color: #fff;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-bottom: 4px solid var(--gold);
+    }
+    header.top .top-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    header.top h1 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -.2px; }
+    header.top .sub { font-size: 12px; opacity: .85; margin-top: 2px; }
+    header.top .nav { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
+    /* 홈으로 버튼: common.css와 같은 값 (common.css가 없는 곳에서도 같은 모양) */
+    #hubHomeBtn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 999px; background: #1B5442; color: #fff; font-weight: 800; font-size: 14px; line-height: 1.2; text-decoration: none; white-space: nowrap; border: 1.5px solid rgba(255,255,255,.25); flex-shrink: 0; transition: background .2s; cursor: pointer; }
+    #hubHomeBtn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
+    #hubHomeBtn:hover { background: #123D30; }
+    .visit-box { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.3); border-radius: 999px; padding: 6px 14px; font-size: 13px; color: #e0e7ff; white-space: nowrap; }
+    .visit-box[hidden] { display: none; }
+    .visit-box b { color: #fff; font-size: 14px; font-variant-numeric: tabular-nums; }
+    .visit-box .sep { opacity: .5; }
+    .hub-btn { background: #fff; color: var(--navy); border: 1px solid #fff; border-radius: 6px; padding: 7px 12px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .hub-btn:hover { background: #dbeafe; border-color: #dbeafe; }
+    .hub-btn.ghost { background: rgba(255,255,255,.12); color: #fff; border-color: rgba(255,255,255,.45); }
+    .hub-btn.ghost:hover { background: rgba(255,255,255,.24); }
+
+    .container { max-width: 1500px; margin: 0 auto; padding: 16px 16px 40px; }
+    .workspace-grid { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); gap: 16px; align-items: start; }
+    @media (max-width: 1024px) { .workspace-grid { grid-template-columns: 1fr; } }
+
+    .card { background: #fff; border: 1px solid var(--card-line); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e5e9f2; padding-bottom: 8px; margin-bottom: 12px; gap: 8px; flex-wrap: wrap; }
+    .card-title { margin: 0; font-size: 15.5px; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+    .card-title .no { background: var(--navy); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+    .card-title .no.won { background: var(--gold); color: #1e293b; }
+
+    .org-status-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--green-soft); border: 1px solid #b7d3c6; color: var(--green); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .org-status-pill.empty { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 12px; }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .field.full { grid-column: 1 / -1; }
+    label { font-size: 12.5px; font-weight: 700; color: var(--gray-600); display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+
+    .input-row { display: flex; align-items: center; gap: 6px; width: 100%; }
+    .input-row input { flex: 1 1 auto; min-width: 0; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+      width: 100%; padding: 7px 9px; border: 1px solid var(--gray-300); border-radius: 6px; font-size: 13.5px; background: #fff; color: #111;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--navy-2); box-shadow: 0 0 0 3px rgba(37, 99, 235, .15); }
+    .num-input, input[type="number"] { text-align: right; font-variant-numeric: tabular-nums; }
+
+    .clear-x { flex: 0 0 30px; width: 30px; height: 32px; border-radius: 6px; border: 1px solid var(--gray-300); background: var(--gray-50); color: var(--gray-600); font-size: 14px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; line-height: 1; transition: all .15s; }
+    .clear-x:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+
+    .quick-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
+    .chip-btn { border: 1px solid #c7d2fe; background: var(--navy-soft); color: var(--navy); border-radius: 999px; padding: 3px 10px; font-size: 11.5px; font-weight: 700; cursor: pointer; }
+    .chip-btn:hover { background: #e0e7ff; border-color: #a5b4fc; }
+
+    .period-dates { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+    .period-dates input[type="date"] { width: 158px; }
+    .period-dates .tilde { color: var(--gray-500); font-weight: 700; }
+    .period-dates .hint { font-size: 11.5px; color: var(--gray-500); }
+
+    /* 클릭형 물음표(?) 버튼 */
+    .q-btn { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; border: none; background: var(--navy); color: #fff; font-size: 11px; font-weight: 700; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; }
+    .q-btn:hover { background: var(--navy-2); box-shadow: 0 0 0 2px #bfdbfe; }
+
+    .late-box { background: #fff8f8; border: 1px solid #fecaca; border-left: 5px solid #dc2626; border-radius: 8px; padding: 12px 14px; margin-top: 12px; }
+    .late-box-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; flex-wrap: wrap; }
+    .late-box-title { font-size: 13px; font-weight: 800; color: var(--danger); display: flex; align-items: center; gap: 6px; }
+
+    /* ───────── 팝업 ───────── */
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, .55); backdrop-filter: blur(3px); z-index: 9999; align-items: center; justify-content: center; padding: 16px; }
+    .modal-backdrop.show { display: flex; }
+    .modal-box { width: 100%; max-width: 580px; background: #fff; border-radius: 14px; box-shadow: 0 24px 48px rgba(0, 0, 0, .25); overflow: hidden; animation: popIn .15s ease-out; max-height: 90vh; display: flex; flex-direction: column; }
+    .modal-box.wide { max-width: 900px; }
+    @keyframes popIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+    .modal-header { background: var(--navy); color: #fff; padding: 13px 18px; display: flex; justify-content: space-between; align-items: center; flex: 0 0 auto; border-bottom: 3px solid var(--gold); }
+    .modal-header.teal { background: var(--green); }
+    .modal-title { margin: 0; font-size: 15.5px; font-weight: 700; }
+    .modal-close-x { background: rgba(255,255,255,.14); border: none; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; line-height: 1; }
+    .modal-close-x:hover { background: rgba(255,255,255,.3); }
+    .modal-body { padding: 16px 18px; font-size: 13px; line-height: 1.65; color: var(--gray-800); overflow-y: auto; flex: 1 1 auto; }
+    .modal-sec { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+    .modal-sec-title { font-weight: 700; color: var(--navy); margin-bottom: 4px; font-size: 12.5px; }
+    .law-tag { display: block; background: #eff6ff; border: 1px solid #bfdbfe; border-left: 5px solid var(--navy-2); color: var(--navy); font-size: 12px; font-weight: 700; padding: 8px 10px; border-radius: 8px; margin-top: 2px; line-height: 1.5; }
+    .modal-footer { padding: 10px 18px; background: var(--gray-50); border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex: 0 0 auto; flex-wrap: wrap; }
+    .area-preview { font-weight: 700; color: var(--navy); }
+
+    /* 엑셀 업로드 영역 (팝업 내부) */
+    .excel-upload-zone { border: 2px dashed var(--green); background: var(--green-soft); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; cursor: pointer; transition: all .15s; }
+    .excel-upload-zone:hover { background: #d6e7de; }
+    .excel-upload-zone.dragover { background: #fef9c3; border-color: var(--navy); }
+    .dz-title { font-weight: 800; color: var(--green); font-size: 13.5px; }
+
+    .picker-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pill-btn { padding: 5px 12px; border: 1px solid var(--gray-300); background: #fff; border-radius: 999px; font-size: 12px; font-weight: 700; cursor: pointer; color: var(--gray-600); }
+    .pill-btn:hover { border-color: var(--green); color: var(--green); }
+    .pill-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+    .picker-scroll { max-height: 330px; overflow: auto; border: 1px solid var(--gray-300); border-radius: 8px; }
+    .picker-sum { margin-right: auto; font-size: 12.5px; font-weight: 700; color: var(--green); }
+    table.picker-tbl { width: 100%; min-width: 660px; border-collapse: collapse; font-size: 12.5px; }
+    table.picker-tbl th, table.picker-tbl td { border: 1px solid var(--card-line); padding: 6px 8px; text-align: left; }
+    table.picker-tbl th { background: #eef2ff; color: var(--navy); font-weight: 700; position: sticky; top: 0; z-index: 1; }
+    table.picker-tbl tbody tr:hover { background: #f1f7f4; }
+    table.picker-tbl tr.checked-row { background: #fef9c3; }
+    table.picker-tbl input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }
+    .badge-kind { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+    .b-land { background: #dcfce7; color: #15803d; }
+    .b-bld { background: #dbeafe; color: #1d4ed8; }
+
+    /* ───────── 버튼 ───────── */
+    .btn { border: 1px solid transparent; border-radius: 6px; padding: 7px 13px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-primary { background: var(--navy); color: #fff; }
+    .btn-primary:hover { background: #1e40af; }
+    .btn-secondary { background: var(--green); color: #fff; }
+    .btn-secondary:hover { background: var(--green-dark); }
+    .btn-outline { background: var(--navy-soft); color: var(--navy); border-color: #c7d2fe; }
+    .btn-outline:hover { background: #e0e7ff; }
+    .btn-danger { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* ───────── 제도 선택 카드 ───────── */
+    .mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    @media (max-width: 560px) { .mode-switch { grid-template-columns: 1fr; } }
+    .mode-card { border: 2px solid var(--gray-300); border-radius: 10px; padding: 10px 12px; cursor: pointer; background: #fff; transition: all .15s; position: relative; }
+    .mode-card:hover { border-color: #94a3b8; background: var(--gray-50); }
+    .mode-card.active-permit { border-color: var(--navy); background: var(--navy-soft); box-shadow: 0 2px 8px rgba(30, 58, 138, .15); }
+    .mode-card.active-lease { border-color: var(--green); background: var(--green-soft); box-shadow: 0 2px 8px rgba(27, 84, 66, .15); }
+    .mode-card.active-permit::after, .mode-card.active-lease::after { content: "✔ 선택됨"; position: absolute; top: 8px; right: 10px; font-size: 11px; font-weight: 800; color: #fff; border-radius: 999px; padding: 1px 8px; }
+    .mode-card.active-permit::after { background: var(--navy); }
+    .mode-card.active-lease::after { background: var(--green); }
+    .mode-card .m-title { font-weight: 800; font-size: 14px; color: var(--gray-900); padding-right: 62px; }
+    .mode-card.active-permit .m-title { color: var(--navy); }
+    .mode-card.active-lease .m-title { color: var(--green); }
+    .mode-card .m-sub { font-size: 11.5px; color: var(--gray-600); margin-top: 2px; }
+
+    /* ───────── 결과 ───────── */
+    .result-box { background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff; border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; }
+    .result-box.lease-theme { background: linear-gradient(135deg, #123D30, #1B5442 60%, #2a7a60); }
+    .result-box #resTotalLabel { opacity: .92; font-weight: 400 !important; font-size: 13px !important; }
+    .big-amount { font-size: 34px; font-weight: 800; color: #fff; margin: 2px 0; line-height: 1.25; letter-spacing: -.5px; font-variant-numeric: tabular-nums; word-break: keep-all; }
+    .kor-amount { font-size: 13px; font-weight: 700; color: #FDE68A; }
+    .empty-hint { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 9px 12px; margin-bottom: 12px; font-size: 13px; color: #78350f; line-height: 1.6; }
+
+    .diff-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 11px 14px; font-size: 12.5px; margin-top: 10px; line-height: 1.7; }
+    .diff-box h4 { margin: 0 0 5px; font-size: 13.5px; color: #92400e; }
+
+    table.summary-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.summary-tbl th, table.summary-tbl td { border: 1px solid var(--gray-300); padding: 6px 9px; text-align: left; }
+    table.summary-tbl th { background: var(--gray-50); width: 42%; font-weight: 700; color: var(--gray-700); }
+    table.summary-tbl td.right { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+    table.summary-tbl td.late { color: #b91c1c; }
+
+    .doc-box { width: 100%; min-height: 340px; font-family: '맑은 고딕', 'Malgun Gothic', monospace; font-size: 13px; line-height: 1.65; padding: 12px 13px; border: 1px solid var(--gray-300); border-radius: 8px; white-space: pre-wrap; margin-top: 4px; resize: vertical; background: #fcfdff; }
+    .check-row { display: flex; align-items: center; gap: 7px; margin: 5px 0; font-size: 12.5px; color: var(--gray-700); }
+    .check-row input[type="checkbox"], .late-box-title input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--navy); }
+
+    /* 알림(토스트): 허브 공통과 같은 자리(아래 가운데) */
+    .toast { position: fixed; left: 50%; bottom: 30px; transform: translate(-50%, 8px); background: #1f2937; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 13.5px; font-weight: 600; box-shadow: 0 8px 24px rgba(0, 0, 0, .25); z-index: 10000; opacity: 0; transition: all .2s; pointer-events: none; max-width: 90vw; line-height: 1.5; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 640px) {
+      header.top { padding: 10px 12px; }
+      header.top h1 { font-size: 16.5px; }
+      header.top .sub { display: none; }
+      .container { padding: 12px 10px 32px; }
+      .big-amount { font-size: 27px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-left">
+    <span data-hub-home></span>
+    <script>
+    /* '홈으로' 버튼 — 허브 공통(common.js)으로 그림. common.js가 없으면 같은 모양으로 직접 그림 */
+    (function(){
+      if (window.HUB && HUB.mountHomeButton) { HUB.mountHomeButton({ title: '홈(index.html)으로 이동합니다' }); return; }
+      var sp = document.querySelector('[data-hub-home]'); if (!sp) return;
+      var a = document.createElement('a'); a.id = 'hubHomeBtn'; a.href = 'index.html'; a.title = '홈(index.html)으로 이동합니다';
+      a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/></svg>홈으로';
+      sp.replaceWith(a);
+    })();
+    </script>
+    <div>
+      <h1>🏛️ 공유재산 사용·수익허가 및 대부 관리</h1>
+      <div class="sub">K-에듀파인 재산엑셀(토지·건물) 불러오기 · 사용료·대부료·연체료 산출 · 기안문 자동 작성 · 입력 내용은 이 PC 브라우저에만 저장됩니다</div>
+    </div>
+  </div>
+  <div class="nav">
+    <div class="visit-box" id="visitBox" hidden title="공유재산 관리 페이지를 방문한 사람 수 · 한 사람(브라우저)은 하루 1번만 셉니다">
+      <span>오늘 접속자 <b id="vToday">…</b></span><span class="sep">|</span><span>누적 접속자 <b id="vTotal">…</b></span>
+    </div>
+    <button type="button" class="hub-btn" onclick="openPropertyPicker()">📂 재산엑셀 불러오기·선택</button>
+    <button type="button" class="hub-btn ghost" onclick="resetFormInputsOnly()">🔄 입력값만 초기화</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="workspace-grid">
+    <!-- 좌측: 제도 선택 + 기본정보 + 평정·요율·연체료 입력 -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title"><span class="no">1</span>제도 선택 및 기본정보</h2>
+          <span id="orgStatusPill" class="org-status-pill empty">⚠️ 저장된 기관 재산목록 없음 (엑셀 불러오기 필요)</span>
+        </div>
+
+        <div class="mode-switch">
+          <div id="cardPermit" class="mode-card active-permit" onclick="selectMode('permit')">
+            <div class="m-title">① 행정재산 사용·수익허가 <button type="button" class="q-btn" onclick="event.stopPropagation(); showLawHelp('mode_permit')">?</button></div>
+            <div class="m-sub">행정재산 · 공법상 행정처분(사용허가서 · 사용료)</div>
+          </div>
+          <div id="cardLease" class="mode-card" onclick="selectMode('lease')">
+            <div class="m-title">② 일반재산 대부(대부계약) <button type="button" class="q-btn" onclick="event.stopPropagation(); showLawHelp('mode_lease')">?</button></div>
+            <div class="m-sub">일반재산 · 사법상 계약(대부계약서 · 대부료)</div>
+          </div>
+        </div>
+        <select id="assetMode" style="display:none;" onchange="recalcAll()">
+          <option value="permit" selected>permit</option>
+          <option value="lease">lease</option>
+        </select>
+
+        <div class="form-grid">
+          <div class="field full">
+            <label>재산명(시설명) — 저장된 소속기관 토지·건물 목록에서 선택 가능 <button type="button" class="q-btn" onclick="showLawHelp('prop_name')">?</button></label>
+            <div class="input-row">
+              <input type="text" id="propName" placeholder="직접 입력하거나 오른쪽 [📋 재산목록 선택] 클릭" oninput="recalcAll()" />
+              <button type="button" class="btn btn-secondary btn-sm" style="flex:0 0 auto; padding:7px 11px;" onclick="openPropertyPicker()">📋 재산목록 선택</button>
+              <button type="button" class="clear-x" title="지우기" onclick="clearField('propName')">×</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>사용자(대부자) 성명·상호 <button type="button" class="q-btn" onclick="showLawHelp('user_name')">?</button></label>
+            <div class="input-row">
+              <input type="text" id="userName" placeholder="예: ○○매점 대표 홍길동" oninput="recalcAll()" />
+              <button type="button" class="clear-x" title="지우기" onclick="clearField('userName')">×</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>재산 소재지 <button type="button" class="q-btn" onclick="showLawHelp('prop_addr')">?</button></label>
+            <div class="input-row">
+              <input type="text" id="propAddr" placeholder="재산 선택 시 자동 입력 (직접 입력 가능)" oninput="recalcAll()" />
+              <button type="button" class="clear-x" title="지우기" onclick="clearField('propAddr')">×</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>계약·허가 방식 <button type="button" class="q-btn" onclick="showLawHelp('contract_way')">?</button></label>
+            <select id="contractWay" onchange="recalcAll()">
+              <option value="경쟁입찰(온비드)">경쟁입찰 (온비드 전자입찰)</option>
+              <option value="수의(허가·대부)">수의 (법령·조례 수의 사유 해당)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>관련 공문번호 <button type="button" class="q-btn" onclick="showLawHelp('ref_doc')">?</button></label>
+            <div class="input-row">
+              <input type="text" id="refDoc" placeholder="예: 행정실-1234(2026. 11. 23.)" oninput="recalcAll()" />
+              <button type="button" class="clear-x" title="지우기" onclick="clearField('refDoc')">×</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>납부기한 기준일 <button type="button" class="q-btn" onclick="showLawHelp('pay_date')">?</button></label>
+            <input type="date" id="payDate" value="2026-12-07" onchange="recalcAll()" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title"><span class="no">2</span>재산평정가격·요율·기간·연체료 산출</h3>
+          <button type="button" class="btn btn-outline btn-sm" onclick="openCommonAreaModal()">📐 공용면적 배분계산</button>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label>토지 개별공시지가 (원/㎡) <button type="button" class="q-btn" onclick="showLawHelp('land_unit')">?</button></label>
+            <div class="input-row">
+              <input type="text" class="num-input" id="landUnit" value="0" oninput="formatNumInput(this); recalcAll()" />
+              <button type="button" class="clear-x" title="0으로 초기화" onclick="clearNumField('landUnit')">×</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>토지 사용·대부면적 (㎡) <button type="button" class="q-btn" onclick="showLawHelp('land_area')">?</button></label>
+            <div class="input-row">
+              <input type="number" step="0.01" id="landArea" value="0" oninput="recalcAll()" />
+              <button type="button" class="clear-x" title="0으로 초기화" onclick="clearNumField('landArea')">×</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>건물 시가표준액 단가 (원/㎡) <button type="button" class="q-btn" onclick="showLawHelp('bld_unit')">?</button></label>
+            <div class="input-row">
+              <input type="text" class="num-input" id="bldUnit" value="0" oninput="formatNumInput(this); recalcAll()" />
+              <button type="button" class="clear-x" title="0으로 초기화" onclick="clearNumField('bldUnit')">×</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>건물 사용·대부면적 (㎡) <button type="button" class="q-btn" onclick="showLawHelp('bld_area')">?</button></label>
+            <div class="input-row">
+              <input type="number" step="0.01" id="bldArea" value="0" oninput="recalcAll()" />
+              <button type="button" class="clear-x" title="0으로 초기화" onclick="clearNumField('bldArea')">×</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>조례 제30조 기본 요율 <button type="button" class="q-btn" onclick="showLawHelp('base_rate')">?</button></label>
+            <select id="baseRate" onchange="recalcAll()">
+              <option value="0.05">일반 행정·일반재산 — 5.0% (1,000분의 50)</option>
+              <option value="0.04">도시계획 저촉 활용지장 — 4.0% (1,000분의 40)</option>
+              <option value="0.025">공용·공공용 / 주거용 — 2.5% (1,000분의 25)</option>
+              <option value="0.01">농경지 실경작 / 학교급식용 — 1.0% (1,000분의 10)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>2026년 소상공인 감면 요율 <button type="button" class="q-btn" onclick="showLawHelp('sme_rate')">?</button></label>
+            <select id="smeRate" onchange="recalcAll()">
+              <option value="none">미적용 (기본 요율 사용)</option>
+              <option value="0.01">소상공인·중소기업 감면 — 1.0% (1,000분의 10)</option>
+              <option value="0.015">소상공인·중소기업 감면 — 1.5% (1,000분의 15)</option>
+              <option value="0.02">소상공인·중소기업 감면 — 2.0% (1,000분의 20)</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label>허가·대부 기간 (일수) <button type="button" class="q-btn" onclick="showLawHelp('period_days')">?</button></label>
+            <div class="period-dates">
+              <input type="date" id="periodStart" aria-label="허가·대부 시작일" onchange="onPeriodDates('start')" />
+              <span class="tilde">~</span>
+              <input type="date" id="periodEnd" aria-label="허가·대부 종료일" onchange="onPeriodDates('end')" />
+              <span class="hint">날짜를 넣으면 일수가 자동 계산됩니다 (선택 사항)</span>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <div class="input-row" style="width:160px;">
+                <input type="number" min="1" id="periodDays" value="365" oninput="syncEndFromDays(); recalcAll()" />
+                <button type="button" class="clear-x" title="365일로 복원" onclick="setDaysQuick(365)">×</button>
+              </div>
+              <div class="quick-chips">
+                <button type="button" class="chip-btn" onclick="setDaysQuick(365)">1년(365일)</button>
+                <button type="button" class="chip-btn" onclick="setDaysQuick(182)">6개월(182일)</button>
+                <button type="button" class="chip-btn" onclick="setDaysQuick(91)">3개월(91일)</button>
+                <button type="button" class="chip-btn" onclick="setDaysQuick(30)">1개월(30일)</button>
+              </div>
+            </div>
+          </div>
+          <div class="field full">
+            <label>부가가치세(10%) 부과 여부 <button type="button" class="q-btn" onclick="showLawHelp('vat_yn')">?</button></label>
+            <select id="vatYn" onchange="recalcAll()">
+              <option value="yes">과세 (10% 가산)</option>
+              <option value="no">면세 (0원)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1;">
+          <div class="check-row"><input type="checkbox" id="chkRenewal" onchange="recalcAll()" /> <span>기존 허가·대부 기간 만료에 따른 갱신 건 여부 <button type="button" class="q-btn" onclick="showLawHelp('renewal_chk')">?</button></span></div>
+          <div class="check-row"><input type="checkbox" id="chkPermStruct" onchange="recalcAll()" /> <span>영구시설물 축조(또는 원상변경) 수반 여부 <button type="button" class="q-btn" onclick="showLawHelp('perm_struct')">?</button></span></div>
+        </div>
+
+        <!-- 납부기한 경과 시 연체료 계산기 -->
+        <div class="late-box">
+          <div class="late-box-head">
+            <div class="late-box-title">
+              <input type="checkbox" id="chkLateFee" onchange="recalcAll()" style="width:15px; height:15px;" />
+              <span>납부기한 경과 연체료 계산 (시행령 제80조)</span>
+              <button type="button" class="q-btn" onclick="showLawHelp('late_fee_days')">?</button>
+            </div>
+            <button type="button" class="q-btn" onclick="showLawHelp('late_fee_rate')">?</button>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label>연체일수 (납기일 경과 일수)
+                <button type="button" class="chip-btn" style="margin-left:auto;" onclick="setLateDaysFromPayDate()" title="위 '납부기한 기준일'부터 오늘까지 지난 일수를 넣습니다">📅 납부기한~오늘 자동계산</button>
+              </label>
+              <div class="input-row">
+                <input type="number" min="0" id="lateDays" value="15" oninput="recalcAll()" />
+                <button type="button" class="clear-x" title="0으로 초기화" onclick="clearNumField('lateDays')">×</button>
+              </div>
+              <div class="quick-chips">
+                <button type="button" class="chip-btn" onclick="setLateDaysQuick(15)">15일(1개월미만 7%)</button>
+                <button type="button" class="chip-btn" onclick="setLateDaysQuick(45)">45일(1~3개월 8%)</button>
+                <button type="button" class="chip-btn" onclick="setLateDaysQuick(120)">120일(3~6개월 9%)</button>
+                <button type="button" class="chip-btn" onclick="setLateDaysQuick(200)">200일(6개월이상 10%)</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>연체료율 구간 (자동·수동 선택 가능)</label>
+              <select id="lateRateSelect" onchange="recalcAll()">
+                <option value="auto">자동 판정 (일수 기준 7% / 8% / 9% / 10%)</option>
+                <option value="0.07">1개월 미만 — 연 7%</option>
+                <option value="0.08">1개월 이상 ~ 3개월 미만 — 연 8%</option>
+                <option value="0.09">3개월 이상 ~ 6개월 미만 — 연 9%</option>
+                <option value="0.10">6개월 이상 — 연 10%</option>
+              </select>
+              <div class="check-row" style="margin-top:4px;">
+                <input type="checkbox" id="chkDisasterHalf" onchange="recalcAll()" />
+                <span>재난 한시 인하 적용 기간(연체료 50% 감경)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 우측: 실시간 산출 요약 + 제도 점검 + K-에듀파인 기안문 -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title"><span class="no won">₩</span><span id="resPanelTitle">사용·수익허가료 산출 및 점검</span></h3>
+        </div>
+
+        <div id="resBanner" class="result-box">
+          <div style="font-size:12px; font-weight:700;" id="resTotalLabel">총 납부예정액 (10원 미만 절사 · 부가세 포함)</div>
+          <div class="big-amount" id="resTotalDisplay">금0원</div>
+          <div id="resTotalKor" class="kor-amount"></div>
+        </div>
+        <div id="resEmptyHint" class="empty-hint">👈 왼쪽에서 <b>[📋 재산목록 선택]</b>으로 재산을 고르거나 단가·면적을 입력하면 금액이 바로 계산됩니다.</div>
+
+        <table class="summary-tbl">
+          <tr><th>토지 / 건물 평정가격</th><td class="right" id="resLandBldPair">0원 / 0원</td></tr>
+          <tr><th>총 재산평정가격</th><td class="right" id="resPropVal">0원</td></tr>
+          <tr><th>공급가액 / 부가가치세(10%)</th><td class="right" id="resSupplyVat">0원 / 0원</td></tr>
+          <tr><th>연체료 가산액 (적용 연체료율)</th><td class="right late" id="resLateFee">미적용 (0원)</td></tr>
+          <tr><th>분할납부 기준 (조례 제36조)</th><td class="right" id="resInstallment">-</td></tr>
+          <tr><th>손해보험 가입 의무액</th><td class="right" id="resInsurance">0원 이상</td></tr>
+        </table>
+
+        <div class="diff-box">
+          <h4>📌 제도별 실무 점검사항</h4>
+          <div id="diffBoxBody"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title"><span class="no">3</span>K-에듀파인 기안문 (실시간 연동)</h3>
+          <button type="button" class="btn btn-primary btn-sm" onclick="copyDoc()">📋 기안문 전체 복사</button>
+        </div>
+        <textarea id="docOutput" class="doc-box"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 소속기관 토지·건물 엑셀 불러오기·저장 및 체크박스 선택 팝업 -->
+<div id="propPickerBackdrop" class="modal-backdrop" onclick="onPickerBackdropClick(event)">
+  <div class="modal-box wide" role="dialog" aria-modal="true">
+    <div class="modal-header teal">
+      <h3 class="modal-title" id="pickerModalTitle">📋 소속기관 토지·건물 재산 목록 관리 및 선택</h3>
+      <button type="button" class="modal-close-x" onclick="closePropertyPicker()" aria-label="팝업 닫기">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- 소속기관 엑셀 파일 업로드 & 브라우저 저장 영역 -->
+      <div id="excelDropZone" class="excel-upload-zone" onclick="document.getElementById('orgExcelInput').click()">
+        <div>
+          <div class="dz-title">
+            📂 K-에듀파인 재산대장 엑셀(<code>토지_건물_입목죽*.xlsx</code>) 끌어다 놓기 또는 클릭하여 불러오기
+          </div>
+          <div style="font-size:11.5px; color:#475569; margin-top:2px;">
+            ※ 파일을 불러오면 <b>입목죽·소계·합계는 자동 제외</b>하고 <b>토지·건물만 추출하여 접속자 브라우저에 영구 저장</b>됩니다. (서버로 전송되지 않음)
+          </div>
+        </div>
+        <div style="display:flex; gap:6px;" onclick="event.stopPropagation();">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('orgExcelInput').click()">엑셀 파일 선택</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="exportSavedJson()" title="다른 PC로 목록 옮길 때 사용">💾 백업(JSON)</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('orgJsonInput').click()" title="백업 파일 불러오기">📂 복원</button>
+        </div>
+        <input type="file" id="orgExcelInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleOrgExcelUpload(event)" />
+        <input type="file" id="orgJsonInput" accept=".json" style="display:none;" onchange="handleOrgJsonRestore(event)" />
+      </div>
+
+      <div class="picker-toolbar">
+        <div class="filter-pills">
+          <button type="button" id="pillAll" class="pill-btn active" onclick="setPickerFilter('ALL')">전체 (0건)</button>
+          <button type="button" id="pillLand" class="pill-btn" onclick="setPickerFilter('토지')">토지 (0건)</button>
+          <button type="button" id="pillBld" class="pill-btn" onclick="setPickerFilter('건물')">건물 (0건)</button>
+        </div>
+        <div style="flex:1; min-width:200px; max-width:280px;">
+          <input type="text" id="pickerSearchInput" placeholder="재산명·소재지·대장번호 검색..." oninput="renderPickerRows()" />
+        </div>
+      </div>
+
+      <div class="picker-scroll">
+        <table class="picker-tbl">
+          <thead>
+            <tr>
+              <th style="width:36px; text-align:center;"><input type="checkbox" id="pickerSelectAll" onchange="togglePickerAll(this.checked)" /></th>
+              <th style="width:62px; text-align:center;">종류</th>
+              <th style="width:110px;">명칭</th>
+              <th>소재지</th>
+              <th style="width:95px; text-align:right;">면적(㎡)</th>
+              <th style="width:120px; text-align:right;">공시지가/참고단가</th>
+              <th style="width:130px;">대장번호</th>
+            </tr>
+          </thead>
+          <tbody id="pickerTbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span id="pickerCheckedSummary" class="picker-sum">선택됨: 0건</span>
+      <button type="button" class="btn btn-danger btn-sm" onclick="clearSavedOrgProperties()">🗑️ 저장된 목록 삭제</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="closePropertyPicker()">닫기</button>
+      <button type="button" class="btn btn-primary btn-sm" onclick="applySelectedProperties()">✅ 선택 항목 자동 입력</button>
+    </div>
+  </div>
+</div>
+
+<!-- 물음표(?) 클릭 시 뜨는 팝업(모달) -->
+<div id="helpModalBackdrop" class="modal-backdrop" onclick="onBackdropClick(event)">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <h3 id="modalTitle" class="modal-title">입력 안내 및 근거 법령</h3>
+      <button type="button" class="modal-close-x" onclick="closeLawHelp()" aria-label="팝업 닫기">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-sec">
+        <div class="modal-sec-title">✏️ 무엇을 입력하나요?</div>
+        <div id="modalGuide"></div>
+      </div>
+      <div class="modal-sec">
+        <div class="modal-sec-title">🔍 뭘 보고 확인하나요? (확인 자료·조회처)</div>
+        <div id="modalCheckDoc"></div>
+      </div>
+      <div class="modal-sec">
+        <div class="modal-sec-title">⚖️ 실무 적용 기준</div>
+        <div id="modalBasis"></div>
+      </div>
+      <div id="modalLaw" class="law-tag"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary btn-sm" onclick="closeLawHelp()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 공용면적 비례배분 계산 팝업 -->
+<div id="areaModalBackdrop" class="modal-backdrop" onclick="onAreaBackdropClick(event)">
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <div class="modal-header teal">
+      <h3 class="modal-title">📐 건물·부지 공용면적 비례배분 계산기</h3>
+      <button type="button" class="modal-close-x" onclick="closeAreaModal()" aria-label="팝업 닫기">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field">
+          <label>사용자 건물 전용면적(㎡)</label>
+          <input type="number" step="0.01" id="mUserExcl" value="35" oninput="calcAreaModalPreview()" />
+        </div>
+        <div class="field">
+          <label>건물 전체 총 전용면적(㎡)</label>
+          <input type="number" step="0.01" id="mTotalExcl" value="2800" oninput="calcAreaModalPreview()" />
+        </div>
+        <div class="field">
+          <label>건물 전체 총 공용면적(㎡)</label>
+          <input type="number" step="0.01" id="mTotalBldCommon" value="1120" oninput="calcAreaModalPreview()" />
+        </div>
+        <div class="field">
+          <label>부지 내 건물 연면적(㎡)</label>
+          <input type="number" step="0.01" id="mBldGross" value="3920" oninput="calcAreaModalPreview()" />
+        </div>
+        <div class="field full">
+          <label>부지 전체 총 공용면적(㎡)</label>
+          <input type="number" step="0.01" id="mTotalLandCommon" value="1500" oninput="calcAreaModalPreview()" />
+        </div>
+      </div>
+      <div class="modal-sec" style="margin-top:12px;">
+        <div class="modal-sec-title">산출된 배분 면적 (전용 + 공용 합계)</div>
+        <div id="mAreaPreview" class="area-preview">-</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline btn-sm" onclick="closeAreaModal()">취소</button>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="applyAreaModal()">계산 면적 반영하기</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastMsg" class="toast"></div>
+
+<script>
+  const STORAGE_KEY = 'gongyu_org_properties_v1';
+
+  let savedOrgName = '';
+  let propertyList = [];
+  let pickerFilter = 'ALL';
+  let pickerCheckedIds = new Set();
+
+  /* 엑셀·백업 파일에서 온 글자를 화면에 안전하게 표시 (<, > 등이 섞여 있어도 화면이 깨지지 않게) */
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  /* 브라우저 저장소에서 소속기관 토지·건물 목록 불러오기 */
+  function loadOrgPropertiesFromStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        savedOrgName = '';
+        propertyList = [];
+      } else {
+        const parsed = JSON.parse(raw);
+        savedOrgName = parsed.orgName || '';
+        propertyList = Array.isArray(parsed.items) ? parsed.items : [];
+      }
+    } catch (e) {
+      savedOrgName = '';
+      propertyList = [];
+    }
+    updateOrgStatusUI();
+  }
+
+  function saveOrgPropertiesToStorage() {
+    const payload = {
+      orgName: savedOrgName,
+      updatedAt: new Date().toISOString(),
+      items: propertyList
+    };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); }
+    catch (e) { alert('브라우저 저장 공간에 저장하지 못했습니다. 이번에는 목록을 쓸 수 있지만, 창을 닫으면 사라집니다. [💾 백업(JSON)]으로 따로 보관해 주세요.'); }
+    updateOrgStatusUI();
+  }
+
+  function updateOrgStatusUI() {
+    const pill = document.getElementById('orgStatusPill');
+    const landCnt = propertyList.filter(i => i.kind === '토지').length;
+    const bldCnt = propertyList.filter(i => i.kind === '건물').length;
+
+    if (propertyList.length === 0) {
+      pill.className = 'org-status-pill empty';
+      pill.textContent = '⚠️ 저장된 기관 재산목록 없음 (엑셀 불러오기 필요)';
+      document.getElementById('pickerModalTitle').textContent = '📋 소속기관 토지·건물 재산 목록 관리 및 선택';
+    } else {
+      pill.className = 'org-status-pill';
+      const orgLabel = savedOrgName ? `[${savedOrgName}] ` : '';
+      pill.textContent = `✅ ${orgLabel}토지 ${landCnt}건 · 건물 ${bldCnt}건 저장됨`;
+      document.getElementById('pickerModalTitle').textContent = `📋 ${orgLabel}토지·건물 재산 목록 선택`;
+    }
+
+    document.getElementById('pillAll').textContent = `전체 (${propertyList.length}건)`;
+    document.getElementById('pillLand').textContent = `토지 (${landCnt}건)`;
+    document.getElementById('pillBld').textContent = `건물 (${bldCnt}건)`;
+  }
+
+  /* K-에듀파인 재산 엑셀(토지_건물_입목죽) 파싱 — 토지·건물만 추출 */
+  function parseOrgPropertyWorkbook(workbook) {
+    const sheetName = workbook.SheetNames[0];
+    const ws = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+    // 헤더 행 찾기 ('재산종류', '소재지', '명칭' 포함 행)
+    let headerIdx = 0;
+    for (let i = 0; i < Math.min(rows.length, 10); i++) {
+      const rowStr = rows[i].join(' ');
+      if (rowStr.includes('재산종류') && (rowStr.includes('소재지') || rowStr.includes('명칭'))) {
+        headerIdx = i;
+        break;
+      }
+    }
+
+    const headers = rows[headerIdx].map(h => String(h || '').trim());
+    const idxOrg = headers.findIndex(h => h.includes('사용기관'));
+    const idxAddr = headers.findIndex(h => h.includes('소재지'));
+    const idxKind = headers.findIndex(h => h.includes('재산종류'));
+    const idxName = headers.findIndex(h => h === '명칭' || h.includes('재산명'));
+    const idxArea = headers.findIndex(h => h.includes('현재면적') || h.includes('면적'));
+    const idxAmt = headers.findIndex(h => h.includes('현재금액') || h.includes('장부가액'));
+    const idxPub = headers.findIndex(h => h.includes('공시지가') || h.includes('표준시가'));
+    const idxLedger = headers.findIndex(h => h.includes('대장번호'));
+
+    const colOrg = idxOrg >= 0 ? idxOrg : 0;
+    const colAddr = idxAddr >= 0 ? idxAddr : 1;
+    const colKind = idxKind >= 0 ? idxKind : 2;
+    const colName = idxName >= 0 ? idxName : 3;
+    const colArea = idxArea >= 0 ? idxArea : 9;
+    const colAmt = idxAmt >= 0 ? idxAmt : 10;
+    const colPub = idxPub >= 0 ? idxPub : 11;
+    const colLedger = idxLedger >= 0 ? idxLedger : 12;
+
+    let detectedOrg = '';
+    const extracted = [];
+    let seq = 1;
+
+    for (let r = headerIdx + 1; r < rows.length; r++) {
+      const row = rows[r];
+      if (!row || row.length === 0) continue;
+
+      const kind = String(row[colKind] || '').trim();
+      // '토지'와 '건물'만 추출 ('입목죽', 소계, 합계 행 자동 제외)
+      if (kind !== '토지' && kind !== '건물') continue;
+
+      const orgText = String(row[colOrg] || '').trim();
+      if (!detectedOrg && orgText) detectedOrg = orgText;
+
+      const rawAddr = String(row[colAddr] || '').trim();
+      const cleanAddr = rawAddr
+        .split(/\r?\n/)
+        .map(s => s.trim())
+        .filter(Boolean)
+        .join(' / ');
+
+      const name = String(row[colName] || '').trim() || kind;
+      const area = Number(parseFloat(String(row[colArea] || '0').replace(/,/g, '')) || 0);
+      const currAmt = Number(parseFloat(String(row[colAmt] || '0').replace(/,/g, '')) || 0);
+      const pubPrice = Number(parseFloat(String(row[colPub] || '0').replace(/,/g, '')) || 0);
+      const ledgerNo = String(row[colLedger] || '').trim();
+
+      const landUnit = (kind === '토지' && pubPrice > 0) ? Math.round(pubPrice) : 0;
+      const estBldUnit = (kind === '건물' && area > 0 && currAmt > 0) ? Math.round(currAmt / area) : 0;
+
+      extracted.push({
+        id: seq++,
+        kind,
+        name,
+        addr: cleanAddr,
+        area: Number(area.toFixed(2)),
+        landUnit,
+        estBldUnit,
+        ledgerNo
+      });
+    }
+
+    if (extracted.length === 0) {
+      alert('엑셀 파일에서 "토지" 또는 "건물" 데이터를 찾지 못했습니다. K-에듀파인 재산대장(토지_건물_입목죽) 엑셀 양식인지 확인해주세요.');
+      return;
+    }
+
+    savedOrgName = detectedOrg;
+    propertyList = extracted;
+    pickerCheckedIds.clear();
+    saveOrgPropertiesToStorage();
+    renderPickerRows();
+
+    const landCnt = extracted.filter(x => x.kind === '토지').length;
+    const bldCnt = extracted.filter(x => x.kind === '건물').length;
+    showToast(`${detectedOrg || '소속기관'} 토지 ${landCnt}건 · 건물 ${bldCnt}건이 저장되었습니다.`);
+  }
+
+  function handleOrgExcelUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    readOrgExcelFile(file);
+    event.target.value = '';
+  }
+
+  function readOrgExcelFile(file) {
+    if (typeof XLSX === 'undefined') {
+      return alert('오프라인 환경에서는 엑셀 라이브러리를 불러올 수 없습니다. 인터넷 연결을 확인하거나 JSON 백업 복원을 이용해주세요.');
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        parseOrgPropertyWorkbook(workbook);
+      } catch (err) {
+        alert('엑셀 파일을 읽지 못했습니다. 파일이 열려 있거나 암호가 걸려 있지 않은지 확인해 주세요.');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function exportSavedJson() {
+    if (propertyList.length === 0) return alert('내보낼 저장 목록이 없습니다.');
+    const blob = new Blob([JSON.stringify({ orgName: savedOrgName, items: propertyList }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${savedOrgName || '소속기관'}_토지건물목록.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleOrgJsonRestore(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        if (!Array.isArray(parsed.items)) throw new Error('형식 오류');
+        savedOrgName = parsed.orgName || '';
+        propertyList = parsed.items;
+        pickerCheckedIds.clear();
+        saveOrgPropertiesToStorage();
+        renderPickerRows();
+        showToast(`백업 파일에서 ${propertyList.length}건의 재산 목록을 복원·저장했습니다.`);
+      } catch (err) {
+        alert('올바른 재산 목록 백업(JSON) 파일이 아닙니다.');
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  function clearSavedOrgProperties() {
+    if (propertyList.length === 0) return alert('삭제할 저장 목록이 없습니다.');
+    if (!confirm('이 브라우저에 저장된 소속기관 토지·건물 목록을 삭제하시겠습니까?')) return;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    savedOrgName = '';
+    propertyList = [];
+    pickerCheckedIds.clear();
+    updateOrgStatusUI();
+    renderPickerRows();
+    showToast('저장된 재산 목록이 삭제되었습니다.');
+  }
+
+  /* 재산 선택 팝업 제어 */
+  function openPropertyPicker() {
+    renderPickerRows();
+    document.getElementById('propPickerBackdrop').classList.add('show');
+  }
+
+  function closePropertyPicker() {
+    document.getElementById('propPickerBackdrop').classList.remove('show');
+  }
+
+  function onPickerBackdropClick(e) {
+    if (e.target && e.target.id === 'propPickerBackdrop') closePropertyPicker();
+  }
+
+  function setPickerFilter(f) {
+    pickerFilter = f;
+    document.getElementById('pillAll').className = 'pill-btn' + (f === 'ALL' ? ' active' : '');
+    document.getElementById('pillLand').className = 'pill-btn' + (f === '토지' ? ' active' : '');
+    document.getElementById('pillBld').className = 'pill-btn' + (f === '건물' ? ' active' : '');
+    renderPickerRows();
+  }
+
+  function getFilteredPickerItems() {
+    const q = (document.getElementById('pickerSearchInput').value || '').trim().toLowerCase();
+    return propertyList.filter(item => {
+      if (pickerFilter !== 'ALL' && item.kind !== pickerFilter) return false;
+      if (!q) return true;
+      return (
+        String(item.name || '').toLowerCase().includes(q) ||
+        String(item.addr || '').toLowerCase().includes(q) ||
+        String(item.ledgerNo || '').toLowerCase().includes(q)
+      );
+    });
+  }
+
+  function renderPickerRows() {
+    const items = getFilteredPickerItems();
+    const tbody = document.getElementById('pickerTbody');
+
+    if (propertyList.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align:center; padding:26px; color:#64748b;">
+            아직 불러온 소속기관 재산 목록이 없습니다.<br>
+            위 <b>[📂 K-에듀파인 재산대장 엑셀 불러오기]</b> 영역에 엑셀 파일을 올려 저장해 주세요.
+          </td>
+        </tr>`;
+      document.getElementById('pickerSelectAll').checked = false;
+      document.getElementById('pickerCheckedSummary').textContent = '선택됨: 0건';
+      return;
+    }
+
+    if (items.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:18px; color:#64748b;">검색 조건에 일치하는 토지·건물이 없습니다.</td></tr>`;
+      document.getElementById('pickerSelectAll').checked = false;
+      document.getElementById('pickerCheckedSummary').textContent = `선택됨: ${pickerCheckedIds.size}건`;
+      return;
+    }
+
+    tbody.innerHTML = items.map(item => {
+      const checked = pickerCheckedIds.has(item.id);
+      const badge = item.kind === '토지'
+        ? '<span class="badge-kind b-land">토지</span>'
+        : '<span class="badge-kind b-bld">건물</span>';
+      const unitLabel = item.kind === '토지'
+        ? `공시 ${formatComma(item.landUnit)}원`
+        : `단가 ${formatComma(item.estBldUnit)}원`;
+
+      return `
+        <tr class="${checked ? 'checked-row' : ''}" onclick="togglePickerRow(${item.id}, event)" style="cursor:pointer;">
+          <td style="text-align:center;"><input type="checkbox" ${checked ? 'checked' : ''} onchange="togglePickerRow(${item.id}, event)" /></td>
+          <td style="text-align:center;">${badge}</td>
+          <td><b>${esc(item.name)}</b></td>
+          <td>${esc(item.addr)}</td>
+          <td style="text-align:right;">${Number(item.area || 0).toLocaleString('ko-KR')}</td>
+          <td style="text-align:right;">${unitLabel}</td>
+          <td>${esc(item.ledgerNo)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const allVisibleChecked = items.length > 0 && items.every(i => pickerCheckedIds.has(i.id));
+    document.getElementById('pickerSelectAll').checked = allVisibleChecked;
+    document.getElementById('pickerCheckedSummary').textContent = `선택됨: ${pickerCheckedIds.size}건`;
+  }
+
+  function togglePickerRow(id, e) {
+    if (e) e.stopPropagation();
+    if (pickerCheckedIds.has(id)) pickerCheckedIds.delete(id);
+    else pickerCheckedIds.add(id);
+    renderPickerRows();
+  }
+
+  function togglePickerAll(checked) {
+    const items = getFilteredPickerItems();
+    items.forEach(item => {
+      if (checked) pickerCheckedIds.add(item.id);
+      else pickerCheckedIds.delete(item.id);
+    });
+    renderPickerRows();
+  }
+
+  function applySelectedProperties() {
+    const chosen = propertyList.filter(item => pickerCheckedIds.has(item.id));
+    if (chosen.length === 0) {
+      return alert('자동 입력할 재산을 최소 1건 이상 체크해주세요.');
+    }
+
+    const names = [...new Set(chosen.map(c => c.name))].join(', ');
+    const addrs = [...new Set(chosen.map(c => c.addr))].join(' / ');
+
+    document.getElementById('propName').value = names;
+    document.getElementById('propAddr').value = addrs;
+
+    const landChosen = chosen.filter(c => c.kind === '토지');
+    const bldChosen = chosen.filter(c => c.kind === '건물');
+
+    if (landChosen.length > 0) {
+      const sumLandArea = landChosen.reduce((acc, c) => acc + c.area, 0);
+      const maxLandUnit = Math.max(...landChosen.map(c => c.landUnit || 0));
+      document.getElementById('landArea').value = Number(sumLandArea.toFixed(2));
+      if (maxLandUnit > 0) document.getElementById('landUnit').value = formatComma(maxLandUnit);
+    } else if (bldChosen.length > 0) {
+      document.getElementById('landArea').value = '0';
+    }
+
+    if (bldChosen.length > 0) {
+      const sumBldArea = bldChosen.reduce((acc, c) => acc + c.area, 0);
+      const firstBldUnit = bldChosen[0].estBldUnit || 0;
+      document.getElementById('bldArea').value = Number(sumBldArea.toFixed(2));
+      if (firstBldUnit > 0) document.getElementById('bldUnit').value = formatComma(firstBldUnit);
+    } else if (landChosen.length > 0) {
+      document.getElementById('bldArea').value = '0';
+      document.getElementById('bldUnit').value = '0';
+    }
+
+    closePropertyPicker();
+    recalcAll();
+    const landUnits = new Set(landChosen.map(c => c.landUnit || 0));
+    const bldUnits = new Set(bldChosen.map(c => c.estBldUnit || 0));
+    if (landUnits.size > 1 || bldUnits.size > 1) {
+      showToast(`${chosen.length}건 입력 완료 — ⚠️ 선택한 재산의 단가가 서로 다릅니다. ${landUnits.size > 1 ? '토지는 가장 높은 공시지가' : ''}${landUnits.size > 1 && bldUnits.size > 1 ? ', ' : ''}${bldUnits.size > 1 ? '건물은 첫 번째 건물 단가' : ''}가 들어갔으니 단가를 확인하세요.`, 6500);
+    } else {
+      showToast(`${chosen.length}건의 재산 정보가 입력 항목에 자동 입력되었습니다.`);
+    }
+  }
+
+  const LAW_HELP_DATA = {
+    mode_permit: {
+      title: '행정재산 사용·수익허가',
+      guide: '학교·회관·청사 등 행정목적으로 쓰이는 행정재산을 행정목적 수행에 지장이 없는 범위에서 타인에게 사용·수익하게 할 때 선택합니다.',
+      checkDoc: '• K-에듀파인 공유재산대장(또는 부동산등기부·건축물대장)에서 재산종류가 <b>[행정재산]</b>인지 확인합니다.<br>• 소관 부서에서 행정목적 수행에 장애가 되지 않는다는 검토 의견을 확인합니다.',
+      basis: '공권력을 가진 우월적 지위에서 행하는 공법상 행정처분(특허)이며, 계약서가 아닌 사용허가서(또는 허가통지) 형태로 처리합니다.',
+      law: '「공유재산 및 물품 관리법」 제20조·제22조, 「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제25조·제30조'
+    },
+    mode_lease: {
+      title: '일반재산 대부(대부계약)',
+      guide: '행정재산 외의 일반재산(유휴지, 용도폐지된 토지·건물 등)을 일정 기간 유·무상으로 사용·수익하게 할 때 선택합니다.',
+      checkDoc: '• K-에듀파인 공유재산대장의 재산종류가 <b>[일반재산]</b>인지 확인합니다(행정재산이었다면 용도폐지 절차가 선행되었는지 확인).<br>• 매각·관리전환·위탁개발 등 다른 처분·활용 계획과 중복되지 않는지 확인합니다.',
+      basis: '당사자 간 대등한 지위에서 체결하는 사법상 계약(민법상 임대차와 유사하나 공유재산법령이 우선 적용)이며, 연고권 배제 특약을 둡니다.',
+      law: '「공유재산 및 물품 관리법」 제29조·제32조, 「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제26조·제27조·제30조'
+    },
+    prop_name: {
+      title: '재산명(시설명)',
+      guide: '오른쪽 <b>[📋 재산목록 선택]</b> 버튼을 눌러 소속기관 K-에듀파인 재산엑셀(토지·건물)을 불러온 뒤 체크하면 자동 입력됩니다. 직접 입력도 가능합니다.',
+      checkDoc: '• K-에듀파인 재산대장 엑셀(<code>토지_건물_입목죽</code>)의 <b>D열(명칭)</b> 및 <b>M열(대장번호)</b>과 신청서 기재 명칭을 대조해 확인합니다.',
+      basis: '대장상 재산 표시와 일치해야 징수결의 및 공부 정리 시 오류가 발생하지 않습니다.',
+      law: '「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제31조·제32조'
+    },
+    user_name: {
+      title: '사용자(대부자) 성명·상호',
+      guide: '사용허가를 받는 자 또는 대부계약을 체결하는 상대방의 상호(법인명)와 대표자 성명을 입력합니다.',
+      checkDoc: '• <b>사업자등록증명원</b>, <b>법인등기사항전부증명서</b>(법인), <b>신청서</b>를 보고 정확한 상호·대표자명을 확인합니다.<br>• 소상공인 감면 시 <b>중소기업현황정보시스템 소상공인확인서</b> 및 유흥·사행업종 여부를 함께 확인합니다.',
+      basis: '상대방의 법적 주체와 감면 자격 여부를 명확히 해야 계약·허가 효력 및 감면 적정성에 문제가 없습니다.',
+      law: '「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제37조, 「소상공인기본법」'
+    },
+    prop_addr: {
+      title: '재산 소재지',
+      guide: '해당 토지·건물이 위치한 행정구역과 지번(및 건물명)을 입력합니다(재산목록 선택 시 자동 입력).',
+      checkDoc: '• 엑셀 대장의 <b>B열(소재지)</b>, <b>토지대장</b>, <b>건축물대장</b>에 기재된 소재지(지번)를 확인합니다.',
+      basis: '재산 소재지는 공부 정리 및 대부정리부(또는 사용허가 대장)의 필수 기재사항입니다.',
+      law: '「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례 시행규칙」 제27조'
+    },
+    contract_way: {
+      title: '계약·허가 방식',
+      guide: '온비드(ONBID) 전자입찰로 진행하는지, 법령·조례상 수의 방식에 해당하는지 선택합니다.',
+      checkDoc: '• <b>입찰공고문·개찰결과서</b> 또는 <b>수의계약·수의허가 사유 검토서</b>와 근거 법조항(시행령 제13조·제38조, 조례 제40조)을 확인합니다.',
+      basis: '경쟁입찰이 원칙이며, 예외적으로 수의 방식을 취할 때는 법령·조례상 구체적 해당 조항을 반드시 특정해야 합니다.',
+      law: '「공유재산 및 물품 관리법」 제29조, 같은 법 시행령 제13조·제38조, 조례 제40조'
+    },
+    ref_doc: {
+      title: '관련 공문번호',
+      guide: '사용허가 또는 대부 신청 접수 문서번호와 시행일자(예: 행정실-1234(2026. 11. 23.))를 입력합니다.',
+      checkDoc: '• K-에듀파인 <b>공문 접수대장(또는 신청 공문)</b> 상단의 문서번호와 일자를 보고 확인합니다.',
+      basis: '기안문 첫째 항목(1. 관련)에 기재하여 이전 문서와의 행정 이력을 연결합니다.',
+      law: '「행정업무의 운영 및 혁신에 관한 규정」'
+    },
+    pay_date: {
+      title: '납부기한 기준일',
+      guide: '사용료·대부료를 납부하도록 지정할 기한일을 입력합니다.',
+      checkDoc: '• <b>사용 개시일(또는 계약체결일) 이전 날짜</b>로 설정하되, 법정 납부기한(허가·계약일로부터 60일 이내 선납 원칙)과 내부 징수결의 일정을 확인합니다.',
+      basis: '사용료·대부료는 사용 개시 전 선납이 원칙이며, 기한 경과 시 연체료가 가산됩니다.',
+      law: '「공유재산 및 물품 관리법」 제22조·제32조·제80조'
+    },
+    land_unit: {
+      title: '토지 개별공시지가 (원/㎡)',
+      guide: '산정 기준일 현재 가장 최근에 공시된 해당 필지의 1㎡당 개별공시지가(원)를 입력합니다(재산목록에서 토지 선택 시 L열 값 자동 반영).',
+      checkDoc: '• 엑셀 대장 <b>L열(공시지가)</b> 또는 <b>부동산공시가격 알리미(www.realtyprice.kr)</b>, <b>토지이용계획확인서</b>를 확인합니다.',
+      basis: '토지 평정가격은 최근 공시된 개별공시지가에 사용·대부 면적을 곱해 산정합니다.',
+      law: '「공유재산 및 물품 관리법 시행령」 제31조·제14조, 「지방자치단체 공유재산 운영기준」'
+    },
+    land_area: {
+      title: '토지 사용·대부면적 (㎡)',
+      guide: '직접 사용하는 부지 면적과 건물 일부 사용 시 비례배분된 부지 공용면적의 합계(㎡)를 입력합니다.',
+      checkDoc: '• 엑셀 대장 <b>J열(현재면적)</b>, <b>현장 실측도면</b>, <b>토지대장</b>을 확인하거나 상단 <b>[📐 공용면적 배분계산]</b>으로 산출합니다.',
+      basis: '공용면적 산정 시 전용면적과 공용면적의 구분 및 비율 계산이 정확해야 합니다.',
+      law: '「지방자치단체 공유재산 운영기준」'
+    },
+    bld_unit: {
+      title: '건물 시가표준액 단가 (원/㎡)',
+      guide: '건물 시가표준액을 건물 연면적으로 나눈 ㎡당 단가(또는 감정평가단가)를 입력합니다.',
+      checkDoc: '• <b>위택스(WETAX) 건물 시가표준액 조회</b> 또는 지방세 과세내역에서 건물 시가표준액을 확인한 뒤 연면적(㎡)으로 나눈 단가를 확인합니다(재산목록 선택 시 대장 현재금액÷면적 기준 참고단가 자동 반영).',
+      basis: '건물 평정가격은 건물 시가표준액 기준으로 산정하며, 해당 건물 평정가격 이상 손해보험 가입 대상이 됩니다.',
+      law: '「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제32조, 「지방자치단체 공유재산 운영기준」'
+    },
+    bld_area: {
+      title: '건물 사용·대부면적 (㎡)',
+      guide: '사용허가·대부 대상 건물 전용면적과 비례배분된 건물 공용면적의 합계(㎡)를 입력합니다.',
+      checkDoc: '• 엑셀 대장 <b>J열(현재면적)</b>, <b>건축물대장</b>, <b>도면</b>을 보고 전용면적과 공용면적 합계를 확인합니다.',
+      basis: '건물 일부를 사용하는 경우 전용면적에 해당 건물의 공용면적 배분분을 합산합니다.',
+      law: '「지방자치단체 공유재산 운영기준」'
+    },
+    base_rate: {
+      title: '조례 제30조 기본 요율',
+      guide: '재산의 사용·대부 용도에 해당하는 조례상 연간 기본 요율을 선택합니다.',
+      checkDoc: '• <b>사용·대부 신청서(사용목적)</b> 및 <b>토지이용계획확인서·건축물대장(용도)</b>를 보고 용도에 맞는 요율을 확인합니다.',
+      basis: '기본 요율은 재산평정가격의 1,000분의 50(5%) 이상이 원칙이며, 용도별 특례 요율(4%, 2.5%, 1%) 해당 여부를 확인합니다.',
+      law: '「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제30조(제25조 준용)'
+    },
+    sme_rate: {
+      title: '2026년 소상공인 감면 요율',
+      guide: '경기침체 시 소상공인·중소기업 임대료 부담 완화 적용 기간(2025. 1. 1.~2026. 12. 31.) 중 심의·의결된 인하 요율(최저 1%)을 선택합니다.',
+      checkDoc: '• <b>중소기업현황정보시스템 소상공인확인서</b>, <b>사업자등록증 업태·종목</b>, <b>공유재산심의회 심의 결과 공문</b>을 보고 감면 대상 및 적용 요율을 확인합니다.',
+      basis: '유흥·사행업종과 폐교재산 대부자 등은 제외되며, 공유재산심의회 심의·의결이 있어야 합니다.',
+      law: '「공유재산 및 물품 관리법 시행령」 개정(2025. 9. 2.), 「2026년도 공유재산 임대료 감면 업무처리 매뉴얼」'
+    },
+    period_days: {
+      title: '허가·대부 기간 (일수)',
+      guide: '사용허가 시작일부터 종료일까지의 총 일수를 입력합니다(빠른 칩 버튼으로 1년/6개월/3개월/1개월 즉시 선택 가능).',
+      checkDoc: '• <b>신청서 및 허가(대부) 추진 계획서</b>에 명시된 사용·대부 시작일과 종료일 사이의 일수를 확인합니다.',
+      basis: '일반재산 대부기간은 조례 제27조에 따라 토지와 그 정착물은 5년 이내, 그 밖의 재산은 1년 이내 범위인지 확인해야 합니다.',
+      law: '「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제27조·제30조'
+    },
+    vat_yn: {
+      title: '부가가치세(10%) 부과 여부',
+      guide: '사용·대부 행위가 부가가치세 과세 대상인지 면세 대상인지 선택합니다.',
+      checkDoc: '• <b>신청서상 사용 용도(매점·자판기·영업소 vs 농경지·주거용·공공용)</b> 및 기관 세무 검토 기준을 보고 확인합니다.',
+      basis: '매점·자판기 등 부동산 임대용역은 원칙적으로 부가세(10%) 과세 대상이며, 농경지·주거용 등은 면세입니다.',
+      law: '「부가가치세법」 제26조 및 같은 법 시행령 제46조'
+    },
+    renewal_chk: {
+      title: '갱신 건 여부',
+      guide: '기존에 사용허가 또는 대부계약을 체결했던 재산의 기간을 연장·갱신하는 경우 체크합니다.',
+      checkDoc: '• 기존 <b>사용허가서 또는 대부계약서 사본</b>, <b>기존 허가·계약 방식(입찰 vs 수의)</b>, <b>기존 갱신 이력</b>을 보고 확인합니다.',
+      basis: '입찰·지명경쟁으로 체결한 경우 갱신 횟수 제한 규정을 확인하고, 수의 건은 수의 사유 지속 여부를 확인해야 합니다.',
+      law: '「공유재산 및 물품 관리법」 제21조·제31조'
+    },
+    perm_struct: {
+      title: '영구시설물 축조(또는 원상변경) 수반 여부',
+      guide: '사용허가·대부 대상 재산에 시설물 설치·구조변경·원상변경이 포함되는지 확인하고 체크합니다.',
+      checkDoc: '• <b>사업계획서·시설설치(배치)도면</b>을 보고 가설물인지, 기초·기둥 등이 고정된 영구시설물인지, 기존 형상을 변경하는지 확인합니다.',
+      basis: '영구시설물 축조는 원칙 금지되며, 예외적 축조 시 조례 제5조의 승인권자(제1관서 교육감, 제2관서 교육장, 신재생에너지 의회 동의 등) 승인이 필요합니다.',
+      law: '「공유재산 및 물품 관리법 시행령」 제9조, 「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제5조'
+    },
+    late_fee_days: {
+      title: '연체료 계산 및 체납일수',
+      guide: '당초 납부기한이 지난 후 미납된 사용료·대부료에 대해 체납일수를 입력하여 연체료를 산출합니다.',
+      checkDoc: '• <b>세입징수부·수납대장·독촉장 발부 기준일</b>을 보고 당초 납부기한 경과일수를 확인합니다.<br>• 납부고지일부터 15일 이내 납부기한으로 재고지한 경우, 고지한 기한 내 납부 시 <b>고지일부터 납부일까지의 연체료는 징수하지 않음</b>에 유의합니다.',
+      basis: '연체료 산식: 체납원금 × 연체료율 × (체납일수 ÷ 365) (10원 미만 절사, 연체기간은 납기일 경과일로부터 60개월 초과 불가).',
+      law: '「공유재산 및 물품 관리법」 제80조, 같은 법 시행령 제80조 제2항, 「공유재산 업무편람」'
+    },
+    late_fee_rate: {
+      title: '연체기간별 연체료율 (7%~10%)',
+      guide: '체납 기간에 따라 법령에서 정한 연리(7%·8%·9%·10%)를 자동으로 판정하거나 직접 선택합니다.',
+      checkDoc: '• <b>최초 납부기한 경과일로부터 연체료 부과 시점까지의 경과 기간</b>(1개월 미만 / 1~3개월 미만 / 3~6개월 미만 / 6개월 이상)을 확인합니다.<br>• 재난으로 한시 인하 요율을 적용한 기간의 사용·대부료는 해당 연체료율의 <b>50%</b>를 적용할 수 있는지 확인합니다.',
+      basis: '1개월 미만 연 7%, 1개월 이상~3개월 미만 연 8%, 3개월 이상~6개월 미만 연 9%, 6개월 이상 연 10% (재난 인하 기간은 50% 감경 가능).',
+      law: '「공유재산 및 물품 관리법 시행령」 제80조 제1항, 「지방자치단체 공유재산 운영기준」'
+    }
+  };
+
+  function showToast(msg, ms) {
+    const t = document.getElementById('toastMsg');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2400);
+  }
+
+  function clearField(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = '';
+    el.focus();
+    recalcAll();
+  }
+
+  function clearNumField(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = '0';
+    el.focus();
+    recalcAll();
+  }
+
+  function resetFormInputsOnly() {
+    if (!confirm('입력창의 계산 값만 초기화하시겠습니까? (저장된 소속기관 재산 목록은 유지됩니다)')) return;
+    document.getElementById('propName').value = '';
+    document.getElementById('userName').value = '';
+    document.getElementById('propAddr').value = '';
+    document.getElementById('refDoc').value = '';
+    document.getElementById('landUnit').value = '0';
+    document.getElementById('landArea').value = '0';
+    document.getElementById('bldUnit').value = '0';
+    document.getElementById('bldArea').value = '0';
+    document.getElementById('periodDays').value = '365';
+    document.getElementById('periodStart').value = '';
+    document.getElementById('periodEnd').value = '';
+    document.getElementById('chkLateFee').checked = false;
+    recalcAll();
+    showToast('입력값이 초기화되었습니다.');
+  }
+
+  function setDaysQuick(days) {
+    document.getElementById('periodDays').value = days;
+    syncEndFromDays();
+    recalcAll();
+    showToast(`기간이 ${days}일로 설정되었습니다.`);
+  }
+
+  function setLateDaysQuick(days) {
+    document.getElementById('chkLateFee').checked = true;
+    document.getElementById('lateDays').value = days;
+    recalcAll();
+    showToast(`연체일수 ${days}일 기준으로 연체료가 계산되었습니다.`);
+  }
+
+  /* ── 허가·대부 기간: 시작일~종료일 ↔ 일수 맞추기 (첫날과 마지막 날을 모두 포함해서 셈) ── */
+  function dateFromInput(id) {
+    const v = document.getElementById(id).value;
+    return v ? new Date(v + 'T00:00:00') : null;
+  }
+  function toInputDate(d) {
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
+  function onPeriodDates(which) {
+    const st = dateFromInput('periodStart'), en = dateFromInput('periodEnd');
+    if (st && en) {
+      const diff = Math.round((en - st) / 86400000) + 1;
+      if (diff < 1) {
+        document.getElementById('periodEnd').value = '';
+        showToast('종료일이 시작일보다 빠릅니다. 종료일을 다시 선택해 주세요.', 3500);
+      } else {
+        document.getElementById('periodDays').value = diff;
+        showToast(`기간이 ${diff}일로 계산되었습니다.`);
+      }
+    } else if (st && which === 'start') {
+      syncEndFromDays();
+    }
+    recalcAll();
+  }
+  function syncEndFromDays() {
+    const st = dateFromInput('periodStart');
+    if (!st) return;
+    const days = Math.max(1, parseInt(document.getElementById('periodDays').value) || 0);
+    if (!days) return;
+    const en = new Date(st); en.setDate(en.getDate() + days - 1);
+    document.getElementById('periodEnd').value = toInputDate(en);
+  }
+
+  /* ── 연체일수: 납부기한 기준일 다음 날부터 오늘까지 ── */
+  function setLateDaysFromPayDate() {
+    const pay = dateFromInput('payDate');
+    if (!pay) return alert('먼저 위쪽 [납부기한 기준일]을 입력해 주세요.');
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    const diff = Math.round((now - pay) / 86400000);
+    if (diff <= 0) {
+      document.getElementById('lateDays').value = 0;
+      recalcAll();
+      return showToast('아직 납부기한이 지나지 않았습니다. (연체일수 0일)', 3200);
+    }
+    setLateDaysQuick(diff);
+  }
+
+  /* ── 입력하던 내용을 이 브라우저에 자동 보관 (새로고침·창 닫기에도 유지) ── */
+  const FORM_KEY = 'gongyu_form_draft_v1';
+  const FORM_FIELDS = ['assetMode', 'propName', 'userName', 'propAddr', 'contractWay', 'refDoc', 'payDate',
+    'landUnit', 'landArea', 'bldUnit', 'bldArea', 'baseRate', 'smeRate', 'periodStart', 'periodEnd', 'periodDays',
+    'vatYn', 'lateDays', 'lateRateSelect'];
+  const FORM_CHECKS = ['chkRenewal', 'chkPermStruct', 'chkLateFee', 'chkDisasterHalf'];
+  let formRestoring = false;
+  function saveFormDraft() {
+    if (formRestoring) return;
+    try {
+      const d = { v: {}, c: {} };
+      FORM_FIELDS.forEach(id => { d.v[id] = document.getElementById(id).value; });
+      FORM_CHECKS.forEach(id => { d.c[id] = document.getElementById(id).checked; });
+      localStorage.setItem(FORM_KEY, JSON.stringify(d));
+    } catch (e) {}
+  }
+  function restoreFormDraft() {
+    try {
+      const d = JSON.parse(localStorage.getItem(FORM_KEY) || 'null');
+      if (!d || !d.v) return false;
+      formRestoring = true;
+      FORM_FIELDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && typeof d.v[id] === 'string') {
+          el.value = d.v[id];
+          if (el.tagName === 'SELECT' && el.selectedIndex < 0) el.selectedIndex = 0;
+        }
+      });
+      FORM_CHECKS.forEach(id => { const el = document.getElementById(id); if (el && d.c) el.checked = !!d.c[id]; });
+      formRestoring = false;
+      const mode = document.getElementById('assetMode').value === 'lease' ? 'lease' : 'permit';
+      document.getElementById('cardPermit').className = 'mode-card' + (mode === 'permit' ? ' active-permit' : '');
+      document.getElementById('cardLease').className = 'mode-card' + (mode === 'lease' ? ' active-lease' : '');
+      return !!(d.v.propName || d.v.userName || parseNum(d.v.landUnit) || parseNum(d.v.bldUnit));
+    } catch (e) { formRestoring = false; return false; }
+  }
+
+  function showLawHelp(key) {
+    const item = LAW_HELP_DATA[key];
+    if (!item) return;
+    document.getElementById('modalTitle').textContent = `❓ ${item.title}`;
+    document.getElementById('modalGuide').innerHTML = item.guide;
+    document.getElementById('modalCheckDoc').innerHTML = item.checkDoc;
+    document.getElementById('modalBasis').innerHTML = item.basis;
+    document.getElementById('modalLaw').textContent = `근거 법령: ${item.law}`;
+    document.getElementById('helpModalBackdrop').classList.add('show');
+  }
+
+  function closeLawHelp() {
+    document.getElementById('helpModalBackdrop').classList.remove('show');
+  }
+
+  function onBackdropClick(e) {
+    if (e.target && e.target.id === 'helpModalBackdrop') closeLawHelp();
+  }
+
+  /* 공용면적 배분 계산 모달 */
+  function openCommonAreaModal() {
+    document.getElementById('mUserExcl').value = parseFloat(document.getElementById('bldArea').value) || 35;
+    calcAreaModalPreview();
+    document.getElementById('areaModalBackdrop').classList.add('show');
+  }
+
+  function closeAreaModal() {
+    document.getElementById('areaModalBackdrop').classList.remove('show');
+  }
+
+  function onAreaBackdropClick(e) {
+    if (e.target && e.target.id === 'areaModalBackdrop') closeAreaModal();
+  }
+
+  function getCalculatedAreas() {
+    const uExcl = Math.max(0, parseFloat(document.getElementById('mUserExcl').value) || 0);
+    const tExcl = Math.max(1, parseFloat(document.getElementById('mTotalExcl').value) || 1);
+    const tBldComm = Math.max(0, parseFloat(document.getElementById('mTotalBldCommon').value) || 0);
+    const bldGross = Math.max(1, parseFloat(document.getElementById('mBldGross').value) || 1);
+    const tLandComm = Math.max(0, parseFloat(document.getElementById('mTotalLandCommon').value) || 0);
+
+    const bldCommShare = tBldComm * (uExcl / tExcl);
+    const finalBldArea = Number((uExcl + bldCommShare).toFixed(2));
+    const landCommShare = tLandComm * (finalBldArea / bldGross);
+    const finalLandArea = Number(landCommShare.toFixed(2));
+
+    return { bldCommShare, finalBldArea, finalLandArea };
+  }
+
+  function calcAreaModalPreview() {
+    const c = getCalculatedAreas();
+    document.getElementById('mAreaPreview').innerHTML =
+      `건물 배분면적: <b>${c.finalBldArea.toFixed(2)}㎡</b> (건물 공용 ${c.bldCommShare.toFixed(2)}㎡ 포함) / ` +
+      `부지 공용배분면적: <b>${c.finalLandArea.toFixed(2)}㎡</b>`;
+  }
+
+  function applyAreaModal() {
+    const c = getCalculatedAreas();
+    document.getElementById('bldArea').value = c.finalBldArea.toFixed(2);
+    document.getElementById('landArea').value = c.finalLandArea.toFixed(2);
+    closeAreaModal();
+    recalcAll();
+    showToast(`건물 ${c.finalBldArea.toFixed(2)}㎡ · 토지 ${c.finalLandArea.toFixed(2)}㎡ 반영 완료`);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeLawHelp();
+      closeAreaModal();
+      closePropertyPicker();
+    }
+  });
+
+  function selectMode(mode) {
+    document.getElementById('assetMode').value = mode;
+    document.getElementById('cardPermit').className = 'mode-card' + (mode === 'permit' ? ' active-permit' : '');
+    document.getElementById('cardLease').className = 'mode-card' + (mode === 'lease' ? ' active-lease' : '');
+    recalcAll();
+  }
+
+  function parseNum(str) {
+    return Number(String(str || '').replace(/[^0-9.-]/g, '')) || 0;
+  }
+
+  function formatComma(num) {
+    return Math.round(num).toLocaleString('ko-KR');
+  }
+
+  function formatNumInput(el) {
+    const val = parseNum(el.value);
+    el.value = el.value === '' ? '' : val.toLocaleString('ko-KR');
+  }
+
+  function numberToKorean(num) {
+    num = Math.round(num);
+    if (num === 0) return '영';
+    const units = ['', '만', '억', '조'];
+    const smallUnits = ['', '십', '백', '천'];
+    const digits = ['', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
+    let result = '', unitIdx = 0;
+    while (num > 0) {
+      const part = num % 10000;
+      if (part > 0) {
+        let partStr = '', temp = part, sIdx = 0;
+        while (temp > 0) {
+          const d = temp % 10;
+          if (d > 0) partStr = digits[d] + smallUnits[sIdx] + partStr;
+          temp = Math.floor(temp / 10);
+          sIdx++;
+        }
+        result = partStr + units[unitIdx] + result;
+      }
+      num = Math.floor(num / 10000);
+      unitIdx++;
+    }
+    return result;
+  }
+
+  function formatMoneyFormal(num) {
+    const n = Math.round(num);
+    return `금${n.toLocaleString('ko-KR')}원(금${numberToKorean(n)}원)`;
+  }
+
+  function formatKoreanDate(dateStr) {
+    if (!dateStr) return '2026. 12. 7.(월)';
+    const d = new Date(dateStr + 'T00:00:00');
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.(${days[d.getDay()]})`;
+  }
+
+  function getAutoLateRate(days) {
+    if (days < 30) return 0.07;
+    if (days < 90) return 0.08;
+    if (days < 180) return 0.09;
+    return 0.10;
+  }
+
+  function recalcAll() {
+    const mode = document.getElementById('assetMode').value;
+    const isPermit = mode === 'permit';
+
+    const propName = document.getElementById('propName').value || '[재산명 미입력]';
+    const userName = document.getElementById('userName').value || '[사용자 미입력]';
+    const propAddr = document.getElementById('propAddr').value || '[소재지 미입력]';
+    const contractWay = document.getElementById('contractWay').value;
+    const refDoc = document.getElementById('refDoc').value || '관련문서-000(2026. 00. 00.)';
+    const payDateK = formatKoreanDate(document.getElementById('payDate').value);
+
+    const landUnit = parseNum(document.getElementById('landUnit').value);
+    const landArea = parseFloat(document.getElementById('landArea').value) || 0;
+    const bldUnit = parseNum(document.getElementById('bldUnit').value);
+    const bldArea = parseFloat(document.getElementById('bldArea').value) || 0;
+
+    const landVal = Math.round(landUnit * landArea);
+    const bldVal = Math.round(bldUnit * bldArea);
+    const propVal = landVal + bldVal;
+
+    const baseRate = parseFloat(document.getElementById('baseRate').value) || 0.05;
+    const smeVal = document.getElementById('smeRate').value;
+    const appliedRate = smeVal === 'none' ? baseRate : parseFloat(smeVal);
+
+    const days = Math.max(1, parseInt(document.getElementById('periodDays').value) || 365);
+    const pStart = document.getElementById('periodStart').value, pEnd = document.getElementById('periodEnd').value;
+    const periodText = (pStart && pEnd) ? `${formatKoreanDate(pStart)} ~ ${formatKoreanDate(pEnd)} (${days}일간)` : `${days}일간`;
+    const annual = Math.round(propVal * appliedRate);
+    const rawFee = (days === 365 || days === 366) ? annual : Math.round(annual * (days / 365));
+    const supply = Math.floor(rawFee / 10) * 10;
+    const hasVat = document.getElementById('vatYn').value === 'yes';
+    const vat = hasVat ? Math.floor((supply * 0.1) / 10) * 10 : 0;
+    const baseTotal = supply + vat;
+
+    const lateChecked = document.getElementById('chkLateFee').checked;
+    const lateDays = Math.max(0, parseInt(document.getElementById('lateDays').value) || 0);
+    const lateRateOpt = document.getElementById('lateRateSelect').value;
+    const isDisasterHalf = document.getElementById('chkDisasterHalf').checked;
+
+    let rawLateRate = lateRateOpt === 'auto' ? getAutoLateRate(lateDays) : parseFloat(lateRateOpt);
+    let effectiveLateRate = isDisasterHalf ? rawLateRate * 0.5 : rawLateRate;
+    let lateFee = 0;
+
+    if (lateChecked && lateDays > 0) {
+      lateFee = Math.floor((baseTotal * effectiveLateRate * (lateDays / 365)) / 10) * 10;
+      document.getElementById('resLateFee').textContent =
+        `+${formatComma(lateFee)}원 (연 ${(effectiveLateRate * 100).toFixed(1)}%, ${lateDays}일)`;
+      document.getElementById('resTotalLabel').textContent =
+        `총 납부예정액 (원금 ${formatComma(baseTotal)}원 + 연체료 ${formatComma(lateFee)}원)`;
+    } else {
+      document.getElementById('resLateFee').textContent = '미적용 (0원)';
+      document.getElementById('resTotalLabel').textContent = '총 납부예정액 (10원 미만 절사 · 부가세 포함)';
+    }
+
+    const grandTotal = baseTotal + lateFee;
+
+    document.getElementById('resPanelTitle').textContent = isPermit
+      ? '행정재산 사용·수익허가료 산출 및 점검'
+      : '일반재산 대부료 산출 및 점검';
+    document.getElementById('resBanner').className = 'result-box' + (isPermit ? '' : ' lease-theme');
+
+    document.getElementById('resLandBldPair').textContent = `${formatComma(landVal)}원 / ${formatComma(bldVal)}원`;
+    document.getElementById('resPropVal').textContent = `${formatComma(propVal)}원`;
+    document.getElementById('resSupplyVat').textContent = `${formatComma(supply)}원 / ${formatComma(vat)}원`;
+    document.getElementById('resTotalDisplay').textContent = `금${formatComma(grandTotal)}원`;
+    document.getElementById('resTotalKor').textContent = `금${numberToKorean(grandTotal)}원`;
+
+    let inst = '일시 선납 (100만 원 이하)';
+    if (supply > 10000000) inst = '연 4회 분납 가능 (1,000만 원 초과)';
+    else if (supply > 5000000) inst = '연 3회 분납 가능 (500만 원 초과)';
+    else if (supply > 2000000) inst = '연 2회 분납 가능 (200만 원 초과)';
+    else if (supply > 1000000) inst = '6개월 2회 분납 가능 (100만 원 초과)';
+    document.getElementById('resInstallment').textContent = inst;
+    document.getElementById('resInsurance').textContent = bldVal > 0 ? `${formatComma(bldVal)}원 이상 손해보험 가입` : '건물 없음';
+    document.getElementById('resEmptyHint').style.display = propVal > 0 ? 'none' : '';
+    const insDoc = bldVal > 0 ? ` 및 손해보험(${formatComma(bldVal)}원 이상) 가입 확인 후` : ' 후';
+
+    const isRenew = document.getElementById('chkRenewal').checked;
+    const isPermStruct = document.getElementById('chkPermStruct').checked;
+
+    let diffHtml = '';
+    if (isPermit) {
+      diffHtml += `• <b>공법상 행정처분(특허):</b> 계약서가 아닌 사용허가 통지·허가서로 처리합니다.<br>`;
+      diffHtml += `• <b>방식·갱신(${contractWay}):</b> ${isRenew ? '갱신 건입니다. 입찰·지명경쟁 허가 여부 및 조례·법령상 갱신 가능 범위를 확인하세요.' : '신규 허가 건으로 행정목적 수행에 지장이 없는지 확인하세요.'}<br>`;
+    } else {
+      diffHtml += `• <b>사법상 계약(연고권 배제):</b> 대부계약서 체결 및 연고권 배제(조례 제26조) 특약을 반영합니다.<br>`;
+      diffHtml += `• <b>대부기간·갱신(조례 제27조):</b> 토지·정착물 5년 이내, 그 외 1년 이내이며, ${isRenew ? '갱신 건이므로 기존 계약 조건 및 갱신 한도를 확인하세요.' : '신규 대부계약 건입니다.'}<br>`;
+    }
+    if (isPermStruct) {
+      diffHtml += `• <b>영구시설물 축조(조례 제5조):</b> 사전 승인(제1관서 교육감, 제2관서 교육장, 신재생에너지 의회 동의 등) 대상 여부를 확인하세요.<br>`;
+    }
+    if (smeVal !== 'none') {
+      diffHtml += `• <b>소상공인 감면(2026년 한시):</b> 2025. 1. 1.~2026. 12. 31. 적용 기간 내 공유재산심의회 의결 및 소상공인 확인 여부를 점검하세요.<br>`;
+    }
+    if (lateChecked && lateDays > 0) {
+      diffHtml += `• <b>연체료 부과(시행령 제80조):</b> 체납 ${lateDays}일 기준 연체료 ${formatMoneyFormal(lateFee)} 가산. 재고지 기한 내 납부 시 고지일~납부일간 연체료 불징수.`;
+    }
+    document.getElementById('diffBoxBody').innerHTML = diffHtml;
+
+    const lateDocLine = (lateChecked && lateDays > 0)
+      ? `\n    4) 연체료 가산액: ${formatMoneyFormal(lateFee)} (체납 ${lateDays}일, 연 ${(effectiveLateRate * 100).toFixed(1)}%, 총 고지액 ${formatMoneyFormal(grandTotal)})`
+      : '';
+
+    if (isPermit) {
+      document.getElementById('docOutput').value =
+        `${propName} 행정재산 사용·수익허가 및 사용료 ${lateChecked && lateDays > 0 ? '연체료 가산 ' : ''}결정 보고\n\n` +
+        `1. 관련: ${refDoc}「${propName} 사용·수익허가 신청」\n` +
+        `2. 「공유재산 및 물품 관리법」 제20조·제22조(연체료: 같은 법 제80조 및 시행령 제80조) 및 「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제25조·제30조에 따라 행정재산 사용·수익허가 및 사용료를 다음과 같이 결정하고자 합니다.\n` +
+        `  가. 허가 재산: ${propName} (${propAddr}, 토지 ${landArea}㎡ · 건물 ${bldArea}㎡)\n` +
+        `  나. 사용허가 대상자: ${userName}\n` +
+        `  다. 허가 방식 및 기간: ${contractWay} / ${periodText}\n` +
+        `  라. 사용료 산출 내역\n` +
+        `    1) 재산평정가격: ${formatMoneyFormal(propVal)} (토지 ${formatComma(landVal)}원 + 건물 ${formatComma(bldVal)}원)\n` +
+        `    2) 적용 요율: ${(appliedRate * 100).toFixed(2)}% (1,000분의 ${Math.round(appliedRate * 1000)})\n` +
+        `    3) 납부할 사용료: ${formatMoneyFormal(baseTotal)} (공급가액 금${formatComma(supply)}원, 부가가치세 금${formatComma(vat)}원)${lateDocLine}\n` +
+        `  마. 납부기한 및 행정사항: ${payDateK}까지 지정 세입계좌 선납(${inst})${insDoc} 사용허가서 교부\n\n` +
+        `붙임  1. 대부(사용)료 산정조서 1부.\n` +
+        `      2. 공유재산 사용·수익허가서(안) 1부.  끝.`;
+    } else {
+      document.getElementById('docOutput').value =
+        `${propName} 일반재산 대부계약 체결 및 대부료 ${lateChecked && lateDays > 0 ? '연체료 가산 ' : ''}결정 보고\n\n` +
+        `1. 관련: ${refDoc}「${propName} 대부 신청」\n` +
+        `2. 「공유재산 및 물품 관리법」 제29조·제32조(연체료: 같은 법 제80조 및 시행령 제80조) 및 「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제26조·제27조·제30조에 따라 일반재산 대부계약 및 대부료를 다음과 같이 결정하고자 합니다.\n` +
+        `  가. 대부 재산: ${propName} (${propAddr}, 토지 ${landArea}㎡ · 건물 ${bldArea}㎡)\n` +
+        `  나. 대부 계약자: ${userName}\n` +
+        `  다. 계약 방식 및 기간: ${contractWay} / ${periodText} (연고권 배제 특약 적용)\n` +
+        `  라. 대부료 산출 내역\n` +
+        `    1) 재산평정가격: ${formatMoneyFormal(propVal)} (토지 ${formatComma(landVal)}원 + 건물 ${formatComma(bldVal)}원)\n` +
+        `    2) 적용 요율: ${(appliedRate * 100).toFixed(2)}% (1,000분의 ${Math.round(appliedRate * 1000)})\n` +
+        `    3) 납부할 대부료: ${formatMoneyFormal(baseTotal)} (공급가액 금${formatComma(supply)}원, 부가가치세 금${formatComma(vat)}원)${lateDocLine}\n` +
+        `  마. 납부기한 및 행정사항: ${payDateK}까지 대부료 선납(${inst})${insDoc} 대부계약 체결\n\n` +
+        `붙임  1. 대부(사용)료 산정조서 1부.\n` +
+        `      2. 공유재산 대부계약서(안) 1부.  끝.`;
+    }
+    saveFormDraft();
+  }
+
+  function copyDoc() {
+    const el = document.getElementById('docOutput');
+    el.select();
+    const done = () => showToast('K-에듀파인 기안문이 클립보드에 복사되었습니다.');
+    const oldWay = () => {
+      try { if (document.execCommand('copy')) return done(); } catch (e) {}
+      showToast('자동 복사가 막혀 있습니다. 기안문이 모두 선택되었으니 Ctrl+C를 눌러 복사하세요.', 5000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(el.value).then(done).catch(oldWay);
+    else oldWay();
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const dz = document.getElementById('excelDropZone');
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+    dz.addEventListener('drop', e => {
+      e.preventDefault();
+      dz.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        readOrgExcelFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    /* 숫자 칸을 누르면 기존 값이 전체 선택됨 → '0'을 지울 필요 없이 바로 입력 */
+    document.addEventListener('focusin', e => {
+      const el = e.target;
+      if (el && el.tagName === 'INPUT' && (el.type === 'number' || el.classList.contains('num-input'))) {
+        setTimeout(() => { try { el.select(); } catch (x) {} }, 0);
+      }
+    });
+
+    loadOrgPropertiesFromStorage();
+    const restored = restoreFormDraft();
+    recalcAll();
+    if (restored) showToast('지난번에 입력하던 내용을 불러왔습니다. 새로 시작하려면 [🔄 입력값만 초기화]를 누르세요.', 4500);
+    startVisitCounter();
+  });
+
+  /* ---------- 이 페이지(공유재산 관리)만의 접속자 수 (오늘 · 누적) ----------
+     · 다른 허브 페이지(yeoncha.html 등)와 같은 방식: Firebase  stats / page_gongyu  { total, todayCount, todayDate }
+     · 한 브라우저는 하루 1번만 셈, 관리자로 로그인한 적이 있는 브라우저는 세지 않음
+     · common.js가 없거나(파일만 따로 연 경우) Firebase 보안 규칙에 'page_gongyu'가 아직 없으면 칸을 숨긴 채 조용히 넘어감 */
+  function startVisitCounter() {
+    const PAGE_DOC = 'page_gongyu', DAY_KEY = 'hubVisitDay_gongyu';
+    const box = document.getElementById('visitBox');
+    const H = window.HUB || {}, C = H.FIREBASE_CONFIG;
+    if (!box || !C || !C.projectId || !C.apiKey || typeof fetch !== 'function') return;
+    const API = 'https://firestore.googleapis.com/v1/', ROOT = 'projects/' + C.projectId + '/databases/(default)/documents', DOC = ROOT + '/stats/' + PAGE_DOC;
+    const today = () => new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);   /* 한국 시간 기준 */
+    const num = x => x ? Number(x.integerValue != null ? x.integerValue : (x.doubleValue || 0)) : 0;
+    const isAdmin = () => { try { return H.isAdminDevice ? !!H.isAdminDevice() : localStorage.getItem('hubAdminDevice') === '1'; } catch (e) { return false; } };
+    const withLimit = p => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))]);
+    const getDoc = () => withLimit(fetch(API + DOC + '?key=' + C.apiKey).then(r => {
+      if (r.status === 404) return { fields: {} };
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }));
+    const show = () => getDoc().then(j => {
+      const f = j.fields || {}, td = f.todayDate ? f.todayDate.stringValue : '';
+      document.getElementById('vToday').textContent = (td === today() ? num(f.todayCount) : 0).toLocaleString('ko-KR');
+      document.getElementById('vTotal').textContent = num(f.total).toLocaleString('ko-KR');
+      box.hidden = false;
+    }).catch(() => {});
+    const count = () => {
+      const t = today();
+      if (isAdmin()) return Promise.resolve();
+      try { if (localStorage.getItem(DAY_KEY) === t) return Promise.resolve(); localStorage.setItem(DAY_KEY, t); } catch (e) { return Promise.resolve(); }
+      return getDoc().then(j => {
+        const f = j.fields || {}, saved = f.todayDate ? f.todayDate.stringValue : '', newDay = !saved || t > saved;
+        const fields = { todayDate: { stringValue: newDay ? t : saved } }, mask = ['todayDate'];
+        const tr = [{ fieldPath: 'total', increment: { integerValue: '1' } }];
+        if (newDay) { fields.todayCount = { integerValue: '1' }; mask.push('todayCount'); }
+        else tr.push({ fieldPath: 'todayCount', increment: { integerValue: '1' } });
+        return withLimit(fetch(API + ROOT + ':commit?key=' + C.apiKey, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ writes: [{ update: { name: DOC, fields: fields }, updateMask: { fieldPaths: mask }, updateTransforms: tr }] }) }))
+          .then(r => { if (!r.ok) { try { localStorage.removeItem(DAY_KEY); } catch (e) {} } });
+      }).catch(() => { try { localStorage.removeItem(DAY_KEY); } catch (e) {} });
+    };
+    show().then(count).then(show);
+    setInterval(show, 60000);
+  }
+</script>
+</body>
+</html>
