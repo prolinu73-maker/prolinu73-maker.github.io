@@ -170,8 +170,8 @@
 
     .top-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 
-    .mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-    @media (max-width: 560px) { .mode-switch { grid-template-columns: 1fr; } }
+    .mode-switch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+    @media (max-width: 760px) { .mode-switch { grid-template-columns: 1fr; } }
     .mode-card {
       border: 2px solid var(--gray-300);
       border-radius: 10px;
@@ -182,12 +182,13 @@
       position: relative;
     }
     .mode-card:hover { border-color: #94a3b8; background: var(--gray-50); }
+    .mode-card.active-temp { border-color: #b45309; background: #fffbeb; }
     .mode-card.active-permit { border-color: var(--navy); background: var(--navy-soft); }
     .mode-card.active-lease { border-color: var(--green); background: var(--green-soft); }
-    .mode-card.active-permit::after, .mode-card.active-lease::after {
+    .mode-card.active-temp::after, .mode-card.active-permit::after, .mode-card.active-lease::after {
       content: "✔ 선택됨";
       position: absolute;
-      top: 8px;
+      top: -10px;
       right: 10px;
       font-size: 11px;
       font-weight: 800;
@@ -195,9 +196,11 @@
       border-radius: 999px;
       padding: 1px 8px;
     }
+    .mode-card.active-temp::after { background: #b45309; }
     .mode-card.active-permit::after { background: var(--navy); }
     .mode-card.active-lease::after { background: var(--green); }
-    .mode-card .m-title { font-weight: 800; font-size: 14px; color: var(--gray-900); padding-right: 62px; }
+    .mode-card .m-title { font-weight: 800; font-size: 14px; color: var(--gray-900); word-break: keep-all; }
+    .mode-card.active-temp .m-title { color: #92400e; }
     .mode-card.active-permit .m-title { color: var(--navy); }
     .mode-card.active-lease .m-title { color: var(--green); }
     .mode-card .m-sub { font-size: 11.5px; color: var(--gray-600); margin-top: 2px; }
@@ -285,6 +288,52 @@
 
     .result-box { background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff; border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; }
     .result-box.lease-theme { background: linear-gradient(135deg, #123D30, #1B5442 60%, #2a7a60); }
+    .result-box.temp-theme { background: linear-gradient(135deg, #78350f, #b45309 60%, #d97706); }
+
+    #step2Body.merged { margin-top: 14px; padding-top: 14px; border-top: 2px dashed #e5e9f2; }
+    /* 일시사용 허가 전용 입력 영역 */
+    .tu-box { border: 1px solid #fcd34d; border-left: 4px solid #b45309; background: #fffdf5; border-radius: 9px; padding: 12px 14px; }
+    .tu-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .tu-title { font-size: 13.5px; font-weight: 800; color: #92400e; display: flex; align-items: center; gap: 6px; }
+    .tu-calc { background: #fff; border: 1px solid #fde68a; border-radius: 8px; padding: 9px 12px; margin-top: 10px; font-size: 12.5px; line-height: 1.7; color: var(--gray-800); }
+    .tu-calc b { color: #92400e; font-variant-numeric: tabular-nums; }
+    .tu-calc .warn { color: #b91c1c; font-weight: 700; }
+    table.rate-tbl { width: 100%; border-collapse: collapse; margin: 8px 0 6px; font-size: 12.5px; background: #fff; }
+    table.rate-tbl th, table.rate-tbl td { border: 1px solid var(--gray-300); padding: 6px 8px; text-align: left; vertical-align: top; line-height: 1.55; }
+    table.rate-tbl th { background: #eef2ff; color: var(--navy); }
+    table.rate-tbl td:first-child { width: 68px; text-align: center; white-space: nowrap; }
+    table.rate-tbl .eg { color: var(--gray-500); }
+    .rate-note { font-size: 12px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 6px 9px; }
+    .wf-subbox.temp-box { border-left: 4px solid #b45309; background: #fffdf5; }
+    .wf-badge.temp { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .diff-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 13px; font-size: 12.5px; margin-top: 10px; line-height: 1.7; }
+    .diff-box h4 { margin: 0 0 4px; font-size: 13px; color: #92400e; }
+    .doc-hint { font-size: 12px; color: var(--gray-500); margin: 0 0 6px; line-height: 1.6; }
+    dl.gloss { margin: 0; }
+    dl.gloss dt { font-weight: 800; color: var(--navy); margin-top: 10px; font-size: 13.5px; }
+    dl.gloss dt:first-child { margin-top: 0; }
+    dl.gloss dd { margin: 2px 0 0; padding-left: 10px; border-left: 3px solid #e0e7ff; }
+
+    /* 일시사용료 산출내역서 */
+    .stmt-title { text-align: center; font-size: 19px; font-weight: 800; margin: 2px 0 12px; letter-spacing: 2px; color: #111; }
+    table.stmt-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.stmt-tbl th, table.stmt-tbl td { border: 1px solid #334155; padding: 6px 9px; text-align: left; vertical-align: top; }
+    table.stmt-tbl th { background: #f1f5f9; width: 30%; font-weight: 700; }
+    table.stmt-tbl td.num { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+    table.stmt-tbl tr.total th, table.stmt-tbl tr.total td { background: #fffbeb; font-size: 14px; }
+    .stmt-foot { margin-top: 14px; font-size: 12.5px; line-height: 1.7; color: #1e293b; }
+    .stmt-sign { margin-top: 18px; text-align: center; font-size: 14px; font-weight: 700; }
+
+    /* 인쇄: 산출내역서 창만 종이에 찍힘 (인쇄 버튼을 눌렀을 때만 적용) */
+    @media print {
+      body.print-stmt { background: #fff; }
+      body.print-stmt > *:not(#tempStmtBackdrop) { display: none !important; }
+      body.print-stmt #tempStmtBackdrop { display: block !important; position: static; background: none; padding: 0; backdrop-filter: none; }
+      body.print-stmt #tempStmtBackdrop .modal-box { max-width: none; max-height: none; box-shadow: none; border-radius: 0; animation: none; display: block; overflow: visible; }
+      body.print-stmt #tempStmtBackdrop .modal-header, body.print-stmt #tempStmtBackdrop .modal-footer { display: none !important; }
+      body.print-stmt #tempStmtBackdrop .modal-body { overflow: visible; padding: 0; }
+      @page { size: A4; margin: 18mm 16mm; }
+    }
     .result-box #resTotalLabel { opacity: .92; font-weight: 400 !important; font-size: 13px !important; }
     .big-amount { font-size: 34px; font-weight: 800; color: #fff; margin: 2px 0; line-height: 1.25; letter-spacing: -.5px; font-variant-numeric: tabular-nums; word-break: keep-all; }
     .kor-amount { font-size: 13px; font-weight: 700; color: #FDE68A; }
@@ -403,7 +452,7 @@
       <button type="button" class="flow-pill active" id="flowPill1" onclick="scrollToCard('cardStep1', 1)">1. 시작·재산선택</button>
       <span class="flow-arrow">→</span>
       <button type="button" class="flow-pill" id="flowPill2" onclick="scrollToCard('cardStep2', 2)">2. 요금·연체료 산출</button>
-      <span class="flow-arrow">→</span>
+      <span class="flow-arrow" id="flowArrow2">→</span>
       <button type="button" class="flow-pill" id="flowPill3" onclick="scrollToCard('cardStep3', 3)">3. 진행절차(입찰·수의)</button>
       <span class="flow-arrow">→</span>
       <button type="button" class="flow-pill" id="flowPill4" onclick="scrollToCard('cardStep4', 4)">4. 끝맺음·기안문</button>
@@ -419,7 +468,7 @@
       <!-- [1단계] 시작 및 재산·상대방 기본정보 -->
       <div class="card" id="cardStep1">
         <div class="card-header">
-          <h2 class="card-title"><span class="no">1</span>시작 · 재산 및 기본정보</h2>
+          <h2 class="card-title"><span class="no">1</span><span id="step1Title">시작 · 재산 및 기본정보</span></h2>
           <span id="orgStatusPill" class="org-status-pill empty">⚠️ 재산목록 미등록</span>
         </div>
 
@@ -429,18 +478,23 @@
         </div>
 
         <div class="mode-switch">
-          <div id="cardPermit" class="mode-card active-permit" onclick="selectMode('permit')">
-            <div class="m-title">① 행정재산 사용·수익허가 <button type="button" class="q-btn" onclick="event.stopPropagation(); showLawHelp('mode_permit')">?</button></div>
+          <div id="cardTemp" class="mode-card active-temp" onclick="selectMode('temp')">
+            <div class="m-title">① 행정재산 일시사용 허가 <button type="button" class="q-btn" onclick="event.stopPropagation(); showLawHelp('mode_temp')">?</button></div>
+            <div class="m-sub">행정재산 · 단기 시설사용(시설사용 조례 기준 사용료)</div>
+          </div>
+          <div id="cardPermit" class="mode-card" onclick="selectMode('permit')">
+            <div class="m-title">② 행정재산 사용·수익허가 <button type="button" class="q-btn" onclick="event.stopPropagation(); showLawHelp('mode_permit')">?</button></div>
             <div class="m-sub">행정재산 · 공법상 처분(사용허가서·사용료)</div>
           </div>
           <div id="cardLease" class="mode-card" onclick="selectMode('lease')">
-            <div class="m-title">② 일반재산 대부(대부계약) <button type="button" class="q-btn" onclick="event.stopPropagation(); showLawHelp('mode_lease')">?</button></div>
+            <div class="m-title">③ 일반재산 대부(대부계약) <button type="button" class="q-btn" onclick="event.stopPropagation(); showLawHelp('mode_lease')">?</button></div>
             <div class="m-sub">일반재산 · 사법상 계약(대부계약서·대부료)</div>
           </div>
         </div>
-        <div class="aux-note" style="font-size:12px; color:#475569; margin:-4px 0 10px;">※ 재산종류가 행정재산이면 ① 사용·수익허가, 일반재산이면 ② 대부계약을 선택합니다.</div>
+        <div class="aux-note" style="font-size:12px; color:#475569; margin:-4px 0 10px;">※ 강당·교실 등을 몇 시간~며칠 빌려주면 ① 일시사용 허가, 행정재산을 일정 기간 쓰게 하면 ② 사용·수익허가, 일반재산이면 ③ 대부계약을 선택합니다.</div>
         <select id="assetMode" style="display:none;" onchange="recalcAll()">
-          <option value="permit" selected>permit</option>
+          <option value="temp" selected>temp</option>
+          <option value="permit">permit</option>
           <option value="lease">lease</option>
         </select>
 
@@ -454,7 +508,7 @@
             </div>
           </div>
 
-          <div class="field">
+          <div class="field" id="fieldContractWay">
             <label>계약·허가 방식 <button type="button" class="q-btn" onclick="showLawHelp('contract_way')">?</button></label>
             <select id="contractWay" onchange="recalcAll()">
               <option value="경쟁입찰(온비드)">경쟁입찰 (온비드 전자입찰)</option>
@@ -493,9 +547,132 @@
       <div class="card" id="cardStep2">
         <div class="card-header">
           <h3 class="card-title"><span class="no">2</span>사용료·대부료 및 연체료 산출</h3>
-          <button type="button" class="btn btn-outline btn-sm" onclick="openCommonAreaModal()">📐 공용면적 배분계산</button>
+          <button type="button" class="btn btn-outline btn-sm" id="btnAreaCalc" onclick="openCommonAreaModal()">📐 공용면적 배분계산</button>
         </div>
 
+        <div id="step2Body">
+        <!-- ① 행정재산 일시사용 허가 전용 입력 (시설사용 조례·규칙 기준) -->
+        <div id="tempInputs" class="tu-box">
+          <div class="tu-head">
+            <div class="tu-title">일시사용료 산출 (시설사용 조례 별표 기준) <button type="button" class="q-btn" onclick="showLawHelp('temp_table')">?</button></div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="showLawHelp('temp_refund')">↩️ 사용료 반환기준(조례 제7조)</button>
+              <button type="button" class="btn btn-primary btn-sm" onclick="openTempStatement()">🖨️ 일시사용료 산출내역서 인쇄</button>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label>사용 목적·행사유형</label>
+              <select id="tuPurpose" onchange="recalcAll()">
+                <option>강의·연수회·협의회·동아리 활동</option>
+                <option>체육활동·각종행사(강당·체육관·운동장)</option>
+                <option>시험장소·수련활동·문화활동</option>
+                <option>공연연습·행사 준비</option>
+                <option>공공·교육·비영리 공익행사</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>사용 인원수 구간</label>
+              <select id="tuPeople" onchange="recalcAll()">
+                <option>20명 이하</option>
+                <option>30명 내외</option>
+                <option>50명 내외</option>
+                <option>100명 내외</option>
+                <option>200명 이상</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label>시설·기준단가 <button type="button" class="q-btn" onclick="showLawHelp('temp_table')">?</button></label>
+              <select id="tuFacility" onchange="recalcAll()">
+                <option value="c4">교실(4시간 이하 기준) — 5,000원</option>
+                <option value="c4o">교실(4시간 초과 기준) — 10,000원</option>
+                <option value="sem">강의실·세미나실·회의실(4시간 기준) — 20,000원</option>
+                <option value="piano">피아노·부대시설(4시간 기준) — 30,000원</option>
+                <option value="gym4">강당·체육관·운동장(4시간 이하 기준) — 50,000원</option>
+                <option value="gym4o">강당·체육관·운동장(4시간 초과 기준) — 100,000원</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>사용시간 구분</label>
+              <select id="tuHours" onchange="recalcAll()">
+                <option value="1">1시간</option>
+                <option value="2">2시간</option>
+                <option value="3">3시간</option>
+                <option value="4" selected>4시간 (1회 기준시간 이하)</option>
+                <option value="6">6시간 (4시간 초과 · 2배 기준)</option>
+                <option value="8">8시간 (4시간 초과 · 2배 기준)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>사용 일수</label>
+              <select id="tuDays" onchange="recalcAll()">
+                <option value="1">1일</option>
+                <option value="2">2일</option>
+                <option value="3">3일</option>
+                <option value="4">4일</option>
+                <option value="5">5일</option>
+                <option value="7">7일</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>사용 시작일 (선택)</label>
+              <input type="date" id="tuUseDate" onchange="recalcAll()" />
+            </div>
+            <div class="field full">
+              <label>사용 시간대 (시작 ~ 종료 시각 직접 입력) <span id="tuSlotInfo" style="font-weight:400; color:#92400e;"></span></label>
+              <div class="period-dates">
+                <input type="time" id="tuTimeStart" value="09:00" step="600" aria-label="사용 시작 시각" style="width:158px;" onchange="onTuTimeChange()" />
+                <span class="tilde">~</span>
+                <input type="time" id="tuTimeEnd" value="13:00" step="600" aria-label="사용 종료 시각" style="width:158px;" onchange="onTuTimeChange()" />
+                <div class="quick-chips" style="margin-top:0;">
+                  <button type="button" class="chip-btn" onclick="setTuTimeQuick('09:00','13:00')">오전 09~13시</button>
+                  <button type="button" class="chip-btn" onclick="setTuTimeQuick('13:00','17:00')">오후 13~17시</button>
+                  <button type="button" class="chip-btn" onclick="setTuTimeQuick('18:00','21:00')">야간 18~21시</button>
+                  <button type="button" class="chip-btn" onclick="setTuTimeQuick('09:00','17:00')">전일 09~17시</button>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label>요일·행사구분 가산/감액</label>
+              <select id="tuDayAdj" onchange="recalcAll()">
+                <option value="1">평일 본행사 (100%)</option>
+                <option value="1.2">토요일·공휴일 (+20%)</option>
+                <option value="0.5">공연연습·행사준비 (50%)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>냉난방기·부대시설 추가징수</label>
+              <select id="tuExtra" onchange="recalcAll()">
+                <option value="0">미적용 (0%)</option>
+                <option value="0.2">부대시설·냉난방 추가징수 (+20%)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>감면·면제 사유 구분 <button type="button" class="q-btn" onclick="showLawHelp('temp_exempt')">?</button></label>
+              <select id="tuExemptReason" onchange="recalcAll()">
+                <option>해당 없음</option>
+                <option>국가·지방자치단체의 공용·공공용 사용</option>
+                <option>학교 교육활동·학생·학부모 관련 행사</option>
+                <option>지역주민 평생교육·비영리 공익행사</option>
+                <option>기타 기관장이 인정하는 사유</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>일시사용료 감면율 <button type="button" class="q-btn" onclick="showLawHelp('temp_discount')">?</button></label>
+              <select id="tuDiscount" onchange="recalcAll()">
+                <option value="0">0% (감면 없음)</option>
+                <option value="20">20%</option>
+                <option value="50">50%</option>
+                <option value="80">80%</option>
+                <option value="100">100% (면제)</option>
+              </select>
+            </div>
+          </div>
+          <div class="tu-calc" id="tuCalcBox"></div>
+        </div>
+
+        <!-- ② 사용·수익허가 / ③ 대부 전용 입력 -->
+        <div id="propInputs">
         <div class="form-grid">
           <div class="field">
             <label>토지 개별공시지가 (원/㎡) <button type="button" class="q-btn" onclick="showLawHelp('land_unit')">?</button></label>
@@ -563,6 +740,10 @@
               </div>
             </div>
           </div>
+        </div>
+        </div>
+
+        <div class="form-grid" style="margin-top:11px;">
           <div class="field full">
             <label>부가가치세(10%) 부과 여부 <button type="button" class="q-btn" onclick="showLawHelp('vat_yn')">?</button></label>
             <select id="vatYn" onchange="recalcAll()">
@@ -572,7 +753,7 @@
           </div>
         </div>
 
-        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1;">
+        <div id="propChecks" style="margin-top:10px; padding-top:8px; border-top:1px dashed #cbd5e1;">
           <div class="check-row"><input type="checkbox" id="chkRenewal" onchange="recalcAll()" /> <span>기간 만료에 따른 갱신 건 여부 <button type="button" class="q-btn" onclick="showLawHelp('renewal_chk')">?</button></span></div>
           <div class="check-row"><input type="checkbox" id="chkPermStruct" onchange="recalcAll()" /> <span>영구시설물 축조(또는 원상변경) 수반 여부 <button type="button" class="q-btn" onclick="showLawHelp('perm_struct')">?</button></span></div>
         </div>
@@ -620,12 +801,13 @@
             </div>
           </div>
         </div>
+        </div><!-- /step2Body -->
       </div>
 
       <!-- [3단계] 계약·허가 방식(경쟁입찰 vs 수의)별 물흐르는 진행과정 -->
       <div class="card" id="cardStep3">
         <div class="card-header">
-          <h3 class="card-title"><span class="no green">3</span><span id="wfCardTitle">진행절차</span></h3>
+          <h3 class="card-title"><span class="no green" id="step3No">3</span><span id="wfCardTitle">진행절차</span></h3>
           <span id="wfModeBadge" class="wf-badge bid">경쟁입찰(온비드)</span>
         </div>
 
@@ -792,6 +974,27 @@
           </div>
         </div>
 
+        <div id="wfTempSection" style="display:none;">
+          <div class="wf-subbox temp-box">
+            <div class="wf-subhead">
+              <div class="wf-subtitle">
+                <span class="wf-step-pill amber">일시사용 허가 진행절차</span>
+                <button type="button" class="q-btn" onclick="showLawHelp('mode_temp')">?</button>
+              </div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary btn-sm" onclick="selectDocTemplate('main')">📝 일시사용 허가 기안문 보기</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="openTempStatement()">🖨️ 산출내역서</button>
+              </div>
+            </div>
+            <ul class="wf-checklist" id="tempChecklist">
+              <li><input type="checkbox" id="chkTemp1" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span>사용허가 신청서 접수 및 교육활동·행정목적 지장 여부 검토</span></li>
+              <li><input type="checkbox" id="chkTemp2" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span>일시사용료 산출(감면·추가징수·과세 여부 확인) 및 허가 결재</span></li>
+              <li><input type="checkbox" id="chkTemp3" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span>사용료 납부고지 및 사용 전 수납 확인 후 허가서 교부</span></li>
+              <li><input type="checkbox" id="chkTemp4" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span>사용 후 시설 원상복구·정리 상태 확인 (취소·연기 시 조례 제7조 반환 처리)</span></li>
+            </ul>
+          </div>
+        </div>
+
         <div id="wfPrivateSection" style="display:none;">
           <div class="wf-subbox priv-box">
             <div class="wf-subhead">
@@ -861,12 +1064,12 @@
         </div>
 
         <table class="summary-tbl">
-          <tr><th>토지 / 건물 평정가격</th><td class="right" id="resLandBldPair">0원 / 0원</td></tr>
-          <tr><th>총 재산평정가격</th><td class="right" id="resPropVal">0원</td></tr>
+          <tr><th id="resTh1">토지 / 건물 평정가격</th><td class="right" id="resLandBldPair">0원 / 0원</td></tr>
+          <tr><th id="resTh2">총 재산평정가격</th><td class="right" id="resPropVal">0원</td></tr>
           <tr><th>공급가액 / 부가가치세(10%)</th><td class="right" id="resSupplyVat">0원 / 0원</td></tr>
           <tr><th>연체료 가산액 (적용 연체료율)</th><td class="right late" id="resLateFee">미적용 (0원)</td></tr>
-          <tr><th>분할납부 기준 (조례 제36조)</th><td class="right" id="resInstallment">-</td></tr>
-          <tr><th>손해보험 가입 의무액</th><td class="right" id="resInsurance">0원 이상</td></tr>
+          <tr><th id="resTh5">분할납부 기준 (조례 제36조)</th><td class="right" id="resInstallment">-</td></tr>
+          <tr><th id="resTh6">손해보험 가입 의무액</th><td class="right" id="resInsurance">0원 이상</td></tr>
         </table>
 
         <div class="aux-note diff-box" id="diffBox">
@@ -877,7 +1080,7 @@
 
       <div class="card" id="cardStep4">
         <div class="card-header">
-          <h3 class="card-title"><span class="no">4</span>기안문 · 공고문 작성</h3>
+          <h3 class="card-title"><span class="no" id="step4No">4</span>기안문 · 공고문 작성</h3>
           <button type="button" class="btn btn-primary btn-sm" onclick="copyDoc()">📋 문서 전체 복사</button>
         </div>
         <div class="doc-tabs" id="docTabBar"></div>
@@ -979,14 +1182,15 @@
 <div id="areaModalBackdrop" class="modal-backdrop" onclick="onAreaBackdropClick(event)">
   <div class="modal-box" role="dialog" aria-modal="true">
     <div class="modal-header teal">
-      <h3 class="modal-title">📐 건물·부지 공용면적 비례배분 계산기</h3>
+      <h3 class="modal-title">📐 건물·부지 공용면적 비례배분 계산기 <button type="button" class="q-btn" style="background:#fff; color:#1B5442;" onclick="showLawHelp('bld_area')" title="도면이 없을 때 계산하는 방법">?</button></h3>
       <button type="button" class="modal-close-x" onclick="closeAreaModal()" aria-label="팝업 닫기">✕</button>
     </div>
     <div class="modal-body">
       <div class="aux-note area-guide">
         건물 일부 사용 시 공용면적을 전용면적 비율만큼 배분합니다.<br>
         · 건물 면적 = 전용 + 건물 공용 × (사용자 전용 ÷ 건물 전체 전용)<br>
-        · 토지 면적 = 부지 공용 × (배분 건물 면적 ÷ 건물 연면적)
+        · 토지 면적 = 부지 공용 × (배분 건물 면적 ÷ 건물 연면적)<br>
+        · <b>도면이 없을 때:</b> 건축물대장의 층별 면적에서 현장 실측한 복도·계단·화장실 등 공용면적을 빼 총 전용면적을 구하고, 사용자 전용면적도 실측해 넣습니다(간이 실측 스케치를 대장에 첨부).
       </div>
       <div class="form-grid">
         <div class="field">
@@ -1031,6 +1235,7 @@
     </div>
     <div class="modal-body">
       <dl class="gloss">
+        <dt>행정재산 일시사용 허가</dt><dd>강당·교실·운동장 등 행정재산을 몇 시간~며칠 동안 잠깐 쓰게 하는 허가입니다. 재산평정가격이 아니라 시설사용 조례의 기준단가(4시간 기준)로 사용료를 계산합니다.</dd>
         <dt>행정재산 / 일반재산</dt><dd>행정목적 재산은 행정재산(사용·수익허가 대상), 그 밖의 재산은 일반재산(대부계약 대상)입니다.</dd>
         <dt>사용·수익허가 / 대부</dt><dd>행정재산은 공법상 처분인 사용·수익허가(사용료), 일반재산은 사법상 계약인 대부(대부료)로 처리합니다.</dd>
         <dt>입찰기초금액(예정가격)</dt><dd>온비드 전자입찰 최저입찰 기준가로 부가가치세 미포함(공급가액) 금액으로 공고하며, 과세 시 부가세(10%)를 별도 징수합니다.</dd>
@@ -1040,6 +1245,22 @@
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-primary btn-sm" onclick="closeGlossary()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 일시사용료 산출내역서 (인쇄·복사) -->
+<div id="tempStmtBackdrop" class="modal-backdrop" onclick="if(event.target.id==='tempStmtBackdrop')closeTempStatement()">
+  <div class="modal-box wide" role="dialog" aria-modal="true" aria-labelledby="tempStmtTitle" style="max-width:760px;">
+    <div class="modal-header" style="background:#92400e;">
+      <h3 class="modal-title" id="tempStmtTitle">🖨️ 일시사용료 산출내역서</h3>
+      <button type="button" class="modal-close-x" onclick="closeTempStatement()" aria-label="팝업 닫기">✕</button>
+    </div>
+    <div class="modal-body" id="tempStmtBody"></div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline btn-sm" onclick="closeTempStatement()">닫기</button>
+      <button type="button" class="btn btn-outline btn-sm" onclick="copyTempStatement()">📋 내역 텍스트 복사</button>
+      <button type="button" class="btn btn-primary btn-sm" onclick="printTempStatement()">🖨️ 인쇄</button>
     </div>
   </div>
 </div>
@@ -1056,6 +1277,182 @@
   let pickerCheckedIds = new Set();
   let currentDocTemplate = 'main';
   let activeFlowStep = 1;
+  let lastSupply = 0;      // 마지막으로 계산된 공급가액 (흐름 바 '완료' 표시에 사용)
+  let lastTemp = null;     // 마지막으로 계산된 일시사용료 내역 (산출내역서에 사용)
+
+  /* 일시사용 허가: 시설·기준단가 (over = 이미 '4시간 초과 기준' 단가라서 시간 2배를 다시 곱하지 않음) */
+  const TU_FAC = {
+    c4:    { name: '교실(4시간 이하 기준)', unit: 5000, over: false },
+    c4o:   { name: '교실(4시간 초과 기준)', unit: 10000, over: true },
+    sem:   { name: '강의실·세미나실·회의실(4시간 기준)', unit: 20000, over: false },
+    piano: { name: '피아노·부대시설(4시간 기준)', unit: 30000, over: false },
+    gym4:  { name: '강당·체육관·운동장(4시간 이하 기준)', unit: 50000, over: false },
+    gym4o: { name: '강당·체육관·운동장(4시간 초과 기준)', unit: 100000, over: true }
+  };
+  function selText(id) { const el = document.getElementById(id); return el && el.selectedIndex >= 0 ? el.options[el.selectedIndex].text : ''; }
+  function floor10(n) { return Math.floor(Math.round(n) / 10) * 10; }
+
+  /* 일시사용료 계산
+     기본 산출액 = 기준단가 × 시간배수(4시간 초과 2배) × 일수 × 요일·행사구분   (10원 미만 절사)
+     감면 후 금액 = 기본 산출액 × (1 - 감면율)                                (10원 미만 절사)
+     추가징수액   = 감면 후 금액 × 추가징수율                                  (10원 미만 절사)
+     공급가액     = 감면 후 금액 + 추가징수액 */
+  function calcTempUse() {
+    const g = id => document.getElementById(id);
+    const fac = TU_FAC[g('tuFacility').value] || TU_FAC.c4;
+    const hours = parseInt(g('tuHours').value) || 4;
+    const dayCnt = parseInt(g('tuDays').value) || 1;
+    const timeMult = (hours > 4 && !fac.over) ? 2 : 1;
+    const dayAdj = parseFloat(g('tuDayAdj').value) || 1;
+    const extraRate = parseFloat(g('tuExtra').value) || 0;
+    const discPct = Math.min(100, Math.max(0, parseFloat(g('tuDiscount').value) || 0));
+    const base = floor10(fac.unit * timeMult * dayCnt * dayAdj);
+    const after = floor10(base * (1 - discPct / 100));
+    const discAmt = base - after;
+    const extra = floor10(after * extraRate);
+    const supply = after + extra;
+    const useDate = g('tuUseDate').value;
+    let dateText = '';
+    if (useDate) {
+      dateText = formatKoreanDate(useDate);
+      if (dayCnt > 1) { const e = new Date(useDate + 'T00:00:00'); e.setDate(e.getDate() + dayCnt - 1); dateText += ' ~ ' + formatKoreanDate(toInputDate(e)); }
+      dateText += ' ';
+    }
+    /* 사용 시간대: 직접 입력한 시작~종료 시각 (비워 두면 '1일 ○시간'으로 표시) */
+    const tS = g('tuTimeStart').value, tE = g('tuTimeEnd').value;
+    let slot = '', slotHours = null, slotBad = false;
+    if (tS && tE) {
+      const mins = (parseInt(tE.slice(0, 2)) * 60 + parseInt(tE.slice(3, 5))) - (parseInt(tS.slice(0, 2)) * 60 + parseInt(tS.slice(3, 5)));
+      if (mins > 0) {
+        slotHours = mins / 60;
+        const hTxt = Number.isInteger(slotHours) ? `${slotHours}시간` : `${Math.floor(slotHours)}시간 ${mins % 60}분`;
+        slot = `${tS} ~ ${tE} (${hTxt})`;
+      } else { slotBad = true; slot = `${tS} ~ ${tE}`; }
+    }
+    const periodText = `${dateText}${dayCnt}일간, ` + (dayCnt > 1 ? '매일 ' : '') + (slot ? slot : `${hours}시간 사용`);
+    let timeNote = timeMult === 2 ? '4시간 초과 → 2배' : (fac.over ? '4시간 초과 기준 단가(2배 반영됨)' : '4시간 이하 → 1배');
+    let warn = (fac.over && hours <= 4) ? '선택한 단가는 "4시간 초과 기준"인데 사용시간이 4시간 이하입니다. 시설·기준단가 또는 사용시간을 확인하세요.' : '';
+    if (slotBad) warn = '사용 시간대의 종료 시각이 시작 시각보다 빠르거나 같습니다. 시각을 다시 확인하세요.';
+    else if (slotHours !== null && (slotHours > 4) !== (hours > 4))
+      warn = `사용 시간대는 ${slotHours > 4 ? '4시간 초과' : '4시간 이하'}인데 [사용시간 구분]은 ${hours}시간으로 되어 있습니다. 둘을 맞춰 주세요.`;
+    return { fac, hours, dayCnt, timeMult, timeNote, dayAdj, dayAdjText: selText('tuDayAdj'), extraRate, extraText: selText('tuExtra'),
+      discPct, reason: selText('tuExemptReason'), base, after, discAmt, extra, supply, periodText, slot, slotHours, useDate,
+      purpose: selText('tuPurpose'), people: selText('tuPeople'), warn };
+  }
+
+  /* 사용 시간대를 바꾸면 [사용시간 구분]도 맞춰 줌 (1·2·3·4·6·8시간 중 같은 값이 있으면 그 값, 없으면 4시간 이하/초과만 맞춤) */
+  function onTuTimeChange() {
+    const tS = document.getElementById('tuTimeStart').value, tE = document.getElementById('tuTimeEnd').value;
+    if (tS && tE) {
+      const mins = (parseInt(tE.slice(0, 2)) * 60 + parseInt(tE.slice(3, 5))) - (parseInt(tS.slice(0, 2)) * 60 + parseInt(tS.slice(3, 5)));
+      if (mins > 0) {
+        const h = mins / 60, sel = document.getElementById('tuHours');
+        const up = Math.ceil(h);
+        if ([1, 2, 3, 4, 6, 8].includes(up)) sel.value = String(up);
+        else if (h > 4 && parseInt(sel.value) <= 4) sel.value = h > 6 ? '8' : '6';
+        else if (h <= 4 && parseInt(sel.value) > 4) sel.value = '4';
+      }
+    }
+    recalcAll();
+  }
+  function setTuTimeQuick(a, b) {
+    document.getElementById('tuTimeStart').value = a;
+    document.getElementById('tuTimeEnd').value = b;
+    onTuTimeChange();
+  }
+
+  /* 일시사용 허가에서는 1번(기본정보)과 2번(사용료 산출)을 한 카드로 합쳐서 보여 줌 */
+  function applyStepLayout(isTemp) {
+    const body = document.getElementById('step2Body');
+    const card1 = document.getElementById('cardStep1'), card2 = document.getElementById('cardStep2');
+    if (isTemp && body.parentNode !== card1) card1.appendChild(body);
+    if (!isTemp && body.parentNode !== card2) card2.appendChild(body);
+    body.classList.toggle('merged', isTemp);
+    card2.style.display = isTemp ? 'none' : '';
+    document.getElementById('fieldContractWay').style.display = isTemp ? 'none' : '';
+    document.getElementById('step1Title').textContent = isTemp ? '기본정보 및 일시사용료 산출' : '시작 · 재산 및 기본정보';
+    document.getElementById('step3No').textContent = isTemp ? '2' : '3';
+    document.getElementById('step4No').textContent = isTemp ? '3' : '4';
+    document.getElementById('flowPill1').textContent = isTemp ? '1. 기본정보·사용료 산출' : '1. 시작·재산선택';
+    document.getElementById('flowPill2').style.display = isTemp ? 'none' : '';
+    document.getElementById('flowArrow2').style.display = isTemp ? 'none' : '';
+    document.getElementById('flowPill3').textContent = isTemp ? '2. 진행절차' : '3. 진행절차(입찰·수의)';
+    document.getElementById('flowPill4').textContent = isTemp ? '3. 끝맺음·기안문' : '4. 끝맺음·기안문';
+    if (isTemp && activeFlowStep === 2) activeFlowStep = 1;
+  }
+
+  function applyModeCards(mode) {
+    document.getElementById('cardTemp').className = 'mode-card' + (mode === 'temp' ? ' active-temp' : '');
+    document.getElementById('cardPermit').className = 'mode-card' + (mode === 'permit' ? ' active-permit' : '');
+    document.getElementById('cardLease').className = 'mode-card' + (mode === 'lease' ? ' active-lease' : '');
+  }
+
+  /* ── 일시사용료 산출내역서 ── */
+  function tempStatementRows() {
+    const t = lastTemp;
+    if (!t) return [];
+    const won = n => formatComma(n) + '원';
+    const rows = [
+      ['사용 시설(재산명)', `${t.propName} (${t.propAddr})`],
+      ['사용자(신청인)', t.userName],
+      ['사용 목적·인원', `${t.purpose} / ${t.people}`],
+      ['사용 일시', t.periodText],
+      ['① 시설·기준단가', `${t.fac.name} ${won(t.fac.unit)}`],
+      ['② 시간 배수', `${t.timeMult}배 (${t.timeNote})`],
+      ['③ 사용 일수', `${t.dayCnt}일`],
+      ['④ 요일·행사구분', t.dayAdjText],
+      ['⑤ 기본 산출액 (①×②×③×④, 10원 미만 절사)', won(t.base), 'num'],
+      ['⑥ 감면 (사유 / 감면율 / 감면액)', `${t.reason} / ${t.discPct}% / -${won(t.discAmt)}`],
+      ['⑦ 감면 후 금액 (10원 미만 절사)', won(t.after), 'num'],
+      ['⑧ 추가징수 (냉난방기·부대시설)', `${t.extraText} → +${won(t.extra)}`],
+      ['⑨ 공급가액 (⑦+⑧)', won(t.supply), 'num'],
+      ['⑩ 부가가치세', t.hasVat ? `${won(t.vat)} (10%, 10원 미만 절사)` : '면세 (0원)', 'num']
+    ];
+    if (t.lateFee > 0) {
+      rows.push(['⑪ 납부할 사용료 (⑨+⑩)', won(t.baseTotal), 'num']);
+      rows.push(['⑫ 연체료', `${won(t.lateFee)} (체납 ${t.lateDays}일, 연 ${(t.lateRate * 100).toFixed(1)}%)`, 'num']);
+      rows.push(['총 고지액 (⑪+⑫)', formatMoneyFormal(t.grandTotal), 'total']);
+    } else {
+      rows.push(['납부할 사용료 (⑨+⑩)', formatMoneyFormal(t.baseTotal), 'total']);
+    }
+    rows.push(['납부기한', t.payDateK]);
+    return rows;
+  }
+  function openTempStatement() {
+    if (document.getElementById('assetMode').value !== 'temp') return alert('산출내역서는 [① 행정재산 일시사용 허가]를 선택했을 때 사용할 수 있습니다.');
+    recalcAll();
+    const rows = tempStatementRows();
+    const d = new Date();
+    document.getElementById('tempStmtBody').innerHTML =
+      `<div class="stmt-title">행정재산 일시사용료 산출내역서</div>
+       <table class="stmt-tbl">${rows.map(r => `<tr class="${r[2] === 'total' ? 'total' : ''}"><th>${esc(r[0])}</th><td class="${r[2] ? 'num' : ''}">${esc(r[1])}</td></tr>`).join('')}</table>
+       <div class="stmt-foot">※ 산출 근거: 시설사용 조례 별표(1회 4시간 기준, 4시간 초과 시 2배, 토요일·공휴일 20% 가산, 연습·준비 50%, 냉난방기 등 부대시설 추가징수)<br>
+       ※ 사용료 반환: 시설사용 조례 제7조 기준에 따릅니다.</div>
+       <div class="stmt-sign">${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.<br><br>${esc(savedOrgName || '○○기관(학교)장')}</div>`;
+    document.getElementById('tempStmtBackdrop').classList.add('show');
+  }
+  function closeTempStatement() { document.getElementById('tempStmtBackdrop').classList.remove('show'); }
+  function copyTempStatement() {
+    const text = '행정재산 일시사용료 산출내역서\n\n' + tempStatementRows().map(r => `${r[0]}: ${r[1]}`).join('\n')
+      + '\n\n※ 산출 근거: 시설사용 조례 별표 / 사용료 반환: 시설사용 조례 제7조';
+    const done = () => showToast('산출내역이 복사되었습니다. Ctrl+V로 붙여넣으세요.', 3000);
+    const oldWay = () => {
+      const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+      ta.remove();
+      ok ? done() : showToast('복사하지 못했습니다. 인쇄 기능을 이용해 주세요.', 4000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(oldWay);
+    else oldWay();
+  }
+  function printTempStatement() {
+    document.body.classList.add('print-stmt');
+    const clear = () => { document.body.classList.remove('print-stmt'); window.removeEventListener('afterprint', clear); };
+    window.addEventListener('afterprint', clear);
+    window.print();
+    setTimeout(clear, 1500);   // afterprint를 알려 주지 않는 브라우저 대비
+  }
 
   function esc(v) {
     return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1077,8 +1474,7 @@
 
   function updateFlowBarHighlight() {
     const hasProp = !!document.getElementById('propName').value.trim();
-    const hasFee = (parseNum(document.getElementById('landUnit').value) * (parseFloat(document.getElementById('landArea').value) || 0)
-                  + parseNum(document.getElementById('bldUnit').value) * (parseFloat(document.getElementById('bldArea').value) || 0)) > 0;
+    const hasFee = lastSupply > 0;
     const doneMap = { 1: hasProp, 2: hasFee, 3: false, 4: false };
 
     for (let i = 1; i <= 4; i++) {
@@ -1438,11 +1834,53 @@
   }
 
   const LAW_HELP_DATA = {
+    mode_temp: {
+      title: '행정재산 일시사용 허가',
+      guide: '강당·체육관·운동장·교실·회의실 등을 <b>몇 시간~며칠 동안 잠깐</b> 쓰게 할 때 선택합니다. 재산평정가격이 아니라 <b>시설사용 조례 별표의 기준단가</b>로 사용료를 계산합니다.',
+      checkDoc: '• <b>사용허가 신청서</b>의 사용 목적·일시·인원·사용 시설을 확인합니다.<br>• 교육활동·행정목적에 지장이 없는지 담당 부서 의견을 확인합니다.<br>• 감면·면제를 적용할 때는 조례상 감면 사유와 증빙을 확인합니다.',
+      basis: '1회 4시간을 기준으로 하며 4시간을 넘으면 2배, 토요일·공휴일은 20% 가산, 공연연습·행사준비는 50%를 적용합니다. 사용료는 사용 전에 미리 받는 것이 원칙이고, 취소·연기 시 조례 제7조에 따라 반환합니다.',
+      law: '「공유재산 및 물품 관리법」 제20조, 시설사용 조례(별표 사용료 기준, 제7조 사용료 반환) 및 같은 조례 시행규칙'
+    },
+    temp_table: {
+      title: '시설사용 조례 별표 기준 (일시사용료 계산법)',
+      guide: '시설·기준단가, 사용시간, 일수, 요일·행사구분, 감면율, 추가징수를 고르면 일시사용료가 자동 계산됩니다.',
+      checkDoc: '• 신청서의 <b>사용 시설·사용 시간·사용 일수·요일</b>을 확인합니다.<br>• 냉난방기·피아노 등 <b>부대시설 사용 여부</b>를 확인합니다.',
+      basis: '① 기준단가는 <b>1회 4시간 기준</b>입니다. 4시간을 넘으면 <b>2배</b>를 적용합니다(이미 "4시간 초과 기준" 단가를 고른 경우에는 다시 2배 하지 않습니다).<br>② <b>토요일·공휴일</b>은 20% 가산, <b>공연연습·행사준비</b>는 50%만 받습니다.<br>③ <b>냉난방기 등 부대시설</b>을 쓰면 20%를 추가로 받습니다.<br>④ 계산 순서: 기본 산출액(단가×시간배수×일수×요일구분) → 감면율 적용 → 추가징수액 가산 = 공급가액. 각 단계에서 10원 미만은 버리고, 과세 대상이면 부가세 10%를 더합니다.',
+      law: '시설사용 조례 별표(시설 사용료 기준) 및 같은 조례 시행규칙'
+    },
+    temp_refund: {
+      title: '사용료 반환기준 (조례 제7조)',
+      guide: '사용자가 사용을 취소·연기하거나 사용하지 못하게 된 경우, 이미 받은 사용료를 아래 기준으로 돌려줍니다.',
+      checkDoc: '• <b>취소·연기 신청서 접수일</b>이 사용 시작 전날 이전인지, 사용일 이후인지 확인합니다.<br>• 천재지변 등 <b>사용자 책임이 아닌 사유</b>인지 확인합니다.<br>• 수납 내역(징수결의·수납대장)과 실제 사용한 일수·시간을 확인합니다.',
+      basis: '① <b>사용 시작 전날까지</b> 취소·연기: 납부한 사용료에서 <b>10%를 공제</b>하고 반환합니다.<br>② <b>사용일 이후</b> 취소·연기: <b>이용한 일수·시간에 해당하는 금액과 10%를 공제</b>하고 반환합니다.<br>③ <b>천재지변 등 사용자에게 책임이 없는 사유</b>: 사용하지 못한 기간·시간에 해당하는 금액을 <b>전액 반환</b>합니다.<br>④ <b>과오납</b>(잘못 더 받은 돈): 과오납 금액에 <b>반환가산금을 더해</b> 반환합니다.',
+      law: '시설사용 조례 제7조(사용료의 반환)'
+    },
+    temp_discount: {
+      title: '일시사용료 감면율 — 어떤 경우에 몇 %인가요?',
+      guide: '감면율은 담당자가 임의로 정하는 것이 아니라 <b>시설사용 조례(감면·면제 조항)와 시행규칙에 적힌 사유</b>에 해당할 때 그 조문에 정해진 비율을 고릅니다. 해당 사유가 없으면 <b>0%</b>로 둡니다.' +
+        '<table class="rate-tbl"><tr><th>감면율</th><th>고르는 경우</th></tr>' +
+        '<tr><td><b>0%</b></td><td>조례·규칙의 감면 사유 어디에도 해당하지 않는 일반 사용</td></tr>' +
+        '<tr><td><b>100%</b><br>(면제)</td><td>조례에서 <b>면제</b>로 정한 경우.<br><span class="eg">흔한 예: 국가·지방자치단체·소속 교육기관이 행정목적이나 행사에 직접 사용하는 경우</span></td></tr>' +
+        '<tr><td><b>50%</b></td><td>조례에서 <b>100분의 50 감액</b>으로 정한 경우.<br><span class="eg">흔한 예: 국가유공자 단체·장애인 단체의 경기나 행사</span></td></tr>' +
+        '<tr><td><b>80%</b></td><td>조례에서 <b>100분의 80 감액</b>으로 정한 경우. <span class="eg">(사유는 소속 조례 조문 확인)</span></td></tr>' +
+        '<tr><td><b>20%</b></td><td>조례에서 <b>100분의 20 감액</b>으로 정한 경우. <span class="eg">(사유는 소속 조례 조문 확인)</span></td></tr></table>' +
+        '<div class="rate-note">※ "흔한 예"는 다른 시·도 교육청 규정에서 자주 보이는 사유입니다. <b>우리 기관에 적용되는 사유와 비율은 반드시 소속 조례·규칙의 감면 조항으로 확인</b>하세요.</div>',
+      checkDoc: '• <b>사용허가 신청서</b>의 신청인(기관·단체)과 사용 목적을 확인합니다.<br>• 감면 사유를 증명하는 서류(주최·주관 공문, 단체 등록증, 사업계획서 등)를 받아 둡니다.<br>• 시설사용 조례·시행규칙의 <b>감면·면제 조항</b>에서 해당 호와 감면 비율을 확인합니다.',
+      basis: '① 사유가 여러 개 겹칠 때 <b>중복해서 깎아 줄 수 있는지</b>는 조례에 정해져 있으므로 조문을 확인합니다.<br>② 감면율은 기본 산출액에 적용하고 10원 미만은 버립니다.<br>③ 감면 사유와 감면율은 기안문과 산출내역서에 적히므로, <b>[감면·면제 사유 구분]과 감면율을 함께</b> 맞춰 선택합니다.<br>④ 사유가 애매하면 0%로 계산해 두고 재산관리관(기관장) 결재 과정에서 확정합니다.',
+      law: '시설사용 조례(사용료 감면·면제 조항) 및 같은 조례 시행규칙'
+    },
+    temp_exempt: {
+      title: '일시사용료 감면·면제',
+      guide: '조례에서 정한 감면·면제 사유에 해당하면 사유를 고르고 감면율(0·20·50·80·100%)을 선택합니다.',
+      checkDoc: '• 신청서의 <b>사용 목적</b>과 감면 사유를 증명하는 서류(공문·사업계획서 등)를 확인합니다.<br>• 조례·규칙에 정해진 감면율과 일치하는지 확인합니다.',
+      basis: '감면율은 기본 산출액에 적용하고 10원 미만은 버립니다. 100%를 고르면 사용료가 면제됩니다. 감면 사유와 감면율은 기안문과 산출내역서에 함께 표시됩니다.',
+      law: '시설사용 조례(사용료 감면·면제 조항) 및 같은 조례 시행규칙'
+    },
     mode_permit: {
-      title: '행정재산 사용·수익허가 vs 일반재산 대부 차이',
-      guide: '행정재산을 행정목적 수행에 지장이 없는 범위에서 쓰게 할 때는 <b>① 사용·수익허가</b>, 일반재산을 빌려줄 때는 <b>② 대부(대부계약)</b>를 선택합니다.',
-      checkDoc: '• K-에듀파인 공유재산대장의 <b>재산종류</b>(행정재산 vs 일반재산)와 담당 부서의 사용 가능 의견을 확인합니다.',
-      basis: '사용·수익허가는 공법상 행정처분(특허·허가서 교부·사용료)이고, 대부는 사법상 계약(대부계약서 체결·대부료·연고권 배제 특약)입니다. 허가기간은 5년 이내, 대부기간은 토지·정착물 5년 이내, 그 외 1년 이내입니다.',
+      title: '사용·수익허가 vs 대부 차이 / 사용허가와 수익허가 구분',
+      guide: '행정재산을 행정목적 수행에 지장이 없는 범위에서 일정 기간 쓰게 할 때는 <b>② 사용·수익허가</b>, 일반재산을 빌려줄 때는 <b>③ 대부(대부계약)</b>를 선택합니다. 몇 시간~며칠만 쓰는 경우는 <b>① 일시사용 허가</b>입니다.',
+      checkDoc: '• K-에듀파인 공유재산대장의 <b>재산종류</b>(행정재산 vs 일반재산)와 담당 부서의 사용 가능 의견을 확인합니다.<br>• 신청서의 사용 목적이 <b>단순 사용</b>(비영리·공간 사용)인지 <b>수익 목적</b>(매점·자판기 등 영업)인지 확인합니다.',
+      basis: '<b>사용·수익허가</b>는 공법상 행정처분(허가서 교부·사용료)이고, <b>대부</b>는 사법상 계약(대부계약서 체결·대부료·연고권 배제 특약)입니다. 허가기간은 5년 이내, 대부기간은 토지·정착물 5년 이내, 그 외 1년 이내입니다.<br><b>사용허가와 수익허가의 구분:</b> 법령상 하나의 "사용·수익허가"로 처리하되, 행정목적에 지장이 없는지와 함께 영업·수익 목적 여부를 따져 부가가치세 과세 여부와 허가조건(영업 범위·시설 설치 제한 등)을 검토합니다.',
       law: '「공유재산 및 물품 관리법」 제20조·제21조·제29조·제31조, 「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제25조·제26조·제27조·제30조'
     },
     mode_lease: {
@@ -1676,6 +2114,13 @@
     document.getElementById('bidFailApplicant').value = '';
     document.getElementById('bidFailRound').value = '1';
     document.getElementById('bidReductionRate').value = '10';
+    ['tuPurpose', 'tuPeople', 'tuFacility', 'tuDays', 'tuDayAdj', 'tuExtra', 'tuExemptReason', 'tuDiscount'].forEach(id => { document.getElementById(id).selectedIndex = 0; });
+    document.getElementById('tuHours').value = '4';
+    document.getElementById('tuUseDate').value = '';
+    document.getElementById('tuTimeStart').value = '09:00';
+    document.getElementById('tuTimeEnd').value = '13:00';
+    document.getElementById('bidFailApplicant').value = '';
+    ['chkRenewal', 'chkPermStruct', 'chkDisasterHalf'].forEach(id => { document.getElementById(id).checked = false; });
     document.querySelectorAll('.wf-checklist input[type="checkbox"]').forEach(cb => { cb.checked = false; });
     updateWfChecklistStyle();
     currentDocTemplate = 'main';
@@ -1751,7 +2196,8 @@
     'bidWinnerName', 'bidWinAmount', 'bidWinDate', 'bidContractDeadline',
     'privateBasisSelect', 'privateCustomText',
     'bidFailRound', 'bidFailApplicant',
-    'bidReductionRate'
+    'bidReductionRate',
+    'tuPurpose', 'tuPeople', 'tuFacility', 'tuHours', 'tuDays', 'tuTimeStart', 'tuTimeEnd', 'tuUseDate', 'tuDayAdj', 'tuExtra', 'tuExemptReason', 'tuDiscount'
   ];
   const FORM_CHECKS = [
     'chkRenewal', 'chkPermStruct', 'chkLateFee', 'chkDisasterHalf',
@@ -1759,7 +2205,8 @@
     'chkWin1', 'chkWin2', 'chkWin3', 'chkWin4',
     'chkPriv1', 'chkPriv2', 'chkPriv3', 'chkPriv4',
     'chkClose1', 'chkClose2', 'chkClose3',
-    'chkFail1', 'chkFail2'
+    'chkFail1', 'chkFail2',
+    'chkTemp1', 'chkTemp2', 'chkTemp3', 'chkTemp4'
   ];
   let formRestoring = false;
   function saveFormDraft() {
@@ -1785,9 +2232,7 @@
       });
       FORM_CHECKS.forEach(id => { const el = document.getElementById(id); if (el && d.c) el.checked = !!d.c[id]; });
       formRestoring = false;
-      const mode = document.getElementById('assetMode').value === 'lease' ? 'lease' : 'permit';
-      document.getElementById('cardPermit').className = 'mode-card' + (mode === 'permit' ? ' active-permit' : '');
-      document.getElementById('cardLease').className = 'mode-card' + (mode === 'lease' ? ' active-lease' : '');
+      applyModeCards(document.getElementById('assetMode').value);
       updateWfChecklistStyle();
       return !!(d.v.propName || d.v.userName || parseNum(d.v.landUnit) || parseNum(d.v.bldUnit));
     } catch (e) { formRestoring = false; return false; }
@@ -1854,13 +2299,14 @@
       closeAreaModal();
       closePropertyPicker();
       closeGlossary();
+      closeTempStatement();
     }
   });
 
   function selectMode(mode) {
     document.getElementById('assetMode').value = mode;
-    document.getElementById('cardPermit').className = 'mode-card' + (mode === 'permit' ? ' active-permit' : '');
-    document.getElementById('cardLease').className = 'mode-card' + (mode === 'lease' ? ' active-lease' : '');
+    applyModeCards(mode);
+    if (mode === 'temp') currentDocTemplate = 'main';
     recalcAll();
   }
 
@@ -1918,12 +2364,13 @@
   function recalcAll() {
     const mode = document.getElementById('assetMode').value;
     const isPermit = mode === 'permit';
+    const isTemp = mode === 'temp';
 
     const propName = document.getElementById('propName').value || '[재산명 미입력]';
     const userName = document.getElementById('userName').value || '[사용자 미입력]';
     const propAddr = document.getElementById('propAddr').value || '[소재지 미입력]';
     const contractWay = document.getElementById('contractWay').value;
-    const isBid = contractWay === '경쟁입찰(온비드)';
+    const isBid = !isTemp && contractWay === '경쟁입찰(온비드)';   // 일시사용 허가는 신청 접수 방식(입찰 없음)
     const refDoc = document.getElementById('refDoc').value || '관련문서-000(2026. 00. 00.)';
     const payDateK = formatKoreanDate(document.getElementById('payDate').value);
 
@@ -1942,10 +2389,12 @@
 
     const days = Math.max(1, parseInt(document.getElementById('periodDays').value) || 365);
     const pStart = document.getElementById('periodStart').value, pEnd = document.getElementById('periodEnd').value;
-    const periodText = (pStart && pEnd) ? `${formatKoreanDate(pStart)} ~ ${formatKoreanDate(pEnd)} (${days}일간)` : `${days}일간`;
+    let periodText = (pStart && pEnd) ? `${formatKoreanDate(pStart)} ~ ${formatKoreanDate(pEnd)} (${days}일간)` : `${days}일간`;
     const annual = Math.round(propVal * appliedRate);
     const rawFee = (days === 365 || days === 366) ? annual : Math.round(annual * (days / 365));
-    const supply = Math.floor(rawFee / 10) * 10;
+    let supply = Math.floor(rawFee / 10) * 10;
+    const tu = calcTempUse();
+    if (isTemp) { supply = tu.supply; periodText = tu.periodText; }   // 일시사용 허가: 시설사용 조례 기준 금액으로 대체
     const hasVat = document.getElementById('vatYn').value === 'yes';
     const vat = hasVat ? Math.floor((supply * 0.1) / 10) * 10 : 0;
     const baseTotal = supply + vat;
@@ -1970,8 +2419,8 @@
 
     const grandTotal = baseTotal + lateFee;
 
-    document.getElementById('resPanelTitle').textContent = isPermit ? '행정재산 사용·수익허가료 산출' : '일반재산 대부료 산출';
-    document.getElementById('resBanner').className = 'result-box' + (isPermit ? '' : ' lease-theme');
+    document.getElementById('resPanelTitle').textContent = isTemp ? '행정재산 일시사용료 산출' : (isPermit ? '행정재산 사용·수익허가료 산출' : '일반재산 대부료 산출');
+    document.getElementById('resBanner').className = 'result-box' + (isTemp ? ' temp-theme' : (isPermit ? '' : ' lease-theme'));
 
     document.getElementById('resLandBldPair').textContent = `${formatComma(landVal)}원 / ${formatComma(bldVal)}원`;
     document.getElementById('resPropVal').textContent = `${formatComma(propVal)}원`;
@@ -1984,9 +2433,40 @@
     else if (supply > 5000000) inst = '연 3회 분납 가능 (500만 원 초과)';
     else if (supply > 2000000) inst = '연 2회 분납 가능 (200만 원 초과)';
     else if (supply > 1000000) inst = '6개월 2회 분납 가능 (100만 원 초과)';
+    if (isTemp) inst = '사용 전 일시 선납';
     document.getElementById('resInstallment').textContent = inst;
     document.getElementById('resInsurance').textContent = bldVal > 0 ? `${formatComma(bldVal)}원 이상 손해보험 가입` : '건물 없음';
-    const insDoc = bldVal > 0 ? ` 및 손해보험(${formatComma(bldVal)}원 이상) 가입 확인 후` : ' 후';
+    const insDoc = (!isTemp && bldVal > 0) ? ` 및 손해보험(${formatComma(bldVal)}원 이상) 가입 확인 후` : ' 후';
+
+    /* 모드별 화면 전환: 입력 영역 · 요약표 이름 */
+    applyStepLayout(isTemp);
+    document.getElementById('tempInputs').style.display = isTemp ? '' : 'none';
+    document.getElementById('propInputs').style.display = isTemp ? 'none' : '';
+    document.getElementById('propChecks').style.display = isTemp ? 'none' : '';
+    document.getElementById('btnAreaCalc').style.display = isTemp ? 'none' : '';
+    const cw = document.getElementById('contractWay');
+    cw.disabled = isTemp;
+    cw.title = isTemp ? '일시사용 허가는 신청을 받아 허가하는 방식이라 입찰·수의 선택이 필요 없습니다.' : '';
+    document.getElementById('resTh1').textContent = isTemp ? '기준단가 × 시간배수 × 일수' : '토지 / 건물 평정가격';
+    document.getElementById('resTh2').textContent = isTemp ? '기본 산출액 (요일·행사구분 반영)' : '총 재산평정가격';
+    document.getElementById('resTh5').textContent = isTemp ? '감면액 / 추가징수액' : '분할납부 기준 (조례 제36조)';
+    document.getElementById('resTh6').textContent = isTemp ? '사용 일시' : '손해보험 가입 의무액';
+    if (isTemp) {
+      document.getElementById('resLandBldPair').textContent = `${formatComma(tu.fac.unit)}원 × ${tu.timeMult}배 × ${tu.dayCnt}일`;
+      document.getElementById('resPropVal').textContent = `${formatComma(tu.base)}원`;
+      document.getElementById('resInstallment').textContent = `-${formatComma(tu.discAmt)}원 (${tu.discPct}%) / +${formatComma(tu.extra)}원`;
+      document.getElementById('resInsurance').textContent = tu.periodText;
+    }
+    document.getElementById('tuSlotInfo').textContent = tu.slot ? `→ ${tu.slot}` : '';
+    document.getElementById('tuCalcBox').innerHTML =
+      `① 기본 산출액 = ${formatComma(tu.fac.unit)}원 × ${tu.timeMult}배(${tu.timeNote}) × ${tu.dayCnt}일 × ${tu.dayAdjText} = <b>${formatComma(tu.base)}원</b><br>` +
+      `② 감면 후 금액 = 기본 산출액 − 감면 ${tu.discPct}%(${formatComma(tu.discAmt)}원) = <b>${formatComma(tu.after)}원</b><br>` +
+      `③ 추가징수액 = 감면 후 금액 × ${Math.round(tu.extraRate * 100)}% = <b>${formatComma(tu.extra)}원</b><br>` +
+      `④ 공급가액 = ② + ③ = <b>${formatComma(tu.supply)}원</b> ${hasVat ? `· 부가세 <b>${formatComma(vat)}원</b>` : '· 면세'} → 납부할 사용료 <b>${formatComma(baseTotal)}원</b>` +
+      (tu.warn ? `<br><span class="warn">⚠️ ${tu.warn}</span>` : '');
+    lastSupply = supply;
+    lastTemp = Object.assign({}, tu, { propName, userName, propAddr, payDateK, hasVat, vat, baseTotal, lateFee, lateDays,
+      lateRate: effectiveLateRate, grandTotal });
 
     const wfBadge = document.getElementById('wfModeBadge');
     const bidSec = document.getElementById('wfBidSection');
@@ -2055,6 +2535,14 @@
       privSec.style.display = 'block';
       if (currentDocTemplate !== 'main') currentDocTemplate = 'main';
     }
+    const tempSec = document.getElementById('wfTempSection');
+    tempSec.style.display = isTemp ? 'block' : 'none';
+    if (isTemp) {
+      privSec.style.display = 'none';
+      wfBadge.className = 'wf-badge temp';
+      wfBadge.textContent = '일시사용 허가(신청 접수)';
+      document.getElementById('wfCardTitle').textContent = '일시사용 허가 진행절차';
+    }
 
     const privBasisSel = document.getElementById('privateBasisSelect').value;
     document.getElementById('privateCustomBox').style.display = privBasisSel === '직접 입력' ? 'flex' : 'none';
@@ -2066,13 +2554,17 @@
     const isPermStruct = document.getElementById('chkPermStruct').checked;
 
     let diffHtml = '';
-    if (isPermit) {
+    if (isTemp) {
+      diffHtml += `• 일시사용 허가: 시설사용 조례 별표 기준(4시간 기준·초과 2배, 토·공휴일 +20%, 연습·준비 50%)<br>`;
+      diffHtml += `• 사용료는 사용 전 선납, 취소·연기 시 조례 제7조 반환기준 적용<br>`;
+      if (tu.discPct > 0) diffHtml += `• 감면 ${tu.discPct}% 적용: 감면 사유(${esc(tu.reason)}) 증빙 확인<br>`;
+    } else if (isPermit) {
       diffHtml += `• 공법상 행정처분(사용허가서 교부) · ${isRenew ? '갱신 건(갱신 한도 확인)' : '신규 허가 건'}<br>`;
     } else {
       diffHtml += `• 사법상 계약(연고권 배제·조례 제26조, 기간 제한·조례 제27조) · ${isRenew ? '갱신 건' : '신규 대부 건'}<br>`;
     }
-    if (isPermStruct) diffHtml += `• 영구시설물 축조·원상변경 승인 절차 확인(조례 제5조)<br>`;
-    if (smeVal !== 'none') diffHtml += `• 2026년 소상공인 감면: 공유재산심의회 의결 및 확인서 징구<br>`;
+    if (isPermStruct && !isTemp) diffHtml += `• 영구시설물 축조·원상변경 승인 절차 확인(조례 제5조)<br>`;
+    if (smeVal !== 'none' && !isTemp) diffHtml += `• 2026년 소상공인 감면: 공유재산심의회 의결 및 확인서 징구<br>`;
     if (lateChecked && lateDays > 0) diffHtml += `• 연체료 ${formatMoneyFormal(lateFee)} 가산(시행령 제80조)`;
     document.getElementById('diffBoxBody').innerHTML = diffHtml;
 
@@ -2088,7 +2580,7 @@
       `;
     } else {
       tabBar.innerHTML = `
-        <button type="button" class="doc-tab-btn active" onclick="selectDocTemplate('main')">① 수의 ${isPermit ? '사용·수익허가' : '대부계약'} 기안문</button>
+        <button type="button" class="doc-tab-btn active" onclick="selectDocTemplate('main')">① ${isTemp ? '일시사용 허가' : (isPermit ? '수의 사용·수익허가' : '수의 대부계약')} 기안문</button>
       `;
     }
 
@@ -2100,8 +2592,8 @@
     const openInfoText = document.getElementById('bidOpenInfo').value.trim() || '2026. 00. 00.(요일) 10:00 행정실 입찰집행관 PC';
     const qualText = document.getElementById('bidQualSummary').value.trim() || '공고일 현재 관련 업종 사업자등록을 필하고 결격사유가 없는 자';
     const orgHeaderName = savedOrgName || '○○기관(학교)장';
-    const actWord = isPermit ? '사용·수익허가' : '대부';
-    const feeWord = isPermit ? '사용료' : '대부료';
+    const actWord = isTemp ? '일시사용 허가' : (isPermit ? '사용·수익허가' : '대부');
+    const feeWord = isPermit || isTemp ? '사용료' : '대부료';
 
     if (isBid && currentDocTemplate === 'bid_notice') {
       document.getElementById('docHintText').innerHTML = '온비드(ONBID) 전자입찰 공고 등록용 초안입니다. 일시와 특이조건만 확인한 뒤 복사해 사용하세요.';
@@ -2127,6 +2619,7 @@
         `2026. 11. 23.\n\n` +
         `${orgHeaderName}`;
     } else if (isBid && currentDocTemplate === 'bid_result') {
+      document.getElementById('docHintText').innerHTML = '개찰 후 1순위 낙찰자 결정 및 허가(계약) 추진을 위한 내부결재 기안문입니다.';
       const displayWinner = winnerName || '[1순위 낙찰자 상호·성명 입력]';
       document.getElementById('docOutput').value =
         `${propName} 전자입찰 개찰 결과 및 ${actWord} 결정 보고\n\n` +
@@ -2218,6 +2711,29 @@
         `  마. 추진 일정: 입찰서 제출(${submitPeriodText}), 개찰(${openInfoText})\n\n` +
         `붙임  1. 대부(사용)료 산정조서 1부.\n` +
         `      2. 공유재산 ${actWord} 전자입찰 공고문(안) 1부.  끝.`;
+    } else if (isTemp) {
+      const tLate = (lateChecked && lateDays > 0)
+        ? `\n    6) 연체료 가산액: ${formatMoneyFormal(lateFee)} (체납 ${lateDays}일, 연 ${(effectiveLateRate * 100).toFixed(1)}%, 총 고지액 ${formatMoneyFormal(grandTotal)})`
+        : '';
+      document.getElementById('docHintText').innerHTML = '행정재산 일시사용 허가 내부결재 기안문입니다. <b>[문서 전체 복사]</b>를 누른 뒤 K-에듀파인에 붙여넣으세요.';
+      document.getElementById('docOutput').value =
+        `${propName} 행정재산 일시사용 허가 및 사용료 ${lateChecked && lateDays > 0 ? '연체료 가산 ' : ''}결정 보고\n\n` +
+        `1. 관련: ${refDoc}「${propName} 일시사용 허가 신청」\n` +
+        `2. 「공유재산 및 물품 관리법」 제20조 및 시설사용 조례에 따라 행정재산 일시사용 허가 및 사용료를 다음과 같이 결정하고자 합니다.\n` +
+        `  가. 사용 시설: ${propName} (${propAddr})\n` +
+        `  나. 사용자: ${userName}\n` +
+        `  다. 사용 목적 및 인원: ${tu.purpose} / ${tu.people}\n` +
+        `  라. 사용 일시: ${tu.periodText}\n` +
+        `  마. 사용료 산출 내역\n` +
+        `    1) 시설·기준단가: ${tu.fac.name} 금${formatComma(tu.fac.unit)}원\n` +
+        `    2) 기본 산출액: ${formatMoneyFormal(tu.base)} (기준단가 × ${tu.timeMult}배[${tu.timeNote}] × ${tu.dayCnt}일 × ${tu.dayAdjText})\n` +
+        `    3) 감면: ${tu.reason}, 감면율 ${tu.discPct}% (감면액 금${formatComma(tu.discAmt)}원, 감면 후 금${formatComma(tu.after)}원)\n` +
+        `    4) 추가징수: ${tu.extraText} (금${formatComma(tu.extra)}원)\n` +
+        `    5) 납부할 사용료: ${formatMoneyFormal(baseTotal)} (공급가액 금${formatComma(supply)}원, 부가가치세 금${formatComma(vat)}원)${tLate}\n` +
+        `  바. 납부기한 및 행정사항: ${payDateK}까지 지정 세입계좌 선납(사용 전 납부), 수납 확인 후 일시사용 허가서 교부\n` +
+        `  사. 사용료 반환: 사용 취소·연기 시 시설사용 조례 제7조 기준에 따라 반환\n\n` +
+        `붙임  1. 행정재산 일시사용료 산출내역서 1부.\n` +
+        `      2. 행정재산 일시사용 허가서(안) 1부.  끝.`;
     } else if (isPermit) {
       document.getElementById('docHintText').innerHTML = '수의 사용·수익허가 내부결재 기안문입니다. <b>[문서 전체 복사]</b>를 누른 뒤 K-에듀파인에 붙여넣으세요.';
       document.getElementById('docOutput').value =
@@ -2236,6 +2752,7 @@
         `붙임  1. 대부(사용)료 산정조서 1부.\n` +
         `      2. 공유재산 사용·수익허가서(안) 1부.  끝.`;
     } else {
+      document.getElementById('docHintText').innerHTML = '수의 대부계약 내부결재 기안문입니다. <b>[문서 전체 복사]</b>를 누른 뒤 K-에듀파인에 붙여넣으세요.';
       document.getElementById('docOutput').value =
         `${propName} 일반재산 대부계약 체결 및 대부료 ${lateChecked && lateDays > 0 ? '연체료 가산 ' : ''}결정 보고\n\n` +
         `1. 관련: ${refDoc}「${propName} 대부 신청」\n` +
