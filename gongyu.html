@@ -95,6 +95,7 @@
     .card-title { margin: 0; font-size: 15.5px; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; }
     .card-title .no { background: var(--navy); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
     .card-title .no.won { background: var(--gold); color: #1e293b; }
+    .card-title .no.green { background: var(--green); color: #fff; }
 
     .org-status-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--green-soft); border: 1px solid #b7d3c6; color: var(--green); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
     .org-status-pill.empty { background: #fffbeb; border-color: #fde68a; color: #92400e; }
@@ -207,6 +208,28 @@
     .mode-card.active-lease .m-title { color: var(--green); }
     .mode-card .m-sub { font-size: 11.5px; color: var(--gray-600); margin-top: 2px; }
 
+    /* ───────── 계약·허가 방식 분기 워크플로우 전용 스타일 ───────── */
+    .wf-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 800; }
+    .wf-badge.bid { background: #dbeafe; color: #1e3a8a; border: 1px solid #93c5fd; }
+    .wf-badge.priv { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .wf-subbox { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 9px; padding: 12px 14px; margin-bottom: 12px; }
+    .wf-subbox.bid-step1 { border-left: 4px solid var(--navy); background: #f8faff; }
+    .wf-subbox.bid-step2 { border-left: 4px solid var(--green); background: #f4faf7; }
+    .wf-subbox.priv-box { border-left: 4px solid #d97706; background: #fffdf5; }
+    .wf-subhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .wf-subtitle { font-size: 13.5px; font-weight: 800; color: var(--gray-900); display: flex; align-items: center; gap: 6px; }
+    .wf-step-pill { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; color: #fff; background: var(--navy); }
+    .wf-step-pill.green { background: var(--green); }
+    .wf-step-pill.amber { background: #b45309; }
+    .wf-checklist { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+    .wf-checklist li { display: flex; align-items: flex-start; gap: 8px; background: #fff; border: 1px solid var(--gray-200); border-radius: 7px; padding: 7px 10px; font-size: 12.5px; line-height: 1.5; }
+    .wf-checklist li input[type="checkbox"] { width: 15px; height: 15px; margin-top: 2px; flex-shrink: 0; accent-color: var(--navy); cursor: pointer; }
+    .wf-checklist li.done-step { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+    .wf-price-banner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; background: #fff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 9px 12px; margin-bottom: 10px; }
+    .wf-price-banner .p-val { font-size: 16px; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; }
+    .wf-win-summary { background: #fff; border: 1px solid #b7d3c6; border-radius: 8px; padding: 9px 12px; margin-top: 8px; font-size: 12.5px; line-height: 1.65; color: var(--gray-800); }
+    .wf-win-summary b { color: var(--green); }
+
     /* ───────── 결과 ───────── */
     .result-box { background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff; border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; }
     .result-box.lease-theme { background: linear-gradient(135deg, #123D30, #1B5442 60%, #2a7a60); }
@@ -224,6 +247,9 @@
     table.summary-tbl td.right { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
     table.summary-tbl td.late { color: #b91c1c; }
 
+    .doc-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .doc-tab-btn { padding: 5px 11px; border: 1px solid var(--gray-300); background: var(--gray-50); color: var(--gray-700); border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .doc-tab-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
     .doc-box { width: 100%; min-height: 340px; font-family: '맑은 고딕', 'Malgun Gothic', monospace; font-size: 13px; line-height: 1.65; padding: 12px 13px; border: 1px solid var(--gray-300); border-radius: 8px; white-space: pre-wrap; margin-top: 4px; resize: vertical; background: #fcfdff; }
     .check-row { display: flex; align-items: center; gap: 7px; margin: 5px 0; font-size: 12.5px; color: var(--gray-700); }
     .check-row input[type="checkbox"], .late-box-title input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--navy); }
@@ -307,7 +333,7 @@
     </script>
     <div>
       <h1>🏛️ 공유재산 사용·수익허가 및 대부 관리</h1>
-      <div class="sub">K-에듀파인 재산엑셀(토지·건물) 불러오기 · 사용료·대부료·연체료 산출 · 기안문 자동 작성 · 입력 내용은 이 PC 브라우저에만 저장됩니다</div>
+      <div class="sub">K-에듀파인 재산엑셀(토지·건물) 불러오기 · 사용료·대부료·연체료 산출 · 경쟁입찰/수의 진행절차 · 기안문 자동 작성</div>
     </div>
   </div>
   <div class="nav">
@@ -329,16 +355,16 @@
     <div class="guide-body">
       <div class="steps">
         <button type="button" class="step-item" id="step1" onclick="goStep(1)"><span class="n">1</span><span><b>재산 고르기</b>재산엑셀을 불러와 빌려줄 토지·건물에 체크</span></button>
-        <button type="button" class="step-item" id="step2" onclick="goStep(2)"><span class="n">2</span><span><b>상대방 적기</b>사용자 이름, 공문번호, 납부기한 입력</span></button>
-        <button type="button" class="step-item" id="step3" onclick="goStep(3)"><span class="n">3</span><span><b>금액 계산하기</b>단가·면적·요율·기간 확인 → 금액 자동 계산</span></button>
-        <button type="button" class="step-item" id="step4" onclick="goStep(4)"><span class="n">4</span><span><b>기안문 복사하기</b>점검표 확인 후 K-에듀파인에 붙여넣기</span></button>
+        <button type="button" class="step-item" id="step2" onclick="goStep(2)"><span class="n">2</span><span><b>방식·상대방 선택</b>경쟁입찰(온비드) 또는 수의 방식 선택 및 정보 입력</span></button>
+        <button type="button" class="step-item" id="step3" onclick="goStep(3)"><span class="n">3</span><span><b>금액·진행과정 확인</b>기초금액·공고문(또는 수의절차) 및 1순위 낙찰 처리</span></button>
+        <button type="button" class="step-item" id="step4" onclick="goStep(4)"><span class="n">4</span><span><b>기안문·공고문 복사</b>점검표 확인 후 K-에듀파인·온비드에 붙여넣기</span></button>
       </div>
       <div class="guide-tip">💡 항목 이름 옆의 <span class="q-btn">?</span> 를 누르면 <b>무엇을 넣는지, 어디서 확인하는지, 근거 법령</b>이 나옵니다. 입력한 내용은 자동으로 보관되므로 창을 닫아도 남아 있습니다.</div>
     </div>
   </div>
 
   <div class="workspace-grid">
-    <!-- 좌측: 제도 선택 + 기본정보 + 평정·요율·연체료 입력 -->
+    <!-- 좌측: 제도 선택 + 기본정보 + 평정·요율·연체료 입력 + 계약·허가 방식별 진행과정 -->
     <div>
       <div class="card">
         <div class="card-header">
@@ -378,9 +404,16 @@
           </div>
 
           <div class="field">
-            <label>사용자(대부자) 성명·상호 <button type="button" class="q-btn" onclick="showLawHelp('user_name')">?</button></label>
+            <label>계약·허가 방식 (선택 시 아래 3번 진행절차 자동 전환) <button type="button" class="q-btn" onclick="showLawHelp('contract_way')">?</button></label>
+            <select id="contractWay" onchange="recalcAll()">
+              <option value="경쟁입찰(온비드)">경쟁입찰 (온비드 전자입찰)</option>
+              <option value="수의(허가·대부)">수의 (법령·조례 수의 사유 해당)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label id="userNameLabel">사용자(대부자) 성명·상호 <button type="button" class="q-btn" onclick="showLawHelp('user_name')">?</button></label>
             <div class="input-row">
-              <input type="text" id="userName" placeholder="예: ○○매점 대표 홍길동" oninput="recalcAll()" />
+              <input type="text" id="userName" placeholder="입찰 공고 전이면 비워두고, 낙찰(수의) 시 입력" oninput="recalcAll()" />
               <button type="button" class="clear-x" title="지우기" onclick="clearField('userName')">×</button>
             </div>
           </div>
@@ -390,13 +423,6 @@
               <input type="text" id="propAddr" placeholder="재산 선택 시 자동 입력 (직접 입력 가능)" oninput="recalcAll()" />
               <button type="button" class="clear-x" title="지우기" onclick="clearField('propAddr')">×</button>
             </div>
-          </div>
-          <div class="field">
-            <label>계약·허가 방식 <button type="button" class="q-btn" onclick="showLawHelp('contract_way')">?</button></label>
-            <select id="contractWay" onchange="recalcAll()">
-              <option value="경쟁입찰(온비드)">경쟁입찰 (온비드 전자입찰)</option>
-              <option value="수의(허가·대부)">수의 (법령·조례 수의 사유 해당)</option>
-            </select>
           </div>
           <div class="field">
             <label>관련 공문번호 <button type="button" class="q-btn" onclick="showLawHelp('ref_doc')">?</button></label>
@@ -547,9 +573,165 @@
           </div>
         </div>
       </div>
+
+      <!-- ★ [신규] 3. 계약·허가 방식(경쟁입찰 vs 수의)별 단계별 업무 진행과정 카드 ★ -->
+      <div class="card" id="workflowCard">
+        <div class="card-header">
+          <h3 class="card-title"><span class="no green">3</span><span id="wfCardTitle">계약·허가 방식별 단계별 진행과정</span></h3>
+          <span id="wfModeBadge" class="wf-badge bid">경쟁입찰(온비드) 진행과정</span>
+        </div>
+
+        <!-- [분기 A] 경쟁입찰(온비드) 선택 시: (1단계) 기초금액·입찰공고 → (2단계) 입찰 종료·1순위자 선정 후 진행과정 -->
+        <div id="wfBidSection">
+          <!-- 1단계: 입찰기초금액 산정 및 온비드 공고 -->
+          <div class="wf-subbox bid-step1">
+            <div class="wf-subhead">
+              <div class="wf-subtitle">
+                <span class="wf-step-pill">입찰 1단계</span>
+                <span>입찰기초금액(예정가격) 산정 및 온비드 공고</span>
+                <button type="button" class="q-btn" onclick="showLawHelp('bid_base_price')">?</button>
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" onclick="selectDocTemplate('bid_notice')">📢 온비드 입찰공고문 보기·복사</button>
+            </div>
+
+            <div class="wf-price-banner">
+              <div>
+                <div style="font-size:11.5px; color:#475569; font-weight:700;">온비드 공고 예정가격(최저입찰가 · 부가가치세 별도 기준)</div>
+                <div class="p-val" id="wfBidBaseDisplay">금0원 (부가가치세 별도)</div>
+              </div>
+              <div style="text-align:right; font-size:12px; color:#334155;">
+                <div>입찰보증금(5/100 이상): <b id="wfBidDeposit">0원</b></div>
+                <div style="font-size:11px; color:#64748b;">※ 낙찰 후 낙찰금액의 10% 부가세 별도 징수(과세 시)</div>
+              </div>
+            </div>
+
+            <div class="form-grid" style="margin-bottom:8px;">
+              <div class="field">
+                <label>입찰서 제출(등록) 기간 <button type="button" class="q-btn" onclick="showLawHelp('bid_schedule')">?</button></label>
+                <div class="input-row">
+                  <input type="text" id="bidSubmitPeriod" placeholder="예: 2026. 11. 25.(수) 10:00 ~ 2026. 12. 2.(수) 16:00" oninput="recalcAll()" />
+                  <button type="button" class="clear-x" title="지우기" onclick="clearField('bidSubmitPeriod')">×</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>개찰 일시 및 집행장소</label>
+                <div class="input-row">
+                  <input type="text" id="bidOpenInfo" placeholder="예: 2026. 12. 3.(목) 10:00 본관 행정실 입찰집행관 PC" oninput="recalcAll()" />
+                  <button type="button" class="clear-x" title="지우기" onclick="clearField('bidOpenInfo')">×</button>
+                </div>
+              </div>
+              <div class="field full">
+                <label>입찰참가자격 요건 요약 (공고문 반영)</label>
+                <div class="input-row">
+                  <input type="text" id="bidQualSummary" value="공고일 현재 해당 지역에 주된 영업소(또는 주소)를 두고 직영이 가능하며 「지방계약법」상 결격사유가 없는 자" oninput="recalcAll()" />
+                  <button type="button" class="clear-x" title="지우기" onclick="clearField('bidQualSummary')">×</button>
+                </div>
+              </div>
+            </div>
+
+            <ul class="wf-checklist" id="bidPreChecklist">
+              <li><input type="checkbox" id="chkBid1" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span><b>① 추진계획 및 예정가격 결정:</b> 위 산출된 공급가액(<b id="chkBidBaseAmt">0원</b>, 부가세 별도)으로 예정가격을 확정하고 내부결재를 득함</span></li>
+              <li><input type="checkbox" id="chkBid2" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span><b>② 온비드 전자입찰 공고 게시:</b> 공고일로부터 입찰서 제출 마감일 전일까지 <b>7일 이상</b>(긴급·재공고 5일) 공고 및 입찰보증금(5% 이상) 설정</span></li>
+              <li><input type="checkbox" id="chkBid3" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span><b>③ 개찰 집행 및 1순위자 확인:</b> 온비드 집행관 PC에서 개찰하여 예정가격 이상 <b>최고가 입찰자(1순위)</b> 확인 (유찰 시 재공고 또는 2회 유찰 후 수의 검토)</span></li>
+            </ul>
+          </div>
+
+          <!-- 2단계: 입찰 종료 후 1순위자 선정 시 업무처리 진행과정 -->
+          <div class="wf-subbox bid-step2" style="margin-bottom:0;">
+            <div class="wf-subhead">
+              <div class="wf-subtitle">
+                <span class="wf-step-pill green">입찰 2단계 · 낙찰 후</span>
+                <span>입찰 종료 후 1순위자 선정 시 업무처리 진행과정</span>
+                <button type="button" class="q-btn" onclick="showLawHelp('bid_winner_flow')">?</button>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="selectDocTemplate('bid_result')">🏆 낙찰결과·허가(계약) 기안문 보기</button>
+            </div>
+
+            <div class="form-grid" style="margin-bottom:8px;">
+              <div class="field">
+                <label>1순위 낙찰자(상호·성명)</label>
+                <div class="input-row">
+                  <input type="text" id="bidWinnerName" placeholder="개찰 후 1순위 낙찰자 상호·성명 입력" oninput="syncWinnerToUser(); recalcAll()" />
+                  <button type="button" class="clear-x" title="지우기" onclick="clearField('bidWinnerName')">×</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>1순위 낙찰금액 (원 · 부가세 별도)</label>
+                <div class="input-row">
+                  <input type="text" class="num-input" id="bidWinAmount" value="0" oninput="formatNumInput(this); recalcAll()" />
+                  <button type="button" class="clear-x" title="0으로 초기화" onclick="clearNumField('bidWinAmount')">×</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>개찰일(낙찰일)</label>
+                <input type="date" id="bidWinDate" onchange="recalcAll()" />
+              </div>
+              <div class="field">
+                <label>계약·허가 체결 및 납부 기한</label>
+                <div class="input-row">
+                  <input type="text" id="bidContractDeadline" value="낙찰일로부터 7일 이내 (사용·대부 개시 전 선납)" oninput="recalcAll()" />
+                  <button type="button" class="clear-x" title="지우기" onclick="clearField('bidContractDeadline')">×</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="wfWinSummaryBox" class="wf-win-summary">
+              개찰 후 위 칸에 <b>1순위 낙찰자</b>와 <b>낙찰금액(공급가액)</b>을 입력하면 낙찰률, 부가가치세(10%), 최종 고지금액이 자동 산출됩니다.
+            </div>
+
+            <ul class="wf-checklist" id="bidPostChecklist">
+              <li><input type="checkbox" id="chkWin1" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span><b>① 1순위자 자격·결격사유 검증:</b> 사업자등록증·영업신고(식품위생법 등)·지방세/국세 완납·입찰참가자격 충족 여부 확인 (부적격 시 낙찰 무효 및 입찰보증금 귀속 검토)</span></li>
+              <li><input type="checkbox" id="chkWin2" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span><b>② 낙찰결과 보고 및 세입 징수결의:</b> 낙찰금액(공급가액)은 세입예산과목으로 징수결의하고, 부가가치세(10%)는 세입세출외현금(부가세 예수금)으로 별도 고지</span></li>
+              <li><input type="checkbox" id="chkWin3" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span><b>③ 선납 수납 및 손해보험 증서 징구:</b> 낙찰금 전액 수납 확인 및 건물 평정가격 이상 손해보험 가입증서(계약보증금/이행보증 포함) 제출 확인</span></li>
+              <li><input type="checkbox" id="chkWin4" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span><b>④ 사용허가서 교부(또는 대부계약 체결) 및 공부 정리:</b> 허가서(계약서) 교부, 온비드 입찰결과 마무리, K-에듀파인 공유재산대장 사용·대부 이력 등록</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- [분기 B] 수의(허가·대부) 선택 시: 수의 사유 점검 및 단계별 진행과정 -->
+        <div id="wfPrivateSection" style="display:none;">
+          <div class="wf-subbox priv-box" style="margin-bottom:0;">
+            <div class="wf-subhead">
+              <div class="wf-subtitle">
+                <span class="wf-step-pill amber">수의 진행절차</span>
+                <span>수의(허가·대부) 법령 근거 선택 및 업무 진행과정</span>
+                <button type="button" class="q-btn" onclick="showLawHelp('private_flow')">?</button>
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" onclick="selectDocTemplate('main')">📝 수의 허가·대부 기안문 보기</button>
+            </div>
+
+            <div class="form-grid" style="margin-bottom:8px;">
+              <div class="field full">
+                <label>수의(허가·대부) 법령·조례 근거 사유 선택 (기안문 본문 자동 반영)</label>
+                <select id="privateBasisSelect" onchange="recalcAll()">
+                  <option value="공공목적·국가·지자체 직접 사용 (공유재산법 시행령 제13조·제29조)">① 국가·다른 지방자치단체가 공용·공공용으로 직접 사용하는 경우</option>
+                  <option value="재산평정가격 1천만 원 이하 소규모 재산 (시행령 제13조제3항제6호·제29조제1항제12호)">② 재산평정가격이 1천만 원 이하인 재산의 사용허가·대부</option>
+                  <option value="2회 이상 일반입찰 유찰 (시행령 제13조제3항제7호·제29조제1항제6호)">③ 2회에 걸쳐 유효한 일반입찰이 성립되지 아니한 경우</option>
+                  <option value="청사 구내재산 후생목적·특정시설 등 법령상 수의 사유 (시행령 제13조·제29조·조례 제40조)">④ 구내 후생목적·지역경제 활성화·법령상 우선 허가(대부) 대상인 경우</option>
+                  <option value="직접 입력">⑤ 기타 법령·조례 수의 사유 (아래 칸에 직접 입력)</option>
+                </select>
+              </div>
+              <div class="field full" id="privateCustomBox" style="display:none;">
+                <label>기타 수의 근거 조항·사유 직접 입력</label>
+                <div class="input-row">
+                  <input type="text" id="privateCustomText" placeholder="예: 「공유재산 및 물품 관리법 시행령」 제13조제3항제○호에 따른 수의허가" oninput="recalcAll()" />
+                  <button type="button" class="clear-x" title="지우기" onclick="clearField('privateCustomText')">×</button>
+                </div>
+              </div>
+            </div>
+
+            <ul class="wf-checklist" id="privChecklist">
+              <li><input type="checkbox" id="chkPriv1" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span><b>① 신청서 접수 및 수의 사유 적정성 검토:</b> 신청서·사업계획서 접수 후 위 법령·조례상 수의 요건 충족 여부 검토</span></li>
+              <li><input type="checkbox" id="chkPriv2" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span><b>② 사용료·대부료 산출 및 감면·과세 확인:</b> 재산평정가격 산정조서 작성, 소상공인 감면 해당 시 심의회 의결·확인서 징구</span></li>
+              <li><input type="checkbox" id="chkPriv3" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span><b>③ 내부결재 및 납부고지(선납 원칙):</b> 허가·대부 결정 내부결재 후 고지서 발부(공급가액 세입징수결의 / 부가세 예수금 구분)</span></li>
+              <li><input type="checkbox" id="chkPriv4" onchange="saveFormDraft(); updateWfChecklistStyle()" /><span><b>④ 수납·손해보험 확인 후 허가서(계약서) 교부:</b> 전액 수납 및 손해보험 증서 확인 후 사용허가서 교부(또는 대부계약 체결)·대장 정리</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- 우측: 실시간 산출 요약 + 제도 점검 + K-에듀파인 기안문 -->
+    <!-- 우측: 실시간 산출 요약 + 제도 점검 + 기안문/공고문 생성기 -->
     <div>
       <div class="card">
         <div class="card-header">
@@ -591,12 +773,13 @@
         <ul class="chk-list" id="chkList"></ul>
       </div>
 
-      <div class="card">
+      <div class="card" id="docCard">
         <div class="card-header">
-          <h3 class="card-title"><span class="no">3</span>K-에듀파인 기안문 (실시간 연동)</h3>
-          <button type="button" class="btn btn-primary btn-sm" onclick="copyDoc()">📋 기안문 전체 복사</button>
+          <h3 class="card-title"><span class="no">4</span>K-에듀파인 기안문 · 입찰공고문</h3>
+          <button type="button" class="btn btn-primary btn-sm" onclick="copyDoc()">📋 문서 전체 복사</button>
         </div>
-        <p class="doc-hint">왼쪽에 입력하면 아래 글이 자동으로 바뀝니다. <b>[기안문 전체 복사]</b>를 누른 뒤 K-에듀파인 기안문 본문에 <b>Ctrl+V</b>로 붙여넣으세요. <b>[ ] 대괄호</b>로 표시된 곳은 아직 입력하지 않은 항목입니다. 이 칸에서 직접 고친 글은 왼쪽 값을 바꾸면 다시 덮어씌워집니다.</p>
+        <div class="doc-tabs" id="docTabBar"></div>
+        <p class="doc-hint" id="docHintText">왼쪽에 입력하면 아래 글이 자동으로 바뀝니다. <b>[문서 전체 복사]</b>를 누른 뒤 K-에듀파인(또는 온비드)에 <b>Ctrl+V</b>로 붙여넣으세요.</p>
         <textarea id="docOutput" class="doc-box"></textarea>
       </div>
     </div>
@@ -611,7 +794,6 @@
       <button type="button" class="modal-close-x" onclick="closePropertyPicker()" aria-label="팝업 닫기">✕</button>
     </div>
     <div class="modal-body">
-      <!-- 소속기관 엑셀 파일 업로드 & 브라우저 저장 영역 -->
       <div id="excelDropZone" class="excel-upload-zone" onclick="document.getElementById('orgExcelInput').click()">
         <div>
           <div class="dz-title">
@@ -759,6 +941,7 @@
         <dt>사용·수익허가 / 사용료</dt><dd>행정재산을 쓰도록 허락하는 행정처분입니다. 계약서가 아니라 허가서를 주고, 받는 돈은 <b>사용료</b>라고 합니다.</dd>
         <dt>대부 / 대부료</dt><dd>일반재산을 빌려주는 계약입니다. 대부계약서를 쓰고, 받는 돈은 <b>대부료</b>라고 합니다.</dd>
         <dt>재산평정가격</dt><dd>사용료·대부료를 계산하는 기준 가격입니다. <b>토지 = 개별공시지가 × 면적</b>, <b>건물 = 시가표준액 단가 × 면적</b>으로 구해 더합니다.</dd>
+        <dt>입찰기초금액(예정가격)</dt><dd>온비드 전자입찰 시 투찰의 기준이 되는 최저입찰가입니다. 실무편람 표준공고문에 따라 <b>부가가치세 미포함(공급가액)</b> 금액으로 공고하고, 낙찰자에게 부가세(10%)를 별도 부과합니다.</dd>
         <dt>개별공시지가</dt><dd>필지마다 공시되는 1㎡당 땅값입니다. 부동산공시가격 알리미(www.realtyprice.kr)에서 지번으로 조회합니다.</dd>
         <dt>시가표준액</dt><dd>지방세를 매길 때 기준이 되는 건물 가격입니다. 위택스(WETAX)에서 조회한 뒤 연면적으로 나누면 ㎡당 단가가 됩니다.</dd>
         <dt>요율</dt><dd>재산평정가격에 곱하는 1년치 비율입니다. 기본은 5%(1,000분의 50)이고, 용도에 따라 4%·2.5%·1%가 있습니다.</dd>
@@ -785,13 +968,12 @@
   let propertyList = [];
   let pickerFilter = 'ALL';
   let pickerCheckedIds = new Set();
+  let currentDocTemplate = 'main'; // 'main' | 'bid_notice' | 'bid_result'
 
-  /* 엑셀·백업 파일에서 온 글자를 화면에 안전하게 표시 (<, > 등이 섞여 있어도 화면이 깨지지 않게) */
   function esc(v) {
     return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
-  /* 브라우저 저장소에서 소속기관 토지·건물 목록 불러오기 */
   function loadOrgPropertiesFromStorage() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -833,7 +1015,7 @@
     } else {
       pill.className = 'org-status-pill';
       const orgLabel = savedOrgName ? `[${savedOrgName}] ` : '';
-      pill.textContent = `✅ 토지 ${landCnt}건 · 건물 ${bldCnt}건 저장됨`;   // 기관명은 표시하지 않음
+      pill.textContent = `✅ 토지 ${landCnt}건 · 건물 ${bldCnt}건 저장됨`;
       document.getElementById('pickerModalTitle').textContent = `📋 ${orgLabel}토지·건물 재산 목록 선택`;
     }
 
@@ -842,13 +1024,11 @@
     document.getElementById('pillBld').textContent = `건물 (${bldCnt}건)`;
   }
 
-  /* K-에듀파인 재산 엑셀(토지_건물_입목죽) 파싱 — 토지·건물만 추출 */
   function parseOrgPropertyWorkbook(workbook) {
     const sheetName = workbook.SheetNames[0];
     const ws = workbook.Sheets[sheetName];
     const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
 
-    // 헤더 행 찾기 ('재산종류', '소재지', '명칭' 포함 행)
     let headerIdx = 0;
     for (let i = 0; i < Math.min(rows.length, 10); i++) {
       const rowStr = rows[i].join(' ');
@@ -886,7 +1066,6 @@
       if (!row || row.length === 0) continue;
 
       const kind = String(row[colKind] || '').trim();
-      // '토지'와 '건물'만 추출 ('입목죽', 소계, 합계 행 자동 제외)
       if (kind !== '토지' && kind !== '건물') continue;
 
       const orgText = String(row[colOrg] || '').trim();
@@ -1005,7 +1184,6 @@
     showToast('저장된 재산 목록이 삭제되었습니다.');
   }
 
-  /* 재산 선택 팝업 제어 */
   function openPropertyPicker() {
     renderPickerRows();
     document.getElementById('propPickerBackdrop').classList.add('show');
@@ -1154,6 +1332,26 @@
     }
   }
 
+  /* 1순위 낙찰자 입력 시 상단 사용자(대부자) 칸에도 자동 반영 */
+  function syncWinnerToUser() {
+    const w = document.getElementById('bidWinnerName').value;
+    document.getElementById('userName').value = w;
+  }
+
+  function updateWfChecklistStyle() {
+    document.querySelectorAll('.wf-checklist li').forEach(li => {
+      const cb = li.querySelector('input[type="checkbox"]');
+      if (cb) li.classList.toggle('done-step', cb.checked);
+    });
+  }
+
+  function selectDocTemplate(tpl) {
+    currentDocTemplate = tpl;
+    recalcAll();
+    const card = document.getElementById('docCard');
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
   const LAW_HELP_DATA = {
     mode_permit: {
       title: '행정재산 사용·수익허가',
@@ -1178,8 +1376,8 @@
     },
     user_name: {
       title: '사용자(대부자) 성명·상호',
-      guide: '사용허가를 받는 자 또는 대부계약을 체결하는 상대방의 상호(법인명)와 대표자 성명을 입력합니다.',
-      checkDoc: '• <b>사업자등록증명원</b>, <b>법인등기사항전부증명서</b>(법인), <b>신청서</b>를 보고 정확한 상호·대표자명을 확인합니다.<br>• 소상공인 감면 시 <b>중소기업현황정보시스템 소상공인확인서</b> 및 유흥·사행업종 여부를 함께 확인합니다.',
+      guide: '수의 건은 신청인 상호·대표자명을 입력하고, 경쟁입찰 건은 공고 전엔 비워두었다가 개찰 후 1순위 낙찰자(상호·대표자명)를 입력합니다.',
+      checkDoc: '• <b>사업자등록증명원</b>, <b>법인등기사항전부증명서</b>(법인), <b>온비드 개찰결과서</b>(입찰 시)를 보고 정확한 상호·대표자명을 확인합니다.<br>• 소상공인 감면 시 <b>중소기업현황정보시스템 소상공인확인서</b> 및 유흥·사행업종 여부를 함께 확인합니다.',
       basis: '상대방의 법적 주체와 감면 자격 여부를 명확히 해야 계약·허가 효력 및 감면 적정성에 문제가 없습니다.',
       law: '「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제37조, 「소상공인기본법」'
     },
@@ -1191,16 +1389,44 @@
       law: '「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례 시행규칙」 제27조'
     },
     contract_way: {
-      title: '계약·허가 방식',
-      guide: '온비드(ONBID) 전자입찰로 진행하는지, 법령·조례상 수의 방식에 해당하는지 선택합니다.',
-      checkDoc: '• <b>입찰공고문·개찰결과서</b> 또는 <b>수의계약·수의허가 사유 검토서</b>와 근거 법조항(시행령 제13조·제38조, 조례 제40조)을 확인합니다.',
+      title: '계약·허가 방식 (선택 시 아래 3번 진행과정 분기)',
+      guide: '<b>경쟁입찰(온비드)</b>을 선택하면 아래 3번 카드에 [입찰 1단계: 기초금액 산정 및 온비드 공고]와 [입찰 2단계: 1순위자 선정 후 진행과정]이 순서대로 나타나고, <b>수의(허가·대부)</b>를 선택하면 [수의 법령 근거 선택 및 진행과정]이 나타납니다.',
+      checkDoc: '• <b>입찰공고문·개찰결과서</b> 또는 <b>수의계약·수의허가 사유 검토서</b>와 근거 법조항(시행령 제13조·제29조·제38조, 조례 제40조)을 확인합니다.',
       basis: '경쟁입찰이 원칙이며, 예외적으로 수의 방식을 취할 때는 법령·조례상 구체적 해당 조항을 반드시 특정해야 합니다.',
-      law: '「공유재산 및 물품 관리법」 제29조, 같은 법 시행령 제13조·제38조, 조례 제40조'
+      law: '「공유재산 및 물품 관리법」 제20조·제29조, 같은 법 시행령 제13조·제26조·제29조'
+    },
+    bid_base_price: {
+      title: '입찰기초금액(예정가격) 및 부가가치세 기준',
+      guide: '위 2번 카드에서 산출된 <b>공급가액(부가가치세 미포함 금액)</b>을 온비드 공고 예정가격(최저입찰가)으로 설정합니다.',
+      checkDoc: '• 「공유재산 업무편람」 표준입찰공고문에 따라 <b>예정가격은 부가가치세 미포함 금액</b>으로 공고하며, 낙찰자는 낙찰금액의 10%(과세 시)를 부가가치세로 별도 납부합니다.',
+      basis: '예정가격 이상 1인 이상(또는 공고 기준) 유효 입찰 시 최고가격 입찰자를 1순위 낙찰자로 결정하며, 입찰보증금은 입찰금액의 100분의 5 이상 납부해야 합니다.',
+      law: '「공유재산 및 물품 관리법 시행령」 제13조·제26조·제31조, 「공유재산 업무편람」 표준입찰공고문'
+    },
+    bid_schedule: {
+      title: '입찰공고 및 개찰 일정',
+      guide: '온비드에 게시할 입찰서 제출(등록) 시작·마감일시와 개찰일시·집행장소를 입력합니다.',
+      checkDoc: '• <b>입찰공고 기안문 및 온비드 공고 등록 화면</b>을 보고 입찰서 제출 마감일 전일까지 법정 공고기간(7일 이상, 긴급·재공고 5일)이 확보되었는지 확인합니다.',
+      basis: '동일인이 2회 이상 유효한 입찰서를 제출하면 모두 무효 처리되며, 동일 최고가 입찰자가 2인 이상이면 온비드 무작위 추첨(자동결정)으로 낙찰자를 정합니다.',
+      law: '「지방자치단체를 당사자로 하는 계약에 관한 법률 시행령」 제35조·제39조, 「공유재산 업무편람」'
+    },
+    bid_winner_flow: {
+      title: '입찰 종료 후 1순위자 선정 시 업무처리 절차',
+      guide: '개찰 후 온비드 [이용기관 입찰결과]에서 확인된 <b>1순위(최고가) 낙찰자</b>의 상호·성명과 <b>낙찰금액(부가세 별도)</b>을 입력하면 낙찰결과·허가(계약) 기안문이 자동 생성됩니다.',
+      checkDoc: '• <b>온비드 개찰결과서</b>, <b>사업자등록증</b>, <b>관련 인허가·영업신고증</b>, <b>국세·지방세 완납증명서</b>, <b>손해보험가입증서</b>를 확인합니다.',
+      basis: '낙찰자가 정당한 사유 없이 기한(통상 낙찰일로부터 7일 이내) 내 계약을 체결하지 않거나 사용료를 납부하지 않으면 낙찰은 무효가 되고 입찰보증금은 교육비특별회계에 귀속됩니다.',
+      law: '「공유재산 및 물품 관리법」 제22조·제32조, 「지방자치단체를 당사자로 하는 계약에 관한 법률」 제12조·제13조'
+    },
+    private_flow: {
+      title: '수의(허가·대부) 진행과정 및 근거 확인',
+      guide: '수의 방식으로 진행하는 경우 해당 법령·조례상 수의 사유를 선택하면 기안문 본문에 근거 조항이 자동 반영됩니다.',
+      checkDoc: '• <b>신청서·사업계획서·감면확인서(소상공인 등)·유찰 확인서(2회 유찰 시)</b> 등 수의 사유를 입증할 증빙서류를 확인합니다.',
+      basis: '경쟁입찰 원칙의 예외이므로 감사 지적 예방을 위해 수의 사유 해당 근거(시행령 제13조·제29조 각 호)를 기안문에 명확히 기재해야 합니다.',
+      law: '「공유재산 및 물품 관리법 시행령」 제13조 제3항(행정재산), 제29조 제1항(일반재산)'
     },
     ref_doc: {
       title: '관련 공문번호',
-      guide: '사용허가 또는 대부 신청 접수 문서번호와 시행일자(예: 행정실-1234(2026. 11. 23.))를 입력합니다.',
-      checkDoc: '• K-에듀파인 <b>공문 접수대장(또는 신청 공문)</b> 상단의 문서번호와 일자를 보고 확인합니다.',
+      guide: '사용허가 또는 대부 신청 접수(또는 입찰공고) 문서번호와 시행일자(예: 행정실-1234(2026. 11. 23.))를 입력합니다.',
+      checkDoc: '• K-에듀파인 <b>공문 접수대장(또는 입찰공고 문서)</b> 상단의 문서번호와 일자를 보고 확인합니다.',
       basis: '기안문 첫째 항목(1. 관련)에 기재하여 이전 문서와의 행정 이력을 연결합니다.',
       law: '「행정업무의 운영 및 혁신에 관한 규정」'
     },
@@ -1309,6 +1535,7 @@
     const el = document.getElementById(id);
     if (!el) return;
     el.value = '';
+    if (id === 'bidWinnerName') document.getElementById('userName').value = '';
     el.focus();
     recalcAll();
   }
@@ -1337,7 +1564,15 @@
     document.getElementById('periodStart').value = '';
     document.getElementById('periodEnd').value = '';
     document.getElementById('chkLateFee').checked = false;
+    document.getElementById('bidWinnerName').value = '';
+    document.getElementById('bidWinAmount').value = '0';
+    document.getElementById('bidWinDate').value = '';
+    document.getElementById('bidSubmitPeriod').value = '';
+    document.getElementById('bidOpenInfo').value = '';
+    document.querySelectorAll('.wf-checklist input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+    updateWfChecklistStyle();
     areaFromLedger = false; bldUnitFromLedger = false;
+    currentDocTemplate = 'main';
     recalcAll();
     showToast('입력값이 초기화되었습니다.');
   }
@@ -1356,7 +1591,6 @@
     showToast(`연체일수 ${days}일 기준으로 연체료가 계산되었습니다.`);
   }
 
-  /* ── 허가·대부 기간: 시작일~종료일 ↔ 일수 맞추기 (첫날과 마지막 날을 모두 포함해서 셈) ── */
   function dateFromInput(id) {
     const v = document.getElementById(id).value;
     return v ? new Date(v + 'T00:00:00') : null;
@@ -1390,7 +1624,6 @@
     document.getElementById('periodEnd').value = toInputDate(en);
   }
 
-  /* ── 연체일수: 납부기한 기준일 다음 날부터 오늘까지 ── */
   function setLateDaysFromPayDate() {
     const pay = dateFromInput('payDate');
     if (!pay) return alert('먼저 위쪽 [납부기한 기준일]을 입력해 주세요.');
@@ -1404,19 +1637,35 @@
     setLateDaysQuick(diff);
   }
 
-  /* ── 입력하던 내용을 이 브라우저에 자동 보관 (새로고침·창 닫기에도 유지) ── */
-  const FORM_KEY = 'gongyu_form_draft_v1';
-  const FORM_FIELDS = ['assetMode', 'propName', 'userName', 'propAddr', 'contractWay', 'refDoc', 'payDate',
-    'landUnit', 'landArea', 'bldUnit', 'bldArea', 'baseRate', 'smeRate', 'periodStart', 'periodEnd', 'periodDays',
-    'vatYn', 'lateDays', 'lateRateSelect'];
-  const FORM_CHECKS = ['chkRenewal', 'chkPermStruct', 'chkLateFee', 'chkDisasterHalf'];
+  /* 입력 내용 자동 저장·복원 */
+  const FORM_KEY = 'gongyu_form_draft_v2';
+  const FORM_FIELDS = [
+    'assetMode', 'propName', 'userName', 'propAddr', 'contractWay', 'refDoc', 'payDate',
+    'landUnit', 'landArea', 'bldUnit', 'bldArea', 'baseRate', 'smeRate',
+    'periodStart', 'periodEnd', 'periodDays', 'vatYn', 'lateDays', 'lateRateSelect',
+    'bidSubmitPeriod', 'bidOpenInfo', 'bidQualSummary',
+    'bidWinnerName', 'bidWinAmount', 'bidWinDate', 'bidContractDeadline',
+    'privateBasisSelect', 'privateCustomText'
+  ];
+  const FORM_CHECKS = [
+    'chkRenewal', 'chkPermStruct', 'chkLateFee', 'chkDisasterHalf',
+    'chkBid1', 'chkBid2', 'chkBid3',
+    'chkWin1', 'chkWin2', 'chkWin3', 'chkWin4',
+    'chkPriv1', 'chkPriv2', 'chkPriv3', 'chkPriv4'
+  ];
   let formRestoring = false;
   function saveFormDraft() {
     if (formRestoring) return;
     try {
       const d = { v: {}, c: {} };
-      FORM_FIELDS.forEach(id => { d.v[id] = document.getElementById(id).value; });
-      FORM_CHECKS.forEach(id => { d.c[id] = document.getElementById(id).checked; });
+      FORM_FIELDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) d.v[id] = el.value;
+      });
+      FORM_CHECKS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) d.c[id] = el.checked;
+      });
       localStorage.setItem(FORM_KEY, JSON.stringify(d));
     } catch (e) {}
   }
@@ -1432,21 +1681,22 @@
           if (el.tagName === 'SELECT' && el.selectedIndex < 0) el.selectedIndex = 0;
         }
       });
-      FORM_CHECKS.forEach(id => { const el = document.getElementById(id); if (el && d.c) el.checked = !!d.c[id]; });
+      FORM_CHECKS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && d.c) el.checked = !!d.c[id];
+      });
       formRestoring = false;
       const mode = document.getElementById('assetMode').value === 'lease' ? 'lease' : 'permit';
       document.getElementById('cardPermit').className = 'mode-card' + (mode === 'permit' ? ' active-permit' : '');
       document.getElementById('cardLease').className = 'mode-card' + (mode === 'lease' ? ' active-lease' : '');
+      updateWfChecklistStyle();
       return !!(d.v.propName || d.v.userName || parseNum(d.v.landUnit) || parseNum(d.v.bldUnit));
     } catch (e) { formRestoring = false; return false; }
   }
 
-  /* =====================================================================
-     초보자 도움 기능 (계산에는 영향 없음 — 화면 안내만 담당)
-     ===================================================================== */
-  let areaFromLedger = false;      // 면적이 재산대장의 '전체 면적' 그대로인지
-  let bldUnitFromLedger = false;   // 건물 단가가 대장 금액÷면적 '참고 단가'인지
-  let lastCopiedDoc = null;        // 마지막으로 복사한 기안문
+  let areaFromLedger = false;
+  let bldUnitFromLedger = false;
+  let lastCopiedDoc = null;
 
   const GUIDE_KEY = 'gongyu_guide_closed';
   function toggleGuide(force) {
@@ -1465,14 +1715,16 @@
   }
   function goStep(n) {
     if (n === 1) { if (propertyList.length === 0 || !document.getElementById('propName').value.trim()) openPropertyPicker(); else focusField('propName'); }
-    else if (n === 2) focusField('userName');
-    else if (n === 3) focusField(parseNum(document.getElementById('landUnit').value) || parseNum(document.getElementById('bldUnit').value) ? 'baseRate' : 'landUnit');
+    else if (n === 2) focusField('contractWay');
+    else if (n === 3) focusField('workflowCard');
     else focusField('docOutput');
   }
   function updateSteps() {
     const v = id => document.getElementById(id).value.trim();
     const propVal = Math.round(parseNum(v('landUnit')) * (parseFloat(v('landArea')) || 0)) + Math.round(parseNum(v('bldUnit')) * (parseFloat(v('bldArea')) || 0));
-    const done = [!!v('propName'), !!v('userName'), propVal > 0, lastCopiedDoc !== null && lastCopiedDoc === document.getElementById('docOutput').value];
+    const isBid = document.getElementById('contractWay').value === '경쟁입찰(온비드)';
+    const step2Done = isBid ? !!v('contractWay') : !!v('userName');
+    const done = [!!v('propName'), step2Done, propVal > 0, lastCopiedDoc !== null && lastCopiedDoc === document.getElementById('docOutput').value];
     let nowSet = false;
     done.forEach((d, i) => {
       const el = document.getElementById('step' + (i + 1));
@@ -1487,7 +1739,6 @@
   function openGlossary() { document.getElementById('glossBackdrop').classList.add('show'); }
   function closeGlossary() { document.getElementById('glossBackdrop').classList.remove('show'); }
 
-  /* 가상의 사례로 입력칸 채우기 (연습용) */
   function fillExample() {
     const has = ['propName', 'userName'].some(id => document.getElementById(id).value.trim())
       || parseNum(document.getElementById('landUnit').value) || parseNum(document.getElementById('bldUnit').value);
@@ -1499,13 +1750,17 @@
     set('contractWay', '경쟁입찰(온비드)');
     set('landUnit', '250,000'); set('landArea', '13.39'); set('bldUnit', '812,000'); set('bldArea', '49');
     set('baseRate', '0.05'); set('smeRate', 'none'); set('periodStart', ''); set('periodEnd', ''); set('periodDays', '365'); set('vatYn', 'yes');
+    set('bidSubmitPeriod', '2026. 11. 25.(수) 10:00 ~ 2026. 12. 2.(수) 16:00');
+    set('bidOpenInfo', '2026. 12. 3.(목) 10:00 본관 행정실 입찰집행관 PC');
+    set('bidWinnerName', '(예시) ○○매점 대표 홍길동');
+    set('bidWinAmount', '2,500,000');
     document.getElementById('chkLateFee').checked = false;
     document.getElementById('chkRenewal').checked = false;
     document.getElementById('chkPermStruct').checked = false;
     areaFromLedger = false; bldUnitFromLedger = false;
     recalcAll();
     document.getElementById('calcDetails').open = true;
-    showToast('연습용 예시를 채웠습니다. 숫자를 바꿔 보며 금액과 기안문이 어떻게 달라지는지 확인해 보세요. 끝나면 [🔄 입력값만 초기화]를 누르세요.', 6500);
+    showToast('연습용 예시를 채웠습니다. 경쟁입찰과 수의를 전환하며 진행과정을 확인해 보세요.', 5500);
   }
 
   const RATE_HINTS = {
@@ -1514,12 +1769,12 @@
     '0.025': '<b>공용·공공용</b>으로 쓰거나 <b>주거용</b>으로 쓰는 경우입니다.',
     '0.01': '<b>농경지를 실제로 경작</b>하거나 <b>학교급식용</b>으로 쓰는 경우입니다.'
   };
+
   function updateBeginnerUI(c) {
     const won = n => formatComma(n) + '원';
     const pct = r => (r * 100).toFixed(2).replace(/\.?0+$/, '') + '%';
     const feeName = c.isPermit ? '사용료' : '대부료';
 
-    /* 1) 요율·부가세 쉬운 설명 */
     document.getElementById('hintBaseRate').innerHTML = RATE_HINTS[String(document.getElementById('baseRate').value)] || '';
     document.getElementById('hintSmeRate').innerHTML = c.smeVal === 'none'
       ? '감면 대상이 아니면 <b>미적용</b> 그대로 두세요.'
@@ -1528,7 +1783,6 @@
       ? '매점·자판기처럼 <b>영업용으로 빌려주는 경우</b>는 원칙적으로 과세입니다.'
       : '<b>농경지·주거용</b> 등 면세 대상일 때 선택합니다. 과세 여부가 애매하면 기관 세무 담당에게 확인하세요.';
 
-    /* 2) 계산 과정 */
     const L = [];
     if (c.propVal <= 0) {
       L.push('<li>단가와 면적을 입력하면 계산 과정이 여기에 순서대로 나옵니다.</li>');
@@ -1552,12 +1806,13 @@
     }
     document.getElementById('calcSteps').innerHTML = L.join('');
 
-    /* 3) 기안 전 점검표 */
     const v = id => document.getElementById(id).value.trim();
+    const isBid = c.contractWay === '경쟁입찰(온비드)';
     const items = [];
     const add = (lv, text, go, label) => items.push({ lv, text, go, label });
-    if (!v('propName')) add('warn', '<b>재산명</b>이 비어 있습니다. 기안문 제목에 들어갑니다.', 'propName', '입력하기');
-    if (!v('userName')) add('warn', `<b>${c.isPermit ? '사용자' : '대부자'} 성명·상호</b>가 비어 있습니다.`, 'userName', '입력하기');
+    if (!v('propName')) add('warn', '<b>재산명</b>이 비어 있습니다. 기안문·공고문 제목에 들어갑니다.', 'propName', '입력하기');
+    if (!isBid && !v('userName')) add('warn', `수의 방식이므로 <b>${c.isPermit ? '사용자' : '대부자'} 성명·상호</b>를 입력하세요.`, 'userName', '입력하기');
+    if (isBid && !v('bidWinnerName')) add('info', '<b>경쟁입찰(온비드)</b> 중입니다. 공고 전이면 [입찰 1단계] 공고문을 먼저 활용하고, 낙찰 후 [입찰 2단계]에 1순위자를 입력하세요.', 'bidWinnerName', '1순위자 입력');
     if (!v('propAddr')) add('warn', '<b>재산 소재지</b>가 비어 있습니다.', 'propAddr', '입력하기');
     if (!v('refDoc')) add('warn', '<b>관련 공문번호</b>가 비어 있습니다. 기안문 "1. 관련"에 들어갑니다.', 'refDoc', '입력하기');
     if (c.propVal <= 0) add('warn', '<b>단가와 면적</b>이 없어 금액이 0원입니다.', 'landUnit', '입력하기');
@@ -1578,9 +1833,9 @@
     }
     if (c.days > 1826) add('warn', `기간이 <b>${formatComma(c.days)}일로 5년을 넘습니다</b>. 허가·대부할 수 있는 기간인지 확인하세요.`, 'periodDays', '기간 고치기');
     if (!c.isPermit && !v('periodStart')) add('info', '일반재산 대부기간은 <b>토지와 그 정착물 5년 이내, 그 밖의 재산 1년 이내</b>입니다(조례 제27조).', 'periodDays', '기간 확인');
-    if (String(c.contractWay).indexOf('수의') === 0) add('info', '<b>수의</b> 방식은 법령·조례의 어느 조항에 해당하는지 근거를 꼭 적어 두어야 합니다.', 'contractWay', '확인');
+    if (!isBid) add('info', '<b>수의</b> 방식은 3번 카드에서 법령·조례의 어느 조항에 해당하는지 근거를 선택해 두어야 합니다.', 'privateBasisSelect', '근거 확인');
     const warnCnt = items.filter(i => i.lv === 'warn').length;
-    if (items.length === 0) add('ok', '필수 항목이 모두 입력되었습니다. 기안문을 복사해 붙여넣으세요.', 'docOutput', '기안문 보기');
+    if (items.length === 0) add('ok', '필수 항목이 모두 입력되었습니다. 문서를 복사해 붙여넣으세요.', 'docOutput', '문서 보기');
     else if (warnCnt === 0) items.unshift({ lv: 'ok', text: '필수 항목은 모두 입력되었습니다. 아래 참고 사항만 확인하세요.' });
     const icon = { warn: '⚠️', info: 'ℹ️', ok: '✅' };
     document.getElementById('chkList').innerHTML = items.map(i =>
@@ -1611,7 +1866,6 @@
     if (e.target && e.target.id === 'helpModalBackdrop') closeLawHelp();
   }
 
-  /* 공용면적 배분 계산 모달 */
   function openCommonAreaModal() {
     document.getElementById('mUserExcl').value = parseFloat(document.getElementById('bldArea').value) || 35;
     calcAreaModalPreview();
@@ -1739,6 +1993,7 @@
     const userName = document.getElementById('userName').value || '[사용자 미입력]';
     const propAddr = document.getElementById('propAddr').value || '[소재지 미입력]';
     const contractWay = document.getElementById('contractWay').value;
+    const isBid = contractWay === '경쟁입찰(온비드)';
     const refDoc = document.getElementById('refDoc').value || '관련문서-000(2026. 00. 00.)';
     const payDateK = formatKoreanDate(document.getElementById('payDate').value);
 
@@ -1808,6 +2063,62 @@
     document.getElementById('resEmptyHint').style.display = propVal > 0 ? 'none' : '';
     const insDoc = bldVal > 0 ? ` 및 손해보험(${formatComma(bldVal)}원 이상) 가입 확인 후` : ' 후';
 
+    /* ── 계약·허가 방식(경쟁입찰 vs 수의) 분기 UI 및 계산 ── */
+    const wfBadge = document.getElementById('wfModeBadge');
+    const bidSec = document.getElementById('wfBidSection');
+    const privSec = document.getElementById('wfPrivateSection');
+
+    // 온비드 공고 예정가격(최저입찰가): 공급가액(부가가치세 미포함) 기준
+    const bidBaseSupply = supply;
+    const bidDepositMin = Math.ceil((bidBaseSupply * 0.05) / 10) * 10;
+
+    // 1순위 낙찰자 정보
+    const winnerName = document.getElementById('bidWinnerName').value.trim();
+    const winSupply = parseNum(document.getElementById('bidWinAmount').value);
+    const winVat = hasVat ? Math.floor((winSupply * 0.1) / 10) * 10 : 0;
+    const winTotal = winSupply + winVat;
+    const winRatePct = (bidBaseSupply > 0 && winSupply > 0) ? ((winSupply / bidBaseSupply) * 100).toFixed(2) : '0.00';
+    const winDateRaw = document.getElementById('bidWinDate').value;
+    const winDateK = winDateRaw ? formatKoreanDate(winDateRaw) : '2026. 00. 00.(요일)';
+    const bidDeadlineText = document.getElementById('bidContractDeadline').value || '낙찰일로부터 7일 이내';
+
+    if (isBid) {
+      wfBadge.className = 'wf-badge bid';
+      wfBadge.textContent = '경쟁입찰(온비드) 진행과정';
+      document.getElementById('wfCardTitle').textContent = '경쟁입찰(온비드) 단계별 진행과정 (공고 → 1순위 낙찰 후 처리)';
+      bidSec.style.display = 'block';
+      privSec.style.display = 'none';
+
+      document.getElementById('wfBidBaseDisplay').textContent = `${formatMoneyFormal(bidBaseSupply)} (${hasVat ? '부가가치세 10% 별도' : '면세'})`;
+      document.getElementById('wfBidDeposit').textContent = `${formatComma(bidDepositMin)}원 이상`;
+      document.getElementById('chkBidBaseAmt').textContent = `${formatComma(bidBaseSupply)}원`;
+
+      const winSummaryBox = document.getElementById('wfWinSummaryBox');
+      if (winSupply > 0) {
+        const diffFromBase = winSupply - bidBaseSupply;
+        const diffSign = diffFromBase >= 0 ? `+${formatComma(diffFromBase)}원` : `${formatComma(diffFromBase)}원 (예정가격 미달 주의!)`;
+        winSummaryBox.innerHTML =
+          `🏆 <b>1순위 낙찰자:</b> ${esc(winnerName || '[미입력]')} &nbsp;|&nbsp; <b>낙찰률:</b> ${winRatePct}% (예정가 대비 ${diffSign})<br>` +
+          `💰 <b>최종 고지·수납할 금액:</b> <b>${formatMoneyFormal(winTotal)}</b> (낙찰 공급가액 ${formatComma(winSupply)}원 + 부가가치세 ${formatComma(winVat)}원)`;
+      } else {
+        winSummaryBox.innerHTML =
+          `개찰 후 위 칸에 <b>1순위 낙찰자</b>와 <b>낙찰금액(공급가액, 부가세 별도)</b>을 입력하면 낙찰률, 부가가치세(10%), 최종 고지금액이 자동 산출됩니다.`;
+      }
+    } else {
+      wfBadge.className = 'wf-badge priv';
+      wfBadge.textContent = '수의(허가·대부) 진행과정';
+      document.getElementById('wfCardTitle').textContent = '수의(허가·대부) 근거 점검 및 단계별 진행과정';
+      bidSec.style.display = 'none';
+      privSec.style.display = 'block';
+      if (currentDocTemplate !== 'main') currentDocTemplate = 'main';
+    }
+
+    const privBasisSel = document.getElementById('privateBasisSelect').value;
+    document.getElementById('privateCustomBox').style.display = privBasisSel === '직접 입력' ? 'flex' : 'none';
+    const privBasisText = privBasisSel === '직접 입력'
+      ? (document.getElementById('privateCustomText').value.trim() || '[수의 근거 조항 직접 입력 필요]')
+      : privBasisSel;
+
     const isRenew = document.getElementById('chkRenewal').checked;
     const isPermStruct = document.getElementById('chkPermStruct').checked;
 
@@ -1830,38 +2141,121 @@
     }
     document.getElementById('diffBoxBody').innerHTML = diffHtml;
 
+    /* ── 문서 탭 바 및 문서 텍스트 생성 ── */
+    const tabBar = document.getElementById('docTabBar');
+    if (isBid) {
+      tabBar.innerHTML = `
+        <button type="button" class="doc-tab-btn ${currentDocTemplate === 'main' ? 'active' : ''}" onclick="selectDocTemplate('main')">① 입찰 추진·예정가격 결정 기안</button>
+        <button type="button" class="doc-tab-btn ${currentDocTemplate === 'bid_notice' ? 'active' : ''}" onclick="selectDocTemplate('bid_notice')">② 온비드 전자입찰 공고문(초안)</button>
+        <button type="button" class="doc-tab-btn ${currentDocTemplate === 'bid_result' ? 'active' : ''}" onclick="selectDocTemplate('bid_result')">③ 1순위 낙찰결과 및 허가(계약) 기안</button>
+      `;
+    } else {
+      tabBar.innerHTML = `
+        <button type="button" class="doc-tab-btn active" onclick="selectDocTemplate('main')">① 수의 ${isPermit ? '사용·수익허가' : '대부계약'} 결정 기안문</button>
+      `;
+    }
+
     const lateDocLine = (lateChecked && lateDays > 0)
       ? `\n    4) 연체료 가산액: ${formatMoneyFormal(lateFee)} (체납 ${lateDays}일, 연 ${(effectiveLateRate * 100).toFixed(1)}%, 총 고지액 ${formatMoneyFormal(grandTotal)})`
       : '';
 
-    if (isPermit) {
+    const submitPeriodText = document.getElementById('bidSubmitPeriod').value.trim() || '2026. 00. 00.(요일) 10:00 ~ 2026. 00. 00.(요일) 16:00';
+    const openInfoText = document.getElementById('bidOpenInfo').value.trim() || '2026. 00. 00.(요일) 10:00 행정실 입찰집행관 PC';
+    const qualText = document.getElementById('bidQualSummary').value.trim() || '공고일 현재 관련 업종 사업자등록을 필하고 결격사유가 없는 자';
+    const orgHeaderName = savedOrgName || '○○기관(학교)장';
+    const actWord = isPermit ? '사용·수익허가' : '대부';
+    const feeWord = isPermit ? '사용료' : '대부료';
+
+    if (isBid && currentDocTemplate === 'bid_notice') {
+      document.getElementById('docHintText').innerHTML = '온비드(ONBID) 전자입찰 공고 등록용 초안입니다. 일시와 특이조건만 확인한 뒤 복사해 사용하세요.';
+      document.getElementById('docOutput').value =
+        `${orgHeaderName} 공고 제2026-○○호\n\n` +
+        `공유재산(${propName}) ${actWord} 전자입찰 공고\n\n` +
+        `「공유재산 및 물품 관리법」 제20조·제29조 및 같은 법 시행령 제13조·제26조에 따라 우리 기관 소관 공유재산의 ${actWord}자 선정을 위하여 다음과 같이 전자입찰 공고합니다.\n\n` +
+        `1. 입찰에 부치는 사항\n` +
+        `  가. 건    명: ${propName} ${actWord} 전자입찰\n` +
+        `  나. 대상 재산: ${propName} (${propAddr}, 토지 ${landArea}㎡ · 건물 ${bldArea}㎡)\n` +
+        `  다. ${actWord} 기간: ${periodText}\n` +
+        `  라. 예정가격(최저입찰가): ${formatMoneyFormal(bidBaseSupply)}\n` +
+        `    ※ 부가가치세 미포함 금액이며, 낙찰자는 낙찰금액의 10%에 해당하는 부가가치세를 별도로 납부하여야 합니다.\n` +
+        `  마. 입찰방법: 일반경쟁입찰(예정가격 이상 최고가격 낙찰, 총액입찰, 온비드 전자입찰)\n` +
+        `2. 입찰서 제출 및 개찰 일정\n` +
+        `  가. 입찰서 제출기간: ${submitPeriodText}\n` +
+        `  나. 개찰일시 및 장소: ${openInfoText}\n` +
+        `3. 입찰참가자격: ${qualText}\n` +
+        `4. 입찰보증금 납부 및 귀속: 입찰금액의 100분의 5 이상에 해당하는 입찰보증금을 입찰마감 전까지 온비드 지정 계좌에 납부하여야 하며, 낙찰자가 기한 내 계약을 체결하지 아니할 경우 입찰보증금은 우리 기관에 귀속됩니다.\n` +
+        `5. 낙찰자 결정 및 ${actWord} 체결\n` +
+        `  가. 예정가격 이상 유효한 입찰자 중 최고가격으로 입찰한 자를 낙찰자로 결정합니다.\n` +
+        `  나. 낙찰자는 ${bidDeadlineText}에 구비서류를 제출하고 ${feeWord}(부가가치세 포함)를 일시 선납하여야 합니다.\n\n` +
+        `2026. 11. 23.\n\n` +
+        `${orgHeaderName}`;
+    } else if (isBid && currentDocTemplate === 'bid_result') {
+      const displayWinner = winnerName || '[1순위 낙찰자 상호·성명 입력]';
+      document.getElementById('docHintText').innerHTML = '개찰 후 <b>1순위 낙찰자</b>와 <b>낙찰금액</b>을 입력하면 아래 낙찰결과·허가(계약) 내부결재 기안문이 자동 완성됩니다.';
+      document.getElementById('docOutput').value =
+        `${propName} 전자입찰 개찰 결과 및 ${actWord} 결정 보고\n\n` +
+        `1. 관련: ${refDoc}「${propName} ${actWord} 전자입찰 공고」\n` +
+        `2. 우리 기관 소관 공유재산(${propName}) ${actWord} 전자입찰을 온비드에서 집행한 결과 1순위 낙찰자가 결정되었으므로 다음과 같이 ${actWord} 및 ${feeWord}를 결정하여 추진하고자 합니다.\n` +
+        `  가. 대상 재산: ${propName} (${propAddr}, 토지 ${landArea}㎡ · 건물 ${bldArea}㎡)\n` +
+        `  나. 개찰(낙찰) 일시: ${winDateK}\n` +
+        `  다. 1순위 낙찰자: ${displayWinner}\n` +
+        `  라. 낙찰 및 ${feeWord} 산출 내역\n` +
+        `    1) 예정가격(기초금액): ${formatMoneyFormal(bidBaseSupply)} (부가가치세 별도)\n` +
+        `    2) 1순위 낙찰금액: ${formatMoneyFormal(winSupply)} (낙찰률 ${winRatePct}%)\n` +
+        `    3) 최종 납부할 ${feeWord}: ${formatMoneyFormal(winTotal)} (공급가액 금${formatComma(winSupply)}원, 부가가치세 금${formatComma(winVat)}원)\n` +
+        `  마. ${actWord} 기간 및 행정사항\n` +
+        `    1) ${actWord} 기간: ${periodText}\n` +
+        `    2) 납부 및 체결 기한: ${bidDeadlineText}까지 선납 수납${insDoc} ${isPermit ? '사용허가서 교부' : '대부계약 체결'}\n\n` +
+        `붙임  1. 온비드 개찰결과서 1부.\n` +
+        `      2. ${isPermit ? '공유재산 사용·수익허가서(안)' : '공유재산 대부계약서(안)'} 1부.  끝.`;
+    } else if (isBid && currentDocTemplate === 'main') {
+      document.getElementById('docHintText').innerHTML = '경쟁입찰(온비드) 추진 및 예정가격(기초금액) 확정을 위한 내부결재 기안문입니다.';
+      document.getElementById('docOutput').value =
+        `${propName} ${isPermit ? '행정재산 사용·수익허가' : '일반재산 대부'} 입찰 추진 및 예정가격 결정 보고\n\n` +
+        `1. 관련: ${refDoc}「${propName} ${actWord} 추진 계획」\n` +
+        `2. 「공유재산 및 물품 관리법」 제20조·제29조 및 「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제30조에 따라 ${propName}의 ${actWord}자 선정을 위한 전자입찰을 다음과 같이 추진하고자 합니다.\n` +
+        `  가. 대상 재산: ${propName} (${propAddr}, 토지 ${landArea}㎡ · 건물 ${bldArea}㎡)\n` +
+        `  나. 계약·허가 방식: 경쟁입찰(온비드 전자입찰, 예정가격 이상 최고가 낙찰)\n` +
+        `  다. ${actWord} 기간: ${periodText}\n` +
+        `  라. 예정가격(입찰기초금액) 산출 내역\n` +
+        `    1) 재산평정가격: ${formatMoneyFormal(propVal)} (토지 ${formatComma(landVal)}원 + 건물 ${formatComma(bldVal)}원)\n` +
+        `    2) 적용 요율: ${(appliedRate * 100).toFixed(2)}% (1,000분의 ${Math.round(appliedRate * 1000)})\n` +
+        `    3) 예정가격(최저입찰가): ${formatMoneyFormal(bidBaseSupply)} (${hasVat ? '부가가치세 10% 별도' : '면세'})\n` +
+        `  마. 추진 일정: 입찰서 제출(${submitPeriodText}), 개찰(${openInfoText})\n\n` +
+        `붙임  1. 대부(사용)료 산정조서 1부.\n` +
+        `      2. 공유재산 ${actWord} 전자입찰 공고문(안) 1부.  끝.`;
+    } else if (isPermit) {
+      document.getElementById('docHintText').innerHTML = '수의 사용·수익허가 내부결재 기안문입니다. <b>[문서 전체 복사]</b>를 누른 뒤 K-에듀파인에 붙여넣으세요.';
       document.getElementById('docOutput').value =
         `${propName} 행정재산 사용·수익허가 및 사용료 ${lateChecked && lateDays > 0 ? '연체료 가산 ' : ''}결정 보고\n\n` +
         `1. 관련: ${refDoc}「${propName} 사용·수익허가 신청」\n` +
         `2. 「공유재산 및 물품 관리법」 제20조·제22조(연체료: 같은 법 제80조 및 시행령 제80조) 및 「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제25조·제30조에 따라 행정재산 사용·수익허가 및 사용료를 다음과 같이 결정하고자 합니다.\n` +
         `  가. 허가 재산: ${propName} (${propAddr}, 토지 ${landArea}㎡ · 건물 ${bldArea}㎡)\n` +
         `  나. 사용허가 대상자: ${userName}\n` +
-        `  다. 허가 방식 및 기간: ${contractWay} / ${periodText}\n` +
-        `  라. 사용료 산출 내역\n` +
+        `  다. 허가 방식 및 근거: ${contractWay} — ${privBasisText}\n` +
+        `  라. 허가 기간: ${periodText}\n` +
+        `  마. 사용료 산출 내역\n` +
         `    1) 재산평정가격: ${formatMoneyFormal(propVal)} (토지 ${formatComma(landVal)}원 + 건물 ${formatComma(bldVal)}원)\n` +
         `    2) 적용 요율: ${(appliedRate * 100).toFixed(2)}% (1,000분의 ${Math.round(appliedRate * 1000)})\n` +
         `    3) 납부할 사용료: ${formatMoneyFormal(baseTotal)} (공급가액 금${formatComma(supply)}원, 부가가치세 금${formatComma(vat)}원)${lateDocLine}\n` +
-        `  마. 납부기한 및 행정사항: ${payDateK}까지 지정 세입계좌 선납(${inst})${insDoc} 사용허가서 교부\n\n` +
+        `  바. 납부기한 및 행정사항: ${payDateK}까지 지정 세입계좌 선납(${inst})${insDoc} 사용허가서 교부\n\n` +
         `붙임  1. 대부(사용)료 산정조서 1부.\n` +
         `      2. 공유재산 사용·수익허가서(안) 1부.  끝.`;
     } else {
+      document.getElementById('docHintText').innerHTML = '수의 대부계약 내부결재 기안문입니다. <b>[문서 전체 복사]</b>를 누른 뒤 K-에듀파인에 붙여넣으세요.';
       document.getElementById('docOutput').value =
         `${propName} 일반재산 대부계약 체결 및 대부료 ${lateChecked && lateDays > 0 ? '연체료 가산 ' : ''}결정 보고\n\n` +
         `1. 관련: ${refDoc}「${propName} 대부 신청」\n` +
         `2. 「공유재산 및 물품 관리법」 제29조·제32조(연체료: 같은 법 제80조 및 시행령 제80조) 및 「전남광주통합특별시 교육비특별회계 소관 공유재산 관리 조례」 제26조·제27조·제30조에 따라 일반재산 대부계약 및 대부료를 다음과 같이 결정하고자 합니다.\n` +
         `  가. 대부 재산: ${propName} (${propAddr}, 토지 ${landArea}㎡ · 건물 ${bldArea}㎡)\n` +
         `  나. 대부 계약자: ${userName}\n` +
-        `  다. 계약 방식 및 기간: ${contractWay} / ${periodText} (연고권 배제 특약 적용)\n` +
-        `  라. 대부료 산출 내역\n` +
+        `  다. 계약 방식 및 근거: ${contractWay} — ${privBasisText}\n` +
+        `  라. 대부 기간: ${periodText} (연고권 배제 특약 적용)\n` +
+        `  마. 대부료 산출 내역\n` +
         `    1) 재산평정가격: ${formatMoneyFormal(propVal)} (토지 ${formatComma(landVal)}원 + 건물 ${formatComma(bldVal)}원)\n` +
         `    2) 적용 요율: ${(appliedRate * 100).toFixed(2)}% (1,000분의 ${Math.round(appliedRate * 1000)})\n` +
         `    3) 납부할 대부료: ${formatMoneyFormal(baseTotal)} (공급가액 금${formatComma(supply)}원, 부가가치세 금${formatComma(vat)}원)${lateDocLine}\n` +
-        `  마. 납부기한 및 행정사항: ${payDateK}까지 대부료 선납(${inst})${insDoc} 대부계약 체결\n\n` +
+        `  바. 납부기한 및 행정사항: ${payDateK}까지 대부료 선납(${inst})${insDoc} 대부계약 체결\n\n` +
         `붙임  1. 대부(사용)료 산정조서 1부.\n` +
         `      2. 공유재산 대부계약서(안) 1부.  끝.`;
     }
@@ -1876,7 +2270,7 @@
     const done = () => { lastCopiedDoc = el.value; updateSteps(); showToast('복사되었습니다. K-에듀파인 기안문 본문에서 Ctrl+V로 붙여넣으세요.', 3500); };
     const oldWay = () => {
       try { if (document.execCommand('copy')) return done(); } catch (e) {}
-      showToast('자동 복사가 막혀 있습니다. 기안문이 모두 선택되었으니 Ctrl+C를 눌러 복사하세요.', 5000);
+      showToast('자동 복사가 막혀 있습니다. 문서가 모두 선택되었으니 Ctrl+C를 눌러 복사하세요.', 5000);
     };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(el.value).then(done).catch(oldWay);
     else oldWay();
@@ -1894,7 +2288,6 @@
       }
     });
 
-    /* 숫자 칸을 누르면 기존 값이 전체 선택됨 → '0'을 지울 필요 없이 바로 입력 */
     document.addEventListener('focusin', e => {
       const el = e.target;
       if (el && el.tagName === 'INPUT' && (el.type === 'number' || el.classList.contains('num-input'))) {
@@ -1902,7 +2295,6 @@
       }
     });
 
-    /* 면적·단가를 직접 고치면 '재산대장 값 그대로' 안내를 끔 (계산보다 먼저 실행되도록 캡처 단계) */
     document.addEventListener('input', e => {
       const id = e.target && e.target.id;
       if (id === 'landArea' || id === 'bldArea') areaFromLedger = false;
@@ -1917,17 +2309,13 @@
     startVisitCounter();
   });
 
-  /* ---------- 이 페이지(공유재산 관리)만의 접속자 수 (오늘 · 누적) ----------
-     · 다른 허브 페이지(yeoncha.html 등)와 같은 방식: Firebase  stats / page_gongyu  { total, todayCount, todayDate }
-     · 한 브라우저는 하루 1번만 셈, 관리자로 로그인한 적이 있는 브라우저는 세지 않음
-     · common.js가 없거나(파일만 따로 연 경우) Firebase 보안 규칙에 'page_gongyu'가 아직 없으면 칸을 숨긴 채 조용히 넘어감 */
   function startVisitCounter() {
     const PAGE_DOC = 'page_gongyu', DAY_KEY = 'hubVisitDay_gongyu';
     const box = document.getElementById('visitBox');
     const H = window.HUB || {}, C = H.FIREBASE_CONFIG;
     if (!box || !C || !C.projectId || !C.apiKey || typeof fetch !== 'function') return;
     const API = 'https://firestore.googleapis.com/v1/', ROOT = 'projects/' + C.projectId + '/databases/(default)/documents', DOC = ROOT + '/stats/' + PAGE_DOC;
-    const today = () => new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);   /* 한국 시간 기준 */
+    const today = () => new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
     const num = x => x ? Number(x.integerValue != null ? x.integerValue : (x.doubleValue || 0)) : 0;
     const isAdmin = () => { try { return H.isAdminDevice ? !!H.isAdminDevice() : localStorage.getItem('hubAdminDevice') === '1'; } catch (e) { return false; } };
     const withLimit = p => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))]);
