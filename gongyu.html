@@ -189,6 +189,9 @@
     .btn-danger:hover { background: #fecaca; }
     .btn-sm { padding: 5px 10px; font-size: 12px; }
 
+    /* 카드 1 제목 바로 아래 버튼 줄 (재산엑셀 불러오기 · 입력값 초기화) */
+    .top-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+
     /* ───────── 제도 선택 카드 ───────── */
     .mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
     @media (max-width: 560px) { .mode-switch { grid-template-columns: 1fr; } }
@@ -262,8 +265,6 @@
     <div class="visit-box" id="visitBox" hidden title="공유재산 관리 페이지를 방문한 사람 수 · 한 사람(브라우저)은 하루 1번만 셉니다">
       <span>오늘 접속자 <b id="vToday">…</b></span><span class="sep">|</span><span>누적 접속자 <b id="vTotal">…</b></span>
     </div>
-    <button type="button" class="hub-btn" onclick="openPropertyPicker()">📂 재산엑셀 불러오기·선택</button>
-    <button type="button" class="hub-btn ghost" onclick="resetFormInputsOnly()">🔄 입력값만 초기화</button>
   </div>
 </header>
 
@@ -275,6 +276,11 @@
         <div class="card-header">
           <h2 class="card-title"><span class="no">1</span>제도 선택 및 기본정보</h2>
           <span id="orgStatusPill" class="org-status-pill empty">⚠️ 저장된 기관 재산목록 없음 (엑셀 불러오기 필요)</span>
+        </div>
+
+        <div class="top-actions">
+          <button type="button" class="btn btn-secondary" onclick="openPropertyPicker()">📂 재산엑셀 불러오기·선택</button>
+          <button type="button" class="btn btn-outline" onclick="resetFormInputsOnly()">🔄 입력값만 초기화</button>
         </div>
 
         <div class="mode-switch">
