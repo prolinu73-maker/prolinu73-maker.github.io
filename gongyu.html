@@ -707,7 +707,7 @@
     } else {
       pill.className = 'org-status-pill';
       const orgLabel = savedOrgName ? `[${savedOrgName}] ` : '';
-      pill.textContent = `✅ ${orgLabel}토지 ${landCnt}건 · 건물 ${bldCnt}건 저장됨`;
+      pill.textContent = `✅ 토지 ${landCnt}건 · 건물 ${bldCnt}건 저장됨`;   // 기관명은 표시하지 않음
       document.getElementById('pickerModalTitle').textContent = `📋 ${orgLabel}토지·건물 재산 목록 선택`;
     }
 
