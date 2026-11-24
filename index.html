@@ -37,7 +37,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css?v=10">
-<script src="common.js?v=26"></script>
+<script src="common.js?v=27"></script>
 <style>
   /* 색(칠판 테마)은 common.css에 있음 */
   * { box-sizing: border-box; }
@@ -774,6 +774,85 @@
   @keyframes sleighSpray { 0% { transform: translate(0,0) scale(1); opacity: .95; } 100% { transform: translate(-18px,-12px) scale(.3); opacity: 0; } }
   @media (max-width: 760px) { .board { padding-bottom: 92px; } .snow-hills { height: 64px; } }
   @media (prefers-reduced-motion: reduce) { .sleigh-spray { display: none; } .sleigh .leg { animation: none !important; } }
+
+  /* =====================================================================
+     🍩 간식 내기 게임 (사다리타기 · 회전판 · 카드 뒤집기)
+     ===================================================================== */
+  .hero-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .hero-row .board-tagline { margin: 0; }
+  .hero-snack { margin: 0; padding: 5px 13px !important; font-size: 13px !important; display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; border: 1px solid rgba(255,214,120,.6); background: rgba(255,190,80,.22); color: #fff; font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer; backdrop-filter: blur(4px); transition: background .2s, transform .2s; }
+  .hero-snack:hover { background: rgba(255,255,255,.26); transform: translateY(-1px); }
+  .sg-overlay { position: fixed; inset: 0; z-index: 2600; background: rgba(10,25,55,.55); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .sg-overlay[hidden] { display: none; }
+  .sg-box { width: min(980px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: #fff; border-radius: 20px; box-shadow: 0 30px 70px rgba(0,0,0,.3); padding: 20px 24px 22px; border-top: 6px solid #3E9AD6; }
+  .sg-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .sg-head h3 { margin: 0; font-size: 22px; color: #12305A; }
+  .sg-x { width: 38px; height: 38px; border: 1px solid #D5E3F0; border-radius: 10px; background: #fff; font-size: 16px; cursor: pointer; color: #475569; }
+  .sg-x:hover { color: #DC2626; border-color: #FCA5A5; }
+  .sg-setup { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px 16px; background: #F3F8FD; border: 1px solid #DCE8F4; border-radius: 14px; }
+  .sg-setup label { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; color: #1E3A5F; }
+  .sg-setup input[type=number] { width: 76px; padding: 9px 10px; border: 1.5px solid #C9DAEA; border-radius: 10px; font-family: inherit; font-size: 17px; font-weight: 800; text-align: center; color: #12305A; background: #fff; }
+  .sg-setup input[type=number]:focus { outline: none; border-color: #3E9AD6; box-shadow: 0 0 0 3px rgba(62,154,214,.2); }
+  .sg-hint { font-size: 12.5px; color: #64748B; }
+  .sg-btn { padding: 9px 16px; border-radius: 10px; border: 1.5px solid #C9DAEA; background: #fff; color: #1F4E7A; font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+  .sg-btn:hover { border-color: #3E9AD6; color: #1F6FB2; }
+  .sg-btn.pri { background: linear-gradient(135deg, #1F6FB2, #3E9AD6); color: #fff; border-color: transparent; }
+  .sg-btn:disabled { opacity: .5; cursor: default; }
+  .sg-names { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin: 12px 0 4px; }
+  .sg-names label { display: flex; align-items: center; gap: 6px; background: #fff; border: 1.5px solid #E2EAF3; border-radius: 10px; padding: 4px 4px 4px 8px; }
+  .sg-names label i { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .sg-names input { width: 100%; min-width: 0; border: none; padding: 6px 2px; font-family: inherit; font-size: 14px; font-weight: 700; color: #1E293B; background: none; }
+  .sg-names input:focus { outline: none; }
+  .sg-names label:focus-within { border-color: #3E9AD6; }
+  .sg-tabs { display: flex; gap: 6px; padding: 5px; margin: 14px 0 12px; background: #F1F6FB; border: 1px solid #E0EAF4; border-radius: 14px; width: max-content; max-width: 100%; overflow-x: auto; }
+  .sg-tabs button { padding: 9px 16px; border: none; border-radius: 10px; background: none; font-family: inherit; font-size: 14.5px; font-weight: 800; color: #475569; cursor: pointer; white-space: nowrap; }
+  .sg-tabs button.active { background: linear-gradient(135deg, #1F6FB2, #3E9AD6); color: #fff; box-shadow: 0 4px 12px rgba(31,111,178,.3); }
+  .sg-tool { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .sg-tool .sg-msg { font-size: 14px; font-weight: 700; color: #334155; margin-right: auto; }
+  .sg-pane[hidden] { display: none; }
+  /* 사다리 */
+  .sg-lad { overflow-x: auto; padding-bottom: 4px; }
+  .sg-lad-in { min-width: 100%; }
+  .sg-lad-row { display: grid; gap: 0; }
+  .sg-lad-row > * { margin: 0 3px; }
+  .sg-lad-top button { padding: 8px 4px; border-radius: 10px; border: 2px solid; background: #fff; font-family: inherit; font-size: 13.5px; font-weight: 800; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: transform .15s; }
+  .sg-lad-top button:hover:not(:disabled) { transform: translateY(-2px); }
+  .sg-lad-top button:disabled { cursor: default; opacity: .75; }
+  #sgLadder { display: block; width: 100%; height: 300px; }
+  .sg-lad-bot div { min-height: 50px; padding: 6px 4px; border-radius: 10px; background: #E2E8F0; color: #64748B; font-size: 13px; font-weight: 800; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.25; word-break: keep-all; transition: background .3s, transform .3s; }
+  .sg-lad-bot div.open { background: #EAF3FC; color: #1F4E7A; }
+  .sg-lad-bot div.win { background: linear-gradient(135deg, #FFE7B0, #FFC86B); color: #8A4B00; transform: scale(1.04); }
+  .sg-lad-bot small { font-size: 11.5px; font-weight: 700; opacity: .85; }
+  /* 회전판 */
+  .sg-wheel-area { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 20px; }
+  .sg-wheel-wrap { position: relative; width: min(400px, 78vw); aspect-ratio: 1 / 1; }
+  #sgWheel { width: 100%; height: 100%; display: block; }
+  .sg-pointer { position: absolute; left: 50%; top: -6px; transform: translateX(-50%); width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent; border-top: 30px solid #DC2626; filter: drop-shadow(0 3px 3px rgba(0,0,0,.3)); z-index: 2; }
+  .sg-spin { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 88px; height: 88px; border-radius: 50%; border: 5px solid #fff; background: linear-gradient(135deg, #1F6FB2, #3E9AD6); color: #fff; font-family: inherit; font-size: 17px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+  .sg-spin:disabled { cursor: wait; filter: grayscale(.3); }
+  .sg-wheel-side { min-width: 220px; max-width: 320px; font-size: 14px; color: #334155; }
+  .sg-wheel-side label { display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 10px; cursor: pointer; }
+  .sg-wheel-side ol { margin: 6px 0 0; padding-left: 22px; }
+  .sg-wheel-side li { margin: 3px 0; font-weight: 700; }
+  /* 카드 */
+  .sg-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+  .sg-card { position: relative; aspect-ratio: 3 / 4; perspective: 700px; border: none; background: none; padding: 0; cursor: pointer; font-family: inherit; }
+  .sg-card:disabled { cursor: default; }
+  .sg-card .in { position: absolute; inset: 0; transition: transform .6s; transform-style: preserve-3d; }
+  .sg-card.flip .in { transform: rotateY(180deg); }
+  .sg-card .f, .sg-card .b { position: absolute; inset: 0; border-radius: 14px; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 6px; text-align: center; }
+  .sg-card .f { background: linear-gradient(150deg, #1F6FB2, #15305E); color: #fff; font-size: 30px; font-weight: 900; box-shadow: 0 6px 16px rgba(21,48,94,.25); border: 3px solid #BFE3FF; }
+  .sg-card .f small { font-size: 12px; font-weight: 700; opacity: .8; }
+  .sg-card:not(:disabled):hover .f { filter: brightness(1.12); }
+  .sg-card .b { transform: rotateY(180deg); background: #F1F5F9; color: #475569; font-size: 14px; font-weight: 800; border: 2px solid #E2E8F0; word-break: keep-all; }
+  .sg-card .b.win { background: linear-gradient(135deg, #FFE7B0, #FFC86B); color: #8A4B00; border-color: #F59E0B; }
+  .sg-card .b span { font-size: 26px; }
+  /* 결과 */
+  .sg-result { margin-top: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 14px 16px; background: linear-gradient(135deg, #FFF7E6, #FFEBC7); border: 1.5px solid #F7C873; border-radius: 14px; }
+  .sg-result[hidden] { display: none; }
+  .sg-result div { flex: 1; min-width: 200px; font-size: 15.5px; font-weight: 800; color: #7A3E00; line-height: 1.6; white-space: pre-line; }
+  .sg-confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 2700; }
+  @media (max-width: 600px) { .sg-box { padding: 16px 14px; } #sgLadder { height: 260px; } }
   .snow-toggle { position: absolute; top: auto; bottom: 12px; right: max(18px, calc(50% - 590px)); left: auto; transform: none; z-index: 3; padding: 5px 12px; font-size: 12px; box-shadow: 0 2px 8px rgba(10,35,75,.15); }
   .hm-dash { margin: 22px auto 0; align-items: stretch; }
   .hm-panel { box-shadow: 0 8px 26px rgba(15,50,95,.09); display: flex; flex-direction: column; }
@@ -852,7 +931,10 @@
   </div>
   <div class="board">
     <div class="board-main">
-      <p class="board-tagline"><span id="typeText">현장을 가장 잘 아는 사람이, 현장을 바꿉니다</span><span class="type-cursor" aria-hidden="true"></span></p>
+      <div class="hero-row">
+        <button type="button" class="hero-snack" id="heroSnack" title="사다리타기 · 회전판 · 카드 뒤집기">🍩 간식 내기 게임</button>
+        <p class="board-tagline"><span id="typeText">현장을 가장 잘 아는 사람이, 현장을 바꿉니다</span><span class="type-cursor" aria-hidden="true"></span></p>
+      </div>
       <h1>
         <span class="line">교육행정 업무,</span>
         <span class="chalk-line" aria-live="polite"><span id="chalkWord">노무 상담부터</span></span>
@@ -1080,6 +1162,358 @@
     <span><b>공유</b>나만의 업무 노하우를 커뮤니티에 나눠 주세요</span>
   </div>
 </div>
+
+
+<!-- ===================== 🍩 간식 내기 게임 =====================
+     상단 메뉴 '소통ㆍ도구 → 간식 내기 게임' 또는 첫 화면 버튼으로 엽니다. (주소: index.html#snack)
+     참여자 이름은 이 컴퓨터(브라우저)에만 저장됩니다. -->
+<div id="snackModal" class="sg-overlay" role="dialog" aria-modal="true" aria-labelledby="sgTitle" hidden>
+  <div class="sg-box">
+    <div class="sg-head"><h3 id="sgTitle">🍩 간식 내기 게임</h3><button type="button" class="sg-x" id="sgClose" aria-label="닫기">✕</button></div>
+    <div class="sg-setup">
+      <label for="sgCount">👥 참여자 수 <input type="number" id="sgCount" min="2" max="20" value="6" inputmode="numeric"> 명</label>
+      <label for="sgWin">🍩 간식 낼 사람 <input type="number" id="sgWin" min="1" max="19" value="1" inputmode="numeric"> 명</label>
+      <button type="button" class="sg-btn pri" id="sgMake">생성</button>
+      <span class="sg-hint">숫자를 넣고 [생성]을 누르면 이름 칸이 생깁니다 (2~20명). 이름은 바꿔 써도 돼요.</span>
+    </div>
+    <div class="sg-names" id="sgNames"></div>
+    <div class="sg-tabs" role="tablist" aria-label="게임 고르기">
+      <button type="button" role="tab" data-g="ladder" class="active" aria-selected="true">🪜 사다리타기</button>
+      <button type="button" role="tab" data-g="wheel" aria-selected="false">🎡 회전판</button>
+      <button type="button" role="tab" data-g="card" aria-selected="false">🃏 카드 뒤집기</button>
+    </div>
+    <div class="sg-pane" data-p="ladder">
+      <div class="sg-tool"><span class="sg-msg">위쪽 이름을 누르면 사다리를 타고 내려갑니다.</span><button type="button" class="sg-btn" id="sgLadNew">🔀 새 사다리</button><button type="button" class="sg-btn pri" id="sgLadAll">▶ 전체 결과 보기</button></div>
+      <div class="sg-lad"><div class="sg-lad-in" id="sgLadIn">
+        <div class="sg-lad-row sg-lad-top" id="sgLadTop"></div>
+        <svg id="sgLadder" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div class="sg-lad-row sg-lad-bot" id="sgLadBot"></div>
+      </div></div>
+    </div>
+    <div class="sg-pane" data-p="wheel" hidden>
+      <div class="sg-wheel-area">
+        <div class="sg-wheel-wrap"><canvas id="sgWheel" width="800" height="800" aria-label="회전판"></canvas><div class="sg-pointer"></div><button type="button" class="sg-spin" id="sgSpin">돌리기</button></div>
+        <div class="sg-wheel-side">
+          <label><input type="checkbox" id="sgExclude" checked> 당첨된 사람은 다음 판에서 빼기</label>
+          <button type="button" class="sg-btn" id="sgWheelReset">↺ 처음부터</button>
+          <div id="sgWheelLog"></div>
+        </div>
+      </div>
+    </div>
+    <div class="sg-pane" data-p="card" hidden>
+      <div class="sg-tool"><span class="sg-msg" id="sgTurn"></span><button type="button" class="sg-btn" id="sgCardNew">🔀 다시 섞기</button></div>
+      <div class="sg-cards" id="sgCards"></div>
+    </div>
+    <div class="sg-result" id="sgResult" hidden><div id="sgResultText"></div><button type="button" class="sg-btn" id="sgCopy">📋 결과 복사</button></div>
+  </div>
+</div>
+<canvas id="sgConfetti" class="sg-confetti" hidden></canvas>
+<script>
+/* =====================================================================
+   🍩 간식 내기 게임 — 사다리타기 · 회전판 · 카드 뒤집기
+   - 참여자 수(2~20)와 간식 낼 사람 수를 넣고 [생성]
+   - 모든 결과는 매번 무작위 (Math.random)
+   ===================================================================== */
+(function () {
+  const $ = id => document.getElementById(id);
+  const modal = $('snackModal'); if (!modal) return;
+  const KEY = 'hubSnackGame';
+  const COLORS = ['#E4572E', '#1F6FB2', '#2E9E6B', '#F59E0B', '#8B5CF6', '#E0598B', '#0EA5A4', '#6366F1', '#D97706', '#16A34A', '#DB2777', '#0284C7', '#7C3AED', '#CA8A04', '#DC2626', '#059669', '#2563EB', '#C026D3', '#EA580C', '#4F46E5'];
+  const WIN = '🍩 간식 당첨', PASS = '통과 😊';
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const rnd = n => Math.floor(Math.random() * n);
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  let st = { count: 6, win: 1, names: [] }, game = 'ladder';
+  try { const v = JSON.parse(localStorage.getItem(KEY) || 'null'); if (v && v.count) st = Object.assign(st, v); } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const nameOf = i => (st.names[i] || '').trim() || ('참가자' + (i + 1));
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  /* ── 참여자 설정 ── */
+  function readNums() {
+    let n = clamp(parseInt($('sgCount').value, 10) || 2, 2, 20);
+    let k = clamp(parseInt($('sgWin').value, 10) || 1, 1, n - 1);
+    $('sgCount').value = n; $('sgWin').value = k; $('sgWin').max = n - 1;
+    return { n, k };
+  }
+  function renderNames() {
+    const box = $('sgNames'); box.innerHTML = '';
+    for (let i = 0; i < st.count; i++) {
+      const lb = document.createElement('label');
+      const dot = document.createElement('i'); dot.style.background = COLORS[i % COLORS.length];
+      const inp = document.createElement('input'); inp.maxLength = 10; inp.placeholder = '참가자' + (i + 1); inp.value = st.names[i] || '';
+      inp.setAttribute('aria-label', (i + 1) + '번 참여자 이름');
+      inp.addEventListener('input', () => { st.names[i] = inp.value; save(); refreshLabels(); });
+      lb.append(dot, inp); box.appendChild(lb);
+    }
+  }
+  function make() {
+    const { n, k } = readNums();
+    st.count = n; st.win = k; st.names = st.names.slice(0, n); save();
+    renderNames(); resetAll();
+  }
+  // 이름만 바뀌었을 때 화면 글자만 고침
+  function refreshLabels() {
+    document.querySelectorAll('#sgLadTop button').forEach((b, i) => b.textContent = nameOf(i));
+    if (game === 'wheel' && !spinning) drawWheel();
+    if (game === 'card') turnMsg();
+  }
+
+  /* ── 결과 · 축하 효과 ── */
+  function showResult(title, winners) {
+    $('sgResultText').textContent = title + '\n🍩 간식 당첨: ' + winners.join(', ');
+    $('sgResult').hidden = false;
+    setTimeout(() => { try { $('sgResult').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' }); } catch (e) {} }, 50);
+  }
+  function hideResult() { $('sgResult').hidden = true; }
+  function confetti() {
+    if (reduce) return;
+    const cv = $('sgConfetti'), ctx = cv.getContext('2d'); cv.hidden = false;
+    const W = cv.width = innerWidth, H = cv.height = innerHeight;
+    const ps = Array.from({ length: 140 }, () => ({ x: W / 2 + (Math.random() - .5) * 200, y: H * .35, vx: (Math.random() - .5) * 14, vy: -Math.random() * 14 - 4, r: Math.random() * 6 + 4, c: COLORS[rnd(COLORS.length)], a: Math.random() * 6, va: (Math.random() - .5) * .4 }));
+    const t0 = performance.now();
+    (function f(now) {
+      const t = now - t0; ctx.clearRect(0, 0, W, H);
+      ps.forEach(p => { p.vy += .35; p.x += p.vx; p.y += p.vy; p.vx *= .99; p.a += p.va;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.c; ctx.globalAlpha = Math.max(0, 1 - t / 2600); ctx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); ctx.restore(); });
+      if (t < 2600) requestAnimationFrame(f); else { ctx.clearRect(0, 0, W, H); cv.hidden = true; }
+    })(t0);
+  }
+
+  /* ── 🪜 사다리타기 ── */
+  const ROWS = 12, VW = 100, VH = 600;
+  let lad = null;
+  function newLadder() {
+    const n = st.count, rungs = [];
+    for (let r = 0; r < ROWS; r++) {
+      const row = new Array(n - 1).fill(false);
+      for (let g = 0; g < n - 1; g++) if (!(g > 0 && row[g - 1]) && Math.random() < .45) row[g] = true;
+      rungs.push(row);
+    }
+    // 가로줄이 하나도 없는 칸에는 하나씩 넣기
+    for (let g = 0; g < n - 1; g++) {
+      if (rungs.some(row => row[g])) continue;
+      const cand = []; for (let r = 0; r < ROWS; r++) if (!(rungs[r][g - 1]) && !(rungs[r][g + 1])) cand.push(r);
+      if (cand.length) rungs[cand[rnd(cand.length)]][g] = true;
+    }
+    const res = shuffle(Array.from({ length: n }, (_, i) => i < st.win ? WIN : PASS));
+    lad = { n, rungs, res, done: {}, busy: 0 };
+    drawLadder();
+  }
+  const xOf = c => (c + .5) * VW;
+  const yOf = r => (r + 1) * VH / (ROWS + 1);
+  function drawLadder() {
+    const n = lad.n, svg = $('sgLadder');
+    $('sgLadIn').style.minWidth = Math.max(n * 64, 0) + 'px';
+    svg.setAttribute('viewBox', `0 0 ${n * VW} ${VH}`);
+    let h = '';
+    for (let c = 0; c < n; c++) h += `<line x1="${xOf(c)}" y1="0" x2="${xOf(c)}" y2="${VH}" stroke="#CBD5E1" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"/>`;
+    lad.rungs.forEach((row, r) => row.forEach((on, g) => { if (on) h += `<line x1="${xOf(g)}" y1="${yOf(r)}" x2="${xOf(g + 1)}" y2="${yOf(r)}" stroke="#CBD5E1" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"/>`; }));
+    h += '<g id="sgPaths"></g>';
+    svg.innerHTML = h;
+    const cols = `repeat(${n}, minmax(0, 1fr))`;
+    const top = $('sgLadTop'), bot = $('sgLadBot');
+    top.style.gridTemplateColumns = bot.style.gridTemplateColumns = cols;
+    top.innerHTML = ''; bot.innerHTML = '';
+    for (let c = 0; c < n; c++) {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = nameOf(c);
+      b.style.borderColor = b.style.color = COLORS[c % COLORS.length];
+      b.addEventListener('click', () => runPath(c));
+      top.appendChild(b);
+      const d = document.createElement('div'); d.textContent = '?'; bot.appendChild(d);
+    }
+    $('sgLadAll').disabled = false; hideResult();
+  }
+  function pathOf(start) {
+    let c = start; const pts = [[xOf(c), 0]];
+    for (let r = 0; r < ROWS; r++) {
+      const y = yOf(r);
+      if (lad.rungs[r][c]) { pts.push([xOf(c), y]); c++; pts.push([xOf(c), y]); }
+      else if (c > 0 && lad.rungs[r][c - 1]) { pts.push([xOf(c), y]); c--; pts.push([xOf(c), y]); }
+    }
+    pts.push([xOf(c), VH]);
+    return { pts, end: c };
+  }
+  function runPath(start, fast) {
+    return new Promise(res => {
+      if (lad.done[start] !== undefined) return res();
+      const { pts, end } = pathOf(start); lad.done[start] = end; lad.busy++;
+      $('sgLadTop').children[start].disabled = true;
+      const svg = $('sgLadder'), g = $('sgPaths');
+      const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      pl.setAttribute('fill', 'none'); pl.setAttribute('stroke', COLORS[start % COLORS.length]); pl.setAttribute('stroke-width', '6');
+      pl.setAttribute('stroke-linejoin', 'round'); pl.setAttribute('stroke-linecap', 'round'); pl.setAttribute('vector-effect', 'non-scaling-stroke');
+      g.appendChild(pl);
+      // 화면 크기 기준 길이로 일정한 속도
+      const sx = svg.clientWidth / (lad.n * VW), sy = svg.clientHeight / VH;
+      const seg = []; let tot = 0;
+      for (let i = 1; i < pts.length; i++) { const d = Math.hypot((pts[i][0] - pts[i - 1][0]) * sx, (pts[i][1] - pts[i - 1][1]) * sy); seg.push(d); tot += d; }
+      const dur = reduce ? 1 : (fast ? 1100 : 2000), t0 = performance.now();
+      (function step(now) {
+        const want = Math.min(1, (now - t0) / dur) * tot;
+        let acc = 0; const out = [pts[0]];
+        for (let i = 0; i < seg.length; i++) {
+          if (acc + seg[i] <= want) { out.push(pts[i + 1]); acc += seg[i]; continue; }
+          const f = (want - acc) / seg[i]; out.push([pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f]); break;
+        }
+        pl.setAttribute('points', out.map(p => p.join(',')).join(' '));
+        if (want < tot) return requestAnimationFrame(step);
+        const cell = $('sgLadBot').children[end], win = lad.res[end] === WIN;
+        cell.innerHTML = ''; cell.append(document.createTextNode(lad.res[end]));
+        const sm = document.createElement('small'); sm.textContent = nameOf(start); cell.appendChild(sm);
+        cell.classList.add(win ? 'win' : 'open'); cell.style.boxShadow = `inset 0 0 0 2px ${COLORS[start % COLORS.length]}`;
+        lad.busy--;
+        if (win && !fast) confetti();
+        checkLadderDone(); res();
+      })(t0);
+    });
+  }
+  function checkLadderDone() {
+    if (Object.keys(lad.done).length !== lad.n || lad.busy) return;
+    $('sgLadAll').disabled = true;
+    const w = []; for (let c = 0; c < lad.n; c++) if (lad.res[lad.done[c]] === WIN) w.push(nameOf(c));
+    showResult('🪜 사다리타기 결과', w);
+  }
+  async function ladderAll() {
+    $('sgLadAll').disabled = true;
+    const list = []; for (let c = 0; c < lad.n; c++) if (lad.done[c] === undefined) list.push(c);
+    for (const c of list) { runPath(c, true); await new Promise(r => setTimeout(r, reduce ? 0 : 260)); }
+    const wait = () => new Promise(r => { (function chk() { lad.busy ? setTimeout(chk, 100) : r(); })(); });
+    await wait(); checkLadderDone(); confetti();
+  }
+
+  /* ── 🎡 회전판 ── */
+  let rot = 0, spinning = false, pool = [], wheelWins = [];
+  function wheelReset() { pool = Array.from({ length: st.count }, (_, i) => i); wheelWins = []; rot = 0; $('sgWheelLog').innerHTML = ''; $('sgSpin').disabled = false; drawWheel(); hideResult(); }
+  function drawWheel() {
+    const cv = $('sgWheel'), ctx = cv.getContext('2d'), S = cv.width, R = S / 2 - 10, n = pool.length;
+    ctx.clearRect(0, 0, S, S);
+    ctx.save(); ctx.translate(S / 2, S / 2);
+    ctx.beginPath(); ctx.arc(0, 0, R + 8, 0, Math.PI * 2); ctx.fillStyle = '#12305A'; ctx.fill();
+    if (!n) { ctx.restore(); return; }
+    const seg = Math.PI * 2 / n;
+    for (let i = 0; i < n; i++) {
+      const a0 = rot + i * seg - Math.PI / 2;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R, a0, a0 + seg); ctx.closePath();
+      ctx.fillStyle = COLORS[pool[i] % COLORS.length]; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
+      ctx.save(); ctx.rotate(a0 + seg / 2); ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
+      const fs = n > 14 ? 24 : n > 8 ? 30 : 36; ctx.font = `800 ${fs}px Pretendard, 'Malgun Gothic', sans-serif`;
+      let t = nameOf(pool[i]); if (t.length > 6) t = t.slice(0, 6) + '…';
+      ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 4; ctx.fillText(t, R - 24, 0); ctx.restore();
+    }
+    ctx.restore();
+  }
+  function spin() {
+    if (spinning || pool.length < 1) return;
+    if (pool.length === 1) { finishSpin(0); return; }
+    spinning = true; $('sgSpin').disabled = true; hideResult();
+    const start = rot, add = Math.PI * 2 * (5 + Math.random() * 3) + Math.random() * Math.PI * 2, dur = reduce ? 10 : 4800, t0 = performance.now();
+    (function f(now) {
+      const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 4);
+      rot = start + add * e; drawWheel();
+      if (p < 1) return requestAnimationFrame(f);
+      rot %= Math.PI * 2; spinning = false;
+      const seg = Math.PI * 2 / pool.length;
+      const a = ((-rot) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);   // 바늘(맨 위)이 가리키는 칸
+      finishSpin(Math.floor(a / seg) % pool.length);
+    })(t0);
+  }
+  function finishSpin(idx) {
+    const who = pool[idx]; wheelWins.push(nameOf(who)); confetti();
+    const log = $('sgWheelLog'); log.innerHTML = `<b>당첨 순서 (${wheelWins.length} / ${st.win}명)</b>`;
+    const ol = document.createElement('ol'); wheelWins.forEach(nm => { const li = document.createElement('li'); li.textContent = '🍩 ' + nm; ol.appendChild(li); }); log.appendChild(ol);
+    showResult('🎡 회전판 결과', wheelWins);
+    if ($('sgExclude').checked) { pool.splice(idx, 1); }
+    // 간식 낼 사람 수만큼 뽑으면 끝
+    const finished = wheelWins.length >= st.win || ($('sgExclude').checked && pool.length === 0);
+    $('sgSpin').disabled = finished;
+    if (finished) { const p2 = document.createElement('p'); p2.style.cssText = 'margin:8px 0 0;font-weight:800;color:#1F6FB2'; p2.textContent = '🎉 다 뽑았습니다! 다시 하려면 [처음부터]를 누르세요.'; log.appendChild(p2); }
+    setTimeout(drawWheel, 900);
+  }
+
+  /* ── 🃏 카드 뒤집기 ── */
+  let cards = null;
+  function newCards() {
+    const n = st.count;
+    cards = { res: shuffle(Array.from({ length: n }, (_, i) => i < st.win ? WIN : PASS)), turn: 0, picked: {} };
+    const box = $('sgCards'); box.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'sg-card'; b.setAttribute('aria-label', (i + 1) + '번 카드');
+      b.innerHTML = `<span class="in"><span class="f">${i + 1}<small>카드</small></span><span class="b"></span></span>`;
+      b.addEventListener('click', () => pickCard(i, b));
+      box.appendChild(b);
+    }
+    turnMsg(); hideResult();
+  }
+  function turnMsg() {
+    if (!cards) return;
+    $('sgTurn').textContent = cards.turn < st.count ? `👉 ${nameOf(cards.turn)} 님 차례 — 카드를 한 장 고르세요` : '모두 골랐습니다!';
+  }
+  function pickCard(i, b) {
+    if (b.disabled || cards.turn >= st.count) return;
+    const who = cards.turn++, win = cards.res[i] === WIN;
+    cards.picked[who] = i;
+    const back = b.querySelector('.b'); back.classList.toggle('win', win);
+    back.innerHTML = `<span>${win ? '🍩' : '😊'}</span>`;
+    const t1 = document.createElement('div'); t1.textContent = nameOf(who);
+    const t2 = document.createElement('div'); t2.textContent = win ? '간식 당첨' : '통과';
+    back.append(t1, t2);
+    b.classList.add('flip'); b.disabled = true;
+    if (win) setTimeout(confetti, 500);
+    turnMsg();
+    if (cards.turn >= st.count) {
+      const w = []; for (let k = 0; k < st.count; k++) if (cards.res[cards.picked[k]] === WIN) w.push(nameOf(k));
+      setTimeout(() => showResult('🃏 카드 뒤집기 결과', w), 700);
+    }
+  }
+
+  /* ── 공통 ── */
+  function resetAll() { newLadder(); wheelReset(); newCards(); }
+  function setGame(g) {
+    game = g;
+    document.querySelectorAll('.sg-tabs button').forEach(b => { const on = b.dataset.g === g; b.classList.toggle('active', on); b.setAttribute('aria-selected', on); });
+    document.querySelectorAll('.sg-pane').forEach(p => p.hidden = p.dataset.p !== g);
+    hideResult();
+    if (g === 'wheel') drawWheel();
+  }
+  let lastFocus = null;
+  function open() {
+    lastFocus = document.activeElement;
+    $('sgCount').value = st.count; $('sgWin').value = st.win;
+    if (!lad) { renderNames(); resetAll(); }
+    modal.hidden = false; document.body.style.overflow = 'hidden';
+    setTimeout(() => $('sgCount').focus(), 30);
+  }
+  function close() {
+    modal.hidden = true; document.body.style.overflow = '';
+    if (location.hash === '#snack') history.replaceState(null, '', location.pathname + location.search);
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  $('sgMake').addEventListener('click', make);
+  [$('sgCount'), $('sgWin')].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); make(); } }));
+  document.querySelectorAll('.sg-tabs button').forEach(b => b.addEventListener('click', () => setGame(b.dataset.g)));
+  $('sgLadNew').addEventListener('click', newLadder);
+  $('sgLadAll').addEventListener('click', ladderAll);
+  $('sgSpin').addEventListener('click', spin);
+  $('sgWheelReset').addEventListener('click', wheelReset);
+  $('sgCardNew').addEventListener('click', newCards);
+  $('sgClose').addEventListener('click', close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) close(); });
+  $('sgCopy').addEventListener('click', () => {
+    const t = $('sgResultText').textContent;
+    const done = () => window.HUB && HUB.toast && HUB.toast('📋 결과를 복사했습니다. 메신저에 붙여 넣으세요.');
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, () => { prompt('아래 내용을 복사하세요', t); });
+    else prompt('아래 내용을 복사하세요', t);
+  });
+  const hb = $('heroSnack'); if (hb) hb.addEventListener('click', open);
+  const fromHash = () => { if (location.hash === '#snack') open(); };
+  window.addEventListener('hashchange', fromHash);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fromHash); else fromHash();
+  window.HUB_SNACK = { open };
+})();
+</script>
 
 <!-- 내 일정 추가 창 -->
 <div id="wcModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="wcModalTitle">

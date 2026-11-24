@@ -88,8 +88,6 @@
               icon: '<path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v2H3z"/><circle cx="7.5" cy="13" r="0.8"/><circle cx="16.5" cy="13" r="0.8"/><path d="M5 11h14"/>' },
             { file: "mulpum_sys.html", label: "물품관리",
               icon: '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/>' },
-            { file: "gongyu.html", label: "공유재산 사용허가ㆍ대부",
-              icon: '<path d="M2 21h20"/><path d="M4 21V8l6-4v17"/><path d="M10 10h10v11"/><path d="M14 14h2"/><path d="M14 17h2"/><path d="M6.5 11h1"/><path d="M6.5 15h1"/>' },
             { file: "facility.html", label: "시설공사 공고문 작성",
               icon: '<path d="M2 20h20"/><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M8 10h8"/>' }
           ] },
@@ -105,7 +103,9 @@
             { file: "apps.html", label: "스마트 업무도구",
               icon: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>' },
             { file: "index.html#community", label: "커뮤니티 라운지",
-              icon: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01"/><path d="M12 11h.01"/><path d="M15.5 11h.01"/>' }
+              icon: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01"/><path d="M12 11h.01"/><path d="M15.5 11h.01"/>' },
+            { file: "index.html#snack", label: "간식 내기 게임",
+              icon: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M7.5 8.5l1 .6M15.5 7.5l-.6 1M16.5 14.5l-1-.3M8 15.5l.9-.7"/>' }
           ] }
     ];
     const HOME_ICON = '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-5h4v5"/>';
@@ -120,7 +120,6 @@
         "budget.html": "예산관리(교특회계)",
         "Per_diem.html": "여비관리",
         "mulpum_sys.html": "물품관리",
-        "gongyu.html": "공유재산 사용허가ㆍ대부",
         "summary_minutes.html": "학교운영위원회 회의록 작성",
         "hobong.html": "교원 호봉획정",
         "geunmu_search.html": "복무 통계 작성",
