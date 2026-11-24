@@ -378,6 +378,13 @@
     .excel-upload-zone { border: 2px dashed var(--green); background: var(--green-soft); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; cursor: pointer; transition: all .15s; }
     .excel-upload-zone:hover { background: #d6e7de; }
     .excel-upload-zone.dragover { background: #fef9c3; border-color: var(--navy); }
+    .excel-path { background: #eff6ff; border: 1px solid #bfdbfe; border-left: 5px solid var(--navy-2); border-radius: 8px; padding: 9px 12px; margin-bottom: 10px; }
+    .excel-path .ep-title { font-size: 12.5px; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+    .excel-path .ep-title span { font-weight: 400; color: var(--gray-600); }
+    .excel-path .ep-steps { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .excel-path .ep-steps span { background: #fff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 3px 9px; font-size: 12.5px; font-weight: 700; color: var(--gray-800); white-space: nowrap; }
+    .excel-path .ep-steps span.last { background: var(--navy); border-color: var(--navy); color: #fff; }
+    .excel-path .ep-steps i { font-style: normal; color: var(--gray-500); font-weight: 800; }
     .dz-title { font-weight: 800; color: var(--green); font-size: 13.5px; }
 
     .picker-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -1099,6 +1106,12 @@
       <button type="button" class="modal-close-x" onclick="closePropertyPicker()" aria-label="팝업 닫기">✕</button>
     </div>
     <div class="modal-body">
+      <div class="excel-path">
+        <div class="ep-title">📥 올릴 엑셀 파일 받는 곳 <span>(교육비특별회계 기준)</span></div>
+        <div class="ep-steps">
+          <span>K-에듀파인</span><i>›</i><span>통합자산관리</span><i>›</i><span>재산관리</span><i>›</i><span>재산대장관리</span><i>›</i><span>조회</span><i>›</i><span class="last">엑셀 다운</span>
+        </div>
+      </div>
       <div id="excelDropZone" class="excel-upload-zone" onclick="document.getElementById('orgExcelInput').click()">
         <div>
           <div class="dz-title">📂 K-에듀파인 재산대장 엑셀(<code>토지_건물_입목죽*.xlsx</code>) 불러오기</div>
