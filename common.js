@@ -24,7 +24,7 @@
     if (w.HUB && w.HUB.__loaded) return;          // 두 번 불러와도 한 번만 실행
     const HUB = w.HUB = w.HUB || {};
     HUB.__loaded = true;
-    HUB.VERSION = "1.8.1";
+    HUB.VERSION = "1.8.2";
 
     // ── 보안: 다른 사이트가 이 페이지를 몰래 액자(iframe)에 넣어 클릭을 가로채는 것(클릭재킹) 막기 ──
     //  같은 사이트 안의 액자는 허용, 다른 사이트 안에 들어가 있으면 이 페이지를 맨 위 창으로 띄움
@@ -88,6 +88,8 @@
               icon: '<path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v2H3z"/><circle cx="7.5" cy="13" r="0.8"/><circle cx="16.5" cy="13" r="0.8"/><path d="M5 11h14"/>' },
             { file: "mulpum_sys.html", label: "물품관리",
               icon: '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/>' },
+            { file: "gongyu.html", label: "공유재산 사용허가ㆍ대부",
+              icon: '<path d="M2 21h20"/><path d="M4 21V8l6-4v17"/><path d="M10 10h10v11"/><path d="M14 14h2"/><path d="M14 17h2"/><path d="M6.5 11h1"/><path d="M6.5 15h1"/>' },
             { file: "facility.html", label: "시설공사 공고문 작성",
               icon: '<path d="M2 20h20"/><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M8 10h8"/>' }
           ] },
@@ -120,6 +122,7 @@
         "budget.html": "예산관리(교특회계)",
         "Per_diem.html": "여비관리",
         "mulpum_sys.html": "물품관리",
+        "gongyu.html": "공유재산 사용허가ㆍ대부",
         "summary_minutes.html": "학교운영위원회 회의록 작성",
         "hobong.html": "교원 호봉획정",
         "geunmu_search.html": "복무 통계 작성",
